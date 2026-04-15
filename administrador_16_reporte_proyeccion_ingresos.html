@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyección de Ingresos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #16a34a; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+        
+        .header { background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color: white; padding: 20px 40px; }
+        .breadcrumb { font-size: 14px; margin-bottom: 12px; }
+        .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 28px; margin-bottom: 8px; }
+        
+        .container { max-width: 1400px; margin: 40px auto; padding: 0 40px; }
+        
+        .filters-applied { background: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid var(--accent); }
+        .filters-applied h3 { color: var(--primary); margin-bottom: 12px; font-size: 16px; }
+        .filter-tag { display: inline-block; background: #f0f0f0; padding: 6px 12px; border-radius: 6px; margin-right: 8px; font-size: 14px; }
+        
+        .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        .summary-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .summary-label { font-size: 13px; color: #666; margin-bottom: 8px; }
+        .summary-value { font-size: 28px; font-weight: 700; color: var(--primary); }
+        .summary-change { font-size: 12px; margin-top: 4px; color: var(--success); }
+        
+        .card { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .card-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
+        
+        .timeline { position: relative; padding: 20px 0; }
+        .timeline-item { display: flex; margin-bottom: 24px; position: relative; }
+        .timeline-dot { width: 16px; height: 16px; border-radius: 50%; background: #0891b2; margin-right: 20px; margin-top: 8px; }
+        .timeline-content { flex: 1; background: #f8f6f1; padding: 16px; border-radius: 8px; }
+        .timeline-month { font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+        .timeline-amount { font-size: 24px; font-weight: 700; color: #0891b2; }
+        .timeline-detail { font-size: 13px; color: #666; margin-top: 4px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--primary); color: white; }
+        th { padding: 14px; text-align: left; font-weight: 600; font-size: 13px; }
+        td { padding: 14px; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
+        tbody tr:hover { background: #f8f6f1; }
+        
+        .progress-bar { height: 24px; background: #e0e0e0; border-radius: 12px; overflow: hidden; position: relative; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #0891b2 0%, #06b6d4 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-export { background: #16a34a; color: white; }
+        
+        .actions { display: flex; gap: 12px; margin-top: 24px; }
+        
+        .scenario-box { background: #e0f2fe; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+        .scenario-title { font-weight: 700; color: #075985; margin-bottom: 8px; }
+    
+        /* ── SHARED INJECTED STYLES ── */
+        .btn-logout {
+            display: flex; align-items: center; gap: 7px;
+            padding: 9px 18px;
+            background: rgba(255,255,255,0.14);
+            border: 1.5px solid rgba(255,255,255,0.38);
+            color: white; border-radius: 8px;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; text-decoration: none;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s; white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.24); }
+        .btn-cashflow {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 9px 16px;
+            background: rgba(255,255,255,0.14);
+            border: 1.5px solid rgba(255,255,255,0.38);
+            color: white; border-radius: 8px;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; text-decoration: none;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s; white-space: nowrap;
+        }
+        .btn-cashflow:hover { background: rgba(255,255,255,0.24); }
+        .header-top {
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .header-top-left { flex: 1; }
+        .header-top-right { flex-shrink: 0; }
+        .filter-band {
+            background: #e8f0fe; border-left: 4px solid #4a7cdc;
+            padding: 12px 20px; border-radius: 8px; margin-bottom: 20px;
+            font-size: 13px; color: #1a4ab0; font-weight: 600;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+        }
+        .filter-band .ftag {
+            background: #1e3a5f; color: white;
+            padding: 3px 10px; border-radius: 999px; font-size: 12px;
+        }
+        .chart-section {
+            background: white; border-radius: 12px; padding: 28px;
+            margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .chart-section h2 {
+            font-size: 18px; font-weight: 700; color: #1e3a5f;
+            margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0;
+        }
+        .chart-wrap { position: relative; height: 300px; }
+        </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js">
+    /* == NAVEGACION Y SESION == */
+            else { window.location.href = pagina; }
+    }
+    /* == CAMPANA == */
+    var _notifs = [];
+    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+    function renderNotificaciones(datos) {
+        _notifs = datos || [];
+        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+        var lista = document.getElementById('notif-list');
+        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
+        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
+        lista.innerHTML = _notifs.map(function(n) {
+            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+        }).join('');
+    }
+    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
+    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+    // Notificaciones cargadas por supabase.js automáticamente
+
+</script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-top">
+            <div class="header-top-left">
+                <div class="breadcrumb"><a href="administrador_8_Cashflow.html" class="btn-cashflow">← Volver a Cashflow</a></div>
+                <h1>📈 Proyección de Ingresos</h1>
+        <p>Estimación de ingresos futuros basado en cuotas pendientes</p>
+            </div>
+            <div class="header-top-right">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <!-- Campana -->
+                <div class="notif-wrapper" style="position:relative;">
+                    <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                    </button>
+                    <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                        <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                            <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">&#x1F514; Notificaciones</h3>
+                            <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como le&iacute;das</button>
+                        </div>
+                        <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando&hellip;</div></div>
+                    </div>
+                </div>
+                <a href="portal_login.html" class="btn-logout" onclick="return confirm('¿Querés cerrar la sesión?')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Cerrar sesión
+        </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- FILTROS APLICADOS -->
+        
+        <div class="filter-band" id="filter-band">🔎 Cargando filtros…</div>
+
+        <div class="chart-section">
+            <h2>📈 Proyección de Ingresos — 3 Escenarios</h2>
+            <div class="chart-wrap">
+                <canvas id="chart-reporte"></canvas>
+            </div>
+        </div>
+<!-- RESUMEN -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-label">Ingreso Proyectado Total</div>
+                <div class="summary-value">$27,845,200</div>
+                <div class="summary-change">Próximos 6 meses</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Cuotas Pendientes</div>
+                <div class="summary-value">1,247</div>
+                <div class="summary-change">De 287 estudiantes</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Tasa Cobro Proyectada</div>
+                <div class="summary-value">87.5%</div>
+                <div class="summary-change">Basada en histórico</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Ingreso Neto Estimado</div>
+                <div class="summary-value">$24,364,550</div>
+                <div class="summary-change">Con 87.5% de cobranza</div>
+            </div>
+        </div>
+
+        <!-- ESCENARIOS -->
+        <div class="card">
+            <h2 class="card-title">🎯 Escenarios de Proyección</h2>
+            
+            <div class="scenario-box">
+                <div class="scenario-title">🟢 Escenario Optimista (95% cobranza)</div>
+                <div style="font-size: 24px; font-weight: 700; color: #075985;">$26,453,000</div>
+                <div style="font-size: 13px; color: #666;">Si se mantiene baja morosidad y se cobra >90%</div>
+            </div>
+            
+            <div class="scenario-box">
+                <div class="scenario-title">🟡 Escenario Base (87.5% cobranza)</div>
+                <div style="font-size: 24px; font-weight: 700; color: #075985;">$24,364,550</div>
+                <div style="font-size: 13px; color: #666;">Proyección basada en tasa histórica promedio</div>
+            </div>
+            
+            <div class="scenario-box" style="background: #fee2e2;">
+                <div class="scenario-title" style="color: #991b1b;">🔴 Escenario Conservador (75% cobranza)</div>
+                <div style="font-size: 24px; font-weight: 700; color: #991b1b;">$20,883,900</div>
+                <div style="font-size: 13px; color: #666;">Si aumenta morosidad o deserción</div>
+            </div>
+        </div>
+
+        <!-- PROYECCIÓN MENSUAL -->
+        <div class="card">
+            <h2 class="card-title">📅 Proyección Mensual de Ingresos</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-month">Abril 2026</div>
+                        <div class="timeline-amount">$4,847,200</div>
+                        <div class="timeline-detail">215 cuotas vencen | 147 estudiantes</div>
+                        <div class="timeline-detail">Proyección: $4,241,300 (87.5% cobranza)</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-month">Mayo 2026</div>
+                        <div class="timeline-amount">$5,125,800</div>
+                        <div class="timeline-detail">238 cuotas vencen | 168 estudiantes</div>
+                        <div class="timeline-detail">Proyección: $4,485,075 (87.5% cobranza)</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-month">Junio 2026</div>
+                        <div class="timeline-amount">$4,950,600</div>
+                        <div class="timeline-detail">225 cuotas vencen | 152 estudiantes</div>
+                        <div class="timeline-detail">Proyección: $4,331,775 (87.5% cobranza)</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-month">Julio 2026</div>
+                        <div class="timeline-amount">$3,842,300</div>
+                        <div class="timeline-detail">189 cuotas vencen | 128 estudiantes</div>
+                        <div class="timeline-detail">Proyección: $3,362,012 (87.5% cobranza)</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-month">Agosto 2026</div>
+                        <div class="timeline-amount">$4,625,100</div>
+                        <div class="timeline-detail">208 cuotas vencen | 142 estudiantes</div>
+                        <div class="timeline-detail">Proyección: $4,046,962 (87.5% cobranza)</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-month">Septiembre 2026</div>
+                        <div class="timeline-amount">$4,454,200</div>
+                        <div class="timeline-detail">192 cuotas vencen | 135 estudiantes</div>
+                        <div class="timeline-detail">Proyección: $3,897,425 (87.5% cobranza)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLA POR PROGRAMA -->
+        <div class="card">
+            <h2 class="card-title">📊 Proyección por Programa/Curso</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Programa/Curso</th>
+                        <th>Cohorte/Edición</th>
+                        <th>Cuotas Pendientes</th>
+                        <th>Monto Total</th>
+                        <th>Ingreso Proyectado</th>
+                        <th>Probabilidad Cobro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Esp. en Costos y Gestión</strong></td>
+                        <td>2024-2025</td>
+                        <td>218</td>
+                        <td>$5,892,000</td>
+                        <td>$5,155,500</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Maestría en Dirección de Negocios</strong></td>
+                        <td>2023-2025</td>
+                        <td>185</td>
+                        <td>$6,248,500</td>
+                        <td>$5,467,437</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Doctorado en Ciencias Económicas</strong></td>
+                        <td>2024-2028</td>
+                        <td>142</td>
+                        <td>$4,825,200</td>
+                        <td>$4,222,050</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Maestría en Agronegocios</strong></td>
+                        <td>2024-2026</td>
+                        <td>268</td>
+                        <td>$5,145,800</td>
+                        <td>$4,502,575</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Diplomado ODS</strong></td>
+                        <td>Edición 2025</td>
+                        <td>298</td>
+                        <td>$3,458,700</td>
+                        <td>$3,026,362</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Otros Programas</strong></td>
+                        <td>Varias</td>
+                        <td>136</td>
+                        <td>$2,275,000</td>
+                        <td>$1,990,625</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot style="background: #f8f6f1; font-weight: 700;">
+                    <tr>
+                        <td colspan="2"><strong>TOTAL</strong></td>
+                        <td><strong>1,247</strong></td>
+                        <td><strong>$27,845,200</strong></td>
+                        <td><strong>$24,364,550</strong></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="actions">
+                <button class="btn btn-export" onclick="exportarExcel()">📥 Exportar a Excel</button>
+                <button class="btn btn-primary" onclick="exportarPDF()">📄 Exportar a PDF</button>
+                <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+        function exportarExcel() {
+            alert('Exportando reporte a Excel...');
+        }
+        
+        function exportarPDF() {
+            alert('Exportando reporte a PDF...');
+        }
+    </script>
+
+<script>
+// ── SHARED: leer filtros desde sessionStorage (guardados por administrador_8_Cashflow.html) ──
+(function() {
+    function fmt(iso) {
+        if (!iso) return '';
+        var p = iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0];
+    }
+    try {
+        var raw = sessionStorage.getItem('sigpo_filtros_cashflow');
+        var f = raw ? JSON.parse(raw) : null;
+        var band = document.getElementById('filter-band');
+        if (!band) return;
+        if (!f) {
+            band.innerHTML = '<span>🔎 Sin filtros activos — mostrando todos los datos</span>';
+            return;
+        }
+        var desde = f.desdeInicio ? 'Inicio' : (f.desde ? fmt(f.desde) : '—');
+        var hasta = f.hasta ? fmt(f.hasta) : 'Sin límite';
+        var rango = f.desdeInicio ? ('Desde el inicio → ' + hasta) : (desde + ' → ' + hasta);
+        var tags = ['📅 ' + rango];
+        if (f.programa) tags.push('🎓 ' + document.getElementById('_prog_label_' + f.programa) ? '' : f.programa);
+        // fallback: usar valor crudo
+        if (f.programa) tags.push('🎓 Programa filtrado');
+        if (f.cohorte) tags.push('📋 ' + (f.cohorte === '' ? 'Todas las cohortes' : 'Cohorte filtrada'));
+        band.innerHTML = '<span>🔎 Filtros aplicados desde Cashflow:</span>' +
+            tags.map(function(t){ return '<span class="ftag">'+t+'</span>'; }).join('');
+
+        // Exponer para que el gráfico específico pueda usarlos
+        window.FILTROS_ACTIVOS = f;
+    } catch(e) {
+        var band = document.getElementById('filter-band');
+        if (band) band.innerHTML = '<span>🔎 Sin filtros activos</span>';
+    }
+})();
+</script>
+
+<script>
+// Inicializar gráfico del reporte
+document.addEventListener('DOMContentLoaded', function() {
+    
+new Chart(document.getElementById('chart-reporte').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+        datasets: [
+            { label: '🟢 Optimista (100%)', data: [3200,4100,5800,3900,3500,4600,2800,5200,6100,2300,1800,1200], borderColor: '#16a34a', borderWidth: 3, fill: false, tension: 0.4 },
+            { label: '🟡 Realista (87%)', data: [2784,3567,5046,3393,3045,4002,2436,4524,5307,2001,1566,1044], borderColor: '#f59e0b', borderWidth: 3, fill: false, tension: 0.4 },
+            { label: '🔴 Estrés (70%)', data: [2240,2870,4060,2730,2450,3220,1960,3640,4270,1610,1260,840], borderColor: '#dc2626', borderWidth: 3, fill: false, tension: 0.4 }
+        ]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'top' }, tooltip:{ callbacks:{ label: c => c.dataset.label+': $'+c.parsed.y.toLocaleString('es-AR')+'K' } } }, scales:{ y:{ beginAtZero:true, ticks:{ callback: v=>'$'+v+'K' } } } }
+});
+
+});
+</script>
+</body>
+</html>

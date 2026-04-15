@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes - Coordinador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1e3a5f;
+            --primary-2: #2d5a87;
+            --accent: #d4af37;
+            --success: #2d7a4f;
+            --danger: #c0392b;
+            --warning: #e67e22;
+            --info: #2563eb;
+            --muted: #6b7280;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; color: #1f2937; }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white;
+            padding: 20px 40px;
+        }
+        .header-wrap {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .breadcrumb { font-size: 14px; margin-bottom: 12px; }
+        .breadcrumb button {
+            color: white; text-decoration: none;
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+        }
+        .breadcrumb button:hover { background: rgba(255,255,255,0.28); }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 26px; margin-bottom: 4px; }
+        .header p  { font-size: 13px; opacity: 0.85; line-height: 1.5; }
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .header-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s;
+        }
+        .header-btn:hover { background: rgba(255,255,255,0.28); }
+
+        .container { max-width: 1300px; margin: 36px auto; padding: 0 40px; }
+
+        .filters-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 18px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .filters-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .field { min-width: 180px; }
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .field select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            background: white;
+            color: #374151;
+        }
+        .field select:focus { outline: none; border-color: var(--primary); }
+        .btn-filter {
+            padding: 10px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .btn-filter:hover { background: var(--primary-2); }
+
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+        .summary-item {
+            background: white; padding: 20px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid var(--accent);
+        }
+        .summary-item.verde { border-color: var(--success); }
+        .summary-item.rojo  { border-color: var(--danger); }
+        .summary-item.naranja { border-color: var(--warning); }
+        .summary-item.azul { border-color: var(--info); }
+        .summary-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .summary-value { font-size: 28px; font-weight: 700; color: var(--primary); line-height: 1.1; }
+        .summary-value.verde  { color: var(--success); }
+        .summary-value.rojo   { color: var(--danger); }
+        .summary-value.azul   { color: var(--info); }
+
+        .report-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .card {
+            background: white; padding: 24px; border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .card-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+        .card-title { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .chart-wrap { position: relative; height: 270px; }
+        .chart-empty {
+            display: none;
+            height: 270px;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #9ca3af;
+            border: 2px dashed #e5e7eb;
+            border-radius: 10px;
+            background: #fafafa;
+            line-height: 1.5;
+            padding: 14px;
+        }
+        .chart-empty.show { display: flex; }
+        .chart-wrap.hide { display: none; }
+
+        .export-btn {
+            width: 100%; padding: 11px; background: var(--primary); color: white;
+            border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+            margin-top: 16px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+            transition: background 0.2s;
+        }
+        .export-btn:hover { background: #2d5a87; }
+
+        .status-bar {
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+        .toast {
+            background:#1e3a5f; color:white; padding:12px 18px; border-radius:10px; font-size:13px; font-weight:600;
+            box-shadow:0 8px 24px rgba(0,0,0,0.2); max-width:320px;
+        }
+        .toast.ok { background: var(--success); }
+        .toast.err { background: var(--danger); }
+
+        @media (max-width: 1100px) {
+            .summary-grid, .report-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 760px) {
+            .header, .container { padding-left: 18px; padding-right: 18px; }
+            .summary-grid, .report-grid { grid-template-columns: 1fr; }
+            .filters-bar { align-items: stretch; }
+            .field { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-wrap">
+        <div>
+            <div class="breadcrumb">
+                <button type="button" onclick="volverDashboard()">← Volver al Dashboard</button>
+            </div>
+            <h1>📊 Reportes y Estadísticas</h1>
+            <p id="headerSubtitle">Programa • Cohortes</p>
+        </div>
+        <div class="header-actions" style="display:flex;gap:10px;align-items:center;">
+            <button class="header-btn" type="button" onclick="exportar('resumen')">📥 Exportar resumen</button>
+            <div class="notif-wrapper" style="position:relative;">
+                <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
+                </button>
+                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                    </div>
+                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                </div>
+            </div>
+            <button class="header-btn" type="button" onclick="cerrarSesion()">🚪 Cerrar sesión</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="filters-bar">
+        <div class="filters-group">
+            <div class="field">
+                <label for="selPrograma">Programa</label>
+                <select id="selPrograma"></select>
+            </div>
+            <div class="field">
+                <label for="selCohorte">Cohorte / Edición</label>
+                <select id="selCohorte"></select>
+            </div>
+            <div class="field">
+                <label for="selAnio">Año</label>
+                <select id="selAnio"></select>
+            </div>
+        </div>
+        <button class="btn-filter" type="button" onclick="recargarConFiltros()">Actualizar reportes</button>
+    </div>
+
+    <div class="status-bar" id="statusBar">Cargando reportes…</div>
+
+    <div class="summary-grid" id="summaryGrid">
+        <div class="summary-item"><div class="summary-label">Total Recaudado</div><div class="summary-value">$0</div></div>
+        <div class="summary-item verde"><div class="summary-label">Estudiantes al Día</div><div class="summary-value verde">0</div></div>
+        <div class="summary-item rojo"><div class="summary-label">En Mora</div><div class="summary-value rojo">0</div></div>
+        <div class="summary-item naranja"><div class="summary-label">Tasa de Pago</div><div class="summary-value">0%</div></div>
+    </div>
+
+    <div class="report-grid">
+        <div class="card">
+            <div class="card-head"><h3 class="card-title">💰 Cashflow Mensual</h3></div>
+            <div class="chart-wrap" id="wrap-cashflow"><canvas id="chart-cashflow"></canvas></div>
+            <div class="chart-empty" id="empty-cashflow">No hay datos suficientes para mostrar el cashflow.</div>
+            <button class="export-btn" onclick="exportar('cashflow')">📥 Exportar Cashflow</button>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h3 class="card-title">📊 Estado de Pagos por Cohorte</h3></div>
+            <div class="chart-wrap" id="wrap-estados"><canvas id="chart-estados"></canvas></div>
+            <div class="chart-empty" id="empty-estados">No hay datos suficientes para mostrar el estado de pagos por cohorte.</div>
+            <button class="export-btn" onclick="exportar('estados')">📥 Exportar Estadísticas</button>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h3 class="card-title">📈 Evolución de Mora</h3></div>
+            <div class="chart-wrap" id="wrap-mora"><canvas id="chart-mora"></canvas></div>
+            <div class="chart-empty" id="empty-mora">No hay datos suficientes para mostrar la evolución de mora.</div>
+            <button class="export-btn" onclick="exportar('mora')">📥 Exportar Histórico</button>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h3 class="card-title">👥 Estudiantes por Estado</h3></div>
+            <div class="chart-wrap" id="wrap-estudiantes"><canvas id="chart-estudiantes"></canvas></div>
+            <div class="chart-empty" id="empty-estudiantes">No hay datos suficientes para mostrar estudiantes por estado.</div>
+            <button class="export-btn" onclick="exportar('estudiantes')">📥 Exportar Listado</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+const QS = new URLSearchParams(location.search);
+const DEFAULT_PROGRAMA_ID = QS.get('programaId') || QS.get('programa_id') || '';
+const DEFAULT_COHORTE_ID = QS.get('cohorteId') || QS.get('cohorte_id') || '';
+const DEFAULT_ANIO = QS.get('anio') || String(new Date().getFullYear());
+
+let reportesData = null;
+let charts = {};
+
+function estaEnAppsScript() {
+    return typeof google !== 'undefined' && google.script && google.script.run;
+}
+
+function gs(fn, ...args) {
+    return new Promise((resolve, reject) => {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn](...args);
+    });
+}
+
+function toast(msg, tipo='') {
+    const c = document.getElementById('toasts');
+    const d = document.createElement('div');
+    d.className = `toast ${tipo}`;
+    d.textContent = msg;
+    c.appendChild(d);
+    setTimeout(() => d.remove(), 3200);
+}
+
+function escapeHtml(v) {
+    return String(v == null ? '' : v)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function formatCurrency(value) {
+    return Number(value || 0).toLocaleString('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        maximumFractionDigits: 0
+    });
+}
+
+function fillSelect(selectId, items, valueKey, textKey, selectedValue, includeAllLabel) {
+    const sel = document.getElementById(selectId);
+    sel.innerHTML = '';
+    if (includeAllLabel) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = includeAllLabel;
+        sel.appendChild(opt);
+    }
+    items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item[valueKey];
+        opt.textContent = item[textKey];
+        if (String(item[valueKey]) === String(selectedValue)) opt.selected = true;
+        sel.appendChild(opt);
+    });
+}
+
+function normalizarData(data) {
+    const programas = Array.isArray(data && data.programas) ? data.programas : [];
+    const cohortes = Array.isArray(data && data.cohortes) ? data.cohortes : [];
+    const anios = Array.isArray(data && data.anios) ? data.anios : [];
+    const resumen = data && data.resumen ? data.resumen : {};
+    const chartsData = data && data.charts ? data.charts : {};
+    const filtros = data && data.filtros ? data.filtros : {};
+
+    return {
+        programas: programas.map(p => ({
+            programaId: p.programaId || p.programa_id || '',
+            nombre: p.nombre || p.nombre_programa || 'Programa'
+        })),
+        cohortes: cohortes.map(c => ({
+            cohorteId: c.cohorteId || c.cohorte_id || '',
+            nombre: c.nombre || c.nombre_cohorte || c.edicion || 'Cohorte'
+        })),
+        anios: anios.map(a => String(a)),
+        filtros: {
+            programaId: filtros.programaId || filtros.programa_id || DEFAULT_PROGRAMA_ID || (programas[0] ? (programas[0].programaId || programas[0].programa_id || '') : ''),
+            cohorteId: filtros.cohorteId || filtros.cohorte_id || DEFAULT_COHORTE_ID || '',
+            anio: String(filtros.anio || DEFAULT_ANIO)
+        },
+        encabezado: {
+            programaNombre: data && data.programaNombre ? data.programaNombre : (programas[0] ? (programas[0].nombre || programas[0].nombre_programa || 'Programa') : 'Programa'),
+            subtitulo: data && data.subtitulo ? data.subtitulo : 'Todas las cohortes'
+        },
+        resumen: {
+            totalRecaudado: Number(resumen.totalRecaudado || resumen.total_recaudado || 0),
+            estudiantesAlDia: Number(resumen.estudiantesAlDia || resumen.estudiantes_al_dia || 0),
+            enMora: Number(resumen.enMora || resumen.en_mora || 0),
+            tasaPago: Number(resumen.tasaPago || resumen.tasa_pago || 0),
+            pagoParcial: Number(resumen.pagoParcial || resumen.pago_parcial || 0)
+        },
+        charts: {
+            cashflow: chartsData.cashflow || { labels: [], ingresos: [], egresos: [] },
+            estadosPorCohorte: chartsData.estadosPorCohorte || chartsData.estados_por_cohorte || { labels: [], alDia: [], enMora: [], pagoParcial: [] },
+            evolucionMora: chartsData.evolucionMora || chartsData.evolucion_mora || { labels: [], estudiantes: [], intereses: [] },
+            estudiantesPorEstado: chartsData.estudiantesPorEstado || chartsData.estudiantes_por_estado || { labels: [], valores: [] }
+        }
+    };
+}
+
+async function cargarVista() {
+    document.getElementById('statusBar').textContent = 'Cargando reportes…';
+    try {
+        const payload = {
+            programaId: document.getElementById('selPrograma')?.value || DEFAULT_PROGRAMA_ID,
+            cohorteId: document.getElementById('selCohorte')?.value || DEFAULT_COHORTE_ID,
+            anio: document.getElementById('selAnio')?.value || DEFAULT_ANIO
+        };
+
+        const raw = estaEnAppsScript()
+            ? await gs('obtenerReportesCoordinador', payload)
+            : obtenerDemoData(payload);
+
+        reportesData = normalizarData(raw);
+        renderFiltros();
+        renderHeader();
+        renderResumen();
+        renderCharts();
+        document.getElementById('statusBar').textContent = 'Reportes actualizados correctamente.';
+    } catch (e) {
+        document.getElementById('statusBar').textContent = 'No se pudieron cargar los reportes.';
+        toast('No se pudieron cargar los reportes', 'err');
+    }
+}
+
+function renderFiltros() {
+    fillSelect('selPrograma', reportesData.programas, 'programaId', 'nombre', reportesData.filtros.programaId, null);
+    fillSelect('selCohorte', reportesData.cohortes, 'cohorteId', 'nombre', reportesData.filtros.cohorteId, 'Todas las cohortes');
+    fillSelect('selAnio', reportesData.anios.map(a => ({ value: a, label: a })), 'value', 'label', reportesData.filtros.anio, null);
+}
+
+function renderHeader() {
+    const cohorteLabel = document.getElementById('selCohorte').value
+        ? (document.getElementById('selCohorte').selectedOptions[0]?.textContent || 'Cohorte')
+        : 'Todas las cohortes';
+    document.getElementById('headerSubtitle').textContent = `${reportesData.encabezado.programaNombre} • ${cohorteLabel} • Año ${reportesData.filtros.anio}`;
+}
+
+function renderResumen() {
+    const r = reportesData.resumen;
+    document.getElementById('summaryGrid').innerHTML = `
+        <div class="summary-item">
+            <div class="summary-label">Total Recaudado ${escapeHtml(reportesData.filtros.anio)}</div>
+            <div class="summary-value">${escapeHtml(formatCurrency(r.totalRecaudado))}</div>
+        </div>
+        <div class="summary-item verde">
+            <div class="summary-label">Estudiantes al Día</div>
+            <div class="summary-value verde">${r.estudiantesAlDia}</div>
+        </div>
+        <div class="summary-item rojo">
+            <div class="summary-label">En Mora</div>
+            <div class="summary-value rojo">${r.enMora}</div>
+        </div>
+        <div class="summary-item naranja">
+            <div class="summary-label">Tasa de Pago</div>
+            <div class="summary-value">${r.tasaPago}%</div>
+        </div>
+    `;
+}
+
+function destroyCharts() {
+    Object.values(charts).forEach(ch => { if (ch) ch.destroy(); });
+    charts = {};
+}
+
+function setEmptyState(key, show) {
+    document.getElementById(`wrap-${key}`).classList.toggle('hide', show);
+    document.getElementById(`empty-${key}`).classList.toggle('show', show);
+}
+
+function renderCharts() {
+    destroyCharts();
+
+    if (typeof Chart === 'undefined') {
+        ['cashflow','estados','mora','estudiantes'].forEach(key => setEmptyState(key, true));
+        document.querySelectorAll('.chart-empty').forEach(el => {
+            el.textContent = 'No se pudo cargar Chart.js en esta instancia.';
+            el.classList.add('show');
+        });
+        return;
+    }
+
+    renderCashflow();
+    renderEstados();
+    renderMora();
+    renderEstudiantes();
+}
+
+function renderCashflow() {
+    const d = reportesData.charts.cashflow;
+    const empty = !d.labels.length;
+    setEmptyState('cashflow', empty);
+    if (empty) return;
+
+    charts.cashflow = new Chart(document.getElementById('chart-cashflow').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: d.labels,
+            datasets: [
+                {
+                    label: 'Ingresos',
+                    data: d.ingresos,
+                    backgroundColor: 'rgba(45,122,79,0.80)',
+                    borderColor: '#2d7a4f',
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                },
+                {
+                    label: 'Egresos',
+                    data: d.egresos,
+                    backgroundColor: 'rgba(192,57,43,0.75)',
+                    borderColor: '#c0392b',
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { callback: v => '$' + Math.round(v/1000) + 'k' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+function renderEstados() {
+    const d = reportesData.charts.estadosPorCohorte;
+    const empty = !d.labels.length;
+    setEmptyState('estados', empty);
+    if (empty) return;
+
+    charts.estados = new Chart(document.getElementById('chart-estados').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: d.labels,
+            datasets: [
+                { label: 'Al día', data: d.alDia, backgroundColor: 'rgba(45,122,79,0.80)', borderColor: '#2d7a4f', borderWidth: 1.5, borderRadius: 5 },
+                { label: 'En mora', data: d.enMora, backgroundColor: 'rgba(192,57,43,0.80)', borderColor: '#c0392b', borderWidth: 1.5, borderRadius: 5 },
+                { label: 'Pago parcial', data: d.pagoParcial, backgroundColor: 'rgba(37,99,235,0.75)', borderColor: '#2563eb', borderWidth: 1.5, borderRadius: 5 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+function renderMora() {
+    const d = reportesData.charts.evolucionMora;
+    const empty = !d.labels.length;
+    setEmptyState('mora', empty);
+    if (empty) return;
+
+    charts.mora = new Chart(document.getElementById('chart-mora').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: d.labels,
+            datasets: [
+                {
+                    label: 'Estudiantes en mora',
+                    data: d.estudiantes,
+                    borderColor: '#c0392b',
+                    backgroundColor: 'rgba(192,57,43,0.10)',
+                    borderWidth: 2.5,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#c0392b',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'Intereses generados ($k)',
+                    data: d.intereses,
+                    borderColor: '#e67e22',
+                    backgroundColor: 'rgba(230,126,34,0.08)',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#e67e22',
+                    fill: true,
+                    tension: 0.3,
+                    yAxisID: 'y2'
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y:  { beginAtZero: true, grid: { color: '#f0f0f0' }, title: { display: true, text: 'Estudiantes' } },
+                y2: { beginAtZero: true, position: 'right', grid: { display: false }, title: { display: true, text: 'Intereses ($k)' }, ticks: { callback: v => '$' + v + 'k' } },
+                x:  { grid: { display: false } }
+            }
+        }
+    });
+}
+
+function renderEstudiantes() {
+    const d = reportesData.charts.estudiantesPorEstado;
+    const empty = !d.labels.length;
+    setEmptyState('estudiantes', empty);
+    if (empty) return;
+
+    charts.estudiantes = new Chart(document.getElementById('chart-estudiantes').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: d.labels,
+            datasets: [{
+                data: d.valores,
+                backgroundColor: ['#2d7a4f','#c0392b','#2563eb','#9ca3af','#d4af37'],
+                borderColor: '#fff',
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { font: { size: 13 }, boxWidth: 14, padding: 16 } },
+                tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed} estudiantes` } }
+            }
+        }
+    });
+}
+
+function recargarConFiltros() {
+    cargarVista();
+}
+
+async function exportar(tipo) {
+    const payload = {
+        tipo,
+        programaId: document.getElementById('selPrograma').value,
+        cohorteId: document.getElementById('selCohorte').value,
+        anio: document.getElementById('selAnio').value
+    };
+
+    try {
+        if (estaEnAppsScript()) {
+            const res = await gs('exportarReporteCoordinador', payload);
+            if (res && res.url) {
+                window.open(res.url, '_blank');
+                toast(`Reporte "${tipo}" exportado correctamente`, 'ok');
+                return;
+            }
+        }
+        toast(`Vista previa local: exportación "${tipo}" lista para conectar con Apps Script.`, 'ok');
+    } catch (e) {
+        toast(`No se pudo exportar el reporte "${tipo}"`, 'err');
+    }
+}
+
+function volverDashboard() {
+    if (estaEnAppsScript()) {
+        window.top.location.href = '?page=coordinador_1_dashboard';
+        window.location.href = 'coordinador_1_dashboard.html';
+    }
+}
+
+
+function obtenerDemoData(payload) {
+    const programaId = payload.programaId || '1';
+    const cohorteId = payload.cohorteId || '';
+    const anio = String(payload.anio || '2026');
+
+    return {
+        programaNombre: 'Especialización en Costos y Gestión Empresarial',
+        subtitulo: cohorteId ? 'Cohorte filtrada' : 'Todas las cohortes',
+        programas: [
+            { programaId: '1', nombre: 'Especialización en Costos y Gestión Empresarial' }
+        ],
+        cohortes: [
+            { cohorteId: '2025', nombre: 'Cohorte 2025-2026' },
+            { cohorteId: '2024', nombre: 'Cohorte 2024-2025' },
+            { cohorteId: '2023', nombre: 'Cohorte 2023-2024' },
+            { cohorteId: '2022', nombre: 'Cohorte 2022-2023' }
+        ],
+        anios: ['2024','2025','2026'],
+        filtros: { programaId, cohorteId, anio },
+        resumen: {
+            totalRecaudado: 8500000,
+            estudiantesAlDia: 28,
+            enMora: 10,
+            tasaPago: 76,
+            pagoParcial: 4
+        },
+        charts: {
+            cashflow: {
+                labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+                ingresos: [850000,920000,780000,1100000,950000,870000,1020000,890000,760000,0,0,0],
+                egresos:  [620000,580000,700000,650000,720000,590000,680000,640000,550000,0,0,0]
+            },
+            estadosPorCohorte: {
+                labels: ['Cohorte 2025-26', 'Cohorte 2024-25', 'Cohorte 2023-24', 'Cohorte 2022-23'],
+                alDia: [8,10,8,2],
+                enMora: [5,2,2,1],
+                pagoParcial: [2,0,0,0]
+            },
+            evolucionMora: {
+                labels: ['Abr','May','Jun','Jul','Ago','Sep'],
+                estudiantes: [6,8,9,11,10,10],
+                intereses: [180,240,310,390,420,450]
+            },
+            estudiantesPorEstado: {
+                labels: ['Al día', 'En mora', 'Pago parcial', 'Pendiente'],
+                valores: [28,10,4,0]
+            }
+        }
+    };
+}
+
+document.addEventListener('DOMContentLoaded', cargarVista);
+</script>
+
+</body>
+</html>

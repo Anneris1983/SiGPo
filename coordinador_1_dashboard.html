@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Coordinador - SiGPo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary:#1e3a5f; --primary-2:#2d5a87; --accent:#d4af37; --bg:#f8f6f1; --success:#2d7a4f; --warning:#e67e22; --danger:#c0392b; --info:#4338ca; --muted:#6b7280; --line:#e5e7eb; }
+        body { font-family:'DM Sans',sans-serif; background:var(--bg); color:#2c2c2c; }
+        .header { background:linear-gradient(135deg,#1e3a5f 0%,#2d5a87 100%); color:white; padding:20px 40px; box-shadow:0 4px 20px rgba(0,0,0,0.1); position:sticky; top:0; z-index:100; }
+        .header-content { max-width:1400px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+        .header-left h1 { font-family:'Crimson Pro',serif; font-size:24px; margin-bottom:4px; }
+        .header-left p { opacity:0.9; font-size:14px; }
+        .header-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        .icon-btn,.logout-btn { border:none; cursor:pointer; border-radius:8px; transition:all 0.25s ease; font-family:'DM Sans',sans-serif; }
+        .icon-btn { background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:white; padding:10px 14px; font-size:18px; position:relative; }
+        .icon-btn:hover,.logout-btn:hover { background:rgba(255,255,255,0.3); }
+        .logout-btn { background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:white; padding:10px 20px; font-size:14px; }
+        .notif-badge { position:absolute; top:-4px; right:-4px; background:#ef4444; color:white; border-radius:50%; min-width:18px; height:18px; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+        .notif-panel { display:none; position:absolute; right:0; top:48px; width:320px; background:white; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.15); z-index:500; overflow:hidden; color:#2c2c2c; border:1px solid #e5e7eb; }
+        .notif-panel.open { display:block; }
+        .notif-head { padding:14px 16px; border-bottom:1px solid #f0f0f0; font-weight:700; color:#1e3a5f; font-size:14px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
+        .notif-head button { background:none; border:none; color:#d4af37; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .notif-item { padding:12px 16px; border-bottom:1px solid #f5f5f5; font-size:13px; cursor:pointer; background:white; }
+        .notif-item.unread { background:#fff9ec; }
+        .notif-item:last-child { border-bottom:none; }
+        .notif-item strong { display:block; color:#1e3a5f; margin-bottom:2px; }
+        .notif-item small { color:#888; font-size:12px; margin-top:2px; display:block; }
+        .container { max-width:1400px; margin:40px auto; padding:0 40px; }
+        .program-header { background:white; padding:32px; border-radius:12px; margin-bottom:32px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+        .program-title { font-family:'Crimson Pro',serif; font-size:32px; color:var(--primary); margin-bottom:8px; line-height:1.15; }
+        .program-subtitle { color:#666; font-size:16px; line-height:1.5; }
+        .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; margin-bottom:32px; }
+        .stat-card { background:white; padding:24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.06); border-left:4px solid var(--accent); }
+        .stat-card.success { border-left-color:var(--success); } .stat-card.warning { border-left-color:var(--warning); } .stat-card.danger { border-left-color:var(--danger); } .stat-card.info { border-left-color:var(--info); }
+        .stat-label { font-size:13px; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
+        .stat-value { font-size:32px; font-weight:700; color:var(--primary); line-height:1.1; }
+        .stat-value.success { color:var(--success); } .stat-value.warning { color:var(--warning); } .stat-value.danger { color:var(--danger); } .stat-value.info { color:var(--info); }
+        .content-grid { display:grid; grid-template-columns:2fr 1fr; gap:24px; }
+        .card { background:white; border-radius:12px; padding:24px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+        .card-title { font-size:20px; font-weight:700; color:var(--primary); margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid #e0e0e0; }
+        .cohortes-list { display:flex; flex-direction:column; gap:16px; }
+        .cohorte-item { padding:16px; background:#f8f6f1; border-radius:8px; cursor:pointer; transition:all 0.25s ease; border:2px solid transparent; }
+        .cohorte-item:hover { border-color:var(--accent); background:#fff9e6; transform:translateY(-1px); }
+        .cohorte-name { font-weight:700; color:var(--primary); margin-bottom:8px; line-height:1.35; }
+        .cohorte-stats { display:flex; gap:16px; font-size:13px; color:#666; flex-wrap:wrap; line-height:1.45; }
+        .cohorte-sub { margin-top:8px; font-size:12px; color:var(--muted); }
+        .quick-actions { display:flex; flex-direction:column; gap:12px; }
+        .action-btn { padding:16px; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; transition:all 0.25s ease; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:12px; text-align:left; }
+        .action-btn.primary { background:var(--primary); color:white; }
+        .action-btn.primary:hover { background:#2d5a87; transform:translateY(-2px); }
+        .action-btn.secondary { background:#e0e0e0; color:#2c2c2c; }
+        .action-btn.secondary:hover { background:#d0d0d0; }
+        .action-icon { font-size:24px; } .action-text { flex:1; }
+        .action-label { font-size:12px; opacity:0.8; display:block; margin-top:2px; }
+        .recent-activity { margin-top:20px; }
+        .activity-item { padding:12px 0; border-bottom:1px solid #e0e0e0; font-size:14px; line-height:1.5; }
+        .activity-item:last-child { border-bottom:none; }
+        .activity-item strong { color:var(--primary); }
+        .activity-time { color:#888; font-size:12px; margin-top:3px; }
+        .tabs-bar { display:flex; gap:8px; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid #e0e0e0; flex-wrap:wrap; }
+        .tab-btn { padding:8px 16px; border:2px solid #e0e0e0; border-radius:8px; background:white; font-size:14px; font-weight:600; color:#666; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.25s ease; }
+        .tab-btn.active { border-color:var(--primary); background:var(--primary); color:white; }
+        .tab-btn.gold { border-color:#d4af37; color:#d4af37; } .tab-btn.gold:hover { background:#fff9e6; }
+        .empty-state { text-align:center; padding:36px 18px; color:#9ca3af; border:2px dashed #e7dfd2; border-radius:12px; background:#fffdfa; }
+        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px; }
+        .modal-overlay.open { display:flex; }
+        .modal-box { background:white; border-radius:16px; padding:32px; max-width:520px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,0.2); max-height:92vh; overflow-y:auto; }
+        .modal-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px; }
+        .modal-top h2 { font-family:'Crimson Pro',serif; font-size:22px; color:#1e3a5f; }
+        .modal-top button { background:none; border:none; font-size:24px; cursor:pointer; color:#999; line-height:1; }
+        .modal-desc { font-size:13px; color:#888; margin-bottom:20px; line-height:1.5; }
+        .field { margin-bottom:16px; }
+        .field label { font-size:13px; font-weight:600; color:#374151; display:block; margin-bottom:6px; }
+        .field input,.field textarea { width:100%; padding:10px 14px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:'DM Sans',sans-serif; box-sizing:border-box; }
+        .field textarea { resize:vertical; min-height:88px; line-height:1.5; }
+        .drop-zone { border:2px dashed #d1d5db; border-radius:10px; padding:20px; text-align:center; cursor:pointer; background:#fafafa; transition:all 0.2s; }
+        .drop-zone:hover,.drop-zone.dragover { border-color:#1e3a5f; background:#eff6ff; }
+        .file-preview { display:none; margin-top:8px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; align-items:center; gap:10px; }
+        .file-preview.open { display:flex; }
+        .file-preview button { background:none; border:none; cursor:pointer; color:#aaa; font-size:18px; }
+        .excel-structure { margin-top:10px; background:#f8f6f1; border-radius:8px; padding:12px 14px; font-size:12px; color:#555; line-height:1.8; }
+        .excel-chip { display:inline-block; background:white; border:1px solid #e0e0e0; border-radius:4px; padding:2px 8px; margin:2px; }
+        .alert-box { display:none; border-radius:8px; padding:11px 14px; font-size:13px; margin-bottom:16px; line-height:1.45; }
+        .alert-box.error { background:#fef9ec; border:1px solid #fde68a; color:#92400e; }
+        .alert-box.success { background:#d1fae5; border:1px solid #6ee7b7; color:#065f46; font-weight:600; }
+        .modal-actions { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+        .btn-modal { padding:10px 22px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; border:none; }
+        .btn-cancel { border:2px solid #d1d5db; background:white; color:#374151; } .btn-send { background:#1e3a5f; color:white; }
+        .loading-block { text-align:center; padding:28px 16px; color:#9ca3af; }
+        @media (max-width:1100px) { .stats-grid { grid-template-columns:repeat(2,1fr); } .content-grid { grid-template-columns:1fr; } }
+        @media (max-width:760px) { .header,.container { padding-left:18px; padding-right:18px; } .stats-grid { grid-template-columns:1fr; } .header-content { align-items:flex-start; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>Dashboard Coordinador</h1>
+                <p id="headerSub">Coordinador • Programa</p>
+            </div>
+            <div class="header-actions">
+                <div style="position:relative;display:inline-block;" id="notifWrapper">
+                    <button class="icon-btn" type="button" onclick="toggleNotif()" title="Notificaciones">🔔<span id="notif-badge" class="notif-badge">0</span></button>
+                    <div id="notif-panel" class="notif-panel">
+                        <div class="notif-head"><span>🔔 Notificaciones</span><button type="button" onclick="marcarTodasLeidas()">Marcar todas como leídas</button></div>
+                        <div id="notif-list"><div class="loading-block">Cargando notificaciones…</div></div>
+                    </div>
+                </div>
+                <button class="logout-btn" type="button" onclick="cerrarSesion()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="program-header">
+            <h1 class="program-title" id="programTitle">Programa/Curso</h1>
+            <p class="program-subtitle" id="programSubtitle">Cohortes activas • estudiantes</p>
+        </div>
+
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <div class="content-grid">
+            <div class="card">
+                <div class="tabs-bar">
+                    <button id="tab-programas" class="tab-btn" type="button" onclick="mostrarTab('programas')">🎓 Mis Programas/Cursos</button>
+                    <button id="tab-cohortes" class="tab-btn active" type="button" onclick="mostrarTab('cohortes')">📚 Mis Cohortes</button>
+                    <button class="tab-btn gold" type="button" onclick="irAGastos()">💸 Cargar Gastos</button>
+                </div>
+
+                <div id="panel-programas" style="display:none;"><div class="cohortes-list" id="programasList"></div></div>
+                <div id="panel-cohortes"><div class="cohortes-list" id="cohortesList"></div></div>
+
+                <div class="recent-activity">
+                    <h3 class="card-title">📋 Actividad Reciente</h3>
+                    <div id="activityList"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">⚡ Acciones Rápidas</h2>
+                <div class="quick-actions">
+                    <button class="action-btn primary" type="button" onclick="abrirModalSolicitud()">
+                        <span class="action-icon">🎓</span>
+                        <span class="action-text">Solicitar Programa/Curso<span class="action-label">Proponer un nuevo programa o edición</span></span>
+                    </button>
+                    <button class="action-btn secondary" type="button" onclick="irAReportes()">
+                        <span class="action-icon">📊</span>
+                        <span class="action-text">Ver Reportes<span class="action-label">Cashflow y estadísticas</span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-solicitud" class="modal-overlay" onclick="if(event.target===this) cerrarModalSolicitud()">
+        <div class="modal-box">
+            <div class="modal-top"><h2>🎓 Solicitar Programa/Curso</h2><button type="button" onclick="cerrarModalSolicitud()">×</button></div>
+            <p class="modal-desc">Esta solicitud se enviará al administrador del sistema junto con el archivo Excel del listado de estudiantes.</p>
+            <div class="field"><label>Programa/Curso <span style="color:#ef4444;">*</span></label><input id="sol-programa" type="text" placeholder="Ej: Especialización en Costos y Gestión Empresarial"></div>
+            <div class="field"><label>Cohorte/Edición <span style="color:#ef4444;">*</span></label><input id="sol-cohorte" type="text" placeholder="Ej: Cohorte 2026-2027 / 8ª Edición 2026"></div>
+            <div class="field"><label>Cantidad de cuotas <span style="color:#ef4444;">*</span></label><input id="sol-cuotas" type="number" min="1" max="60" placeholder="Ej: 12"></div>
+            <div class="field"><label>Mes de la primera cuota/inscripción <span style="color:#ef4444;">*</span></label><input id="sol-mes" type="text" placeholder="Ej: Marzo 2026 / 01/03/2026"></div>
+            <div class="field"><label>💬 Comentarios</label><textarea id="sol-comentarios" placeholder="Información adicional, observaciones o aclaraciones para el administrador..."></textarea></div>
+            <div class="field">
+                <label>📎 Listado de estudiantes (Excel) <span style="color:#ef4444;">*</span></label>
+                <div id="sol-drop" class="drop-zone" onclick="document.getElementById('sol-archivo').click()" ondragover="onDragSolicitud(event)" ondragleave="offDragSolicitud(event)" ondrop="onDropSolicitud(event)">
+                    <div style="font-size:28px;margin-bottom:6px;">📊</div>
+                    <div style="font-size:13px;color:#666;">Arrastrá o <span style="color:#1e3a5f;font-weight:600;">hacé clic</span> para seleccionar el archivo</div>
+                    <div style="font-size:11px;color:#aaa;margin-top:4px;">Solo .xlsx o .xls</div>
+                </div>
+                <input id="sol-archivo" type="file" accept=".xlsx,.xls" style="display:none;" onchange="mostrarArchivo(this)">
+                <div id="sol-archivo-preview" class="file-preview"><span style="font-size:18px;">📄</span><span id="sol-archivo-nombre" style="font-size:13px;color:#065f46;font-weight:600;flex:1;"></span><button type="button" onclick="quitarArchivo()">×</button></div>
+                <div class="excel-structure"><strong style="display:block;margin-bottom:4px;color:#1e3a5f;">📋 Estructura requerida del Excel:</strong><span class="excel-chip">A: Apellido</span><span class="excel-chip">B: Nombre</span><span class="excel-chip">C: DNI</span><span class="excel-chip">D: Correo Electrónico</span></div>
+            </div>
+            <div id="sol-alert" class="alert-box error"></div>
+            <div id="sol-success" class="alert-box success">✅ Solicitud enviada correctamente al administrador del sistema.</div>
+            <div class="modal-actions"><button type="button" class="btn-modal btn-cancel" onclick="cerrarModalSolicitud()">Cancelar</button><button type="button" class="btn-modal btn-send" onclick="enviarSolicitud()">📧 Enviar Solicitud</button></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+        let dashboardData = null;
+        let notificaciones = [];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('click', cerrarNotifSiCorresponde);
+            cargarVista();
+            cargarNotificaciones();
+        });
+
+        function cargarVista() {
+            if (estaEnAppsScript()) {
+                google.script.run.withSuccessHandler(function (respuesta) {
+                    dashboardData = normalizarDashboard(respuesta);
+                    renderDashboard();
+                }).withFailureHandler(function () {
+                    dashboardData = normalizarDashboard(obtenerDemoDashboard());
+                    renderDashboard();
+                }).obtenerDashboardCoordinador();
+                dashboardData = normalizarDashboard(obtenerDemoDashboard());
+                renderDashboard();
+            }
+        }
+
+        function normalizarDashboard(data) {
+            const coordinador = data && data.coordinador ? data.coordinador : {};
+            const programaActual = data && data.programaActual ? data.programaActual : {};
+            const resumen = data && data.resumen ? data.resumen : {};
+            const programas = Array.isArray(data && data.programas) ? data.programas : [];
+            const cohortes = Array.isArray(data && data.cohortes) ? data.cohortes : [];
+            const actividad = Array.isArray(data && data.actividadReciente) ? data.actividadReciente : [];
+            return {
+                coordinador: { nombreCompleto: coordinador.nombreCompleto || coordinador.nombre_completo || coordinador.nombre || 'Coordinador/a' },
+                programaActual: {
+                    programaId: programaActual.programaId || programaActual.programa_id || '',
+                    nombre: programaActual.nombre || programaActual.nombre_programa || 'Programa/Curso',
+                    cohortesActivas: Number(programaActual.cohortesActivas || programaActual.cohortes_activas || 0),
+                    estudiantesTotales: Number(programaActual.estudiantesTotales || programaActual.estudiantes_totales || 0)
+                },
+                resumen: {
+                    totalEstudiantes: Number(resumen.totalEstudiantes || resumen.total_estudiantes || 0),
+                    alDia: Number(resumen.alDia || resumen.al_dia || 0),
+                    enMora: Number(resumen.enMora || resumen.en_mora || 0),
+                    recaudadoTexto: resumen.recaudadoTexto || resumen.recaudado_texto || '$0'
+                },
+                programas: programas.map(function (p) { return { programaId:p.programaId || p.programa_id || '', nombre:p.nombre || p.nombre_programa || 'Programa/Curso', tipo:p.tipo || p.nivel || '', estudiantes:Number(p.estudiantes || p.total_estudiantes || 0), cohortes:Number(p.cohortes || p.total_cohortes || 0), estado:p.estado || 'Activo', destino:p.destino || 'coordinador_3_Programas_de_posgrado.html' }; }),
+                cohortes: cohortes.map(function (c) { return { cohorteId:c.cohorteId || c.cohorte_id || '', nombre:c.nombre || c.nombre_cohorte || c.edicion || 'Cohorte', estado:c.estado || '', estudiantes:Number(c.estudiantes || c.total_estudiantes || 0), alDia:Number(c.alDia || c.al_dia || 0), mora:Number(c.mora || c.en_mora || 0), recaudadoTexto:c.recaudadoTexto || c.recaudado_texto || '$0', detalle:c.detalle || '', destino:c.destino || 'coordinador_3_cohorte.html' }; }),
+                actividadReciente: actividad.map(function (a) { return { titulo:a.titulo || '', descripcion:a.descripcion || '', tiempo:a.tiempo || '' }; })
+            };
+        }
+
+        function renderDashboard() {
+            renderHeader();
+            renderProgramaActual();
+            renderStats();
+            renderProgramas();
+            renderCohortes();
+            renderActividad();
+            mostrarTab('cohortes');
+        }
+
+        function renderHeader() { document.getElementById('headerSub').textContent = (dashboardData.coordinador.nombreCompleto || 'Coordinador/a') + ' • ' + (dashboardData.programaActual.nombre || 'Programa/Curso'); }
+        function renderProgramaActual() {
+            document.getElementById('programTitle').textContent = '💼 ' + (dashboardData.programaActual.nombre || 'Programa/Curso');
+            document.getElementById('programSubtitle').textContent = dashboardData.programaActual.cohortesActivas + ' cohortes activas • ' + dashboardData.programaActual.estudiantesTotales + ' estudiantes totales';
+        }
+        function renderStats() {
+            const r = dashboardData.resumen;
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card"><div class="stat-label">Total Estudiantes</div><div class="stat-value">${r.totalEstudiantes}</div></div>
+                <div class="stat-card success"><div class="stat-label">Al día</div><div class="stat-value success">${r.alDia}</div></div>
+                <div class="stat-card danger"><div class="stat-label">En mora</div><div class="stat-value danger">${r.enMora}</div></div>
+                <div class="stat-card info"><div class="stat-label">Recaudado</div><div class="stat-value info">${escapeHtml(r.recaudadoTexto)}</div></div>`;
+        }
+        function renderProgramas() {
+            const cont = document.getElementById('programasList');
+            if (!dashboardData.programas.length) { cont.innerHTML = '<div class="empty-state">No hay programas o cursos asignados.</div>'; return; }
+            cont.innerHTML = dashboardData.programas.map(function (p) { return `<div class="cohorte-item" onclick="irADestino('${escapeJs(p.destino)}')"><div class="cohorte-name">💼 ${escapeHtml(p.nombre)}</div><div class="cohorte-stats"><span>📋 ${escapeHtml(p.tipo || 'Programa')}</span><span>👥 ${p.estudiantes} estudiantes</span><span>📅 ${p.cohortes} cohortes</span><span style="color:#2d7a4f;">✅ ${escapeHtml(p.estado)}</span></div></div>`; }).join('');
+        }
+        function renderCohortes() {
+            const cont = document.getElementById('cohortesList');
+            if (!dashboardData.cohortes.length) { cont.innerHTML = '<div class="empty-state">No hay cohortes o ediciones para mostrar.</div>'; return; }
+            cont.innerHTML = dashboardData.cohortes.map(function (c) { return `<div class="cohorte-item" onclick="irADestino('${escapeJs(c.destino)}')"><div class="cohorte-name">${escapeHtml(c.nombre)}${c.estado ? ' • ' + escapeHtml(c.estado.toUpperCase()) : ''}</div><div class="cohorte-stats"><span>👥 ${c.estudiantes} estudiantes</span><span>✓ ${c.alDia} al día</span><span>⚠️ ${c.mora} en mora</span><span>💰 ${escapeHtml(c.recaudadoTexto)}</span></div>${c.detalle ? `<div class="cohorte-sub">${escapeHtml(c.detalle)}</div>` : ''}</div>`; }).join('');
+        }
+        function renderActividad() {
+            const cont = document.getElementById('activityList');
+            if (!dashboardData.actividadReciente.length) { cont.innerHTML = '<div class="empty-state">No hay actividad reciente.</div>'; return; }
+            cont.innerHTML = dashboardData.actividadReciente.map(function (a) { return `<div class="activity-item"><strong>${escapeHtml(a.titulo)}</strong>${a.descripcion ? ' - ' + escapeHtml(a.descripcion) : ''}<div class="activity-time">${escapeHtml(a.tiempo)}</div></div>`; }).join('');
+        }
+        function mostrarTab(tab) {
+            const panelP = document.getElementById('panel-programas'); const panelC = document.getElementById('panel-cohortes'); const tabP = document.getElementById('tab-programas'); const tabC = document.getElementById('tab-cohortes');
+            if (tab === 'programas') { panelP.style.display = 'block'; panelC.style.display = 'none'; tabP.classList.add('active'); tabC.classList.remove('active'); }
+            else { panelP.style.display = 'none'; panelC.style.display = 'block'; tabP.classList.remove('active'); tabC.classList.add('active'); }
+        }
+        function irAGastos() { irADestino('coordinador_5_Gestion_gastos.html'); }
+        function irAReportes() { irADestino('coordinador_4_reportes.html'); }
+        function irADestino(destino) { if (!destino) return; if (estaEnAppsScript()) window.top.location.href = '?page=' + destino.replace('.html', '').split('?')[0]; else window.location.href = destino; }
+        function abrirModalSolicitud() { document.getElementById('modal-solicitud').classList.add('open'); document.getElementById('sol-alert').style.display = 'none'; document.getElementById('sol-success').style.display = 'none'; document.getElementById('sol-programa').value = ''; document.getElementById('sol-cohorte').value = ''; document.getElementById('sol-cuotas').value = ''; document.getElementById('sol-mes').value = ''; document.getElementById('sol-comentarios').value = ''; quitarArchivo(); }
+        function cerrarModalSolicitud() { document.getElementById('modal-solicitud').classList.remove('open'); }
+        function mostrarArchivo(input) { const archivo = input.files && input.files[0]; if (!archivo) return; document.getElementById('sol-archivo-nombre').textContent = archivo.name; document.getElementById('sol-archivo-preview').classList.add('open'); }
+        function quitarArchivo() { document.getElementById('sol-archivo').value = ''; document.getElementById('sol-archivo-preview').classList.remove('open'); document.getElementById('sol-archivo-nombre').textContent = ''; }
+        function onDragSolicitud(e) { e.preventDefault(); document.getElementById('sol-drop').classList.add('dragover'); }
+        function offDragSolicitud(e) { e.preventDefault(); document.getElementById('sol-drop').classList.remove('dragover'); }
+        function onDropSolicitud(e) { e.preventDefault(); document.getElementById('sol-drop').classList.remove('dragover'); const archivo = e.dataTransfer.files && e.dataTransfer.files[0]; if (!archivo) return; const input = document.getElementById('sol-archivo'); const transfer = new DataTransfer(); transfer.items.add(archivo); input.files = transfer.files; mostrarArchivo(input); }
+        async function enviarSolicitud() {
+            const programa = document.getElementById('sol-programa').value.trim(); const cohorte = document.getElementById('sol-cohorte').value.trim(); const cuotas = document.getElementById('sol-cuotas').value.trim(); const mes = document.getElementById('sol-mes').value.trim(); const comentarios = document.getElementById('sol-comentarios').value.trim(); const archivo = document.getElementById('sol-archivo').files[0]; const alerta = document.getElementById('sol-alert'); const success = document.getElementById('sol-success');
+            if (!programa || !cohorte || !cuotas || !mes || !archivo) { alerta.textContent = '⚠️ Completá todos los campos obligatorios e incluí el archivo Excel con el listado de estudiantes.'; alerta.style.display = 'block'; success.style.display = 'none'; return; }
+            const okExt = archivo.name.toLowerCase().endsWith('.xlsx') || archivo.name.toLowerCase().endsWith('.xls');
+            if (!okExt) { alerta.textContent = '⚠️ El archivo debe ser Excel (.xlsx o .xls).'; alerta.style.display = 'block'; success.style.display = 'none'; return; }
+            alerta.style.display = 'none';
+            try {
+                const payload = { programa:programa, cohorte:cohorte, cuotas:Number(cuotas), mesPrimeraCuota:mes, comentarios:comentarios, archivo: await leerArchivoBase64(archivo) };
+                if (estaEnAppsScript()) {
+                    google.script.run.withSuccessHandler(function () { success.style.display = 'block'; setTimeout(function () { cerrarModalSolicitud(); }, 2200); }).withFailureHandler(function () { alerta.textContent = '⚠️ No se pudo enviar la solicitud al administrador.'; alerta.style.display = 'block'; success.style.display = 'none'; }).enviarSolicitudProgramaCurso(payload);
+                } else { success.style.display = 'block'; setTimeout(function () { cerrarModalSolicitud(); }, 2200); }
+            } catch (e) { alerta.textContent = '⚠️ No se pudo leer el archivo Excel.'; alerta.style.display = 'block'; success.style.display = 'none'; }
+        }
+        function cargarNotificaciones() {
+            if (estaEnAppsScript()) google.script.run.withSuccessHandler(renderNotificaciones).withFailureHandler(function () { renderNotificaciones([]); }).obtenerNotificacionesCoordinador();
+            else renderNotificaciones([{ id:'n1', titulo:'María González', mensaje:'Cuota 5 en mora', tiempo:'Hace 2 días', leida:false },{ id:'n2', titulo:'Juan Pérez', mensaje:'Cuota 7 vence mañana', tiempo:'Hace 1 día', leida:false },{ id:'n3', titulo:'Ana Ruiz', mensaje:'Solicitud de readmisión', tiempo:'Hace 5 días', leida:true }]);
+        }
+        function renderNotificaciones(datos) {
+            notificaciones = Array.isArray(datos) ? datos : [];
+            const badge = document.getElementById('notif-badge'); const sinLeer = notificaciones.filter(function (n) { return !n.leida; }).length; badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+            const lista = document.getElementById('notif-list');
+            if (!notificaciones.length) { lista.innerHTML = '<div class="loading-block">No hay notificaciones.</div>'; return; }
+            lista.innerHTML = notificaciones.map(function (n, i) { return `<div class="notif-item ${n.leida ? '' : 'unread'}" onclick="leerNotif(${i})"><strong>${escapeHtml(n.titulo || 'Notificación')}</strong><div>${escapeHtml(n.mensaje || '')}</div><small>${escapeHtml(n.tiempo || '')}</small></div>`; }).join('');
+        }
+        function toggleNotif() { document.getElementById('notif-panel').classList.toggle('open'); }
+        function cerrarNotifSiCorresponde(e) { const wrapper = document.getElementById('notifWrapper'); if (!wrapper || wrapper.contains(e.target)) return; document.getElementById('notif-panel').classList.remove('open'); }
+        function leerNotif(index) { if (!notificaciones[index]) return; notificaciones[index].leida = true; renderNotificaciones(notificaciones); }
+        function marcarTodasLeidas() { notificaciones = notificaciones.map(function (n) { n.leida = true; return n; }); renderNotificaciones(notificaciones); if (estaEnAppsScript()) google.script.run.withFailureHandler(function () {}).marcarNotificacionesCoordinadorLeidas(); }
+                async function leerArchivoBase64(archivo) { return new Promise(function (resolve, reject) { const reader = new FileReader(); reader.onload = function (e) { const raw = String(e.target.result || ''); const base64 = raw.includes(',') ? raw.split(',')[1] : raw; resolve({ name:archivo.name, mimeType:archivo.type || 'application/vnd.ms-excel', size:archivo.size, base64:base64 }); }; reader.onerror = reject; reader.readAsDataURL(archivo); }); }
+        function estaEnAppsScript() { return typeof google !== 'undefined' && google.script && google.script.run; }
+        function escapeHtml(valor) { return String(valor == null ? '' : valor).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'", '&#39;'); }
+        function escapeJs(valor) { return String(valor == null ? '' : valor).replaceAll('\\','\\\\').replaceAll("'", "\\'"); }
+        function obtenerDemoDashboard() {
+            return {
+                coordinador:{ nombreCompleto:'Dr. Carlos Méndez' },
+                programaActual:{ programaId:1, nombre:'Especialización en Costos y Gestión Empresarial', cohortesActivas:5, estudiantesTotales:42 },
+                resumen:{ totalEstudiantes:42, alDia:28, enMora:10, recaudadoTexto:'$8.5M' },
+                programas:[{ programaId:1, nombre:'Especialización en Costos y Gestión Empresarial', tipo:'Especialización', estudiantes:42, cohortes:5, estado:'Activo', destino:'coordinador_3_Programas_de_posgrado.html' }],
+                cohortes:[{ cohorteId:1, nombre:'Cohorte 2025-2026', estado:'Activa', estudiantes:15, alDia:8, mora:5, recaudadoTexto:'$3.2M' },{ cohorteId:2, nombre:'Cohorte 2024-2025', estado:'Activa', estudiantes:12, alDia:10, mora:2, recaudadoTexto:'$2.8M' },{ cohorteId:3, nombre:'Cohorte 2023-2024', estado:'Cerrada', estudiantes:8, alDia:8, mora:0, recaudadoTexto:'$1.9M' }],
+                actividadReciente:[{ titulo:'María González', descripcion:'Cuota 5 en mora', tiempo:'Hace 2 días' },{ titulo:'Juan Pérez', descripcion:'Abonó cuota 7', tiempo:'Hace 3 días' },{ titulo:'Ana Ruiz', descripcion:'Solicitud de readmisión', tiempo:'Hace 5 días' }]
+            };
+        }
+    </script>
+</body>
+</html>

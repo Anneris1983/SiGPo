@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Egresos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #1e3a5f; --accent: #d4af37; --danger: #dc2626; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+        
+        .header { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 20px 40px; }
+        .breadcrumb { font-size: 14px; margin-bottom: 12px; }
+        .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 28px; margin-bottom: 8px; }
+        
+        .container { max-width: 1400px; margin: 40px auto; padding: 0 40px; }
+        
+        .filters-applied { background: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid var(--accent); }
+        .filters-applied h3 { color: var(--primary); margin-bottom: 12px; font-size: 16px; }
+        .filter-tag { display: inline-block; background: #f0f0f0; padding: 6px 12px; border-radius: 6px; margin-right: 8px; font-size: 14px; }
+        
+        .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        .summary-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .summary-label { font-size: 13px; color: #666; margin-bottom: 8px; }
+        .summary-value { font-size: 28px; font-weight: 700; color: var(--primary); }
+        .summary-change { font-size: 12px; margin-top: 4px; }
+        .change-up { color: #dc2626; }
+        .change-down { color: #16a34a; }
+        
+        .card { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .card-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
+        
+        .chart-container { height: 300px; background: #f8f6f1; border-radius: 12px; padding: 20px; margin-bottom: 24px; position: relative; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--primary); color: white; }
+        th { padding: 14px; text-align: left; font-weight: 600; font-size: 13px; }
+        td { padding: 14px; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
+        tbody tr:hover { background: #f8f6f1; }
+        
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge-ejecutado { background: #dcfce7; color: #166534; }
+        .badge-comprometido { background: #fef3c7; color: #92400e; }
+        .badge-pendiente { background: #f3f4f6; color: #374151; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-export { background: #16a34a; color: white; }
+        
+        .actions { display: flex; gap: 12px; margin-top: 24px; }
+    
+        /* ── SHARED INJECTED STYLES ── */
+        .btn-logout {
+            display: flex; align-items: center; gap: 7px;
+            padding: 9px 18px;
+            background: rgba(255,255,255,0.14);
+            border: 1.5px solid rgba(255,255,255,0.38);
+            color: white; border-radius: 8px;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; text-decoration: none;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s; white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.24); }
+        .btn-cashflow {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 9px 16px;
+            background: rgba(255,255,255,0.14);
+            border: 1.5px solid rgba(255,255,255,0.38);
+            color: white; border-radius: 8px;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; text-decoration: none;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s; white-space: nowrap;
+        }
+        .btn-cashflow:hover { background: rgba(255,255,255,0.24); }
+        .header-top {
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .header-top-left { flex: 1; }
+        .header-top-right { flex-shrink: 0; }
+        .filter-band {
+            background: #e8f0fe; border-left: 4px solid #4a7cdc;
+            padding: 12px 20px; border-radius: 8px; margin-bottom: 20px;
+            font-size: 13px; color: #1a4ab0; font-weight: 600;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+        }
+        .filter-band .ftag {
+            background: #1e3a5f; color: white;
+            padding: 3px 10px; border-radius: 999px; font-size: 12px;
+        }
+        .chart-section {
+            background: white; border-radius: 12px; padding: 28px;
+            margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .chart-section h2 {
+            font-size: 18px; font-weight: 700; color: #1e3a5f;
+            margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0;
+        }
+        .chart-wrap { position: relative; height: 300px; }
+        </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js">
+    /* == NAVEGACION Y SESION == */
+            else { window.location.href = pagina; }
+    }
+    /* == CAMPANA == */
+    var _notifs = [];
+    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+    function renderNotificaciones(datos) {
+        _notifs = datos || [];
+        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+        var lista = document.getElementById('notif-list');
+        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
+        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
+        lista.innerHTML = _notifs.map(function(n) {
+            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+        }).join('');
+    }
+    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
+    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+    // Notificaciones cargadas por supabase.js automáticamente
+
+</script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-top">
+            <div class="header-top-left">
+                <div class="breadcrumb"><a href="administrador_8_Cashflow.html" class="btn-cashflow">← Volver a Cashflow</a></div>
+                <h1>💸 Reporte de Egresos</h1>
+        <p>Detalle completo de gastos ejecutados por categoría y programa</p>
+            </div>
+            <div class="header-top-right">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <!-- Campana -->
+                <div class="notif-wrapper" style="position:relative;">
+                    <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                    </button>
+                    <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                        <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                            <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">&#x1F514; Notificaciones</h3>
+                            <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como le&iacute;das</button>
+                        </div>
+                        <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando&hellip;</div></div>
+                    </div>
+                </div>
+                <a href="portal_login.html" class="btn-logout" onclick="return confirm('¿Querés cerrar la sesión?')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Cerrar sesión
+        </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- FILTROS APLICADOS -->
+        
+        <div class="filter-band" id="filter-band">🔎 Cargando filtros…</div>
+
+        <div class="chart-section">
+            <h2>💸 Egresos Ejecutados por Categoría</h2>
+            <div class="chart-wrap">
+                <canvas id="chart-reporte"></canvas>
+            </div>
+        </div>
+<!-- RESUMEN -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-label">Total Ejecutado</div>
+                <div class="summary-value">$2,847,500</div>
+                <div class="summary-change change-up">↑ +15% vs período anterior</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Comprometido</div>
+                <div class="summary-value">$890,000</div>
+                <div class="summary-change">Pendiente de ejecución</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Presupuestado</div>
+                <div class="summary-value">$4,200,000</div>
+                <div class="summary-change change-down">68% ejecutado</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Disponible</div>
+                <div class="summary-value">$462,500</div>
+                <div class="summary-change">11% del presupuesto</div>
+            </div>
+        </div>
+
+        <!-- GRÁFICO POR CATEGORÍA -->
+        <div class="card">
+            <h2 class="card-title">📊 Distribución por Categoría de Gasto</h2>
+            <div class="chart-container">
+                <canvas id="chartCategorias"></canvas>
+            </div>
+        </div>
+
+        <!-- TABLA DETALLADA -->
+        <div class="card">
+            <h2 class="card-title">📋 Detalle de Egresos por Categoría</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Categoría</th>
+                        <th>Tipo</th>
+                        <th>Presupuestado</th>
+                        <th>Ejecutado</th>
+                        <th>Comprometido</th>
+                        <th>Disponible</th>
+                        <th>% Ejecución</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Hon. Dirección/Coordinación</strong></td>
+                        <td>FIJO</td>
+                        <td>$800,000</td>
+                        <td>$600,000</td>
+                        <td>$200,000</td>
+                        <td>$0</td>
+                        <td>75%</td>
+                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hon. Personal Apoyo</strong></td>
+                        <td>FIJO</td>
+                        <td>$450,000</td>
+                        <td>$337,500</td>
+                        <td>$112,500</td>
+                        <td>$0</td>
+                        <td>75%</td>
+                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hon. Profesores</strong></td>
+                        <td>VARIABLE</td>
+                        <td>$1,200,000</td>
+                        <td>$980,000</td>
+                        <td>$150,000</td>
+                        <td>$70,000</td>
+                        <td>82%</td>
+                        <td><span class="badge badge-comprometido">COMPROMETIDO</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Movilidad</strong></td>
+                        <td>AJUSTABLE</td>
+                        <td>$180,000</td>
+                        <td>$125,000</td>
+                        <td>$35,000</td>
+                        <td>$20,000</td>
+                        <td>69%</td>
+                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pasajes Aéreos/Colectivos</strong></td>
+                        <td>AJUSTABLE</td>
+                        <td>$350,000</td>
+                        <td>$287,000</td>
+                        <td>$48,000</td>
+                        <td>$15,000</td>
+                        <td>82%</td>
+                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Agapé/Break</strong></td>
+                        <td>AJUSTABLE</td>
+                        <td>$280,000</td>
+                        <td>$195,000</td>
+                        <td>$65,000</td>
+                        <td>$20,000</td>
+                        <td>70%</td>
+                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Publicidad</strong></td>
+                        <td>OPERATIVO</td>
+                        <td>$250,000</td>
+                        <td>$180,000</td>
+                        <td>$50,000</td>
+                        <td>$20,000</td>
+                        <td>72%</td>
+                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gastos Varios</strong></td>
+                        <td>OPERATIVO</td>
+                        <td>$180,000</td>
+                        <td>$93,000</td>
+                        <td>$45,000</td>
+                        <td>$42,000</td>
+                        <td>52%</td>
+                        <td><span class="badge badge-pendiente">PENDIENTE</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Servicios Informáticos</strong></td>
+                        <td>CRÍTICO</td>
+                        <td>$120,000</td>
+                        <td>$90,000</td>
+                        <td>$30,000</td>
+                        <td>$0</td>
+                        <td>75%</td>
+                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Papelería y Útiles</strong></td>
+                        <td>OPERATIVO</td>
+                        <td>$95,000</td>
+                        <td>$47,500</td>
+                        <td>$22,500</td>
+                        <td>$25,000</td>
+                        <td>50%</td>
+                        <td><span class="badge badge-pendiente">PENDIENTE</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Plataformas Internet</strong></td>
+                        <td>CRÍTICO</td>
+                        <td>$295,000</td>
+                        <td>$212,500</td>
+                        <td>$82,500</td>
+                        <td>$0</td>
+                        <td>72%</td>
+                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
+                    </tr>
+                </tbody>
+                <tfoot style="background: #f8f6f1; font-weight: 700;">
+                    <tr>
+                        <td colspan="2"><strong>TOTAL</strong></td>
+                        <td><strong>$4,200,000</strong></td>
+                        <td><strong>$2,847,500</strong></td>
+                        <td><strong>$890,000</strong></td>
+                        <td><strong>$462,500</strong></td>
+                        <td><strong>68%</strong></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="actions">
+                <button class="btn btn-export" onclick="exportarExcel()">📥 Exportar a Excel</button>
+                <button class="btn btn-primary" onclick="exportarPDF()">📄 Exportar a PDF</button>
+                <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+        function exportarExcel() {
+            alert('Exportando reporte a Excel...');
+            // Aquí iría la llamada al backend
+        }
+        
+        function exportarPDF() {
+            alert('Exportando reporte a PDF...');
+        }
+    </script>
+
+<script>
+// ── SHARED: leer filtros desde sessionStorage (guardados por administrador_8_Cashflow.html) ──
+(function() {
+    function fmt(iso) {
+        if (!iso) return '';
+        var p = iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0];
+    }
+    try {
+        var raw = sessionStorage.getItem('sigpo_filtros_cashflow');
+        var f = raw ? JSON.parse(raw) : null;
+        var band = document.getElementById('filter-band');
+        if (!band) return;
+        if (!f) {
+            band.innerHTML = '<span>🔎 Sin filtros activos — mostrando todos los datos</span>';
+            return;
+        }
+        var desde = f.desdeInicio ? 'Inicio' : (f.desde ? fmt(f.desde) : '—');
+        var hasta = f.hasta ? fmt(f.hasta) : 'Sin límite';
+        var rango = f.desdeInicio ? ('Desde el inicio → ' + hasta) : (desde + ' → ' + hasta);
+        var tags = ['📅 ' + rango];
+        if (f.programa) tags.push('🎓 ' + document.getElementById('_prog_label_' + f.programa) ? '' : f.programa);
+        // fallback: usar valor crudo
+        if (f.programa) tags.push('🎓 Programa filtrado');
+        if (f.cohorte) tags.push('📋 ' + (f.cohorte === '' ? 'Todas las cohortes' : 'Cohorte filtrada'));
+        band.innerHTML = '<span>🔎 Filtros aplicados desde Cashflow:</span>' +
+            tags.map(function(t){ return '<span class="ftag">'+t+'</span>'; }).join('');
+
+        // Exponer para que el gráfico específico pueda usarlos
+        window.FILTROS_ACTIVOS = f;
+    } catch(e) {
+        var band = document.getElementById('filter-band');
+        if (band) band.innerHTML = '<span>🔎 Sin filtros activos</span>';
+    }
+})();
+</script>
+
+<script>
+// Inicializar gráfico del reporte
+document.addEventListener('DOMContentLoaded', function() {
+    
+// Gráfico 1: Egresos mensuales por categoría (chart-reporte, inyectado)
+new Chart(document.getElementById('chart-reporte').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+        datasets: [
+            { label: 'Hon. Profesores', data: [350,400,480,420,370,450,320,430,520,300,250,210], backgroundColor:'rgba(220,38,38,0.75)', borderColor:'#dc2626', borderWidth:2 },
+            { label: 'Plataformas/IT', data: [120,120,120,120,120,120,120,120,120,120,120,120], backgroundColor:'rgba(8,145,178,0.75)', borderColor:'#0891b2', borderWidth:2 },
+            { label: 'Pasajes/Movilidad', data: [70,80,100,85,75,90,60,85,105,55,45,40], backgroundColor:'rgba(245,158,11,0.75)', borderColor:'#f59e0b', borderWidth:2 },
+            { label: 'Agapé/Break', data: [50,60,75,65,55,70,45,65,80,42,35,28], backgroundColor:'rgba(107,114,128,0.75)', borderColor:'#6b7280', borderWidth:2 }
+        ]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'top' }, tooltip:{ callbacks:{ label: c=> c.dataset.label+': $'+c.parsed.y.toLocaleString('es-AR')+'K' } } }, scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true, ticks:{ callback: v=>'$'+v+'K' } } } }
+});
+
+// Gráfico 2: Distribución por Categoría (dona — chartCategorias, original del archivo)
+new Chart(document.getElementById('chartCategorias').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+        labels: [
+            'Hon. Dirección/Coord.',
+            'Hon. Personal Apoyo',
+            'Hon. Profesores',
+            'Movilidad',
+            'Pasajes Aéreos',
+            'Agapé / Break',
+            'Plataformas / IT',
+            'Servicios Informáticos',
+            'Materiales',
+            'Otros'
+        ],
+        datasets: [{
+            data: [600000, 337500, 980000, 125000, 287000, 156000, 120000, 90000, 45000, 32000],
+            backgroundColor: [
+                '#1e3a5f','#2d5a87','#dc2626','#f59e0b','#d97706',
+                '#16a34a','#0891b2','#7c3aed','#db2777','#6b7280'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'right', labels: { font: { size: 12 }, padding: 16 } },
+            tooltip: {
+                callbacks: {
+                    label: function(c) {
+                        const total = c.dataset.data.reduce((a,b) => a+b, 0);
+                        const pct = ((c.parsed / total) * 100).toFixed(1);
+                        return c.label + ': $' + c.parsed.toLocaleString('es-AR') + ' (' + pct + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egresos vs Ingresos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1e3a5f;
+            --accent: #d4af37;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --info: #0891b2;
+            --bg: #f8f6f1;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: #111827; }
+        .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 20px 40px; }
+        .breadcrumb { font-size: 14px; margin-bottom: 12px; }
+        .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 28px; margin-bottom: 8px; }
+        .container { max-width: 1400px; margin: 40px auto; padding: 0 40px; }
+        .card { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .card-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; }
+        .summary-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+        .summary-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .summary-label { font-size: 13px; color: #666; margin-bottom: 8px; }
+        .summary-value { font-size: 28px; font-weight: 700; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 14px; text-align: left; }
+        thead { background: var(--primary); color: white; }
+        td { border-bottom: 1px solid #e0e0e0; }
+
+        .btn-logout {
+            display: flex; align-items: center; gap: 7px;
+            padding: 9px 18px;
+            background: rgba(255,255,255,0.14);
+            border: 1.5px solid rgba(255,255,255,0.38);
+            color: white; border-radius: 8px;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; text-decoration: none;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s; white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.24); }
+        .btn-cashflow {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 9px 16px;
+            background: rgba(255,255,255,0.14);
+            border: 1.5px solid rgba(255,255,255,0.38);
+            color: white; border-radius: 8px;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; text-decoration: none;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s; white-space: nowrap;
+        }
+        .btn-cashflow:hover { background: rgba(255,255,255,0.24); }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+        .header-top-left { flex: 1; }
+        .header-top-right { flex-shrink: 0; }
+        .filter-band {
+            background: #e8f0fe; border-left: 4px solid #4a7cdc;
+            padding: 12px 20px; border-radius: 8px; margin-bottom: 20px;
+            font-size: 13px; color: #1a4ab0; font-weight: 600;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+        }
+        .filter-band .ftag {
+            background: #1e3a5f; color: white;
+            padding: 3px 10px; border-radius: 999px; font-size: 12px;
+        }
+        .chart-wrap {
+            position: relative;
+            height: 340px;
+            background: #f8f6f1;
+            border-radius: 8px;
+            margin: 20px 0 12px 0;
+            padding: 12px;
+        }
+        .chart-note {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        .actions-footer {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 28px;
+            justify-content: flex-start;
+        }
+        .action-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 14px 24px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            transition: transform 0.12s ease, opacity 0.2s ease;
+        }
+        .action-btn:hover { opacity: 0.92; }
+        .action-btn:active { transform: scale(0.98); }
+        .btn-excel { background: #16a34a; }
+        .btn-pdf { background: #234273; }
+        .btn-print { background: #234273; }
+
+        @media (max-width: 900px) {
+            .container { padding: 0 18px; }
+            .header { padding: 20px 18px; }
+            .summary-cards { grid-template-columns: 1fr; }
+            .header-top { flex-direction: column; align-items: stretch; }
+            .actions-footer { flex-direction: column; }
+            .action-btn { justify-content: center; }
+        }
+
+        @media print {
+            .header-top-right,
+            .breadcrumb,
+            .actions-footer { display: none !important; }
+            body { background: white; }
+            .container { max-width: 100%; margin: 0; padding: 0; }
+            .summary-card, .card { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js">
+    /* == NAVEGACION Y SESION == */
+            else { window.location.href = pagina; }
+    }
+    /* == CAMPANA == */
+    var _notifs = [];
+    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+    function renderNotificaciones(datos) {
+        _notifs = datos || [];
+        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+        var lista = document.getElementById('notif-list');
+        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
+        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
+        lista.innerHTML = _notifs.map(function(n) {
+            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+        }).join('');
+    }
+    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
+    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+    // Notificaciones cargadas por supabase.js automáticamente
+
+</script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-top">
+            <div class="header-top-left">
+                <div class="breadcrumb"><a href="administrador_8_Cashflow.html" class="btn-cashflow">← Volver a Cashflow</a></div>
+                <h1>⚖️ Egresos vs Ingresos</h1>
+                <p>Comparativa de gastos operativos contra ingresos por cuotas</p>
+            </div>
+            <div class="header-top-right">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <!-- Campana -->
+                <div class="notif-wrapper" style="position:relative;">
+                    <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                    </button>
+                    <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                        <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                            <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">&#x1F514; Notificaciones</h3>
+                            <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como le&iacute;das</button>
+                        </div>
+                        <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando&hellip;</div></div>
+                    </div>
+                </div>
+                <a href="portal_login.html" class="btn-logout" onclick="return confirm('¿Querés cerrar la sesión?')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Cerrar sesión
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="filter-band" class="filter-band">
+            <span>🔎 Sin filtros activos — mostrando todos los datos</span>
+        </div>
+
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-label">Total Ingresos</div>
+                <div class="summary-value" style="color: #16a34a;">$42,500,000</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Total Egresos</div>
+                <div class="summary-value" style="color: #dc2626;">$8,200,000</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Balance Neto</div>
+                <div class="summary-value" style="color: #0891b2;">$34,300,000</div>
+            </div>
+        </div>
+
+        <div class="card" id="reporte-contenido">
+            <h2 class="card-title">📊 Comparativa Mensual</h2>
+            <div class="chart-note">Gráfico: ingresos (verde), egresos (rojo) y balance (azul) por mes</div>
+            <div class="chart-wrap">
+                <canvas id="chart-reporte"></canvas>
+            </div>
+
+            <table id="tabla-egresos-ingresos">
+                <thead>
+                    <tr>
+                        <th>Mes</th>
+                        <th>Ingresos</th>
+                        <th>Egresos</th>
+                        <th>Balance</th>
+                        <th>Margen %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Enero 2025</td><td>$3,200,000</td><td>$680,000</td><td>$2,520,000</td><td>78.8%</td></tr>
+                    <tr><td>Febrero 2025</td><td>$4,100,000</td><td>$740,000</td><td>$3,360,000</td><td>82.0%</td></tr>
+                    <tr><td>Marzo 2025</td><td>$5,800,000</td><td>$890,000</td><td>$4,910,000</td><td>84.7%</td></tr>
+                </tbody>
+            </table>
+
+            <div class="actions-footer">
+                <button class="action-btn btn-excel" onclick="exportarExcel()">📥 Exportar a Excel</button>
+                <button class="action-btn btn-pdf" onclick="exportarPDF()">📄 Exportar a PDF</button>
+                <button class="action-btn btn-print" onclick="imprimirReporte()">🖨️ Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+(function() {
+    function fmt(iso) {
+        if (!iso) return '';
+        var p = iso.split('-');
+        return p[2] + '/' + p[1] + '/' + p[0];
+    }
+
+    try {
+        var raw = sessionStorage.getItem('sigpo_filtros_cashflow');
+        var f = raw ? JSON.parse(raw) : null;
+        var band = document.getElementById('filter-band');
+        if (!band) return;
+
+        if (!f) {
+            band.innerHTML = '<span>🔎 Sin filtros activos — mostrando todos los datos</span>';
+            return;
+        }
+
+        var desde = f.desdeInicio ? 'Inicio' : (f.desde ? fmt(f.desde) : '—');
+        var hasta = f.hasta ? fmt(f.hasta) : 'Sin límite';
+        var rango = f.desdeInicio ? ('Desde el inicio → ' + hasta) : (desde + ' → ' + hasta);
+        var tags = ['📅 ' + rango];
+
+        if (f.programa) tags.push('🎓 Programa filtrado');
+        if (f.cohorte) tags.push('📋 Cohorte filtrada');
+
+        band.innerHTML = '<span>🔎 Filtros aplicados desde Cashflow:</span>' +
+            tags.map(function(t) { return '<span class="ftag">' + t + '</span>'; }).join('');
+
+        window.FILTROS_ACTIVOS = f;
+    } catch (e) {
+        var band = document.getElementById('filter-band');
+        if (band) band.innerHTML = '<span>🔎 Sin filtros activos</span>';
+    }
+})();
+</script>
+
+<script>
+let reporteChart = null;
+
+function parseCurrency(texto) {
+    if (!texto) return 0;
+    // Para montos tipo $3,200,000 o $3.200.000: elimina símbolos y separadores de miles.
+    const limpio = String(texto).replace(/[^\d-]/g, '');
+    return Number(limpio) || 0;
+}
+
+function getDatosTabla() {
+    const filas = document.querySelectorAll('#tabla-egresos-ingresos tbody tr');
+    const labels = [];
+    const ingresos = [];
+    const egresos = [];
+    const balances = [];
+
+    filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('td');
+        if (celdas.length >= 4) {
+            labels.push(celdas[0].textContent.trim());
+            ingresos.push(parseCurrency(celdas[1].textContent.trim()));
+            egresos.push(parseCurrency(celdas[2].textContent.trim()));
+            balances.push(parseCurrency(celdas[3].textContent.trim()));
+        }
+    });
+
+    return { labels, ingresos, egresos, balances };
+}
+
+function formatoPesosCompacto(valor) {
+    return '$' + valor.toLocaleString('es-AR');
+}
+
+function iniciarGrafico() {
+    const canvas = document.getElementById('chart-reporte');
+    if (!canvas) return;
+
+    const { labels, ingresos, egresos, balances } = getDatosTabla();
+    const ctx = canvas.getContext('2d');
+
+    if (reporteChart) {
+        reporteChart.destroy();
+    }
+
+    reporteChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Ingresos',
+                    data: ingresos,
+                    backgroundColor: 'rgba(22,163,74,0.75)',
+                    borderColor: '#16a34a',
+                    borderWidth: 2,
+                    borderRadius: 6
+                },
+                {
+                    label: 'Egresos',
+                    data: egresos,
+                    backgroundColor: 'rgba(220,38,38,0.75)',
+                    borderColor: '#dc2626',
+                    borderWidth: 2,
+                    borderRadius: 6
+                },
+                {
+                    label: 'Balance',
+                    data: balances,
+                    type: 'line',
+                    borderColor: '#0891b2',
+                    backgroundColor: 'rgba(8,145,178,0.18)',
+                    pointBackgroundColor: '#0891b2',
+                    pointBorderColor: '#0891b2',
+                    pointRadius: 4,
+                    pointHoverRadius: 5,
+                    borderWidth: 3,
+                    tension: 0.25,
+                    fill: false,
+                    yAxisID: 'y'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + formatoPesosCompacto(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + Number(value).toLocaleString('es-AR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function exportarExcel() {
+    const tabla = document.getElementById('tabla-egresos-ingresos');
+    const wb = XLSX.utils.table_to_book(tabla, { sheet: 'Egresos vs Ingresos' });
+    XLSX.writeFile(wb, 'egresos_vs_ingresos.xlsx');
+}
+
+function exportarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'pt', 'a4');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('Egresos vs Ingresos', 40, 40);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('Comparativa de gastos operativos contra ingresos por cuotas', 40, 58);
+
+    const summaryValues = Array.from(document.querySelectorAll('.summary-card')).map(card => {
+        return {
+            label: card.querySelector('.summary-label')?.textContent || '',
+            value: card.querySelector('.summary-value')?.textContent || ''
+        };
+    });
+
+    let y = 85;
+    summaryValues.forEach(item => {
+        doc.text(item.label + ': ' + item.value, 40, y);
+        y += 16;
+    });
+
+    if (typeof doc.autoTable === 'function') {
+        const rows = Array.from(document.querySelectorAll('#tabla-egresos-ingresos tbody tr')).map(tr =>
+            Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim())
+        );
+
+        doc.autoTable({
+            startY: y + 10,
+            head: [['Mes', 'Ingresos', 'Egresos', 'Balance', 'Margen %']],
+            body: rows,
+            theme: 'grid',
+            headStyles: { fillColor: [30, 58, 95] }
+        });
+    }
+
+    doc.save('egresos_vs_ingresos.pdf');
+}
+
+function imprimirReporte() {
+    window.print();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    iniciarGrafico();
+});
+</script>
+</body>
+</html>

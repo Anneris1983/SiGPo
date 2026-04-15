@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión — SiGPo FCE UNCUYO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #1e3a5f; --accent: #d4af37; --bg: #f8f6f1; --success: #2d7a4f; --danger: #c0392b; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+        .login-container {
+            width: 100%; max-width: 460px; padding: 20px;
+        }
+
+        .login-card {
+            background: white; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.1);
+        }
+
+        /* ── HEADER ── */
+        .login-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            padding: 36px 32px 28px; text-align: center; color: white;
+        }
+        .login-logo {
+            width: 80px; height: 80px; background: rgba(255,255,255,0.15);
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px; font-size: 40px;
+            border: 2px solid rgba(255,255,255,0.25);
+        }
+        .login-header h1 { font-family: 'Crimson Pro', serif; font-size: 26px; margin-bottom: 6px; }
+        .login-header p { font-size: 14px; opacity: 0.85; }
+        .login-header .subtitulo { font-size: 12px; opacity: 0.65; margin-top: 4px; }
+
+        /* ── FORM ── */
+        .login-body { padding: 32px; }
+        .field { margin-bottom: 20px; }
+        .field label {
+            display: block; font-size: 13px; font-weight: 600;
+            color: var(--primary); margin-bottom: 6px;
+        }
+        .field input {
+            width: 100%; padding: 12px 14px; border: 2px solid #e0e0e0;
+            border-radius: 10px; font-size: 15px; font-family: 'DM Sans', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .field input:focus { outline: none; border-color: var(--primary); }
+        .field input::placeholder { color: #bbb; }
+
+        .field-password { position: relative; }
+        .field-password input { padding-right: 44px; }
+        .toggle-pass {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer; font-size: 18px;
+            color: #999; padding: 4px;
+        }
+        .toggle-pass:hover { color: var(--primary); }
+
+        .error-msg {
+            display: none; background: #fee2e2; color: #991b1b;
+            padding: 10px 14px; border-radius: 8px; font-size: 13px;
+            margin-bottom: 16px; border-left: 4px solid var(--danger);
+        }
+        .error-msg.show { display: block; }
+
+        .btn-login {
+            width: 100%; padding: 14px; background: var(--primary);
+            color: white; border: none; border-radius: 10px;
+            font-size: 16px; font-weight: 700; cursor: pointer;
+            font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-login:hover { background: #2d5a87; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30,58,95,0.3); }
+        .btn-login:active { transform: translateY(0); }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-login .spinner {
+            display: none; width: 18px; height: 18px;
+            border: 2.5px solid rgba(255,255,255,0.3); border-top-color: white;
+            border-radius: 50%; animation: spin 0.7s linear infinite;
+        }
+        .btn-login.loading .spinner { display: inline-block; }
+        .btn-login.loading .btn-text { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── FOOTER ── */
+        .login-footer {
+            padding: 16px 32px 24px; text-align: center;
+            font-size: 12px; color: #999;
+        }
+        .login-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+        .login-footer a:hover { text-decoration: underline; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 500px) {
+            .login-container { padding: 12px; }
+            .login-header { padding: 28px 24px 22px; }
+            .login-body { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="login-card">
+        <!-- HEADER -->
+        <div class="login-header">
+            <div class="login-logo">🎓</div>
+            <h1>SiGPo</h1>
+            <p>Sistema de Gestión de Pagos para Posgrado</p>
+            <div class="subtitulo">Facultad de Ciencias Económicas — UNCUYO</div>
+        </div>
+
+        <!-- FORM -->
+        <div class="login-body">
+            <div id="errorMsg" class="error-msg"></div>
+
+            <div class="field">
+                <label for="dni">DNI</label>
+                <input type="text" id="dni" placeholder="Ingresá tu DNI" autocomplete="username" inputmode="numeric" maxlength="10"
+                    onkeydown="if(event.key==='Enter') document.getElementById('password').focus()">
+            </div>
+
+            <div class="field">
+                <label for="password">Contraseña</label>
+                <div class="field-password">
+                    <input type="password" id="password" placeholder="Ingresá tu contraseña" autocomplete="current-password"
+                        onkeydown="if(event.key==='Enter') iniciarSesion()">
+                    <button type="button" class="toggle-pass" onclick="togglePassword()" title="Mostrar/ocultar contraseña">👁️</button>
+                </div>
+            </div>
+
+            <button id="btnLogin" class="btn-login" onclick="iniciarSesion()">
+                <span class="btn-text">Iniciar Sesión</span>
+                <span class="spinner"></span>
+            </button>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="login-footer">
+            <p>¿Olvidaste tu contraseña? <a href="#" onclick="recuperarPassword(event)">Recuperar acceso</a></p>
+            <p style="margin-top: 8px;">Secretaría de Posgrado — FCE UNCUYO</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ══════════════════════════════════════════════
+   CONFIGURACIÓN SUPABASE
+   ══════════════════════════════════════════════ */
+var SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+var RUTAS = {
+    'ESTUDIANTE':          'portal_estudiante_2_dashboard.html',
+    'COORDINADOR':         'coordinador_1_dashboard.html',
+    'SECRETARIA':          'secretaria_1_dashboard.html',
+    'COOPERADORA':         'cooperadora_2_Dashboard.html',
+    'ADMINISTRADOR':       'administrador_2_dashboard.html'
+};
+
+/* ══════════════════════════════════════════════
+   TOGGLE PASSWORD
+   ══════════════════════════════════════════════ */
+function togglePassword() {
+    var input = document.getElementById('password');
+    var btn = document.querySelector('.toggle-pass');
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+    }
+}
+
+/* ══════════════════════════════════════════════
+   MOSTRAR ERROR
+   ══════════════════════════════════════════════ */
+function mostrarError(msg) {
+    var el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.classList.add('show');
+}
+function limpiarError() {
+    document.getElementById('errorMsg').classList.remove('show');
+}
+
+/* ══════════════════════════════════════════════
+   INICIAR SESIÓN
+   ══════════════════════════════════════════════ */
+async function iniciarSesion() {
+    limpiarError();
+    var dni = document.getElementById('dni').value.trim();
+    var password = document.getElementById('password').value;
+
+    // Validaciones
+    if (!dni) { mostrarError('Ingresá tu DNI'); document.getElementById('dni').focus(); return; }
+    if (!/^\d{7,10}$/.test(dni)) { mostrarError('El DNI debe tener entre 7 y 10 dígitos numéricos'); document.getElementById('dni').focus(); return; }
+    if (!password) { mostrarError('Ingresá tu contraseña'); document.getElementById('password').focus(); return; }
+
+    // Loading state
+    var btn = document.getElementById('btnLogin');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    try {
+        // 1. Login con Supabase Auth (email = dni@sigpo.fce)
+        var email = dni + '@sigpo.fce';
+        mostrarError('Conectando con Supabase...');
+        var resultado = await sb.auth.signInWithPassword({ email: email, password: password });
+
+        if (resultado.error) {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            mostrarError('Error Supabase: ' + resultado.error.message + ' (status: ' + (resultado.error.status || 'N/A') + ')');
+            return;
+        }
+
+        // 2. Obtener rol del usuario desde la tabla usuarios
+        var resp = await sb.from('usuarios').select('rol, nombre_completo, email, programa_id, dni').eq('dni', dni).eq('activo', true).single();
+
+        if (resp.error || !resp.data) {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            mostrarError('Usuario no encontrado o inactivo');
+            return;
+        }
+
+        var usuario = resp.data;
+
+        // 3. Guardar datos en localStorage
+        localStorage.setItem('sigpo_rol', usuario.rol);
+        localStorage.setItem('sigpo_nombre', usuario.nombre_completo);
+        localStorage.setItem('sigpo_dni', usuario.dni);
+        localStorage.setItem('sigpo_email', usuario.email);
+        localStorage.setItem('sigpo_programa_id', usuario.programa_id || '');
+
+        // 4. Redirigir según rol
+        var destino = RUTAS[usuario.rol] || 'portal_estudiante_2_dashboard.html';
+        window.location.href = destino;
+
+    } catch (err) {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        mostrarError('Error técnico: ' + (err.message || err) + ' | URL: ' + SUPABASE_URL);
+        console.error('Login error:', err);
+    }
+}
+
+/* ══════════════════════════════════════════════
+   RECUPERAR CONTRASEÑA
+   ══════════════════════════════════════════════ */
+async function recuperarPassword(e) {
+    e.preventDefault();
+    var dni = document.getElementById('dni').value.trim();
+    if (!dni) {
+        alert('Ingresá tu DNI y hacé clic en "Recuperar acceso".\nSe enviará un correo a tu email registrado con instrucciones.');
+        document.getElementById('dni').focus();
+        return;
+    }
+
+    var resp = await sb.from('usuarios').select('email').eq('dni', dni).single();
+    if (resp.error || !resp.data) {
+        alert('No se encontró un usuario con DNI ' + dni);
+        return;
+    }
+
+    var email = resp.data.email;
+    var partes = email.split('@');
+    var oculto = partes[0].substring(0, 3) + '***@' + partes[1];
+    alert('📧 Se enviarán instrucciones de recuperación a ' + oculto);
+}
+
+/* ══════════════════════════════════════════════
+   AL CARGAR: si llegó al login, limpiar sesión anterior
+   ══════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async function() {
+    // Si el usuario llegó al login, cerrar cualquier sesión previa
+    await sb.auth.signOut();
+    localStorage.removeItem('sigpo_rol');
+    localStorage.removeItem('sigpo_nombre');
+    localStorage.removeItem('sigpo_dni');
+    localStorage.removeItem('sigpo_email');
+    localStorage.removeItem('sigpo_programa_id');
+    document.getElementById('dni').focus();
+});
+</script>
+</body>
+</html>

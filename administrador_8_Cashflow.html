@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashflow y Reportes - Administrador SiGPo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #2d7a4f; --danger: #ef4444; --warning: #f59e0b; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+
+        /* HEADER */
+        .header { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 20px 40px; }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 28px; }
+        .header p { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+        .breadcrumb { font-size: 14px; margin-bottom: 12px; }
+        .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
+        .btn-logout {
+            background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.35);
+            color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none;
+            font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 7px;
+            white-space: nowrap; transition: background 0.2s;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.25); }
+
+        /* LAYOUT */
+        .container { max-width: 1400px; margin: 40px auto; padding: 0 40px; }
+        .card { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .card-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
+
+        /* FILTROS */
+        .filters-row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; }
+        .filter-item { display: flex; flex-direction: column; }
+        .filter-item label { font-weight: 600; margin-bottom: 8px; color: var(--primary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .filter-item select,
+        .filter-item input[type="date"] {
+            padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px;
+            font-size: 14px; font-family: 'DM Sans', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .filter-item select:focus,
+        .filter-item input:focus { outline: none; border-color: var(--primary); }
+
+        /* Checkbox "desde el inicio" */
+        .desde-inicio-wrap {
+            display: flex; align-items: center; gap: 6px;
+            margin-top: 6px; font-size: 12px; color: #555; cursor: pointer;
+            user-select: none;
+        }
+        .desde-inicio-wrap input[type=checkbox] { width: 14px; height: 14px; accent-color: var(--primary); cursor: pointer; }
+
+        /* Botones */
+        .btn { padding: 11px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.15s, transform 0.1s; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+        .btn:hover { opacity: 0.87; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-accent  { background: var(--accent); color: white; }
+
+        /* Banda de contexto activo */
+        .filter-context {
+            background: #e8f0fe; border-left: 4px solid #4a7cdc;
+            padding: 10px 18px; border-radius: 8px; margin-top: 18px;
+            font-size: 13px; color: #1a4ab0; font-weight: 600;
+            display: none; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .filter-context.visible { display: flex; }
+
+        /* RESUMEN */
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .summary-box { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 24px; border-radius: 12px; color: white; }
+        .summary-label { font-size: 14px; opacity: 0.9; margin-bottom: 8px; }
+        .summary-value { font-size: 34px; font-weight: 700; }
+
+        /* GRÁFICO */
+        .chart-container { background: #f8f6f1; padding: 24px; border-radius: 12px; }
+        .chart-title { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 20px; }
+        .chart { height: 280px; background: white; border-radius: 8px; display: flex; align-items: flex-end; padding: 20px 16px 20px 16px; gap: 6px; }
+        .bar { flex: 1; background: linear-gradient(180deg, #2d7a4f 0%, #4caf50 100%); border-radius: 4px 4px 0 0; position: relative; min-height: 20px; transition: opacity 0.2s; }
+        .bar:hover { opacity: 0.8; }
+        .bar-label { position: absolute; bottom: -22px; left: 0; right: 0; text-align: center; font-size: 11px; color: #666; }
+        .bar-value { position: absolute; top: -22px; left: 0; right: 0; text-align: center; font-size: 11px; font-weight: 600; color: var(--primary); }
+
+        /* REPORTES */
+        .reports-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .report-card {
+            background: #f8f6f1; border: 2px solid #e0e0e0; padding: 20px;
+            border-radius: 12px; cursor: pointer; transition: all 0.25s;
+            text-decoration: none; display: block;
+        }
+        .report-card:hover { border-color: var(--accent); box-shadow: 0 4px 18px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .report-icon { font-size: 28px; margin-bottom: 10px; }
+        .report-title { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+        .report-desc { font-size: 13px; color: #666; line-height: 1.5; }
+        .report-arrow { float: right; font-size: 18px; color: var(--accent); margin-top: -2px; }
+
+        .export-buttons { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+
+        /* Loader */
+        #loader {
+            display: none; position: fixed; inset: 0;
+            background: rgba(248,246,241,0.72); z-index: 999;
+            align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+        }
+        #loader.visible { display: flex; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loader p { font-weight: 600; color: var(--primary); }
+
+        @media (max-width: 900px) {
+            .summary-grid { grid-template-columns: 1fr; }
+            .reports-grid  { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+    <div class="spinner"></div>
+    <p>Aplicando filtros…</p>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+            <div class="breadcrumb"><a href="administrador_2_dashboard.html" onclick="navegar('administrador_2_dashboard.html'); return false;">← Volver al Dashboard</a></div>
+            <h1>💰 Gestión Financiera — Cashflow</h1>
+            <p>Panel de control financiero y reportes consolidados</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+            <!-- Campana de Notificaciones -->
+            <div class="notif-wrapper" style="position:relative;">
+                <button onclick="toggleNotif()" title="Notificaciones" aria-label="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;transition:background 0.2s;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                </button>
+                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                    </div>
+                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                </div>
+            </div>
+            <a href="portal_login.html" class="btn-logout" onclick="return cerrarSesion(event)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar sesión
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ═══════ FILTROS ═══════ -->
+    <div class="card">
+        <h2 class="card-title">🔍 Filtros de Consulta</h2>
+        <div class="filters-row">
+
+            <!-- Fecha Desde -->
+            <div class="filter-item">
+                <label>Fecha Desde</label>
+                <input type="date" id="fechaDesde" value="2025-01-01" style="width:170px;">
+                <label class="desde-inicio-wrap">
+                    <input type="checkbox" id="chkInicio" onchange="toggleDesdeInicio(this)">
+                    Desde el inicio (todos los datos)
+                </label>
+            </div>
+
+            <!-- Fecha Hasta -->
+            <div class="filter-item">
+                <label>Fecha Hasta</label>
+                <input type="date" id="fechaHasta" value="2025-12-31" style="width:170px;">
+            </div>
+
+            <!-- Programa -->
+            <div class="filter-item">
+                <label>Programa / Curso</label>
+                <select id="filtroPrograma" style="width:260px;">
+                    <option value="">Todos los programas</option>
+                    <option value="1">Doctorado en Ciencias Económicas</option>
+                    <option value="4">Maestría en Dirección de Negocios</option>
+                    <option value="7">Esp. en Costos y Gestión</option>
+                </select>
+            </div>
+
+            <!-- Cohorte -->
+            <div class="filter-item">
+                <label>Cohorte / Edición</label>
+                <select id="filtroCohorte" style="width:220px;">
+                    <option value="">Todas las cohortes</option>
+                    <option value="1">Cohorte 2025-2026</option>
+                    <option value="2">Cohorte 2024-2025</option>
+                    <option value="3">Cohorte 2023-2024</option>
+                </select>
+            </div>
+
+            <!-- Botones -->
+            <button class="btn btn-primary" onclick="aplicarFiltros()">
+                🔍 Filtrar
+            </button>
+            <button class="btn btn-accent" onclick="exportarExcel()">
+                📊 Exportar Reporte Excel
+            </button>
+        </div>
+
+        <!-- Banda de contexto -->
+        <div class="filter-context" id="filterContext"></div>
+    </div>
+
+    <!-- ═══════ RESUMEN FINANCIERO ═══════ -->
+    <div class="card">
+        <h2 class="card-title">📊 Resumen Financiero Global</h2>
+        <div class="summary-grid">
+            <div class="summary-box">
+                <div class="summary-label">Total Ingresos</div>
+                <div class="summary-value" id="totalIngresos">$42.5M</div>
+            </div>
+            <div class="summary-box">
+                <div class="summary-label">Total Egresos</div>
+                <div class="summary-value" id="totalEgresos">$8.2M</div>
+            </div>
+            <div class="summary-box">
+                <div class="summary-label">Balance Neto</div>
+                <div class="summary-value" id="balanceNeto">$34.3M</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════ GRÁFICO CASHFLOW ═══════ -->
+    <div class="card">
+        <h2 class="card-title">📈 Flujo de Caja Mensual</h2>
+        <div class="chart-container">
+            <div class="chart-title" id="chartTitle">Recaudación por Mes — 2025 (en millones)</div>
+            <div class="chart" id="cashflowChart">
+                <!-- Barras generadas dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════ REPORTES ═══════ -->
+    <div class="card">
+        <h2 class="card-title">📑 Reportes Disponibles <span style="font-size:14px;font-weight:400;color:#888;">(10 reportes) — Los filtros aplicados se pasan a cada reporte</span></h2>
+        <div class="reports-grid">
+
+            <a class="report-card" href="administrador_23_reporte_egresos_ejecutados.html" onclick="guardarFiltrosYNavegar(event, 'administrador_23_reporte_egresos_ejecutados.html')">
+                <span class="report-arrow">→</span>
+                <div class="report-icon">💸</div>
+                <div class="report-title">Egresos Ejecutados</div>
+                <div class="report-desc">Detalle completo de todos los gastos ejecutados por categoría y programa</div>
+            </a>
+
+            <a class="report-card" href="administrador_14_reporte_ingresos_ejecutados.html" onclick="guardarFiltrosYNavegar(event, 'administrador_14_reporte_ingresos_ejecutados.html')">
+                <span class="report-arrow">→</span>
+                <div class="report-icon">📊</div>
+                <div class="report-title">Ingresos Ejecutados</div>
+                <div class="report-desc">Detalle de ingresos recaudados discriminado por cada programa de posgrado</div>
+            </a>
+
+            <a class="report-card" href="administrador_15_reporte_morosidad.html" onclick="guardarFiltrosYNavegar(event, 'administrador_15_reporte_morosidad.html')">
+                <span class="report-arrow">→</span>
+                <div class="report-icon">⚠️</div>
+                <div class="report-title">Morosidad</div>
+                <div class="report-desc">Análisis de deuda vencida y estudiantes en mora por cohorte</div>
+            </a>
+
+            <a class="report-card" href="administrador_16_reporte_proyeccion_ingresos.html" onclick="guardarFiltrosYNavegar(event, 'administrador_16_reporte_proyeccion_ingresos.html')">
+                <span class="report-arrow">→</span>
+                <div class="report-icon">📈</div>
+                <div class="report-title">Proyección Ingresos</div>
+                <div class="report-desc">Estimación de ingresos futuros basado en cuotas pendientes</div>
+            </a>
+
+            <a class="report-card" href="administrador_21_reporte_proyeccion_egresos.html" onclick="guardarFiltrosYNavegar(event, 'administrador_21_reporte_proyeccion_egresos.html')">
+                <span class="report-arrow">→</span>
+                <div class="report-icon">📉</div>
+                <div class="report-title">Proyección Egresos</div>
+                <div class="report-desc">Estimación de gastos futuros basado en compromisos y contratos</div>
+            </a>
+
+            <a class="report-card" href="administrador_19_reporte_estado_pagos.html" onclick="guardarFiltrosYNavegar(event, 'administrador_19_reporte_estado_pagos.html')">
+                <span class="report-arrow">→</span>
+                <div class="report-icon">💳</div>
+                <div class="report-title">Estado de Pagos</div>
+                <div class="report-desc">Vista general del estado de pagos de todos los estudiantes</div>
+            </a>
+
+            <a class="report-card" href="administrador_18_reporte_egresos_vs_ingresos.html" onclick="guardarFiltrosYNavegar(event, 'administrador_18_reporte_egresos_vs_ingresos.html')">
+                <span class="report-arrow">→</span>
+                <div class="report-icon">⚖️</div>
+                <div class="report-title">Egresos vs Ingresos</div>
+                <div class="report-desc">Comparativa de gastos operativos contra ingresos por cuotas</div>
+            </a>
+
+            <a class="report-card" href="administrador_22_reporte_tasa_desercion.html" onclick="guardarFiltrosYNavegar(event, 'administrador_22_reporte_tasa_desercion.html')">
+                <span class="report-arrow">→</span>
+                <div class="report-icon">🚪</div>
+                <div class="report-title">Tasa Deserción</div>
+                <div class="report-desc">Análisis de abandono estudiantil por programa y cohorte</div>
+            </a>
+
+            <a class="report-card" href="administrador_20_reporte_impacto_descuentos.html" onclick="guardarFiltrosYNavegar(event, 'administrador_20_reporte_impacto_descuentos.html')">
+                <span class="report-arrow">→</span>
+                <div class="report-icon">🎯</div>
+                <div class="report-title">Impacto Descuentos</div>
+                <div class="report-desc">Análisis financiero del efecto de descuentos en la recaudación</div>
+            </a>
+
+            <a class="report-card" href="administrador_17_reporte_comparativo.html" onclick="guardarFiltrosYNavegar(event, 'administrador_17_reporte_comparativo.html')">
+                <span class="report-arrow">→</span>
+                <div class="report-icon">📊</div>
+                <div class="report-title">Comparativo</div>
+                <div class="report-desc">Comparación de recaudación entre períodos académicos</div>
+            </a>
+
+        </div>
+
+        <div class="export-buttons">
+            <button class="btn btn-success" onclick="exportarTodoExcel()">📥 Exportar Todo a Excel</button>
+            <button class="btn btn-primary" onclick="generarPDF()">📄 Generar PDF Consolidado</button>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+/* Navegación y sesión proporcionadas por supabase.js */
+    
+/* ══════════════════════════════════════════════
+   CAMPANA DE NOTIFICACIONES
+   ══════════════════════════════════════════════ */
+var _notifs = [];
+function toggleNotif() {
+    var dd = document.getElementById('notif-dropdown');
+    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function(e) {
+    var wrapper = document.querySelector('.notif-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('notif-dropdown').style.display = 'none';
+    }
+});
+function renderNotificaciones(datos) {
+    _notifs = datos || [];
+    var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+    var badge = document.getElementById('notif-badge');
+    badge.textContent = sinLeer;
+    badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+    var lista = document.getElementById('notif-list');
+    if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+    var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
+    var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
+    lista.innerHTML = _notifs.map(function(n) {
+        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+            + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+            + '<div style="flex:1;min-width:0;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p>'
+            + '<div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+    }).join('');
+}
+function leerNotif(id) {
+    _notifs.forEach(function(n) { if (n.id === id) n.leida = true; });
+    renderNotificaciones(_notifs);
+    if (typeof google !== 'undefined' && google.script) google.script.run.marcarNotificacionLeida(id);
+}
+function marcarTodasLeidas() {
+    _notifs.forEach(function(n) { n.leida = true; });
+    renderNotificaciones(_notifs);
+    if (typeof google !== 'undefined' && google.script) google.script.run.marcarTodasNotificacionesLeidas();
+}
+(function() {
+    if (typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(renderNotificaciones).obtenerNotificaciones('ADMINISTRADOR');
+        renderNotificaciones([
+            { id:'n1', tipo:'pago', mensaje:'<strong>María González</strong> realizó un pago de <strong>$85.500</strong>', tiempo:'Hace 15 min', leida:false },
+            { id:'n2', tipo:'mora', mensaje:'<strong>3 estudiantes</strong> nuevos en mora', tiempo:'Hace 1 hora', leida:false },
+            { id:'n3', tipo:'alerta', mensaje:'Error en proceso automático de <strong>cálculo de mora</strong>', tiempo:'Hace 5 horas', leida:true }
+        ]);
+    }
+})();
+
+// ─── DATOS BASE (simulan respuesta del Apps Script) ───────────────────────────
+const DATA_BASE = {
+    ingresos: 42500000, egresos: 8200000,
+    barras: [
+        { mes:'Ene', val:3.2 }, { mes:'Feb', val:4.1 }, { mes:'Mar', val:5.8 },
+        { mes:'Abr', val:3.9 }, { mes:'May', val:3.5 }, { mes:'Jun', val:4.6 },
+        { mes:'Jul', val:2.8 }, { mes:'Ago', val:5.2 }, { mes:'Sep', val:6.1 },
+        { mes:'Oct', val:2.3 }, { mes:'Nov', val:1.8 }, { mes:'Dic', val:1.2 }
+    ]
+};
+
+// Variaciones demo por programa
+const DATA_PROGRAMAS = {
+    '1': { ingresos:12400000, egresos:2100000, barras:[{mes:'Ene',val:0.9},{mes:'Feb',val:1.1},{mes:'Mar',val:1.4},{mes:'Abr',val:1.0},{mes:'May',val:0.8},{mes:'Jun',val:1.2},{mes:'Jul',val:0.7},{mes:'Ago',val:1.3},{mes:'Sep',val:1.5},{mes:'Oct',val:0.6},{mes:'Nov',val:0.5},{mes:'Dic',val:0.4}] },
+    '4': { ingresos:18700000, egresos:3800000, barras:[{mes:'Ene',val:1.4},{mes:'Feb',val:1.7},{mes:'Mar',val:2.3},{mes:'Abr',val:1.5},{mes:'May',val:1.3},{mes:'Jun',val:1.9},{mes:'Jul',val:1.1},{mes:'Ago',val:2.1},{mes:'Sep',val:2.5},{mes:'Oct',val:0.9},{mes:'Nov',val:0.7},{mes:'Dic',val:0.5}] },
+    '7': { ingresos: 8900000, egresos:1600000, barras:[{mes:'Ene',val:0.7},{mes:'Feb',val:0.9},{mes:'Mar',val:1.1},{mes:'Abr',val:0.8},{mes:'May',val:0.7},{mes:'Jun',val:1.0},{mes:'Jul',val:0.5},{mes:'Ago',val:0.9},{mes:'Sep',val:1.2},{mes:'Oct',val:0.4},{mes:'Nov',val:0.3},{mes:'Dic',val:0.2}] }
+};
+
+// ─── ESTADO ACTIVO DE FILTROS (se pasa a reportes hijos) ─────────────────────
+let filtrosActivos = {};
+
+// ─── RENDER BARRAS ────────────────────────────────────────────────────────────
+function renderBarras(barras, maxVal) {
+    const chart = document.getElementById('cashflowChart');
+    chart.innerHTML = '';
+    const max = maxVal || Math.max(...barras.map(b => b.val));
+    barras.forEach(b => {
+        const pct = Math.round((b.val / max) * 100);
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = Math.max(pct, 5) + '%';
+        bar.innerHTML = `<div class="bar-value">$${b.val}M</div><div class="bar-label">${b.mes}</div>`;
+        chart.appendChild(bar);
+    });
+}
+
+// ─── TOGGLE DESDE INICIO ─────────────────────────────────────────────────────
+function toggleDesdeInicio(chk) {
+    const input = document.getElementById('fechaDesde');
+    if (chk.checked) {
+        input.value = '';
+        input.disabled = true;
+        input.style.opacity = '0.4';
+        input.disabled = false;
+        input.style.opacity = '1';
+        input.value = '2025-01-01';
+    }
+}
+
+// ─── APLICAR FILTROS ─────────────────────────────────────────────────────────
+function aplicarFiltros() {
+    document.getElementById('loader').classList.add('visible');
+    setTimeout(_ejecutarFiltros, 550);
+}
+
+function _ejecutarFiltros() {
+    const desdeChk  = document.getElementById('chkInicio').checked;
+    const desde     = desdeChk ? null : document.getElementById('fechaDesde').value;
+    const hasta     = document.getElementById('fechaHasta').value;
+    const programa  = document.getElementById('filtroPrograma').value;
+    const cohorte   = document.getElementById('filtroCohorte').value;
+
+    // Guardar filtros activos para pasarlos a los reportes hijos
+    filtrosActivos = { desdeInicio: desdeChk, desde, hasta, programa, cohorte };
+    persistirFiltros();
+
+    // Seleccionar dataset
+    const d = DATA_PROGRAMAS[programa] || DATA_BASE;
+
+    // Recortar barras por rango de fechas
+    let barras = [...d.barras];
+    if (!desdeChk && desde && hasta) {
+        const mesDesde = new Date(desde).getMonth();       // 0–11
+        const mesHasta = new Date(hasta).getMonth();
+        barras = barras.slice(mesDesde, mesHasta + 1);
+    }
+
+    // Actualizar resumen
+    const ing = d.ingresos;
+    const egr = d.egresos;
+    const bal = ing - egr;
+    document.getElementById('totalIngresos').textContent = formatMillones(ing);
+    document.getElementById('totalEgresos').textContent  = formatMillones(egr);
+    const balEl = document.getElementById('balanceNeto');
+    balEl.textContent = formatMillones(bal);
+    balEl.parentElement.style.background = bal >= 0
+        ? 'linear-gradient(135deg,#1e3a5f 0%,#2d5a87 100%)'
+        : 'linear-gradient(135deg,#7f1d1d 0%,#b91c1c 100%)';
+
+    // Actualizar gráfico
+    const programaSelect = document.getElementById('filtroPrograma');
+    const programaNombre = programaSelect.options[programaSelect.selectedIndex].text;
+    const rango = desdeChk ? ('inicio → ' + (hasta ? formatFecha(hasta) : 'hoy')) : ((desde ? formatFecha(desde) : '—') + ' → ' + (hasta ? formatFecha(hasta) : 'hoy'));
+    document.getElementById('chartTitle').textContent = `Recaudación por Mes — ${programaNombre} | ${rango} (en millones)`;
+    renderBarras(barras);
+
+    // Banda de contexto
+    actualizarContexto(desdeChk, desde, hasta, programaNombre, document.getElementById('filtroCohorte').options[document.getElementById('filtroCohorte').selectedIndex].text);
+
+    document.getElementById('loader').classList.remove('visible');
+}
+
+function actualizarContexto(desdeChk, desde, hasta, programa, cohorte) {
+    const el = document.getElementById('filterContext');
+    const partes = [];
+    if (desdeChk)   partes.push('📅 Desde: <strong>el inicio</strong>');
+    else if (desde) partes.push('📅 Desde: <strong>' + formatFecha(desde) + '</strong>');
+    if (hasta)      partes.push('hasta <strong>' + formatFecha(hasta) + '</strong>');
+    if (programa && programa !== 'Todos los programas') partes.push('| 🎓 ' + programa);
+    if (cohorte  && cohorte  !== 'Todas las cohortes')  partes.push('| 📋 ' + cohorte);
+
+    if (partes.length) {
+        el.innerHTML = '🔎 Mostrando: ' + partes.join(' ');
+        el.classList.add('visible');
+        el.classList.remove('visible');
+    }
+}
+
+// ─── PERSISTENCIA DE FILTROS (para que los reportes hijos los lean) ───────────
+// Se guardan en sessionStorage con la clave 'sigpo_filtros_cashflow'.
+// Cada vista de reporte hijo debe leer esta clave al cargar y pre-llenar sus filtros.
+function persistirFiltros() {
+    try {
+        sessionStorage.setItem('sigpo_filtros_cashflow', JSON.stringify(filtrosActivos));
+    } catch(e) {}
+}
+
+function guardarFiltrosYNavegar(event, destino) {
+    // Guardar filtros actuales antes de navegar
+    const desdeChk = document.getElementById('chkInicio').checked;
+    filtrosActivos = {
+        desdeInicio: desdeChk,
+        desde:    desdeChk ? null : document.getElementById('fechaDesde').value,
+        hasta:    document.getElementById('fechaHasta').value,
+        programa: document.getElementById('filtroPrograma').value,
+        cohorte:  document.getElementById('filtroCohorte').value
+    };
+    persistirFiltros();
+    // Navegación normal por href — no prevenir default
+}
+
+// ─── EXPORTAR ─────────────────────────────────────────────────────────────────
+function exportarExcel() {
+    const desdeChk = document.getElementById('chkInicio').checked;
+    const desde    = desdeChk ? 'Desde el inicio' : (document.getElementById('fechaDesde').value ? formatFecha(document.getElementById('fechaDesde').value) : '—');
+    const hasta    = document.getElementById('fechaHasta').value ? formatFecha(document.getElementById('fechaHasta').value) : 'Sin límite';
+    const prog     = document.getElementById('filtroPrograma').options[document.getElementById('filtroPrograma').selectedIndex].text;
+    const coh      = document.getElementById('filtroCohorte').options[document.getElementById('filtroCohorte').selectedIndex].text;
+    const rango    = desdeChk ? 'Todos los registros hasta ' + hasta : desde + ' → ' + hasta;
+
+    alert(
+        '📊 Exportando Reporte Excel — Cashflow\n\n' +
+        '─────────────────────────────\n' +
+        'Parámetros:\n' +
+        '• Rango:    ' + rango + '\n' +
+        '• Programa: ' + prog + '\n' +
+        '• Cohorte:  ' + coh + '\n' +
+        '─────────────────────────────\n\n' +
+        'Se integrará con el Apps Script para generar el archivo.'
+    );
+    // google.script.run.withSuccessHandler(url => window.open(url)).exportarCashflow(filtrosActivos);
+}
+
+function exportarTodoExcel() {
+    alert('📥 Exportar Todo a Excel\n\nGenerará un archivo con todos los reportes consolidados aplicando los filtros activos.\n\nSe integrará con el Apps Script.');
+}
+
+function generarPDF() {
+    alert('📄 Generando PDF Consolidado con los filtros activos.\n\nSe integrará con el Apps Script.');
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function formatFecha(iso) {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return d + '/' + m + '/' + y;
+}
+
+function formatMillones(n) {
+    if (Math.abs(n) >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
+    return '$' + n.toLocaleString('es-AR');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    renderBarras(DATA_BASE.barras);
+
+    // Si venimos de "volver" desde un reporte hijo, restaurar filtros
+    try {
+        const guardados = sessionStorage.getItem('sigpo_filtros_cashflow');
+        if (guardados) {
+            const f = JSON.parse(guardados);
+            if (f.desdeInicio) {
+                document.getElementById('chkInicio').checked = true;
+                toggleDesdeInicio({ checked: true });
+            } else if (f.desde) {
+                document.getElementById('fechaDesde').value = f.desde;
+            }
+            if (f.hasta)    document.getElementById('fechaHasta').value = f.hasta;
+            if (f.programa) document.getElementById('filtroPrograma').value = f.programa;
+            if (f.cohorte)  document.getElementById('filtroCohorte').value  = f.cohorte;
+        }
+    } catch(e) {}
+});
+</script>
+</body>
+</html>

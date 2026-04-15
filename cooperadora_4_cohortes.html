@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cohortes - Esp. Costos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a5f;
+            --accent: #d4af37;
+            --bg: #f8f6f1;
+            --success: #2d7a4f;
+            --warning: #e67e22;
+            --danger: #c0392b;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white;
+            padding: 20px 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .breadcrumb {
+            font-size: 14px;
+            margin-bottom: 12px;
+            opacity: 0.9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .breadcrumb a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            opacity: 0.7;
+        }
+
+        .header h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 40px;
+        }
+
+        .page-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .page-subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 32px;
+        }
+
+        .cohortes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .cohorte-card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cohorte-card:hover {
+            border-color: var(--accent);
+            transform: translateX(8px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .cohorte-card.active {
+            border-color: var(--accent);
+            background: linear-gradient(90deg, #fff9e6 0%, white 30%);
+        }
+
+        .cohorte-left {
+            flex: 1;
+        }
+
+        .cohorte-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .cohorte-dates {
+            color: #666;
+            font-size: 15px;
+            margin-bottom: 16px;
+        }
+
+        .cohorte-stats {
+            display: flex;
+            gap: 32px;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-value.success {
+            color: var(--success);
+        }
+
+        .stat-value.warning {
+            color: var(--warning);
+        }
+
+        .stat-value.danger {
+            color: var(--danger);
+        }
+
+        .cohorte-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.active {
+            background: #d4edda;
+            color: var(--success);
+        }
+
+        .badge.closed {
+            background: #e8e8e8;
+            color: #666;
+        }
+
+        .arrow {
+            font-size: 28px;
+            color: var(--accent);
+            transition: transform 0.3s ease;
+        }
+
+        .cohorte-card:hover .arrow {
+            transform: translateX(8px);
+        }
+
+        .btn-toggle {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 2px solid;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .btn-toggle.cerrar {
+            background: white;
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        .btn-toggle.cerrar:hover {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-toggle.activar {
+            background: white;
+            border-color: var(--success);
+            color: var(--success);
+        }
+        .btn-toggle.activar:hover {
+            background: var(--success);
+            color: white;
+        }
+        .saldo-positivo { color: var(--success); font-weight: 700; }
+        .saldo-negativo { color: var(--danger); font-weight: 700; }
+        .btn-logout { padding: 8px 18px; background: transparent; color: white; border: 2px solid rgba(255,255,255,0.7); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s, border-color 0.2s; opacity: 1; }
+        .btn-logout:hover { background: rgba(255,255,255,0.15); border-color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content" style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+                <div class="breadcrumb">
+                    <a href="cooperadora_3_programas.html">← Volver a Programas</a>
+                </div>
+                <h1>💼 Especialización en Costos y Gestión Empresarial</h1>
+                <p>Selecciona una cohorte para ver sus estudiantes</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                <div class="notif-wrapper" style="position:relative;">
+                    <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                    </button>
+                    <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                        <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                            <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                            <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                        </div>
+                        <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="return cerrarSesion(event)">Cerrar Sesión</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">Cohortes Disponibles</h1>
+        <p class="page-subtitle">5 cohortes • 42 estudiantes totales</p>
+
+        <div class="cohortes-list">
+
+            <!-- COHORTE ACTIVA 2025-2026 -->
+            <div class="cohorte-card active" id="cohorte-1" onclick="irACohorte(1)">
+                <div class="cohorte-left">
+                    <div class="cohorte-title">Cohorte 2025-2026</div>
+                    <div class="cohorte-dates">Abril 2025 - Septiembre 2026 • 16 cuotas</div>
+                    <div class="cohorte-stats">
+                        <div class="stat-box">
+                            <div class="stat-label">Estudiantes</div>
+                            <div class="stat-value">15</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Al día</div>
+                            <div class="stat-value success">8</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">En mora</div>
+                            <div class="stat-value danger">5</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Pago parcial</div>
+                            <div class="stat-value warning">2</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Recaudado</div>
+                            <div class="stat-value">$3.2M</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Egresos</div>
+                            <div class="stat-value">$2.1M</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Saldo</div>
+                            <div class="stat-value saldo-positivo">$1.1M</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cohorte-right">
+                    <span class="badge active" id="badge-1">Activa</span>
+                    <button class="btn-toggle cerrar" onclick="toggleEstado(1, event)">🔒 Cerrar</button>
+                    <span class="arrow">→</span>
+                </div>
+            </div>
+
+            <!-- COHORTE 2024-2025 -->
+            <div class="cohorte-card active" id="cohorte-2" onclick="irACohorte(2)">
+                <div class="cohorte-left">
+                    <div class="cohorte-title">Cohorte 2024-2025</div>
+                    <div class="cohorte-dates">Abril 2024 - Septiembre 2025 • 16 cuotas</div>
+                    <div class="cohorte-stats">
+                        <div class="stat-box">
+                            <div class="stat-label">Estudiantes</div>
+                            <div class="stat-value">12</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Al día</div>
+                            <div class="stat-value success">10</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">En mora</div>
+                            <div class="stat-value danger">2</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Pago parcial</div>
+                            <div class="stat-value warning">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Recaudado</div>
+                            <div class="stat-value">$2.8M</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Egresos</div>
+                            <div class="stat-value">$1.9M</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Saldo</div>
+                            <div class="stat-value saldo-positivo">$0.9M</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cohorte-right">
+                    <span class="badge active" id="badge-2">Activa</span>
+                    <button class="btn-toggle cerrar" onclick="toggleEstado(2, event)">🔒 Cerrar</button>
+                    <span class="arrow">→</span>
+                </div>
+            </div>
+
+            <!-- COHORTE 2023-2024 -->
+            <div class="cohorte-card" id="cohorte-3" onclick="irACohorte(3)">
+                <div class="cohorte-left">
+                    <div class="cohorte-title">Cohorte 2023-2024</div>
+                    <div class="cohorte-dates">Abril 2023 - Septiembre 2024 • 16 cuotas</div>
+                    <div class="cohorte-stats">
+                        <div class="stat-box">
+                            <div class="stat-label">Estudiantes</div>
+                            <div class="stat-value">8</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Al día</div>
+                            <div class="stat-value success">8</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">En mora</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Pago parcial</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Recaudado</div>
+                            <div class="stat-value">$1.9M</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Egresos</div>
+                            <div class="stat-value">$1.5M</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Saldo</div>
+                            <div class="stat-value saldo-positivo">$0.4M</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cohorte-right">
+                    <span class="badge closed" id="badge-3">Cerrada</span>
+                    <button class="btn-toggle activar" onclick="toggleEstado(3, event)">✅ Activar</button>
+                    <span class="arrow">→</span>
+                </div>
+            </div>
+
+            <!-- COHORTE 2022-2023 -->
+            <div class="cohorte-card" id="cohorte-4" onclick="irACohorte(4)">
+                <div class="cohorte-left">
+                    <div class="cohorte-title">Cohorte 2022-2023</div>
+                    <div class="cohorte-dates">Abril 2022 - Septiembre 2023 • 16 cuotas</div>
+                    <div class="cohorte-stats">
+                        <div class="stat-box">
+                            <div class="stat-label">Estudiantes</div>
+                            <div class="stat-value">5</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Completaron</div>
+                            <div class="stat-value success">5</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">En mora</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Pago parcial</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Recaudado</div>
+                            <div class="stat-value">$1.2M</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Egresos</div>
+                            <div class="stat-value">$1.0M</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Saldo</div>
+                            <div class="stat-value saldo-positivo">$0.2M</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cohorte-right">
+                    <span class="badge closed" id="badge-4">Cerrada</span>
+                    <button class="btn-toggle activar" onclick="toggleEstado(4, event)">✅ Activar</button>
+                    <span class="arrow">→</span>
+                </div>
+            </div>
+
+            <!-- COHORTE 2021-2022 -->
+            <div class="cohorte-card" id="cohorte-5" onclick="irACohorte(5)">
+                <div class="cohorte-left">
+                    <div class="cohorte-title">Cohorte 2021-2022</div>
+                    <div class="cohorte-dates">Abril 2021 - Septiembre 2022 • 19 cuotas</div>
+                    <div class="cohorte-stats">
+                        <div class="stat-box">
+                            <div class="stat-label">Estudiantes</div>
+                            <div class="stat-value">2</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Completaron</div>
+                            <div class="stat-value success">2</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">En mora</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Pago parcial</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Recaudado</div>
+                            <div class="stat-value">$480k</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Egresos</div>
+                            <div class="stat-value">$390k</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Saldo</div>
+                            <div class="stat-value saldo-positivo">$90k</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cohorte-right">
+                    <span class="badge closed" id="badge-5">Cerrada</span>
+                    <button class="btn-toggle activar" onclick="toggleEstado(5, event)">✅ Activar</button>
+                    <span class="arrow">→</span>
+                </div>
+            </div>
+
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+            function toggleEstado(id, event) {
+                event.stopPropagation(); // evita que el click navegue a la cohorte
+
+                var card  = document.getElementById('cohorte-' + id);
+                var badge = document.getElementById('badge-' + id);
+                var btn   = event.currentTarget;
+                var esActiva = badge.classList.contains('active');
+
+                if (esActiva) {
+                    // Pasar a CERRADA
+                    card.classList.remove('active');
+                    badge.classList.remove('active');
+                    badge.classList.add('closed');
+                    badge.textContent = 'Cerrada';
+                    btn.classList.remove('cerrar');
+                    btn.classList.add('activar');
+                    btn.textContent = '✅ Activar';
+                    // Pasar a ACTIVA
+                    card.classList.add('active');
+                    badge.classList.remove('closed');
+                    badge.classList.add('active');
+                    badge.textContent = 'Activa';
+                    btn.classList.remove('activar');
+                    btn.classList.add('cerrar');
+                    btn.textContent = '🔒 Cerrar';
+                }
+            }
+
+            function irACohorte(cohorteId) {
+                // Redirige a la vista de detalle de la cohorte seleccionada
+                window.location.href = 'cooperadora_5_cohorte.html?cohorte=' + cohorteId;
+            }
+        
+    /* Navegación y sesión proporcionadas por supabase.js */
+    
+        /* ══ CAMPANA ══ */
+    var _notifs = [];
+    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+    function renderNotificaciones(datos) {
+        _notifs = datos || [];
+        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+        var lista = document.getElementById('notif-list');
+        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+        var iconos = { pago:'\u{1f4b0}', mora:'\u{1f534}', solicitud:'\u{1f4cb}', reclamo:'\u26a0\ufe0f', alerta:'\u{1f6a8}' };
+        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
+        lista.innerHTML = _notifs.map(function(n) {
+            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+        }).join('');
+    }
+    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
+    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+    // Notificaciones cargadas por supabase.js automáticamente
+
+</script>
+    </div>
+</body>
+</html>

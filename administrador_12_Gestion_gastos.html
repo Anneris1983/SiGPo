@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Gastos y Egresos - Administrador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #2d7a4f; --danger: #dc2626; --warning: #f59e0b; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+        
+        .header { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 20px 40px; }
+        .breadcrumb { font-size: 14px; margin-bottom: 12px; }
+        .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 24px; }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .header-top-left { flex: 1; }
+        .btn-logout {
+            display: flex; align-items: center; gap: 7px;
+            padding: 9px 18px;
+            background: rgba(255,255,255,0.14);
+            border: 1.5px solid rgba(255,255,255,0.38);
+            color: white; border-radius: 8px;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; text-decoration: none;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s; white-space: nowrap;
+            flex-shrink: 0; margin-top: 4px;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.24); }
+        
+        .container { max-width: 1600px; margin: 40px auto; padding: 0 40px; }
+        
+        .card { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .card-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
+        .stat-box { background: linear-gradient(135deg, #f8f6f1 0%, #ffffff 100%); border: 2px solid #e0e0e0; padding: 24px; border-radius: 12px; text-align: center; }
+        .stat-value { font-size: 32px; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 13px; color: #666; margin-top: 8px; }
+        
+        .tabs { display: flex; gap: 0; margin-bottom: 24px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .tab { flex: 1; padding: 16px 24px; text-align: center; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s; }
+        .tab:hover { background: #f8f6f1; }
+        .tab.active { border-bottom-color: var(--accent); color: var(--primary); background: #f8f6f1; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .toolbar { display: flex; gap: 12px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; }
+        .search-box { flex: 1; position: relative; min-width: 200px; }
+        .search-box input { width: 100%; padding: 12px 16px 12px 40px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999; }
+        
+        .filter-select { padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-weight: 600; background: white; cursor: pointer; }
+        
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: 'DM Sans', sans-serif; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        thead { background: #f8f6f1; position: sticky; top: 0; }
+        th { padding: 12px; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #e0e0e0; white-space: nowrap; }
+        td { padding: 12px; border-bottom: 1px solid #e8e8e8; }
+        tbody tr:hover { background: #f8f6f1; }
+        
+        .badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-ejecutado { background: #fee2e2; color: #991b1b; }
+        .badge-proyectado { background: #fef3c7; color: #92400e; }
+        
+        .btn-icon { padding: 8px 12px; font-size: 13px; margin: 0 2px; }
+        
+        .actions-group { display: flex; gap: 4px; justify-content: flex-start; align-items: center; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 24px; border-bottom: 2px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 20px; font-weight: 700; color: var(--primary); }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        .modal-body { padding: 24px; }
+        .modal-footer { padding: 24px; border-top: 2px solid #e0e0e0; display: flex; gap: 12px; justify-content: flex-end; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--primary); font-size: 14px; }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
+        .form-textarea { resize: vertical; min-height: 80px; }
+        .form-hint { font-size: 13px; color: #666; margin-top: 4px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        
+        .import-info { background: #e0f2fe; padding: 16px; border-radius: 8px; margin-top: 12px; }
+        .import-info ul { margin-top: 8px; padding-left: 20px; font-size: 13px; color: #075985; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-top">
+            <div class="header-top-left">
+                <div class="breadcrumb"><a href="administrador_2_dashboard.html" onclick="navegar('administrador_2_dashboard.html'); return false;">← Volver al Dashboard</a></div>
+                <h1>💸 Gestión de Gastos y Egresos - Administrador</h1>
+                <p>Control de pagos ejecutados y proyectados</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+                <!-- Campana -->
+                <div class="notif-wrapper" style="position:relative;">
+                    <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                    </button>
+                    <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                        <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                            <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                            <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                        </div>
+                        <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                    </div>
+                </div>
+                <a href="portal_login.html" class="btn-logout" onclick="return cerrarSesion(event)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Cerrar sesión
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- RESUMEN -->
+        <div class="card">
+            <h2 class="card-title">📊 Resumen Financiero</h2>
+            <div class="stats-grid">
+                <div class="stat-box" style="border-color: #dc2626;">
+                    <div class="stat-value" style="color: #dc2626;">$8.2M</div>
+                    <div class="stat-label">Gastos Ejecutados</div>
+                </div>
+                <div class="stat-box" style="border-color: #f59e0b;">
+                    <div class="stat-value" style="color: #f59e0b;">$6.5M</div>
+                    <div class="stat-label">Gastos Proyectados</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">$14.7M</div>
+                    <div class="stat-label">Total Gastos</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs">
+            <div class="tab active" onclick="cambiarTab('proyectados')">
+                <div>📋 Gastos Proyectados</div>
+                <div style="font-size: 12px; color: #666; font-weight: 400;">Compromisos futuros</div>
+            </div>
+            <div class="tab" onclick="cambiarTab('ejecutados')">
+                <div>✅ Gastos Ejecutados</div>
+                <div style="font-size: 12px; color: #666; font-weight: 400;">Pagos realizados</div>
+            </div>
+        </div>
+
+        <!-- TAB: GASTOS PROYECTADOS -->
+        <div id="tab-proyectados" class="tab-content active">
+            <div class="card">
+                <h2 class="card-title">📋 Gastos Proyectados</h2>
+                
+                <div class="toolbar">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" placeholder="Buscar por concepto, proveedor..." onkeyup="buscar(this.value, 'proyectados')">
+                    </div>
+                    <select class="filter-select" onchange="filtrarCategoria(this.value, 'proyectados')">
+                        <option>Todas las categorías</option>
+                        <option>Hon. Dirección/Coordinación</option>
+                        <option>Hon. Personal Apoyo</option>
+                        <option>Hon. Profesores</option>
+                        <option>Movilidad</option>
+                        <option>Pasajes Aéreos/Colectivos</option>
+                        <option>Agapé/Break</option>
+                        <option>Publicidad</option>
+                        <option>Gastos Varios</option>
+                        <option>Servicios Informáticos</option>
+                        <option>Papelería y Útiles</option>
+                        <option>Plataformas Internet</option>
+                    </select>
+                    <select class="filter-select" onchange="filtrarPrograma(this.value, 'proyectados')">
+                        <option>Todos los programas</option>
+                    </select>
+                    <button class="btn btn-success" onclick="nuevoGasto('proyectados')">+ Nuevo Gasto</button>
+                    <button class="btn btn-warning" onclick="importarProyectados()">📥 Importar Proyectados</button>
+                    <button class="btn btn-success">📊 Exportar</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="tablaProyectados">
+                        <thead>
+                            <tr>
+                                <th>Fecha Estimada</th>
+                                <th>Categoría</th>
+                                <th>Concepto/Descripción</th>
+                                <th>Programa/Curso</th>
+                                <th>Cohorte/Edición</th>
+                                <th>Monto</th>
+                                <th>Proveedor</th>
+                                <th>N° comprobante</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>15/04/2026</td>
+                                <td>Hon. Profesores</td>
+                                <td>Pago Docente - Módulo Finanzas</td>
+                                <td>Esp. en Costos</td>
+                                <td>2024-2025</td>
+                                <td>$180,000</td>
+                                <td>Dr. Carlos Méndez</td>
+                                <td>-</td>
+                                <td><span class="badge badge-proyectado">Proyectado</span></td>
+                                <td>
+                                    <div class="actions-group">
+                                        <button class="btn btn-primary btn-icon" onclick="ejecutarGasto(1)" title="Ejecutar gasto">✓ Ejecutar</button>
+                                        <button class="btn btn-primary btn-icon" onclick="editarGasto(1)" title="Editar">✏️</button>
+                                        <button class="btn btn-danger btn-icon" onclick="eliminarGasto(1)" title="Eliminar">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>20/04/2026</td>
+                                <td>Movilidad</td>
+                                <td>Traslados profesores visitantes</td>
+                                <td>Maestría Agronegocios</td>
+                                <td>2025-2026</td>
+                                <td>$90,000</td>
+                                <td>Remisería Mendoza</td>
+                                <td>-</td>
+                                <td><span class="badge badge-proyectado">Proyectado</span></td>
+                                <td>
+                                    <div class="actions-group">
+                                        <button class="btn btn-primary btn-icon" onclick="ejecutarGasto(2)" title="Ejecutar gasto">✓ Ejecutar</button>
+                                        <button class="btn btn-primary btn-icon" onclick="editarGasto(2)" title="Editar">✏️</button>
+                                        <button class="btn btn-danger btn-icon" onclick="eliminarGasto(2)" title="Eliminar">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>25/04/2026</td>
+                                <td>Agapé/Break</td>
+                                <td>Coffee break jornada intensiva</td>
+                                <td>Doctorado en Economía</td>
+                                <td>2024-2027</td>
+                                <td>$120,000</td>
+                                <td>Catering Los Andes</td>
+                                <td>-</td>
+                                <td><span class="badge badge-proyectado">Proyectado</span></td>
+                                <td>
+                                    <div class="actions-group">
+                                        <button class="btn btn-primary btn-icon" onclick="ejecutarGasto(3)" title="Ejecutar gasto">✓ Ejecutar</button>
+                                        <button class="btn btn-primary btn-icon" onclick="editarGasto(3)" title="Editar">✏️</button>
+                                        <button class="btn btn-danger btn-icon" onclick="eliminarGasto(3)" title="Eliminar">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: GASTOS EJECUTADOS -->
+        <div id="tab-ejecutados" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">✅ Gastos Ejecutados</h2>
+                
+                <div class="toolbar">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" placeholder="Buscar por concepto, proveedor..." onkeyup="buscar(this.value, 'ejecutados')">
+                    </div>
+                    <select class="filter-select" onchange="filtrarCategoria(this.value, 'ejecutados')">
+                        <option>Todas las categorías</option>
+                        <option>Hon. Dirección/Coordinación</option>
+                        <option>Hon. Personal Apoyo</option>
+                        <option>Hon. Profesores</option>
+                        <option>Movilidad</option>
+                        <option>Pasajes Aéreos/Colectivos</option>
+                        <option>Agapé/Break</option>
+                        <option>Publicidad</option>
+                        <option>Gastos Varios</option>
+                        <option>Servicios Informáticos</option>
+                        <option>Papelería y Útiles</option>
+                        <option>Plataformas Internet</option>
+                    </select>
+                    <select class="filter-select" onchange="filtrarPrograma(this.value, 'ejecutados')">
+                        <option>Todos los programas</option>
+                    </select>
+                    <button class="btn btn-success" onclick="nuevoGasto('ejecutados')">+ Nuevo Gasto</button>
+                    <button class="btn btn-danger" onclick="importarEjecutados()">📥 Importar Ejecutados</button>
+                    <button class="btn btn-success">📊 Exportar</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="tablaEjecutados">
+                        <thead>
+                            <tr>
+                                <th>Fecha Estimada</th>
+                                <th>Categoría</th>
+                                <th>Concepto/Descripción</th>
+                                <th>Programa/Curso</th>
+                                <th>Cohorte/Edición</th>
+                                <th>Monto</th>
+                                <th>Proveedor</th>
+                                <th>N° comprobante</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>15/03/2026</td>
+                                <td>Hon. Profesores</td>
+                                <td>Pago Docente - Módulo Costos</td>
+                                <td>Esp. en Costos</td>
+                                <td>2024-2025</td>
+                                <td>$450,000</td>
+                                <td>Dr. Juan Pérez</td>
+                                <td>FC-2026-0234</td>
+                                <td><span class="badge badge-ejecutado">Ejecutado</span></td>
+                                <td>
+                                    <div class="actions-group">
+                                        <button class="btn btn-primary btn-icon" onclick="editarGasto(1)" title="Editar">✏️</button>
+                                        <button class="btn btn-danger btn-icon" onclick="eliminarGasto(1)" title="Eliminar">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>10/03/2026</td>
+                                <td>Servicios Informáticos</td>
+                                <td>Licencias Zoom - Marzo 2026</td>
+                                <td>Todos los programas</td>
+                                <td>-</td>
+                                <td>$85,000</td>
+                                <td>Zoom Video Communications</td>
+                                <td>INV-2026-0187</td>
+                                <td><span class="badge badge-ejecutado">Ejecutado</span></td>
+                                <td>
+                                    <div class="actions-group">
+                                        <button class="btn btn-primary btn-icon" onclick="editarGasto(2)" title="Editar">✏️</button>
+                                        <button class="btn btn-danger btn-icon" onclick="eliminarGasto(2)" title="Eliminar">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: NUEVO/EDITAR GASTO -->
+    <div class="modal" id="modalGasto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitulo">Nuevo Gasto</h3>
+                <button class="modal-close" onclick="cerrarModal('modalGasto')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Fecha Estimada</label>
+                        <input type="date" class="form-input" id="fechaEstimada">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Categoría</label>
+                        <select class="form-select" id="categoria">
+                            <option>Hon. Dirección/Coordinación</option>
+                            <option>Hon. Personal Apoyo</option>
+                            <option>Hon. Profesores</option>
+                            <option>Movilidad</option>
+                            <option>Pasajes Aéreos/Colectivos</option>
+                            <option>Agapé/Break</option>
+                            <option>Publicidad</option>
+                            <option>Gastos Varios</option>
+                            <option>Servicios Informáticos</option>
+                            <option>Papelería y Útiles</option>
+                            <option>Plataformas Internet</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Concepto/Descripción</label>
+                    <textarea class="form-textarea" id="concepto" placeholder="Detalle del gasto..."></textarea>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Programa/Curso</label>
+                        <select class="form-select" id="programa">
+                            <option>Esp. en Costos y Gestión</option>
+                            <option>Maestría en Dirección de Negocios</option>
+                            <option>Doctorado en Ciencias Económicas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cohorte/Edición</label>
+                        <input type="text" class="form-input" id="cohorte" placeholder="ej: 2024-2025">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Monto</label>
+                        <input type="number" class="form-input" id="monto" placeholder="$">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Proveedor</label>
+                        <input type="text" class="form-input" id="proveedor">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">N° comprobante</label>
+                    <input type="text" class="form-input" id="comprobante" placeholder="Opcional">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background: #e0e0e0; color: #666;" onclick="cerrarModal('modalGasto')">Cancelar</button>
+                <button class="btn btn-success" onclick="guardarGasto()">💾 Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EJECUTAR GASTO -->
+    <div class="modal" id="modalEjecutar">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">✓ Ejecutar Gasto Proyectado</h3>
+                <button class="modal-close" onclick="cerrarModal('modalEjecutar')">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: #666;">Complete los datos para ejecutar este gasto:</p>
+                <div class="form-group">
+                    <label class="form-label">Fecha de Ejecución</label>
+                    <input type="date" class="form-input" id="fechaEjecucion">
+                    <div class="form-hint">Fecha en que se realizó el pago</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">N° de comprobante *</label>
+                    <input type="text" class="form-input" id="comprobanteEjecucion" placeholder="ej: FC-2026-0234">
+                    <div class="form-hint">Número de factura o comprobante de pago</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Observaciones</label>
+                    <textarea class="form-textarea" id="observaciones" placeholder="Detalles adicionales (opcional)"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background: #e0e0e0; color: #666;" onclick="cerrarModal('modalEjecutar')">Cancelar</button>
+                <button class="btn btn-success" onclick="confirmarEjecucion()">✓ Confirmar Ejecución</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: IMPORTAR EXCEL -->
+    <div class="modal" id="modalImportar">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📥 Importar Gastos desde Excel</h3>
+                <button class="modal-close" onclick="cerrarModal('modalImportar')">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="tipoImportacion">
+                <div class="form-group">
+                    <label class="form-label">Archivo Excel (.xlsx, .xls)</label>
+                    <input type="file" accept=".xlsx,.xls" onchange="procesarExcel(this.files[0])" class="form-input">
+                </div>
+                <div class="import-info">
+                    <strong>📋 Estructura requerida del Excel:</strong>
+                    <ul>
+                        <li><strong>Columna A:</strong> Fecha Estimada</li>
+                        <li><strong>Columna B:</strong> Categoría</li>
+                        <li><strong>Columna C:</strong> Concepto/Descripción</li>
+                        <li><strong>Columna D:</strong> Programa/Curso</li>
+                        <li><strong>Columna E:</strong> Cohorte/Edición</li>
+                        <li><strong>Columna F:</strong> Monto</li>
+                        <li><strong>Columna G:</strong> Proveedor</li>
+                        <li><strong>Columna H:</strong> N° comprobante</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background: #e0e0e0; color: #666;" onclick="cerrarModal('modalImportar')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+        let gastoAEjecutar = null;
+
+        function cambiarTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            
+            event.target.closest('.tab').classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
+        function nuevoGasto(tipo) {
+            document.getElementById('modalTitulo').textContent = 'Nuevo Gasto ' + (tipo === 'proyectados' ? 'Proyectado' : 'Ejecutado');
+            document.getElementById('modalGasto').classList.add('active');
+        }
+
+        function editarGasto(id) {
+            document.getElementById('modalTitulo').textContent = 'Editar Gasto';
+            document.getElementById('modalGasto').classList.add('active');
+        }
+
+        function eliminarGasto(id) {
+            if (confirm('¿Está seguro de eliminar este gasto?')) {
+                alert('Gasto eliminado');
+            }
+        }
+
+        function ejecutarGasto(id) {
+            gastoAEjecutar = id;
+            // Pre-llenar fecha de ejecución con fecha actual
+            document.getElementById('fechaEjecucion').valueAsDate = new Date();
+            document.getElementById('modalEjecutar').classList.add('active');
+        }
+
+        function confirmarEjecucion() {
+            const fechaEjecucion = document.getElementById('fechaEjecucion').value;
+            const comprobante = document.getElementById('comprobanteEjecucion').value;
+            const observaciones = document.getElementById('observaciones').value;
+
+            if (!fechaEjecucion) {
+                alert('Por favor ingrese la fecha de ejecución');
+                return;
+            }
+
+            if (!comprobante) {
+                alert('Por favor ingrese el número de comprobante');
+                return;
+            }
+
+            // Aquí iría la llamada al backend para actualizar el gasto
+            alert('Gasto ejecutado exitosamente\n\n' + 
+                  'ID: ' + gastoAEjecutar + '\n' +
+                  'Fecha: ' + fechaEjecucion + '\n' +
+                  'Comprobante: ' + comprobante + '\n' +
+                  (observaciones ? 'Observaciones: ' + observaciones : ''));
+
+            cerrarModal('modalEjecutar');
+            
+            // Limpiar campos
+            document.getElementById('comprobanteEjecucion').value = '';
+            document.getElementById('observaciones').value = '';
+            gastoAEjecutar = null;
+
+            // Simular actualización de la interfaz
+            // En producción, esto se haría recargando los datos desde el backend
+        }
+
+        function guardarGasto() {
+            alert('Gasto guardado exitosamente');
+            cerrarModal('modalGasto');
+        }
+
+        function importarProyectados() {
+            document.getElementById('modalImportar').classList.add('active');
+            document.getElementById('tipoImportacion').value = 'proyectados';
+        }
+
+        function importarEjecutados() {
+            document.getElementById('modalImportar').classList.add('active');
+            document.getElementById('tipoImportacion').value = 'ejecutados';
+        }
+
+        function procesarExcel(file) {
+            if (!file) return;
+            
+            const tipo = document.getElementById('tipoImportacion').value;
+            alert('Procesando archivo Excel...\n\nTipo: ' + tipo + '\nArchivo: ' + file.name + '\n\nColumnas esperadas:\nA: Fecha Estimada\nB: Categoría\nC: Concepto/Descripción\nD: Programa/Curso\nE: Cohorte/Edición\nF: Monto\nG: Proveedor\nH: N° comprobante');
+            
+            cerrarModal('modalImportar');
+        }
+
+        function cerrarModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function buscar(texto, tipo) {
+            console.log('Buscando:', texto, 'en', tipo);
+        }
+
+        function filtrarCategoria(categoria, tipo) {
+            console.log('Filtrando por categoría:', categoria, 'en', tipo);
+        }
+
+        function filtrarPrograma(programa, tipo) {
+            console.log('Filtrando por programa:', programa, 'en', tipo);
+        }
+
+        /* Navegación y sesión proporcionadas por supabase.js */
+    
+                /* ── CAMPANA ── */
+        var _notifs = [];
+        function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+        document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+        function renderNotificaciones(datos) {
+            _notifs = datos || [];
+            var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+            var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+            var lista = document.getElementById('notif-list');
+            if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+            var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
+            var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
+            lista.innerHTML = _notifs.map(function(n) {
+                return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+                    + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+                    + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+            }).join('');
+        }
+        function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
+        function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+        // Notificaciones cargadas por supabase.js automáticamente
+    </script>
+</body>
+</html>

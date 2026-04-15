@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración de Categorías de Gastos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; padding: 32px; }
+        
+        .header { margin-bottom: 32px; }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 28px; color: var(--primary); margin-bottom: 8px; }
+        .header p { color: #666; }
+        
+        .alert-info { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 16px; border-radius: 8px; margin-bottom: 24px; }
+        
+        .categorias-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .categorias-table thead { background: var(--primary); color: white; }
+        .categorias-table th { padding: 16px; text-align: left; font-weight: 600; font-size: 14px; }
+        .categorias-table td { padding: 16px; border-bottom: 1px solid #e0e0e0; }
+        .categorias-table tr:last-child td { border-bottom: none; }
+        .categorias-table tr:hover { background: #fafafa; }
+        
+        .categoria-nombre { font-weight: 600; color: var(--primary); }
+        
+        .select-tipo { padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; min-width: 150px; cursor: pointer; }
+        .select-tipo:focus { outline: none; border-color: var(--accent); }
+        
+        .badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-fijo { background: #e3f2fd; color: #1565c0; }
+        .badge-variable { background: #fff3e0; color: #ef6c00; }
+        .badge-ajustable { background: #fef3c7; color: #92400e; }
+        .badge-critico { background: #fee2e2; color: #991b1b; }
+        .badge-operativo { background: #f3e8ff; color: #6b21a8; }
+        
+        .tipo-fijo { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
+        .tipo-variable { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); }
+        .tipo-ajustable { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); }
+        .tipo-critico { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); }
+        .tipo-operativo { background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); }
+        
+        .actions { margin-top: 24px; display: flex; gap: 16px; justify-content: flex-end; }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #2d5a87; }
+        .btn-secondary { background: #e0e0e0; color: #666; }
+        .btn-secondary:hover { background: #d0d0d0; }
+        
+        .descripcion-tipos { background: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+        .descripcion-tipos h3 { color: var(--primary); margin-bottom: 16px; font-size: 16px; }
+        .tipo-desc { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .tipo-desc-badge { min-width: 100px; }
+    </style>
+</head>
+<body>
+    <!-- HEADER INSTITUCIONAL -->
+    <div style="background:linear-gradient(135deg,#1e3a5f 0%,#2d5a87 100%);color:white;padding:20px 40px;display:flex;align-items:flex-start;justify-content:space-between;">
+        <div style="flex:1;">
+            <div style="font-size:14px;margin-bottom:12px;"><a href="administrador_7_reportes_globales.html" onclick="navegar('administrador_7_reportes_globales.html'); return false;" style="color:white;text-decoration:none;opacity:0.9;">← Volver a Reportes Globales</a></div>
+            <h1 style="font-family:'Crimson Pro',serif;font-size:24px;margin-bottom:4px;">⚙️ Configuración de Categorías de Gastos</h1>
+            <p style="font-size:14px;opacity:0.85;">Define el tipo y criticidad de cada categoría de egreso</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;">
+            <div class="notif-wrapper" style="position:relative;">
+                <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                </button>
+                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                    </div>
+                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                </div>
+            </div>
+            <a href="portal_login.html" onclick="return cerrarSesion(event)" style="display:flex;align-items:center;gap:8px;padding:9px 18px;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.35);color:white;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;font-family:'DM Sans',sans-serif;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesión
+            </a>
+        </div>
+    </div>
+    
+    <div class="alert-info">
+        <strong>ℹ️ Información:</strong> Estas configuraciones afectan cómo se muestran los gastos en los reportes financieros y determinan qué gastos son ajustables en escenarios de virtualización.
+    </div>
+    
+    <div class="descripcion-tipos">
+        <h3>Tipos de Gastos Disponibles:</h3>
+        <div class="tipo-desc">
+            <span class="badge badge-fijo tipo-desc-badge">FIJO</span>
+            <span>Gastos que no pueden modificarse (ej: Honorarios Dirección)</span>
+        </div>
+        <div class="tipo-desc">
+            <span class="badge badge-variable tipo-desc-badge">VARIABLE</span>
+            <span>Gastos que varían según cantidad de estudiantes o actividades</span>
+        </div>
+        <div class="tipo-desc">
+            <span class="badge badge-ajustable tipo-desc-badge">AJUSTABLE</span>
+            <span>Gastos que pueden reducirse al virtualizar (ej: Movilidad, Pasajes)</span>
+        </div>
+        <div class="tipo-desc">
+            <span class="badge badge-critico tipo-desc-badge">CRÍTICO</span>
+            <span>Gastos esenciales para el funcionamiento (ej: Plataformas IT)</span>
+        </div>
+        <div class="tipo-desc">
+            <span class="badge badge-operativo tipo-desc-badge">OPERATIVO</span>
+            <span>Gastos operativos generales (ej: Papelería, Publicidad)</span>
+        </div>
+    </div>
+    
+    <table class="categorias-table">
+        <thead>
+            <tr>
+                <th>Categoría de Gasto</th>
+                <th>Tipo Actual</th>
+                <th>Nuevo Tipo</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody id="categoriasBody">
+            <!-- Las filas se generan dinámicamente -->
+        </tbody>
+    </table>
+    
+    <div class="actions">
+        <button class="btn btn-secondary" onclick="cerrar()">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarCambios()">💾 Guardar Cambios</button>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+        // Categorías de gastos con su configuración actual
+        const categorias = [
+            { id: 1, nombre: 'Hon. Dirección/Coordinación', tipo: 'FIJO', desc: 'No ajustable, honorarios fijos por programa' },
+            { id: 2, nombre: 'Hon. Personal Apoyo', tipo: 'FIJO', desc: 'Personal administrativo y soporte' },
+            { id: 3, nombre: 'Hon. Profesores', tipo: 'VARIABLE', desc: 'Varía según cantidad de módulos y profesores' },
+            { id: 4, nombre: 'Movilidad', tipo: 'AJUSTABLE', desc: 'Puede eliminarse al virtualizar (-$145K)' },
+            { id: 5, nombre: 'Pasajes Aéreos/Colectivos', tipo: 'AJUSTABLE', desc: 'Puede eliminarse al virtualizar (-$280K)' },
+            { id: 6, nombre: 'Agapé/Break', tipo: 'AJUSTABLE', desc: 'Puede eliminarse al virtualizar (-$231K)' },
+            { id: 7, nombre: 'Publicidad', tipo: 'OPERATIVO', desc: 'Gasto operativo para promoción' },
+            { id: 8, nombre: 'Gastos Varios', tipo: 'OPERATIVO', desc: 'Gastos operativos generales' },
+            { id: 9, nombre: 'Servicios Informáticos', tipo: 'CRITICO', desc: 'Esencial para funcionamiento del programa' },
+            { id: 10, nombre: 'Papelería y Útiles', tipo: 'OPERATIVO', desc: 'Material de oficina y suministros' },
+            { id: 11, nombre: 'Plataformas Internet', tipo: 'CRITICO', desc: 'Zoom, Moodle, herramientas esenciales' }
+        ];
+        
+        const tiposDisponibles = ['FIJO', 'VARIABLE', 'AJUSTABLE', 'CRITICO', 'OPERATIVO'];
+        
+        // Renderizar tabla
+        function renderizarCategorias() {
+            const tbody = document.getElementById('categoriasBody');
+            tbody.innerHTML = '';
+            
+            categorias.forEach(cat => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="categoria-nombre">${cat.nombre}</td>
+                    <td><span class="badge badge-${cat.tipo.toLowerCase()}">${cat.tipo}</span></td>
+                    <td>
+                        <select class="select-tipo" data-categoria-id="${cat.id}">
+                            ${tiposDisponibles.map(tipo => 
+                                `<option value="${tipo}" ${tipo === cat.tipo ? 'selected' : ''}>${tipo}</option>`
+                            ).join('')}
+                        </select>
+                    </td>
+                    <td style="color: #666; font-size: 13px;">${cat.desc}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // Guardar cambios
+        function guardarCambios() {
+            const selects = document.querySelectorAll('.select-tipo');
+            const cambios = [];
+            
+            selects.forEach(select => {
+                const categoriaId = parseInt(select.dataset.categoriaId);
+                const nuevoTipo = select.value;
+                const categoria = categorias.find(c => c.id === categoriaId);
+                
+                if (categoria && categoria.tipo !== nuevoTipo) {
+                    cambios.push({
+                        id: categoriaId,
+                        nombre: categoria.nombre,
+                        tipoAnterior: categoria.tipo,
+                        tipoNuevo: nuevoTipo
+                    });
+                    categoria.tipo = nuevoTipo;
+                }
+            });
+            
+            if (cambios.length === 0) {
+                alert('No se realizaron cambios.');
+                return;
+            }
+            
+            var btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Guardando…';
+
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler(function() {
+                        btn.textContent = '✅ Guardado';
+                        btn.style.background = '#2d7a4f';
+                        setTimeout(function() { navegar('administrador_7_reportes_globales.html'); }, 1200);
+                    })
+                    .withFailureHandler(function() {
+                        btn.disabled = false;
+                        btn.textContent = '💾 Guardar Cambios';
+                        btn.style.background = '';
+                        alert('Error al guardar. Intentá de nuevo.');
+                    })
+                    .guardarCategoriasGastos(cambios);
+                setTimeout(function() {
+                    btn.textContent = '✅ Guardado';
+                    btn.style.background = '#2d7a4f';
+                    alert('✅ Se guardaron ' + cambios.length + ' cambios:\n\n' +
+                        cambios.map(function(c) { return c.nombre + ': ' + c.tipoAnterior + ' → ' + c.tipoNuevo; }).join('\n'));
+                    setTimeout(function() { navegar('administrador_7_reportes_globales.html'); }, 800);
+                }, 500);
+            }
+        }
+        
+        function cerrar() {
+            navegar('administrador_7_reportes_globales.html');
+        }
+
+        /* Navegación y sesión proporcionadas por supabase.js */
+    
+                /* ── CAMPANA ── */
+        var _notifs = [];
+        function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+        document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) document.getElementById('notif-dropdown').style.display = 'none'; });
+        function renderNotificaciones(datos) {
+            _notifs = datos || [];
+            var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+            var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+            var lista = document.getElementById('notif-list');
+            if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+            var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
+            var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
+            lista.innerHTML = _notifs.map(function(n) {
+                return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+                    + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+                    + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+            }).join('');
+        }
+        function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); if (typeof google !== 'undefined' && google.script) google.script.run.marcarNotificacionLeida(id); }
+        function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); if (typeof google !== 'undefined' && google.script) google.script.run.marcarTodasNotificacionesLeidas(); }
+        
+        // Inicializar
+        renderizarCategorias();
+        if (typeof google !== 'undefined' && google.script) {
+            google.script.run.withSuccessHandler(renderNotificaciones).obtenerNotificaciones('ADMINISTRADOR');
+            renderNotificaciones([
+                { id:'n1', tipo:'pago', mensaje:'<strong>María González</strong> realizó un pago', tiempo:'Hace 15 min', leida:false },
+                { id:'n2', tipo:'mora', mensaje:'<strong>3 estudiantes</strong> nuevos en mora', tiempo:'Hace 1 hora', leida:true }
+            ]);
+        }
+    </script>
+</body>
+</html>

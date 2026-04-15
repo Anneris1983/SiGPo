@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista Cohorte - Coordinador FCE UNCUYO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1e3a5f;
+            --accent:  #d4af37;
+            --success: #2d7a4f;
+            --danger:  #c0392b;
+            --warning: #e67e22;
+            --bg:      #f8f6f1;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 20px; }
+
+        /* ── HEADER ── */
+        .page-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white; padding: 22px 28px; border-radius: 12px 12px 0 0;
+            display: flex; justify-content: space-between; align-items: center; gap: 20px;
+        }
+        .header-left h1 { font-family: 'Crimson Pro', serif; font-size: 24px; margin-bottom: 4px; }
+        .header-left p  { opacity: 0.85; font-size: 13px; }
+        .stat-row { display: flex; gap: 20px; flex-shrink: 0; align-items: flex-start; }
+        .btn-logout {
+            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3);
+            color: white; padding: 6px 13px; border-radius: 8px; font-size: 12px;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+            display: inline-flex; align-items: center; gap: 5px;
+            transition: background 0.2s;
+        }
+        .btn-logout:hover { background: rgba(192,57,43,0.6); border-color: rgba(192,57,43,0.8); }
+        .stat-item { text-align: center; }
+        .stat-label { font-size: 10px; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 22px; font-weight: 700; margin-top: 2px; }
+
+        /* ── TOOLBAR ── */
+        .toolbar {
+            background: white; padding: 14px 22px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #e0e0e0; gap: 12px; flex-wrap: wrap;
+        }
+        .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .filter-label { font-weight: 600; font-size: 13px; white-space: nowrap; }
+        .filter-btn {
+            padding: 6px 13px; border: 2px solid #e0e0e0; background: white;
+            border-radius: 6px; font-size: 12px; cursor: pointer;
+            transition: all 0.2s; font-family: 'DM Sans', sans-serif; white-space: nowrap;
+        }
+        .filter-btn:hover { border-color: var(--accent); }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn {
+            padding: 8px 14px; border: none; border-radius: 8px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; font-family: 'DM Sans', sans-serif; white-space: nowrap;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #2d5a87; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #246441; }
+        .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-crear { background: var(--accent); color: white; }
+        .btn-crear:hover { background: #b8962e; }
+        .btn-import { background: #6f42c1; color: white; }
+        .btn-import:hover { background: #5a32a3; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── BARRA SELECCIÓN ── */
+        .selection-bar {
+            display: none; background: #fff8e1; padding: 10px 22px;
+            align-items: center; justify-content: space-between;
+            border-bottom: 2px solid #ffc107; font-size: 13px; font-weight: 600;
+        }
+        .selection-bar.show { display: flex; }
+
+        /* ── TABLA ── */
+        .table-wrapper { background: white; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        thead { position: sticky; top: 0; z-index: 10; }
+        th {
+            padding: 9px 6px; text-align: center; font-weight: 600;
+            border-bottom: 2px solid #c5c5c5; border-right: 1px solid #ddd;
+            white-space: nowrap; font-size: 10px; text-transform: uppercase;
+            letter-spacing: 0.4px; color: #555; background: #f0ede6;
+        }
+        th.col-name  { text-align: left; min-width: 165px; padding-left: 10px; }
+        th.col-email { text-align: left; min-width: 175px; padding-left: 8px; }
+        th.col-cuota { min-width: 82px; }
+        th.col-check { width: 32px; }
+        th.tot-hdr   { color: white; font-size: 10px; min-width: 100px; }
+        th.th-pagar   { background: #3730a3; }
+        th.th-abonado { background: #2d7a4f; }
+        th.th-saldo   { background: #c0392b; }
+
+        td {
+            padding: 9px 6px; border-bottom: 1px solid #ebebeb;
+            border-right: 1px solid #ebebeb; vertical-align: middle;
+        }
+        tr.fila-est:hover td { background: rgba(212,175,55,0.05); }
+        tr.oculta { display: none; }
+
+        .cell-name  { font-weight: 700; color: var(--primary); padding-left: 10px; white-space: nowrap; cursor: pointer; }
+        .cell-name:hover { text-decoration: underline; }
+        .cell-desc  { text-align: center; font-weight: 600; }
+        .cell-email { font-size: 11px; color: #2d5a87; padding-left: 8px; }
+
+        td[data-est="ABONADA"]      { background: #d4edda; color: #1e7e44; text-align:center; font-weight:600; }
+        td[data-est="PAGO_PARCIAL"] { background: #fff3cd; color: #856404; text-align:center; font-weight:600; font-size:10px; }
+        td[data-est="EN_MORA"]      { background: #f8d7da; color: #c0392b; text-align:center; font-weight:600; }
+        td[data-est="PENDIENTE"]    { background: #f0f0f0; color: #666;    text-align:center; font-weight:600; }
+        td[data-est="NO_APLICA"]    { background: #fafafa; color: #ccc; font-style:italic; font-size:10px;
+                                      border: 1px dashed #e0e0e0; text-align:center; }
+
+        td[data-est="NO_ABONADA"]  { background: #eef2ff; color: #4338ca; text-align:center; font-weight:600; }
+        td[data-est="A_DEFINIR"]   { background: #f3f4f6; color: #6b7280; text-align:center; font-weight:600; font-style:italic; }
+        .ley-noabonada { background:#eef2ff; border:1px solid #c7d2fe; }
+        .ley-adefinir  { background:#f3f4f6; border:1px solid #d1d5db; }
+
+
+        .cell-tot-pagar   { background:#eef2ff; color:#1e3a5f; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+        .cell-tot-abonado { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+        .cell-saldo-pos   { background:#f8d7da; color:#c0392b; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+        .cell-saldo-cero  { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+
+        .edit-btn {
+            background:none; border:none; cursor:pointer; font-size:11px;
+            margin-left:3px; opacity:0.4; transition:opacity 0.2s; vertical-align:middle;
+        }
+        .edit-btn:hover { opacity:1; }
+
+        /* ── EMPTY ── */
+        .empty-state { display:none; text-align:center; padding:60px 20px; color:#aaa; }
+        .empty-state.show { display:block; }
+
+        /* ── LEYENDA ── */
+        .leyenda {
+            background:white; padding:12px 22px;
+            display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+            border-top:1px solid #e8e8e8; font-size:12px; color:#555;
+            border-radius:0 0 12px 12px; box-shadow:0 4px 16px rgba(0,0,0,0.07);
+        }
+        .ley-item { display:flex; align-items:center; gap:5px; }
+        .ley-box { width:18px; height:13px; border-radius:3px; flex-shrink:0; }
+        .ley-abonada   { background:#d4edda; border:1px solid #b8dcc7; }
+        .ley-parcial   { background:#fff3cd; border:1px solid #ffe082; }
+        .ley-mora      { background:#f8d7da; border:1px solid #f1a8b0; }
+        .ley-pendiente { background:#f0f0f0; border:1px solid #d0d0d0; }
+        .ley-nodebe    { background:#fafafa; border:1px dashed #d0d0d0; }
+
+        /* ── SPINNER ── */
+        .spinner-overlay {
+            display:none; position:fixed; inset:0;
+            background:rgba(255,255,255,0.78); z-index:9000;
+            align-items:center; justify-content:center; flex-direction:column; gap:14px;
+        }
+        .spinner-overlay.show { display:flex; }
+        .spinner { width:42px; height:42px; border:4px solid #e0e0e0; border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* ── MODALES ── */
+        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center; }
+        .modal-overlay.show { display:flex; }
+        .modal-box { background:white; border-radius:16px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden; animation:mIn 0.22s ease; }
+        @keyframes mIn { from{opacity:0;transform:scale(0.94) translateY(-8px);} to{opacity:1;transform:scale(1) translateY(0);} }
+        .modal-hdr { background:linear-gradient(135deg,#1e3a5f 0%,#2d5a87 100%); color:white; padding:18px 22px; display:flex; justify-content:space-between; align-items:flex-start; }
+        .modal-hdr h2 { font-family:'Crimson Pro',serif; font-size:20px; margin-bottom:2px; }
+        .modal-hdr p  { font-size:12px; opacity:0.85; }
+        .modal-close { background:rgba(255,255,255,0.2); border:none; color:white; width:30px; height:30px; border-radius:8px; font-size:18px; cursor:pointer; flex-shrink:0; transition:background 0.2s; line-height:1; }
+        .modal-close:hover { background:rgba(255,255,255,0.35); }
+        .modal-body   { padding:22px; }
+        .modal-footer { padding:14px 22px; border-top:1px solid #f0ede6; display:flex; justify-content:flex-end; gap:10px; }
+        .mfield { margin-bottom:16px; }
+        .mfield label { display:block; font-weight:600; font-size:12px; color:var(--primary); margin-bottom:5px; }
+        .mfield input, .mfield select, .mfield textarea { width:100%; padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; transition:border-color 0.2s; }
+        .mfield input:focus, .mfield select:focus, .mfield textarea:focus { outline:none; border-color:var(--primary); }
+        .mgrid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .mhint  { font-size:11px; color:#999; margin-top:3px; }
+        .btn-cancel { padding:9px 18px; background:white; border:2px solid #ddd; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; color:#666; font-family:'DM Sans',sans-serif; }
+        .btn-cancel:hover { background:#f0f0f0; }
+        .btn-save   { padding:9px 18px; background:var(--success); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-save:hover { background:#246441; }
+        .btn-purple { padding:9px 18px; background:#6f42c1; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-purple:hover { background:#5a32a3; }
+        .btn-purple:disabled { opacity:0.4; cursor:not-allowed; }
+
+        /* Cuota preview */
+        .cuotas-preview { max-height:200px; overflow-y:auto; border:1px solid #e0e0e0; border-radius:8px; }
+        .cprev-row { display:flex; align-items:center; gap:10px; padding:7px 12px; border-bottom:1px solid #f0f0f0; font-size:12px; }
+        .cprev-row:last-child { border-bottom:none; }
+
+        /* Import */
+        .istep { display:flex; align-items:flex-start; gap:14px; margin-bottom:16px; padding:14px; background:#f8f6f1; border-radius:10px; border-left:4px solid #6f42c1; }
+        .istep-num { width:28px; height:28px; border-radius:50%; background:#6f42c1; color:white; font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .istep h4 { font-size:13px; font-weight:700; color:var(--primary); margin-bottom:3px; }
+        .istep p  { font-size:12px; color:#555; line-height:1.5; }
+        .drop-zone { border:2px dashed #6f42c1; border-radius:10px; padding:22px; text-align:center; cursor:pointer; transition:all 0.2s; background:#f9f7ff; }
+        .drop-zone:hover, .drop-zone.dragover { background:#ede9ff; border-color:#5a32a3; }
+        .drop-zone input { display:none; }
+        .imp-preview { display:none; margin-top:12px; background:#f0ede6; border-radius:8px; padding:12px; align-items:center; gap:10px; }
+        .imp-preview.show { display:flex; }
+
+        /* Toast */
+        .toast-wrap { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+        .toast { background:#1e3a5f; color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,0.2); animation:tin 0.28s ease; max-width:340px; }
+        .toast.ok  { background:var(--success); }
+        .toast.err { background:var(--danger); }
+        @keyframes tin { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+
+        /* ── PLAN CUOTAS ── */
+        .plan-paso-titulo { font-size:13px; font-weight:700; color:var(--primary); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.4px; }
+        .plan-fila { display:grid; grid-template-columns:auto 1fr 110px 110px 130px auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; transition:border-color 0.2s; }
+        .plan-fila:focus-within { border-color:var(--accent); }
+        .plan-fila.fila-irregular { border-color:#e67e22; background:#fffbf5; }
+        .plan-fila-num { width:26px; height:26px; border-radius:50%; background:var(--primary); color:white; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:2px; }
+        .plan-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
+        .plan-fila input, .plan-fila select { width:100%; padding:7px 9px; border:1.5px solid #ddd; border-radius:7px; font-size:12px; font-family:'DM Sans',sans-serif; transition:border-color 0.2s; background:white; }
+        .plan-fila input:focus, .plan-fila select:focus { outline:none; border-color:var(--primary); }
+        .plan-fila .monto-wrap { position:relative; }
+        .plan-fila .monto-wrap input { padding-left:20px; }
+        .plan-fila .monto-wrap::before { content:'$'; position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:12px; color:#999; pointer-events:none; }
+        .plan-fila .btn-del { background:none; border:none; cursor:pointer; color:#e74c3c; font-size:17px; padding:4px; border-radius:6px; transition:background 0.2s; line-height:1; align-self:end; margin-bottom:2px; }
+        .plan-fila .btn-del:hover { background:#fdecea; }
+        .btn-agregar-cuota { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:#2d7a4f; color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
+        .btn-agregar-cuota:hover { background:#246441; }
+        .plan-destino-box { background:#f0f8ff; border:1.5px solid #b3d4f0; border-radius:10px; padding:14px 16px; }
+        .plan-radio-opcion { display:flex; gap:12px; align-items:flex-start; cursor:pointer; }
+        .plan-radio-opcion input[type=radio] { margin-top:3px; accent-color:var(--primary); width:15px; height:15px; flex-shrink:0; }
+        .plan-radio-opcion.seleccionado { background:rgba(30,58,95,0.06); border-radius:8px; padding:8px; margin:-8px; }
+
+        /* ── BAJA / ALTA COHORTE ── */
+        tr.fila-pasiva-cohorte .cell-name { color:#999; text-decoration:line-through; }
+        tr.fila-pasiva-cohorte td { opacity:0.6; }
+        .btn-baja-coh {
+            background:none; border:1.5px solid #e65100; color:#e65100;
+            border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px;
+            cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap;
+        }
+        .btn-baja-coh:hover { background:#fff8e1; }
+        .btn-alta-coh {
+            background:none; border:1.5px solid #2d7a4f; color:#2d7a4f;
+            border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px;
+            cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap;
+        }
+        .btn-alta-coh:hover { background:#d4edda; }
+    </style>
+</head>
+<body>
+
+<div class="spinner-overlay" id="spinner"><div class="spinner"></div><span style="color:#1e3a5f;font-weight:600;font-size:14px;">Cargando...</span></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<div id="app">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div class="header-left">
+            <button onclick="volverADashboard()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 13px;border-radius:8px;font-size:12px;cursor:pointer;margin-bottom:10px;display:inline-flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;">← Volver</button>
+            <h1 id="hdr-programa">—</h1>
+            <p id="hdr-sub">—</p>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="position:relative;" id="notif-wrapper">
+                    <button onclick="toggleNotif()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 12px;border-radius:8px;font-size:18px;cursor:pointer;position:relative;" title="Notificaciones">
+                        🔔
+                        <span id="notif-badge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;border-radius:50%;min-width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;">0</span>
+                    </button>
+                    <div id="notif-panel" style="display:none;position:absolute;right:0;top:48px;width:320px;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:500;overflow:hidden;">
+                        <div style="padding:14px 16px;border-bottom:1px solid #f0f0f0;font-weight:700;color:#1e3a5f;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;">
+                            <span>🔔 Notificaciones</span>
+                            <button type="button" onclick="marcarTodasLeidas()" style="background:none;border:none;color:#d4af37;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                        </div>
+                        <div id="notif-list">
+                            <div style="padding:24px 16px;text-align:center;color:#9ca3af;font-size:13px;">Cargando notificaciones…</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="cerrarSesion()">🔓 Cerrar sesión</button>
+            </div>
+            <div class="stat-row">
+                <div class="stat-item"><div class="stat-label">Al día</div><div class="stat-value" id="s-aldia">—</div></div>
+                <div class="stat-item"><div class="stat-label">En mora</div><div class="stat-value" id="s-mora" style="color:#ffc107;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Recaudado</div><div class="stat-value" id="s-recaudado">—</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <div class="filters" id="filtros">
+            <span class="filter-label">Filtrar:</span>
+            <button class="filter-btn active" data-f="todos">Todos</button>
+            <button class="filter-btn" data-f="ABONADA">Al día</button>
+            <button class="filter-btn" data-f="EN_MORA">En mora</button>
+            <button class="filter-btn" data-f="PAGO_PARCIAL">Pago parcial</button>
+            <button class="filter-btn" data-f="PENDIENTE">Pendiente</button>
+            <button class="filter-btn" data-f="NO_ABONADA">No abonada</button>
+            <button class="filter-btn" data-f="A_DEFINIR">A definir</button>
+        </div>
+        <div class="actions">
+            <button class="btn btn-crear" onclick="abrirCrearCuota()">➕ Crear plan de cuotas</button>
+            <button class="btn btn-outline" onclick="abrirCorreo()">✉️ Editar correos de reclamo</button>
+            <button class="btn btn-primary" id="btn-reclamar" disabled onclick="reclamarSel()">📧 Reclamar seleccionados</button>
+            <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar a Excel</button>
+        </div>
+    </div>
+
+    <!-- BARRA SELECCIÓN -->
+    <div class="selection-bar" id="sel-bar">
+        <span id="sel-txt">0 seleccionados</span>
+        <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary" onclick="reclamarSel()">📧 Enviar reclamo</button>
+            <button class="btn btn-outline" onclick="deselAll()">✕ Cancelar</button>
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-wrapper">
+        <table id="tabla">
+            <thead id="t-head"></thead>
+            <tbody id="t-body"></tbody>
+        </table>
+        <div class="empty-state" id="empty"><div style="font-size:48px;margin-bottom:12px;">🔍</div><div style="font-size:15px;font-weight:600;color:#666;">Sin resultados para este filtro</div></div>
+    </div>
+
+    <!-- LEYENDA -->
+    <div class="leyenda">
+        <strong style="color:#333;">Leyenda:</strong>
+        <div class="ley-item"><span class="ley-box ley-abonada"></span> Abonada</div>
+        <div class="ley-item"><span class="ley-box ley-parcial"></span> Pago Parcial</div>
+        <div class="ley-item"><span class="ley-box ley-mora"></span> En Mora</div>
+        <div class="ley-item"><span class="ley-box ley-pendiente"></span> Pendiente</div>
+        <div class="ley-item"><span class="ley-box ley-noabonada"></span> No abonada</div>
+        <div class="ley-item"><span class="ley-box ley-adefinir"></span> A definir</div>
+        <div class="ley-item"><span class="ley-box ley-nodebe"></span> No debe abonar</div>
+    </div>
+</div>
+
+
+
+<!-- ═══ MODAL: CREAR PLAN DE CUOTAS ═══ -->
+<div class="modal-overlay" id="modal-cuota">
+    <div class="modal-box" style="max-width:640px;">
+        <div class="modal-hdr" style="background:linear-gradient(135deg,#1e3a5f 0%,#2d5a87 100%);">
+            <div>
+                <h2>➕ Crear Plan de Cuotas</h2>
+                <p id="cuota-sub">Especialización en Costos y Gestión Empresarial · Cohorte 2025–2026</p>
+            </div>
+            <button class="modal-close" onclick="cerrar('modal-cuota')">×</button>
+        </div>
+        <div class="modal-body" style="padding:0;">
+
+            <!-- PASO 1 -->
+            <div style="padding:20px 22px 0;">
+                <div class="plan-paso-titulo">Paso 1: Definir Cuotas</div>
+                <div id="plan-filas"></div>
+
+                <!-- Alerta monto bajo -->
+                <div id="plan-alerta" style="display:none;margin:10px 0;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px 14px;font-size:12px;color:#795548;line-height:1.5;">
+                    ⚠️ <strong>Consejo:</strong> Al no colocar el monto también se guardará <strong>$ 0,00</strong>. Podés actualizar el valor más adelante y la cuota se creará con <em>saldo pendiente total</em> hasta que se registre el monto.
+                </div>
+
+                <button class="btn-agregar-cuota" onclick="planAgregar()">+ Agregar otra cuota</button>
+            </div>
+
+            <div style="border-top:1px solid #eee;margin:14px 0 0;"></div>
+
+            <!-- PASO 2 -->
+            <div style="padding:14px 22px 20px;">
+                <div class="plan-paso-titulo">Paso 2: Aplicar a Estudiantes</div>
+                <div class="plan-destino-box">
+                    <label class="plan-radio-opcion" id="opt-cohorte">
+                        <input type="radio" name="plan-dest" value="cohorte" checked onchange="planDestChange()">
+                        <div>
+                            <div style="font-weight:700;font-size:13px;color:var(--primary);">Toda la cohorte</div>
+                            <div id="plan-desc-cohorte" style="font-size:11px;color:#666;margin-top:2px;">Se creará el plan para los <strong id="plan-n-todos">—</strong> estudiantes de la Cohorte.</div>
+                        </div>
+                    </label>
+                    <label class="plan-radio-opcion" id="opt-especificos" style="margin-top:8px;">
+                        <input type="radio" name="plan-dest" value="especificos" onchange="planDestChange()">
+                        <div>
+                            <div style="font-weight:700;font-size:13px;color:var(--primary);">Estudiantes específicos</div>
+                            <div id="plan-desc-especificos" style="font-size:11px;color:#666;margin-top:2px;">Seleccioná manualmente a quiénes aplicar este plan.</div>
+                            <div id="plan-sel-nombres" style="display:none;margin-top:8px;font-size:11px;color:#2d5a87;font-weight:600;line-height:1.6;"></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="modal-footer" style="justify-content:space-between;align-items:center;">
+            <div id="plan-resumen" style="font-size:12px;color:#555;font-weight:600;"></div>
+            <div style="display:flex;gap:10px;">
+                <button class="btn-cancel" onclick="cerrar('modal-cuota')">Cancelar</button>
+                <button class="btn-save" onclick="guardarCuotas()" style="background:var(--primary);">✔ Crear Plan de Cuotas</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL: CORREO RECLAMO ═══ -->
+<div class="modal-overlay" id="modal-correo">
+    <div class="modal-box" style="max-width:600px;">
+        <div class="modal-hdr">
+            <div><h2>✉️ Plantillas de Correo</h2><p>Recordatorios y reclamos automáticos</p></div>
+            <button class="modal-close" onclick="cerrar('modal-correo')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="mfield">
+                <label>Tipo</label>
+                <select id="c-tipo" onchange="cargarPlantilla()">
+                    <option value="recordatorio">📩 Recordatorio de vencimiento próximo</option>
+                    <option value="reclamo">🔔 Reclamo por cuota vencida</option>
+                    <option value="coordinador">👨‍🏫 Aviso al coordinador</option>
+                </select>
+            </div>
+            <div class="mfield"><label>Asunto</label><input type="text" id="c-asunto"></div>
+            <div class="mfield">
+                <label>Cuerpo</label>
+                <textarea id="c-cuerpo" style="min-height:130px;resize:vertical;"></textarea>
+                <div class="mhint">Variables: {nombre} {apellido} {dni} {cuota} {periodo} {monto} {vencimiento} {programa} {cbu} {alias}</div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="cerrar('modal-correo')">Cancelar</button>
+            <button class="btn-save" onclick="guardarPlantilla()">💾 Guardar plantilla</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<!-- ═══ MODAL: DESCUENTO ═══ -->
+<div class="modal-overlay" id="modal-descuento">
+    <div class="modal-box" style="max-width:520px;">
+        <div class="modal-hdr">
+            <div><h2>🏷️ Editar descuento</h2><p id="desc-sub">Estudiante</p></div>
+            <button class="modal-close" onclick="cerrar('modal-descuento')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="mgrid2">
+                <div class="mfield">
+                    <label>Porcentaje</label>
+                    <input type="number" id="desc-pct" min="0" max="100" step="1" placeholder="Ej: 10">
+                </div>
+                <div class="mfield">
+                    <label>Motivo</label>
+                    <input type="text" id="desc-motivo" placeholder="Ej: Beca parcial">
+                </div>
+            </div>
+            <div class="mgrid2">
+                <div class="mfield">
+                    <label>Fecha inicio</label>
+                    <input type="date" id="desc-desde">
+                </div>
+                <div class="mfield">
+                    <label>Fecha fin</label>
+                    <input type="date" id="desc-hasta">
+                </div>
+            </div>
+            <div class="mhint">Este cambio aplica solo a esta cohorte/edición y debe quedar registrado en el backend.</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="cerrar('modal-descuento')">Cancelar</button>
+            <button class="btn-save" onclick="guardarDescuento()">💾 Guardar descuento</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL: BAJA / ALTA COHORTE ═══ -->
+<div class="modal-overlay" id="modal-baja-cohorte">
+    <div class="modal-box" style="max-width:560px;">
+        <div class="modal-hdr" id="mbc-hdr">
+            <div><h2 id="mbc-titulo">⛔ Baja en esta cohorte</h2><p id="mbc-sub">Programa · Cohorte</p></div>
+            <button class="modal-close" onclick="cerrar('modal-baja-cohorte')">×</button>
+        </div>
+        <div class="modal-body" id="mbc-cuerpo"></div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="cerrar('modal-baja-cohorte')">Cancelar</button>
+            <button class="btn-save" id="mbc-btn" onclick="ejecutarCambioEstado()">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL: IMPORTAR COBROS ═══ -->
+<div class="modal-overlay" id="modal-importar">
+    <div class="modal-box" style="max-width:620px;">
+        <div class="modal-hdr" style="background:linear-gradient(135deg,#6f42c1 0%,#5a32a3 100%);">
+            <div><h2>📥 Importar cobros</h2><p>Subí un Excel para registrar o actualizar cobros de la cohorte</p></div>
+            <button class="modal-close" onclick="cerrar('modal-importar')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="istep">
+                <div class="istep-num">1</div>
+                <div>
+                    <h4>Descargá la plantilla</h4>
+                    <p>Usá la plantilla para preparar los registros con el formato correcto antes de importar.</p>
+                    <button class="btn btn-outline" onclick="dlPlantilla()" style="margin-top:8px;">⬇ Descargar plantilla</button>
+                </div>
+            </div>
+
+            <div class="istep">
+                <div class="istep-num">2</div>
+                <div style="width:100%;">
+                    <h4>Seleccioná el archivo Excel</h4>
+                    <p>Solo se admiten archivos .xlsx o .xls.</p>
+                    <div id="drop-zone" class="drop-zone" onclick="document.getElementById('file-imp').click()" ondragover="dOver(event)" ondragleave="dLeave()" ondrop="dDrop(event)">
+                        <div style="font-size:28px;margin-bottom:6px;">📊</div>
+                        <div style="font-size:13px;color:#666;">Arrastrá el archivo acá o <strong>hacé clic</strong> para seleccionarlo</div>
+                        <input type="file" id="file-imp" accept=".xlsx,.xls" onchange="fileElegido(event)">
+                    </div>
+                    <div id="imp-prev" class="imp-preview">
+                        <span style="font-size:18px;">📄</span>
+                        <div style="flex:1;">
+                            <div id="imp-fn" style="font-size:13px;font-weight:700;color:#1e3a5f;"></div>
+                            <div id="imp-fs" style="font-size:12px;color:#777;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="istep">
+                <div class="istep-num">3</div>
+                <div>
+                    <h4>Procesá la importación</h4>
+                    <p>El sistema validará el archivo y registrará los cobros en esta cohorte.</p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="cerrar('modal-importar')">Cancelar</button>
+            <button class="btn-purple" id="btn-imp" disabled onclick="procesarImport()">⚙ Procesar importación</button>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+const QS = new URLSearchParams(location.search);
+const COHORTE_ID  = parseInt(QS.get('cohorte_id') || QS.get('cohorteId') || '1', 10);
+const PROGRAMA_ID = parseInt(QS.get('programa_id') || QS.get('programaId') || '1', 10);
+
+const PLANTILLAS_DEF = {
+    recordatorio: {
+        asunto: 'Recordatorio de vencimiento: {cuota} - {programa}',
+        cuerpo:  'Estimado/a {nombre} {apellido},\n\nLe recordamos que la {cuota} del período {periodo} del programa "{programa}" vence el {vencimiento}.\n\nMonto: ${monto}\nCBU: {cbu} | Alias: {alias}\n\nSecretaría de Posgrado - FCE UNCUYO'
+    },
+    reclamo: {
+        asunto: 'Cuota vencida pendiente de pago: {cuota} - {programa}',
+        cuerpo:  'Estimado/a {nombre} {apellido},\n\nLe informamos que la {cuota} del período {periodo} se encuentra vencida.\n\nSaldo pendiente: ${monto}\nCBU: {cbu} | Alias: {alias}\n\nLe solicitamos regularizar su situación.\n\nSecretaría de Posgrado - FCE UNCUYO'
+    },
+    coordinador: {
+        asunto: 'Aviso de deuda: {programa}',
+        cuerpo:  'Estimado/a Coordinador/a,\n\nEl/la estudiante {apellido}, {nombre} (DNI {dni}) registra cuotas impagas en el programa "{programa}".\n\nSecretaría de Posgrado - FCE UNCUYO'
+    }
+};
+
+const V = {
+    data: null,
+    filtro: 'todos',
+    descTarget: null,
+    notifications: [],
+    plantillas: JSON.parse(JSON.stringify(PLANTILLAS_DEF)),
+    importFile: null
+};
+
+document.addEventListener('DOMContentLoaded', cargar);
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('notif-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('notif-panel').style.display = 'none';
+    }
+});
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if(e.target===m) cerrar(m.id); });
+});
+
+async function cargar() {
+    spin(true);
+    try {
+        const res = estaEnAppsScript()
+            ? await gs('obtenerDetalleCohorteCoordinador', PROGRAMA_ID, COHORTE_ID)
+            : obtenerDemoData();
+        V.data = normalizarVista(res);
+        if (res && res.plantillas) V.plantillas = { ...V.plantillas, ...res.plantillas };
+        renderHeader();
+        renderTabla();
+        actualizarStats();
+        actualizarFiltros();
+        initFiltros();
+    } catch(e) {
+        toast('Error al cargar los datos', 'err');
+    } finally {
+        spin(false);
+    }
+    cargarNotificaciones();
+}
+
+function normalizarVista(data) {
+    const programa = data && data.programa ? data.programa : {};
+    const cohorte = data && data.cohorte ? data.cohorte : {};
+    const estudiantesRaw = Array.isArray(data && data.estudiantes) ? data.estudiantes : [];
+    const columnasRaw = Array.isArray(data && data.columnas) ? data.columnas : [];
+
+    const estudiantes = estudiantesRaw.map(normalizarEstudiante);
+    const columnas = columnasRaw.length ? columnasRaw.map(normalizarColumna) : derivarColumnas(estudiantes);
+
+    return {
+        programa: {
+            programaId: programa.programaId || programa.programa_id || PROGRAMA_ID,
+            nombre: programa.nombre || programa.nombre_programa || 'Programa'
+        },
+        cohorte: {
+            cohorteId: cohorte.cohorteId || cohorte.cohorte_id || COHORTE_ID,
+            nombre: cohorte.nombre || cohorte.nombre_cohorte || cohorte.edicion || 'Cohorte',
+            fecha_inicio: cohorte.fecha_inicio || cohorte.fechaInicio || '',
+            fecha_fin: cohorte.fecha_fin || cohorte.fechaFin || '',
+            estado: cohorte.estado || ''
+        },
+        columnas,
+        estudiantes
+    };
+}
+
+function normalizarColumna(c) {
+    return {
+        concepto_base: c.concepto_base || c.conceptoBase || c.concepto || 'Cuota',
+        periodo: c.periodo || '',
+        fecha_vencimiento: c.fecha_vencimiento || c.fechaVencimiento || ''
+    };
+}
+
+function normalizarEstudiante(e) {
+    const cobrosRaw = Array.isArray(e.cobros) ? e.cobros : [];
+    return {
+        dni: Number(e.dni || e.documento || 0),
+        apellido: e.apellido || '',
+        nombre: e.nombre || '',
+        email: e.email || e.correo || '',
+        telefono: e.telefono || '',
+        descuento_porcentaje: Number(e.descuento_porcentaje || e.descuento || 0),
+        estado_academico: e.estado_academico || e.estadoAcademico || 'ACTIVO',
+        cobros: cobrosRaw.filter(x => x !== undefined).map(c => c ? normalizarCobro(c) : null)
+    };
+}
+
+function normalizarCobro(c) {
+    const concepto = c.concepto || c.concepto_base || c.nombre || 'Cuota';
+    const montoOriginal = c.monto_original != null ? Number(c.monto_original) : (c.montoOriginal != null ? Number(c.montoOriginal) : (c.monto_final != null ? Number(c.monto_final) : null));
+    const montoAbonado = c.monto_abonado != null ? Number(c.monto_abonado) : (c.montoAbonado != null ? Number(c.montoAbonado) : 0);
+    let montoFinal = c.monto_final != null ? Number(c.monto_final) : (c.montoFinal != null ? Number(c.montoFinal) : null);
+    let saldo = c.saldo_pendiente != null ? Number(c.saldo_pendiente) : (c.saldoPendiente != null ? Number(c.saldoPendiente) : null);
+    const descuento = Number(c.descuento_porcentaje != null ? c.descuento_porcentaje : (c.descuentoPorcentaje != null ? c.descuentoPorcentaje : 0));
+    const fechaVto = c.fecha_vencimiento || c.fechaVencimiento || '';
+    const estadoExplicito = String(c.estado || c.estado_cobro || c.estadoCobro || '').toUpperCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    if (montoFinal == null && montoOriginal != null) montoFinal = montoOriginal;
+    if (saldo == null) {
+        if (montoFinal == null) saldo = 0;
+        else saldo = Math.max(0, montoFinal - montoAbonado);
+    }
+
+    let estado = 'NO_ABONADA';
+    const hoyStr = new Date().toISOString().split('T')[0];
+
+    if (['ABONADA', 'PAGADA', 'PAGADO'].includes(estadoExplicito) || (montoFinal != null && saldo <= 0 && montoAbonado > 0)) estado = 'ABONADA';
+    else if (['PAGO PARCIAL', 'PARCIAL'].includes(estadoExplicito) || (montoAbonado > 0 && saldo > 0)) estado = 'PAGO_PARCIAL';
+    else if (['PENDIENTE', 'PENDIENTE DE VERIFICACION', 'PENDIENTE DE REVISION'].includes(estadoExplicito)) estado = 'PENDIENTE';
+    else if (['NO ABONADA', 'NO ABONADO'].includes(estadoExplicito)) estado = 'NO_ABONADA';
+    else if (['A DEFINIR', 'NO DEFINIDO', 'NO DEFINIDA'].includes(estadoExplicito) || montoFinal == null) estado = 'A_DEFINIR';
+    else if (['EN MORA', 'MORA', 'VENCIDA'].includes(estadoExplicito)) estado = 'EN_MORA';
+    else if (saldo > 0 && fechaVto && fechaVto < hoyStr) estado = 'EN_MORA';
+    else if (saldo > 0) estado = 'NO_ABONADA';
+    else if (saldo <= 0) estado = 'ABONADA';
+
+    return {
+        cobro_id: c.cobro_id || c.cobroId || c.id || '',
+        concepto: concepto,
+        concepto_base: c.concepto_base || c.conceptoBase || concepto,
+        periodo: c.periodo || '',
+        fecha_vencimiento: fechaVto,
+        fecha_pago: c.fecha_pago || c.fechaPago || '',
+        monto_original: montoOriginal,
+        descuento_porcentaje: descuento,
+        monto_final: montoFinal,
+        monto_abonado: montoAbonado,
+        saldo_pendiente: saldo,
+        estado: estado
+    };
+}
+
+function derivarColumnas(estudiantes) {
+    const mapa = new Map();
+    estudiantes.forEach(est => {
+        est.cobros.forEach(c => {
+            if (!c) return;
+            const key = c.concepto_base || c.concepto;
+            if (!mapa.has(key)) mapa.set(key, { concepto_base: key, periodo: c.periodo || '', fecha_vencimiento: c.fecha_vencimiento || '' });
+        });
+    });
+    return [...mapa.values()].sort((a,b) => String(a.fecha_vencimiento || '9999-12-31').localeCompare(String(b.fecha_vencimiento || '9999-12-31')));
+}
+
+function renderHeader() {
+    const { programa, cohorte, estudiantes } = V.data;
+    document.getElementById('hdr-programa').textContent = programa.nombre;
+    const partes = [cohorte.nombre];
+    partes.push(`${estudiantes.length} estudiante${estudiantes.length !== 1 ? 's' : ''}`);
+    if (cohorte.fecha_inicio || cohorte.fecha_fin) partes.push(`${cohorte.fecha_inicio || '—'} → ${cohorte.fecha_fin || '—'}`);
+    document.getElementById('hdr-sub').textContent = partes.join(' • ');
+}
+
+function renderTabla() {
+    const { columnas, estudiantes } = V.data;
+    const thead = document.getElementById('t-head');
+    const tbody = document.getElementById('t-body');
+
+    thead.innerHTML = `<tr>
+      <th class="col-check"><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>
+      <th class="col-name">Apellido y Nombre</th>
+      <th style="min-width:74px;text-align:center;">Desc %</th>
+      <th class="col-email">Correo electrónico</th>
+      <th style="min-width:88px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>Cohorte</th>
+      ${columnas.map(c=>`<th class="col-cuota">${escapeHtml(c.concepto_base)}<br><span style="font-weight:400;color:#888;font-size:9px;">${escapeHtml(c.periodo || '')}</span></th>`).join('')}
+      <th class="tot-hdr th-pagar">Total a<br>Pagar</th>
+      <th class="tot-hdr th-abonado">Total<br>Abonado</th>
+      <th class="tot-hdr th-saldo">Saldo<br>Pendiente</th>
+    </tr>`;
+
+    tbody.innerHTML = '';
+    estudiantes.forEach(est => {
+        const estadoGen = calcEstadoGeneral(est.cobros);
+        let totP = 0, totA = 0, totS = 0;
+        est.cobros.forEach(c => { if(c){ totP += Number(c.monto_final || 0); totA += Number(c.monto_abonado || 0); totS += Number(c.saldo_pendiente || 0); }});
+
+        const cobrosMap = {};
+        est.cobros.forEach(c => { if (c) cobrosMap[c.concepto_base || c.concepto] = c; });
+
+        const celdas = columnas.map(col => {
+            const c = cobrosMap[col.concepto_base];
+            if (!c) return `<td data-est="NO_APLICA">no debe<br>abonar</td>`;
+            let txt = '';
+            if (c.estado === 'ABONADA') txt = fMonto(c.monto_final);
+            else if (c.estado === 'PAGO_PARCIAL') txt = `${fMonto(c.monto_abonado)}/${fMonto(c.monto_final)}`;
+            else if (c.estado === 'PENDIENTE') txt = 'en revisión';
+            else if (c.estado === 'NO_ABONADA') txt = fMonto(c.saldo_pendiente || c.monto_final);
+            else if (c.estado === 'EN_MORA') txt = fMonto(c.saldo_pendiente || c.monto_final);
+            else if (c.estado === 'A_DEFINIR') txt = 'a definir';
+            else txt = fMonto(c.monto_final);
+            const title = `${c.concepto} · ${c.periodo || ''} | Estado: ${c.estado} | Abonado: ${fMonto(c.monto_abonado)} | Saldo: ${fMonto(c.saldo_pendiente)}${c.fecha_vencimiento ? ' | Vence: '+c.fecha_vencimiento : ''}`;
+            return `<td data-est="${c.estado}" title="${escapeHtml(title)}">${txt}</td>`;
+        }).join('');
+
+        const tr = document.createElement('tr');
+        tr.className = 'fila-est' + (est.estado_academico === 'BAJA_COHORTE' ? ' fila-pasiva-cohorte' : '');
+        tr.dataset.dni = est.dni;
+        tr.dataset.est = estadoGen;
+
+        const btnEstado = est.estado_academico === 'BAJA_COHORTE'
+            ? `<button class="btn-alta-coh" type="button" onclick="event.stopPropagation();confirmarCambioEstado(${est.dni}, '${escapeJs(est.apellido + ', ' + est.nombre)}', 'ACTIVO')">Alta</button>`
+            : `<button class="btn-baja-coh" type="button" onclick="event.stopPropagation();confirmarCambioEstado(${est.dni}, '${escapeJs(est.apellido + ', ' + est.nombre)}', 'BAJA_COHORTE')">Baja</button>`;
+
+        tr.innerHTML = `
+          <td style="text-align:center;"><input type="checkbox" class="chk-e" data-dni="${est.dni}" onchange="onChk()"></td>
+          <td class="cell-name" onclick="irEstudiante(${est.dni})">${escapeHtml(est.apellido)}, ${escapeHtml(est.nombre)}</td>
+          <td class="cell-desc" style="color:${est.descuento_porcentaje>0?'var(--success)':'#aaa'}">
+            ${est.descuento_porcentaje}% <button class="edit-btn" type="button" title="Editar descuento" onclick='event.stopPropagation();abrirDescuento({ dni:${est.dni}, apellido:${JSON.stringify(est.apellido)}, nombre:${JSON.stringify(est.nombre)}, pct:${est.descuento_porcentaje} }, this)'>✏️</button>
+          </td>
+          <td class="cell-email">${escapeHtml(est.email)}</td>
+          <td style="text-align:center;border-right:1px solid #ebebeb;">
+            <div style="font-size:11px;margin-bottom:4px;">${est.estado_academico === 'BAJA_COHORTE' ? '⛔ Baja' : '✅ Activo'}</div>
+            ${btnEstado}
+          </td>
+          ${celdas}
+          <td class="cell-tot-pagar">${fMonto(totP)}</td>
+          <td class="cell-tot-abonado">${fMonto(totA)}</td>
+          <td class="${totS===0?'cell-saldo-cero':'cell-saldo-pos'}">${fMonto(totS)}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    aplicarFiltro();
+    onChk();
+}
+
+function calcEstadoGeneral(cobros) {
+    const pesos = { EN_MORA:6, PAGO_PARCIAL:5, PENDIENTE:4, NO_ABONADA:3, A_DEFINIR:2, ABONADA:1 };
+    let peor = 'ABONADA';
+    cobros.forEach(c => { if (c && (pesos[c.estado] || 0) > (pesos[peor] || 0)) peor = c.estado; });
+    return peor;
+}
+
+function actualizarStats() {
+    const ests = V.data.estudiantes;
+    const cg = e => calcEstadoGeneral(e.cobros);
+    const recaud = ests.reduce((s,e)=>s + e.cobros.reduce((ss,c)=>ss+(c?Number(c.monto_abonado||0):0),0), 0);
+    document.getElementById('s-aldia').textContent     = ests.filter(e=>cg(e)==='ABONADA').length;
+    document.getElementById('s-mora').textContent      = ests.filter(e=>cg(e)==='EN_MORA').length;
+    document.getElementById('s-parcial').textContent   = ests.filter(e=>cg(e)==='PAGO_PARCIAL').length;
+    document.getElementById('s-recaudado').textContent = fMillones(recaud);
+}
+
+function actualizarFiltros() {
+    const ests = V.data.estudiantes;
+    const cg = e => calcEstadoGeneral(e.cobros);
+    const n = f => f==='todos' ? ests.length : ests.filter(e=>cg(e)===f).length;
+    const labels = { todos:'Todos', ABONADA:'Al día', EN_MORA:'En mora', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'Pendiente', NO_ABONADA:'No abonada', A_DEFINIR:'A definir' };
+    document.querySelectorAll('.filter-btn').forEach(b => { b.textContent = `${labels[b.dataset.f]} (${n(b.dataset.f)})`; });
+}
+
+function initFiltros() {
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.onclick = () => {
+            V.filtro = b.dataset.f;
+            document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            aplicarFiltro();
+        };
+    });
+}
+
+function aplicarFiltro() {
+    let vis = 0;
+    document.querySelectorAll('.fila-est').forEach(tr => {
+        const ok = V.filtro==='todos' || tr.dataset.est===V.filtro;
+        tr.classList.toggle('oculta', !ok);
+        if (ok) vis++;
+    });
+    document.getElementById('empty').classList.toggle('show', vis===0);
+}
+
+function toggleAll(cb) {
+    document.querySelectorAll('.chk-e').forEach(c => {
+        const row = c.closest('tr');
+        if (row && !row.classList.contains('oculta')) c.checked = cb.checked;
+    });
+    onChk();
+}
+function onChk() {
+    const sel = getSel();
+    document.getElementById('sel-bar').classList.toggle('show', sel.length>0);
+    document.getElementById('sel-txt').textContent = `${sel.length} estudiante${sel.length!==1?'s':''} seleccionado${sel.length!==1?'s':''}`;
+    document.getElementById('btn-reclamar').disabled = sel.length===0;
+    const visibles = [...document.querySelectorAll('.fila-est:not(.oculta) .chk-e')];
+    const all = document.getElementById('chk-all');
+    if (!all) return;
+    all.indeterminate = sel.length>0 && sel.length<visibles.length;
+    all.checked = visibles.length>0 && visibles.every(c=>c.checked);
+}
+function getSel() { return [...document.querySelectorAll('.chk-e:checked')].map(c=>parseInt(c.dataset.dni,10)); }
+function deselAll() {
+    document.querySelectorAll('.chk-e').forEach(c=>c.checked=false);
+    const all = document.getElementById('chk-all');
+    if (all) all.checked = false;
+    onChk();
+}
+
+function abrirDescuento(info, btn) {
+    V.descTarget = { ...info, tdEl: btn.closest('td') };
+    document.getElementById('desc-sub').textContent = `${info.apellido}, ${info.nombre} — DNI ${info.dni}`;
+    document.getElementById('desc-pct').value = info.pct || 0;
+    document.getElementById('desc-desde').value = hoy();
+    document.getElementById('desc-hasta').value = '';
+    document.getElementById('desc-motivo').value = '';
+    abrir('modal-descuento');
+    setTimeout(()=>document.getElementById('desc-pct').focus(),80);
+}
+async function guardarDescuento() {
+    const pct = parseFloat(document.getElementById('desc-pct').value);
+    const desde = document.getElementById('desc-desde').value;
+    const hasta = document.getElementById('desc-hasta').value;
+    const motivo = document.getElementById('desc-motivo').value.trim();
+    if (isNaN(pct) || pct<0 || pct>100) { toast('Porcentaje inválido (0–100)','err'); return; }
+    if (!desde) { toast('Indicá fecha de inicio','err'); return; }
+    if (hasta && hasta<desde) { toast('La fecha fin debe ser posterior al inicio','err'); return; }
+    spin(true);
+    try {
+        if (estaEnAppsScript()) {
+            await gs('actualizarDescuentoCoordinador', { dni:V.descTarget.dni, cohorteId:COHORTE_ID, programaId:PROGRAMA_ID, descuentoPorcentaje:pct, desde, hasta, motivo });
+            await delay(350);
+        }
+        const est = V.data.estudiantes.find(e=>e.dni===V.descTarget.dni);
+        if(est) est.descuento_porcentaje = pct;
+        renderTabla();
+        toast('Descuento actualizado ✓','ok');
+        cerrar('modal-descuento');
+    } catch(e) { toast('Error al guardar','err'); }
+    finally { spin(false); }
+}
+
+let planFilas = [];
+function abrirCrearCuota() {
+    const total = V.data ? V.data.estudiantes.length : 0;
+    document.getElementById('plan-n-todos').textContent = total;
+    if (V.data) document.getElementById('cuota-sub').textContent = `${V.data.programa.nombre} · ${V.data.cohorte.nombre}`;
+    planFilas = [
+        { nombre:'Inscripción', periodo: planPeriodoSiguiente(0), monto:'', vencimiento: planFechaDefault(0) },
+        { nombre:'Cuota 1', periodo: planPeriodoSiguiente(1), monto:'', vencimiento: planFechaDefault(1) }
+    ];
+    document.querySelector('input[name="plan-dest"][value="cohorte"]').checked = true;
+    planDestChange();
+    planRenderFilas();
+    planActualizarResumen();
+    planCheckAlerta();
+    abrir('modal-cuota');
+}
+function planPeriodoSiguiente(offset) {
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + offset);
+    return d.toLocaleDateString('es-AR', { month:'long', year:'numeric' }).replace(/^\w/, c=>c.toUpperCase());
+}
+function planFechaDefault(offset) {
+    const d = new Date(); d.setDate(15); d.setMonth(d.getMonth() + offset);
+    return d.toISOString().split('T')[0];
+}
+function planRenderFilas() {
+    const cont = document.getElementById('plan-filas');
+    cont.innerHTML = '';
+    planFilas.forEach((f,i) => {
+        const div = document.createElement('div');
+        div.className = 'plan-fila' + (!f.monto ? ' fila-irregular' : '');
+        div.innerHTML = `
+            <div class="plan-fila-num">${i+1}</div>
+            <div>
+                <label>Nombre de la cuota</label>
+                <input type="text" value="${escapeAttr(f.nombre)}" placeholder="Cuota ${i+1}" onchange="planFilas[${i}].nombre=this.value; planActualizarResumen();">
+            </div>
+            <div>
+                <label>Período</label>
+                <input type="text" value="${escapeAttr(f.periodo)}" placeholder="Mar 2026" onchange="planFilas[${i}].periodo=this.value;">
+            </div>
+            <div class="monto-wrap">
+                <label>Monto</label>
+                <input type="number" value="${escapeAttr(f.monto)}" placeholder="0" oninput="planFilas[${i}].monto=this.value; planCheckAlerta(); planActualizarResumen(); this.closest('.plan-fila').classList.toggle('fila-irregular',!this.value||parseFloat(this.value)===0);">
+            </div>
+            <div>
+                <label>Vencimiento</label>
+                <input type="date" value="${escapeAttr(f.vencimiento)}" onchange="planFilas[${i}].vencimiento=this.value;">
+            </div>
+            <button class="btn-del" title="Eliminar" onclick="planEliminar(${i})" ${planFilas.length<=1?'disabled style=&quot;opacity:0.3&quot;':''}>🗑</button>`;
+        cont.appendChild(div);
+    });
+}
+function planAgregar() {
+    const offset = planFilas.length;
+    planFilas.push({ nombre:`Cuota ${offset}`, periodo:planPeriodoSiguiente(offset), monto:'', vencimiento:planFechaDefault(offset) });
+    planRenderFilas(); planActualizarResumen(); planCheckAlerta();
+}
+function planEliminar(i) {
+    if (planFilas.length<=1) return;
+    planFilas.splice(i,1); planRenderFilas(); planActualizarResumen(); planCheckAlerta();
+}
+function planCheckAlerta() {
+    const hayVacio = planFilas.some(f => !f.monto || parseFloat(f.monto) === 0);
+    document.getElementById('plan-alerta').style.display = hayVacio ? 'block' : 'none';
+}
+function planDestChange() {
+    const val = document.querySelector('input[name="plan-dest"]:checked').value;
+    const selNombres = document.getElementById('plan-sel-nombres');
+    document.getElementById('opt-cohorte').classList.toggle('seleccionado', val==='cohorte');
+    document.getElementById('opt-especificos').classList.toggle('seleccionado', val==='especificos');
+    if (val === 'especificos') {
+        const sel = getSel();
+        if (!sel.length) {
+            selNombres.style.display = 'block';
+            selNombres.textContent = 'Sin estudiantes seleccionados en la tabla. Cerrá el modal, seleccioná estudiantes y volvé a abrir.';
+            selNombres.style.color = '#c0392b';
+            const nombres = sel.map(dni => {
+                const e = V.data.estudiantes.find(x => x.dni === dni);
+                return e ? `${e.apellido}, ${e.nombre}` : `DNI ${dni}`;
+            });
+            selNombres.style.display = 'block';
+            selNombres.innerHTML = nombres.map(n => `• ${escapeHtml(n)}`).join('<br>');
+            selNombres.style.color = '#2d5a87';
+        }
+        selNombres.style.display = 'none';
+    }
+    planActualizarResumen();
+}
+function planCantEstudiantes() {
+    const val = document.querySelector('input[name="plan-dest"]:checked').value;
+    return val === 'cohorte' ? (V.data ? V.data.estudiantes.length : 0) : getSel().length;
+}
+function planActualizarResumen() {
+    const n = planCantEstudiantes();
+    const q = planFilas.length;
+    document.getElementById('plan-resumen').innerHTML = `Se crearán <strong>${q}</strong> cuota${q!==1?'s':''} para <strong>${n}</strong> estudiante${n!==1?'s':''} <span style="color:#999;">(${q*n} registros totales)</span>`;
+}
+async function guardarCuotas() {
+    if (!planFilas.length) { toast('Agregá al menos una cuota','err'); return; }
+    if (!planFilas.some(f=>String(f.nombre||'').trim())) { toast('Completá el nombre de al menos una cuota','err'); return; }
+    const val = document.querySelector('input[name="plan-dest"]:checked').value;
+    let dnis = val === 'cohorte' ? V.data.estudiantes.map(e=>e.dni) : getSel();
+    if (val==='especificos' && !dnis.length) { toast('Seleccioná al menos un estudiante','err'); return; }
+    spin(true);
+    try {
+        const payload = {
+            programaId: PROGRAMA_ID,
+            cohorteId: COHORTE_ID,
+            dnis,
+            cuotas: planFilas.map(f => ({
+                concepto: String(f.nombre || '').trim(),
+                periodo: String(f.periodo || '').trim(),
+                fechaVencimiento: f.vencimiento || '',
+                montoOriginal: f.monto === '' ? null : Number(f.monto)
+            }))
+        };
+        if (estaEnAppsScript()) await gs('crearPlanCuotasCoordinador', payload);
+        else await delay(600);
+        toast(`${planFilas.length} cuota${planFilas.length>1?'s':''} creadas para ${dnis.length} estudiante${dnis.length>1?'s':''} ✓`, 'ok');
+        cerrar('modal-cuota');
+        deselAll();
+    } catch(e) { toast('Error al crear el plan','err'); }
+    finally { spin(false); }
+}
+
+let _bcDni = null, _bcNombre = '', _bcNuevoEstado = '';
+function confirmarCambioEstado(dni, nombre, nuevoEstado) {
+    _bcDni = dni; _bcNombre = nombre; _bcNuevoEstado = nuevoEstado;
+    const esBaja = nuevoEstado === 'BAJA_COHORTE';
+    const hdr = document.getElementById('mbc-hdr');
+    const btn = document.getElementById('mbc-btn');
+    hdr.style.background = esBaja ? 'linear-gradient(135deg,#e65100 0%,#f59e0b 100%)' : 'linear-gradient(135deg,#2d7a4f 0%,#4caf50 100%)';
+    document.getElementById('mbc-titulo').textContent = esBaja ? '⛔ Baja en esta cohorte' : '✅ Alta en esta cohorte';
+    document.getElementById('mbc-sub').textContent = V.data ? V.data.programa.nombre + ' · ' + V.data.cohorte.nombre : '';
+    btn.textContent = esBaja ? '⛔ Confirmar Baja' : '✅ Confirmar Alta';
+    btn.style.background = esBaja ? '#ea580c' : '#2d7a4f';
+    document.getElementById('mbc-cuerpo').innerHTML = esBaja
+        ? `<p style="font-size:13px;color:#555;">Va a dar de baja a <strong>${escapeHtml(nombre)}</strong> solo en esta cohorte/edición.</p>
+           <div style="margin-top:12px;background:#fff8e1;border-left:4px solid #f59e0b;padding:12px;border-radius:8px;font-size:12px;color:#78350f;">
+             <strong>Efectos:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;">
+               <li>Deja de generar deuda nueva en esta cohorte.</li>
+               <li>El historial de pagos se conserva.</li>
+               <li>Puede reactivarse con el botón Alta.</li>
+             </ul>
+           </div>`
+        : `<p style="font-size:13px;color:#555;">Va a reactivar a <strong>${escapeHtml(nombre)}</strong> en esta cohorte/edición.</p>
+           <div style="margin-top:12px;background:#d4edda;border-left:4px solid #2d7a4f;padding:12px;border-radius:8px;font-size:12px;color:#155724;">
+             <strong>Efectos:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;">
+               <li>El estudiante vuelve a estado ACTIVO en esta cohorte.</li>
+               <li>Se reanudan los cálculos de cuotas y deuda.</li>
+             </ul>
+           </div>`;
+    abrir('modal-baja-cohorte');
+}
+async function ejecutarCambioEstado() {
+    spin(true);
+    try {
+        if (estaEnAppsScript()) await gs('cambiarEstadoEstudianteEnCohorte', { dni:_bcDni, cohorteId:COHORTE_ID, programaId:PROGRAMA_ID, estadoAcademico:_bcNuevoEstado });
+        else await delay(400);
+        const est = V.data.estudiantes.find(e => e.dni === _bcDni);
+        if (est) est.estado_academico = _bcNuevoEstado;
+        renderTabla();
+        toast(_bcNuevoEstado === 'BAJA_COHORTE' ? `${_bcNombre} dado/a de baja en esta cohorte ✓` : `${_bcNombre} reactivado/a en esta cohorte ✓`, 'ok');
+        cerrar('modal-baja-cohorte');
+    } catch(e) { toast('Error al procesar','err'); }
+    finally { spin(false); }
+}
+
+function abrirCorreo() { cargarPlantilla(); abrir('modal-correo'); }
+function cargarPlantilla() {
+    const t = document.getElementById('c-tipo').value;
+    const plant = V.plantillas[t] || PLANTILLAS_DEF[t];
+    document.getElementById('c-asunto').value = plant.asunto;
+    document.getElementById('c-cuerpo').value = plant.cuerpo;
+}
+async function guardarPlantilla() {
+    const t = document.getElementById('c-tipo').value;
+    V.plantillas[t] = { asunto: document.getElementById('c-asunto').value.trim(), cuerpo: document.getElementById('c-cuerpo').value.trim() };
+    try {
+        if (estaEnAppsScript()) await gs('guardarPlantillaCorreoCoordinador', { tipo:t, ...V.plantillas[t] });
+        toast('Plantilla guardada ✓','ok');
+        cerrar('modal-correo');
+    } catch(e) { toast('Error al guardar la plantilla','err'); }
+}
+async function reclamarSel() {
+    const sel = getSel();
+    if (!sel.length) { toast('Seleccioná al menos un estudiante','err'); return; }
+    spin(true);
+    try {
+        if (estaEnAppsScript()) await gs('enviarReclamosCoordinador', { dnis:sel, cohorteId:COHORTE_ID, programaId:PROGRAMA_ID, plantilla:V.plantillas.reclamo });
+        else await delay(700);
+        toast(`Reclamo enviado a ${sel.length} estudiante${sel.length>1?'s':''} ✓`, 'ok');
+        deselAll();
+    } catch(e) { toast('Error al enviar reclamos','err'); }
+    finally { spin(false); }
+}
+async function exportarExcel() {
+    spin(true);
+    try {
+        if (estaEnAppsScript()) {
+            const res = await gs('exportarEstadoPagosCohorteCoordinador', { cohorteId:COHORTE_ID, programaId:PROGRAMA_ID });
+            if (res && res.url) window.open(res.url, '_blank');
+            await delay(400);
+        }
+        toast('Exportación iniciada — descargando archivo ✓','ok');
+    } catch(e) { toast('Error al exportar','err'); }
+    finally { spin(false); }
+}
+
+function dlPlantilla() { toast('Descargando plantilla…'); }
+function dOver(e){ e.preventDefault(); document.getElementById('drop-zone').classList.add('dragover'); }
+function dLeave(){ document.getElementById('drop-zone').classList.remove('dragover'); }
+function dDrop(e){ e.preventDefault(); dLeave(); const f=e.dataTransfer.files[0]; if(f) mostrarArch(f); }
+function fileElegido(e){ const f=e.target.files[0]; if(f) mostrarArch(f); }
+function mostrarArch(f) {
+    if(!['xlsx','xls'].includes(String(f.name).split('.').pop().toLowerCase())) { toast('Solo .xlsx o .xls','err'); return; }
+    V.importFile = f;
+    document.getElementById('imp-fn').textContent = f.name;
+    document.getElementById('imp-fs').textContent = (f.size/1024).toFixed(1)+' KB';
+    document.getElementById('imp-prev').classList.add('show');
+    document.getElementById('btn-imp').disabled = false;
+}
+async function procesarImport() {
+    if (!V.importFile) { toast('Seleccioná un archivo Excel','err'); return; }
+    spin(true);
+    try {
+        const archivo = await leerArchivoBase64(V.importFile);
+        if (estaEnAppsScript()) await gs('importarCobrosCoordinador', { cohorteId:COHORTE_ID, programaId:PROGRAMA_ID, archivo });
+        else await delay(700);
+        toast('Importación completada ✓','ok');
+        cerrar('modal-importar');
+        document.getElementById('file-imp').value = '';
+        document.getElementById('imp-prev').classList.remove('show');
+        document.getElementById('btn-imp').disabled = true;
+        V.importFile = null;
+    } catch(e) { toast('Error en la importación','err'); }
+    finally { spin(false); }
+}
+
+function irEstudiante(dni) { navegar('coordinador_4_estudiante.html', { dni:dni, cohorte_id:COHORTE_ID, programa_id:PROGRAMA_ID }); }
+function volverADashboard() { navegar('coordinador_1_dashboard.html'); }
+function navegar(destino, params={}) {
+    const qs = new URLSearchParams(params).toString();
+    if (estaEnAppsScript()) {
+        window.top.location.href = '?page=' + destino.replace('.html', '').split('?')[0] + (qs ? '&' + qs : '');
+        window.location.href = destino + (qs ? '?' + qs : '');
+    }
+}
+
+async function cargarNotificaciones() {
+    try {
+        V.notifications = estaEnAppsScript() ? await gs('obtenerNotificacionesCoordinador') : obtenerDemoNotificaciones();
+    } catch(e) {
+        V.notifications = [];
+    }
+    renderNotificaciones();
+}
+function renderNotificaciones() {
+    const badge = document.getElementById('notif-badge');
+    const cont = document.getElementById('notif-list');
+    const unread = (V.notifications || []).filter(n => !n.leida).length;
+    badge.textContent = unread;
+    badge.style.display = unread > 0 ? 'flex' : 'none';
+    if (!V.notifications || !V.notifications.length) {
+        cont.innerHTML = '<div style="padding:24px 16px;text-align:center;color:#9ca3af;font-size:13px;">No hay notificaciones.</div>';
+        return;
+    }
+    cont.innerHTML = V.notifications.map((n, i) => `
+        <div class="notif-item ${n.leida ? '' : 'unread'}" onclick="leerNotif(${i})">
+            <div style="font-weight:600;color:#1e3a5f;">${escapeHtml(n.titulo || 'Notificación')}</div>
+            <div style="margin-top:2px;">${escapeHtml(n.mensaje || '')}</div>
+            <small>${escapeHtml(n.tiempo || '')}</small>
+        </div>
+    `).join('');
+}
+function toggleNotif() {
+    var p = document.getElementById('notif-panel');
+    p.style.display = p.style.display === 'block' ? 'none' : 'block';
+}
+function leerNotif(i) {
+    if (!V.notifications[i]) return;
+    V.notifications[i].leida = true;
+    renderNotificaciones();
+}
+async function marcarTodasLeidas() {
+    V.notifications = (V.notifications || []).map(n => ({ ...n, leida:true }));
+    renderNotificaciones();
+    if (estaEnAppsScript()) { try { await gs('marcarNotificacionesCoordinadorLeidas'); } catch(e) {} }
+}
+
+
+function abrir(id){ document.getElementById(id).classList.add('show'); }
+function cerrar(id){ document.getElementById(id).classList.remove('show'); }
+function spin(v){ document.getElementById('spinner').classList.toggle('show', !!v); }
+function hoy(){ return new Date().toISOString().split('T')[0]; }
+function delay(ms){ return new Promise(r=>setTimeout(r, ms)); }
+function toast(msg, tipo='') {
+    const c = document.getElementById('toasts');
+    const d = document.createElement('div');
+    d.className = `toast ${tipo}`;
+    d.textContent = msg;
+    c.appendChild(d);
+    setTimeout(()=>d.remove(), 3500);
+}
+function fMonto(n) {
+    if (n===null||n===undefined) return '–';
+    return '$'+Math.round(Number(n)).toLocaleString('es-AR');
+}
+function fMillones(n) {
+    n = Number(n || 0);
+    if (n>=1000000) return '$'+(n/1000000).toFixed(1)+'M';
+    if (n>=1000)    return '$'+(n/1000).toFixed(0)+'k';
+    return fMonto(n);
+}
+function escapeHtml(valor) {
+    return String(valor == null ? '' : valor).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'", '&#39;');
+}
+function escapeAttr(valor) { return escapeHtml(valor); }
+function escapeJs(valor) {
+    return String(valor == null ? '' : valor)
+        .replaceAll('\\', '\\\\')
+        .replaceAll("'", "\\'");
+}
+function estaEnAppsScript() { return typeof google !== 'undefined' && google.script && google.script.run; }
+function gs(fn, ...args) {
+    return new Promise((resolve, reject) => {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn](...args);
+    });
+}
+async function leerArchivoBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const raw = String(e.target.result || '');
+            const base64 = raw.includes(',') ? raw.split(',')[1] : raw;
+            resolve({ name:file.name, mimeType:file.type || 'application/vnd.ms-excel', size:file.size, base64 });
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function obtenerDemoNotificaciones() {
+    return [
+        { titulo:'María González', mensaje:'Cuota 5 en mora', tiempo:'Hace 2 días', leida:false },
+        { titulo:'Juan Pérez', mensaje:'Cuota 7 vence mañana', tiempo:'Hace 1 día', leida:false },
+        { titulo:'Ana Ruiz', mensaje:'Solicitud de readmisión', tiempo:'Hace 5 días', leida:true }
+    ];
+}
+function obtenerDemoData() {
+    return {
+        programa: { programa_id:PROGRAMA_ID, nombre:'Especialización en Costos y Gestión Empresarial' },
+        cohorte: { cohorte_id:COHORTE_ID, nombre:'Cohorte 2025-2026', fecha_inicio:'2025-03-01', fecha_fin:'2026-12-31', estado:'ACTIVO' },
+        columnas: [
+            { concepto_base:'Inscripción', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15' },
+            { concepto_base:'Cuota 01', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15' },
+            { concepto_base:'Cuota 02', periodo:'Abr 2025', fecha_vencimiento:'2025-04-15' },
+            { concepto_base:'Cuota 03', periodo:'May 2025', fecha_vencimiento:'2025-05-15' },
+            { concepto_base:'Cuota 04', periodo:'Jun 2025', fecha_vencimiento:'2025-06-15' },
+            { concepto_base:'Cuota 05', periodo:'Jul 2025', fecha_vencimiento:'2025-07-15' },
+            { concepto_base:'Cuota 06', periodo:'Ago 2025', fecha_vencimiento:'2025-08-15' },
+            { concepto_base:'Cuota 07', periodo:'Sep 2025', fecha_vencimiento:'2025-09-15' }
+        ],
+        estudiantes: [
+            { dni:12345678, apellido:'González', nombre:'María', email:'maria.gonzalez@email.com', telefono:'2615551234', descuento_porcentaje:5, estado_academico:'ACTIVO',
+              cobros:[
+                { cobro_id:1, concepto:'Inscripción', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15', fecha_pago:'2025-03-10', monto_original:50000, descuento_porcentaje:5, monto_final:47500, monto_abonado:47500, saldo_pendiente:0, estado:'ABONADA' },
+                { cobro_id:2, concepto:'Cuota 01', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15', fecha_pago:'2025-03-10', monto_original:90000, descuento_porcentaje:5, monto_final:85500, monto_abonado:85500, saldo_pendiente:0, estado:'ABONADA' },
+                { cobro_id:3, concepto:'Cuota 02', periodo:'Abr 2025', fecha_vencimiento:'2025-04-15', fecha_pago:'2025-04-12', monto_original:90000, descuento_porcentaje:5, monto_final:85500, monto_abonado:85500, saldo_pendiente:0, estado:'ABONADA' },
+                { cobro_id:4, concepto:'Cuota 03', periodo:'May 2025', fecha_vencimiento:'2025-05-15', monto_original:90000, descuento_porcentaje:5, monto_final:85500, monto_abonado:50000, saldo_pendiente:35500, estado:'PAGO_PARCIAL' },
+                { cobro_id:5, concepto:'Cuota 04', periodo:'Jun 2025', fecha_vencimiento:'2025-06-15', monto_original:90000, descuento_porcentaje:5, monto_final:85500, monto_abonado:0, saldo_pendiente:85500, estado:'PENDIENTE' },
+                { cobro_id:6, concepto:'Cuota 05', periodo:'Jul 2025', fecha_vencimiento:'2025-07-15', monto_original:90000, descuento_porcentaje:5, monto_final:85500, monto_abonado:0, saldo_pendiente:85500, estado:'NO_ABONADA' },
+                { cobro_id:7, concepto:'Cuota 06', periodo:'Ago 2025', fecha_vencimiento:'2025-08-15', monto_original:90000, descuento_porcentaje:5, monto_final:null, monto_abonado:0, saldo_pendiente:0, estado:'A_DEFINIR' }
+              ]
+            },
+            { dni:23456789, apellido:'Rodríguez', nombre:'Juan', email:'juan.rodriguez@email.com', telefono:'2615552345', descuento_porcentaje:0, estado_academico:'ACTIVO',
+              cobros:[
+                { cobro_id:8, concepto:'Inscripción', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15', fecha_pago:'2025-03-08', monto_original:50000, descuento_porcentaje:0, monto_final:50000, monto_abonado:50000, saldo_pendiente:0, estado:'ABONADA' },
+                { cobro_id:9, concepto:'Cuota 01', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15', monto_original:90000, descuento_porcentaje:0, monto_final:90000, monto_abonado:0, saldo_pendiente:90000, estado:'EN_MORA' },
+                { cobro_id:10, concepto:'Cuota 02', periodo:'Abr 2025', fecha_vencimiento:'2025-04-15', monto_original:90000, descuento_porcentaje:0, monto_final:90000, monto_abonado:0, saldo_pendiente:90000, estado:'EN_MORA' },
+                { cobro_id:11, concepto:'Cuota 03', periodo:'May 2025', fecha_vencimiento:'2025-05-15', monto_original:90000, descuento_porcentaje:0, monto_final:90000, monto_abonado:0, saldo_pendiente:90000, estado:'NO_ABONADA' }
+              ]
+            },
+            { dni:34567890, apellido:'Martínez', nombre:'Laura', email:'laura.martinez@email.com', telefono:'2615553456', descuento_porcentaje:5, estado_academico:'BAJA_COHORTE',
+              cobros:[
+                { cobro_id:12, concepto:'Inscripción', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15', fecha_pago:'2025-03-12', monto_original:50000, descuento_porcentaje:5, monto_final:47500, monto_abonado:47500, saldo_pendiente:0, estado:'ABONADA' },
+                { cobro_id:13, concepto:'Cuota 01', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15', fecha_pago:'2025-03-12', monto_original:90000, descuento_porcentaje:5, monto_final:85500, monto_abonado:85500, saldo_pendiente:0, estado:'ABONADA' }
+              ]
+            }
+        ]
+    };
+}
+</script>
+
+</body>
+</html>

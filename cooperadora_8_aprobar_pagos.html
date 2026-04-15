@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprobar Comprobante - Cooperadora</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a5f;
+            --accent: #d4af37;
+            --bg: #f8f6f1;
+            --text: #2c2c2c;
+            --white: #ffffff;
+            --success: #2d7a4f;
+            --warning: #e67e22;
+            --danger: #c0392b;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: rgba(0,0,0,0.5);
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: 16px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: var(--white);
+            padding: 24px 32px;
+        }
+
+        .modal-header h2 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .modal-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .modal-body {
+            padding: 32px;
+        }
+
+        .student-info-box {
+            background: #f8f6f1;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .info-value.highlight {
+            font-size: 24px;
+            color: var(--primary);
+        }
+
+        .comprobante-preview {
+            background: #f8f6f1;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .file-icon-large {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            color: var(--white);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .file-meta {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .view-file-btn {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-file-btn:hover {
+            background: #2d5a87;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .payment-options {
+            margin-bottom: 24px;
+        }
+
+        .radio-option {
+            background: #f8f6f1;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .radio-option:hover {
+            background: #e8e6e1;
+        }
+
+        .radio-option.selected {
+            border-color: var(--accent);
+            background: #fff9e6;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .radio-content {
+            flex: 1;
+        }
+
+        .radio-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .radio-description {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .partial-payment-input {
+            display: none;
+            background: #f8f6f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+
+        .partial-payment-input.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .calculation-box {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 100%);
+            padding: 16px 20px;
+            border-radius: 8px;
+            border-left: 4px solid #0c5460;
+            margin-top: 16px;
+        }
+
+        .calculation-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .calculation-row.total {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            padding-top: 8px;
+            border-top: 2px solid #0c5460;
+            margin-top: 8px;
+        }
+
+        .alert-box {
+            background: #fff3cd;
+            border-left: 4px solid var(--warning);
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #856404;
+        }
+
+        .alert-box strong {
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .upload-section {
+            margin-bottom: 24px;
+        }
+
+        .upload-box {
+            border: 3px dashed #d0d0d0;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            background: #f8f6f1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-box:hover {
+            border-color: var(--accent);
+            background: #fff9e6;
+        }
+
+        .upload-label {
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+        }
+
+        .upload-text strong {
+            font-size: 16px;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .upload-text p {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .file-uploaded {
+            background: #d4edda;
+            border: 2px solid var(--success);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .file-icon-small {
+            font-size: 32px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name-uploaded {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .file-size {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .btn-remove {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-remove:hover {
+            background: #a02f23;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .warning-box strong {
+            font-weight: 700;
+        }
+
+        .modal-footer {
+            padding: 20px 32px;
+            background: #f8f6f1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-success:hover {
+            background: #246441;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(45, 122, 79, 0.3);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+        function selectPaymentType(type) {
+            const fullRadio = document.getElementById('full-payment');
+            const partialRadio = document.getElementById('partial-payment');
+            const partialInput = document.getElementById('partial-input-section');
+            
+            if (type === 'full') {
+                fullRadio.checked = true;
+                document.getElementById('full-option').classList.add('selected');
+                document.getElementById('partial-option').classList.remove('selected');
+                partialInput.classList.remove('active');
+                partialRadio.checked = true;
+                document.getElementById('partial-option').classList.add('selected');
+                document.getElementById('full-option').classList.remove('selected');
+                partialInput.classList.add('active');
+            }
+        }
+
+        function calculateRemaining() {
+            const total = 115762.50;
+            const paid = parseFloat(document.getElementById('monto-abonado').value) || 0;
+            const remaining = total - paid;
+            
+            document.getElementById('calc-total').textContent = '$' + total.toLocaleString('es-AR', {minimumFractionDigits: 2});
+            document.getElementById('calc-paid').textContent = '$' + paid.toLocaleString('es-AR', {minimumFractionDigits: 2});
+            document.getElementById('calc-remaining').textContent = '$' + remaining.toLocaleString('es-AR', {minimumFractionDigits: 2});
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            
+            if (!file) return;
+
+            // Validar que sea PDF
+            if (file.type !== 'application/pdf') {
+                alert('⚠️ Solo se permiten archivos PDF');
+                event.target.value = '';
+                return;
+            }
+
+            // Validar tamaño (10 MB máximo)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('⚠️ El archivo no puede superar los 10 MB');
+                event.target.value = '';
+                return;
+            }
+
+            // Mostrar archivo subido
+            document.getElementById('upload-box').style.display = 'none';
+            document.getElementById('file-uploaded').style.display = 'flex';
+            document.getElementById('warning-no-file').style.display = 'none';
+            
+            // Mostrar nombre y tamaño
+            document.getElementById('file-name-uploaded').textContent = file.name;
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            document.getElementById('file-size').textContent = `${sizeMB} MB`;
+
+            // Habilitar botón de aprobar
+            const btnAprobar = document.getElementById('btn-aprobar');
+            btnAprobar.disabled = false;
+            btnAprobar.style.opacity = '1';
+            btnAprobar.style.cursor = 'pointer';
+        }
+
+        function removeFile() {
+            // Limpiar input
+            document.getElementById('recibo-file').value = '';
+            
+            // Ocultar archivo subido
+            document.getElementById('upload-box').style.display = 'block';
+            document.getElementById('file-uploaded').style.display = 'none';
+            document.getElementById('warning-no-file').style.display = 'block';
+
+            // Deshabilitar botón de aprobar
+            const btnAprobar = document.getElementById('btn-aprobar');
+            btnAprobar.disabled = true;
+            btnAprobar.style.opacity = '0.5';
+            btnAprobar.style.cursor = 'not-allowed';
+        }
+    
+    /* Navegación y sesión proporcionadas por supabase.js */
+    
+        /* ══ CAMPANA ══ */
+    var _notifs = [];
+    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+    function renderNotificaciones(datos) {
+        _notifs = datos || [];
+        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+        var lista = document.getElementById('notif-list');
+        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+        var iconos = { pago:'\u{1f4b0}', mora:'\u{1f534}', solicitud:'\u{1f4cb}', reclamo:'\u26a0\ufe0f', alerta:'\u{1f6a8}' };
+        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
+        lista.innerHTML = _notifs.map(function(n) {
+            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+        }).join('');
+    }
+    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
+    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+    // Notificaciones cargadas por supabase.js automáticamente
+
+</script>
+</head>
+<body>
+    <!-- BARRA SUPERIOR -->
+    <div style="background:linear-gradient(135deg,#1e3a5f 0%,#2d5a87 100%);padding:12px 32px;display:flex;justify-content:space-between;align-items:center;">
+        <a href="cooperadora_6_aprobar_pagos.html" style="color:white;text-decoration:none;font-size:14px;font-family:'DM Sans',sans-serif;opacity:0.9;">← Volver a Aprobar Pagos</a>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="notif-wrapper" style="position:relative;">
+                <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                </button>
+                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                    </div>
+                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                </div>
+            </div>
+            <a href="portal_login.html" onclick="return cerrarSesion(event)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);color:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;font-family:'DM Sans',sans-serif;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar Sesión
+            </a>
+        </div>
+    </div>
+
+    <div class="modal">
+        <div class="modal-header">
+            <button class="btn-close" onclick="window.location.href='cooperadora_6_aprobar_pagos.html'" style="position:absolute; top:20px; right:20px; background:none; border:none; color:white; font-size:32px; cursor:pointer; line-height:1;">×</button>
+            <h2>✅ Aprobar Comprobante de Pago</h2>
+            <p>Revisión y registro del pago</p>
+        </div>
+
+        <div class="modal-body">
+            <!-- INFO DEL ESTUDIANTE Y CUOTA -->
+            <div class="student-info-box">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Estudiante</div>
+                        <div class="info-value">María González</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">DNI</div>
+                        <div class="info-value">23456789</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Programa</div>
+                        <div class="info-value">Esp. Costos 2025-2026</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Cuota</div>
+                        <div class="info-value">Cuota 5 - Diciembre 2025</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Monto Total Cuota</div>
+                        <div class="info-value highlight">$115.762,50</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Estado Actual</div>
+                        <div class="info-value" style="color: var(--danger);">En Mora</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMPROBANTE -->
+            <div class="comprobante-preview">
+                <div class="file-icon-large">📄</div>
+                <div class="file-details">
+                    <div class="file-name">transferencia_diciembre.pdf</div>
+                    <div class="file-meta">Subido: 24/03/2026 15:45 • Tamaño: 1.2 MB</div>
+                </div>
+                <button class="view-file-btn">👁️ Ver Comprobante</button>
+            </div>
+
+            <div class="section-title">¿Cómo registrar este pago?</div>
+
+            <!-- OPCIONES DE PAGO -->
+            <div class="payment-options">
+                <div class="radio-option selected" id="full-option" onclick="selectPaymentType('full')">
+                    <input type="radio" name="payment-type" id="full-payment" checked>
+                    <div class="radio-content">
+                        <div class="radio-title">💯 Pago Completo</div>
+                        <div class="radio-description">El estudiante pagó el monto total de la cuota ($115.762,50)</div>
+                    </div>
+                </div>
+
+                <div class="radio-option" id="partial-option" onclick="selectPaymentType('partial')">
+                    <input type="radio" name="payment-type" id="partial-payment">
+                    <div class="radio-content">
+                        <div class="radio-title">📊 Pago Parcial</div>
+                        <div class="radio-description">El estudiante pagó solo una parte del monto total</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INPUT DE PAGO PARCIAL -->
+            <div class="partial-payment-input" id="partial-input-section">
+                <div class="input-group">
+                    <label for="monto-abonado">💰 Monto Abonado</label>
+                    <input 
+                        type="number" 
+                        id="monto-abonado" 
+                        placeholder="Ejemplo: 70000"
+                        step="0.01"
+                        oninput="calculateRemaining()"
+                    >
+                </div>
+
+                <div class="calculation-box">
+                    <div class="calculation-row">
+                        <span>Monto total de la cuota:</span>
+                        <strong id="calc-total">$115.762,50</strong>
+                    </div>
+                    <div class="calculation-row">
+                        <span>Monto abonado:</span>
+                        <strong id="calc-paid">$0,00</strong>
+                    </div>
+                    <div class="calculation-row total">
+                        <span>Saldo pendiente:</span>
+                        <strong id="calc-remaining">$115.762,50</strong>
+                    </div>
+                </div>
+
+                <div class="alert-box">
+                    <strong>⚠️ Importante:</strong>
+                    El saldo pendiente podrá entrar en mora si no se paga antes del día 16 del próximo mes.
+                </div>
+            </div>
+
+            <!-- SUBIR RECIBO OFICIAL -->
+            <div class="section-title" style="margin-top: 32px;">📄 Subir Recibo Oficial (OBLIGATORIO)</div>
+            
+            <div class="upload-section" id="upload-section">
+                <div class="upload-box" id="upload-box">
+                    <input 
+                        type="file" 
+                        id="recibo-file" 
+                        accept=".pdf"
+                        style="display: none;"
+                        onchange="handleFileUpload(event)"
+                    >
+                    <label for="recibo-file" class="upload-label">
+                        <div class="upload-icon">📎</div>
+                        <div class="upload-text">
+                            <strong>Click para seleccionar archivo PDF</strong>
+                            <p>Solo archivos PDF • Máximo 10 MB</p>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="file-uploaded" id="file-uploaded" style="display: none;">
+                    <div class="file-icon-small">✅</div>
+                    <div class="file-info">
+                        <div class="file-name-uploaded" id="file-name-uploaded"></div>
+                        <div class="file-size" id="file-size"></div>
+                    </div>
+                    <button class="btn-remove" onclick="removeFile()">❌ Cambiar</button>
+                </div>
+
+                <div class="warning-box" id="warning-no-file">
+                    <strong>⚠️ No podrás aprobar sin subir el recibo oficial</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="history.back()">Cancelar</button>
+            <button class="btn btn-success" id="btn-aprobar" disabled style="opacity: 0.5; cursor: not-allowed;">
+                <span>✓</span>
+                <span>Aprobar y Registrar Pago</span>
+            </button>
+        </div>
+    </div>
+</body>
+</html>

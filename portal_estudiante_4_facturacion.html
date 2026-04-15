@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos de Facturación - Portal Estudiante FCE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+
+        /* ── NAVBAR ── */
+        .navbar { background: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .nav-brand { font-weight: 700; color: var(--primary); font-size: 15px; }
+        .nav-links  { display: flex; gap: 8px; }
+        .nav-link   { text-decoration: none; color: #666; font-weight: 500; padding: 8px 14px; border-radius: 6px; transition: all 0.2s; font-size: 14px; }
+        .nav-link:hover, .nav-link.active { background: var(--accent); color: white; }
+
+        /* ── LAYOUT ── */
+        .container { max-width: 860px; margin: 32px auto; padding: 0 28px; }
+        .header { margin-bottom: 28px; }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 30px; color: var(--primary); margin-bottom: 4px; }
+        .header p  { color: #888; font-size: 14px; }
+
+        /* ── CARD ── */
+        .card { background: white; border-radius: 12px; padding: 28px 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 20px; }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--accent);
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* ── INFO BOX ── */
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #1e40af;
+            line-height: 1.6;
+        }
+        .info-box strong { display: block; margin-bottom: 4px; font-size: 14px; }
+
+        /* ── DATOS ACTUALES ── */
+        .datos-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+        .dato-item {
+            background: #f8f6f1;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+        .dato-item.full { grid-column: 1 / -1; }
+        .dato-label { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .dato-value { font-size: 15px; font-weight: 600; color: var(--primary); }
+
+        /* ── FORMULARIO ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full { grid-column: 1 / -1; }
+
+        label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        label .req { color: var(--danger); }
+
+        input, select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            color: #1f2937;
+            transition: border-color 0.2s;
+            background: white;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(212,175,55,0.12);
+        }
+        .helper { font-size: 12px; color: #9ca3af; margin-top: 5px; }
+
+        /* ── BOTONES ── */
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #2d5a87; }
+        .btn-outline { background: white; color: #374151; border: 2px solid #d1d5db; }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { padding: 7px 16px; font-size: 13px; }
+
+        .btn-row { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+        /* ── ALERT ÉXITO ── */
+        .alert-success {
+            display: none;
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #065f46;
+            font-weight: 600;
+            margin-top: 16px;
+            align-items: center;
+            gap: 8px;
+        }
+        .alert-success.show { display: flex; }
+
+        /* ── MODOS ── */
+        .modo-ver  .form-section { display: none; }
+        .modo-ver  .btn-row      { display: none; }
+        .modo-ver  .alert-success.show { display: flex; }
+        .modo-edit .datos-grid   { display: none; }
+        .modo-edit .btn-modificar{ display: none; }
+        .modo-edit .form-section { display: block; }
+
+        /* datos bancarios */
+        .banco-box { background: #f8f6f1; padding: 16px; border-radius: 8px; font-size: 14px; line-height: 2; }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-brand">Portal de Estudiantes</div>
+    <div class="nav-links">
+        <a href="portal_estudiante_2_dashboard.html" class="nav-link">🏠 Dashboard</a>
+        <a href="portal_estudiante_3_cuotas.html"    class="nav-link">💳 Mis Cuotas</a>
+        <a href="portal_estudiante_4_facturacion.html" class="nav-link active">📄 Facturación</a>
+        <a href="portal_estudiante_5_historial.html"  class="nav-link">📊 Historial</a>
+            <!-- Campana -->
+            <div class="notif-wrapper" style="position:relative;display:inline-flex;">
+                <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:6px 8px;border-radius:6px;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
+                </button>
+                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                    </div>
+                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                </div>
+            </div>
+            <a href="portal_login.html" class="nav-link" onclick="return cerrarSesion(event)">🚪 Salir</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="header">
+        <h1>📄 Datos de Facturación</h1>
+        <p>Estos datos se usan para generar tus recibos y comprobantes oficiales</p>
+    </div>
+
+    <!-- CARD PRINCIPAL -->
+    <div class="card modo-ver" id="mainCard">
+
+        <div class="info-box">
+            <strong>ℹ️ Importante</strong>
+            Completá estos datos con precisión. Cooperadora los usará para emitir tus comprobantes oficiales.
+            Una vez guardados, cualquier modificación deberá ser solicitada a administración.
+        </div>
+
+        <!-- DATOS ACTUALES -->
+        <div class="section-header">
+            <div class="section-title">📋 Datos Actuales</div>
+            <button class="btn btn-outline btn-sm btn-modificar" onclick="activarEdicion()">✏️ Modificar</button>
+        </div>
+
+        <div class="datos-grid">
+            <div class="dato-item">
+                <div class="dato-label">Razón Social / Nombre</div>
+                <div class="dato-value" id="v-razon">María González</div>
+            </div>
+            <div class="dato-item">
+                <div class="dato-label">CUIT</div>
+                <div class="dato-value" id="v-cuit">27-12345678-3</div>
+            </div>
+            <div class="dato-item">
+                <div class="dato-label">Condición IVA</div>
+                <div class="dato-value" id="v-iva">Consumidor Final</div>
+            </div>
+            <div class="dato-item">
+                <div class="dato-label">Código Postal</div>
+                <div class="dato-value" id="v-cp">5500</div>
+            </div>
+            <div class="dato-item">
+                <div class="dato-label">Provincia</div>
+                <div class="dato-value" id="v-provincia">Mendoza</div>
+            </div>
+            <div class="dato-item">
+                <div class="dato-label">Teléfono</div>
+                <div class="dato-value" id="v-telefono">2615-551234</div>
+            </div>
+            <div class="dato-item full">
+                <div class="dato-label">Dirección Fiscal</div>
+                <div class="dato-value" id="v-direccion">Av. San Martín 1450, Godoy Cruz, Mendoza</div>
+            </div>
+            <div class="dato-item full">
+                <div class="dato-label">Email para comprobantes</div>
+                <div class="dato-value" id="v-email">maria.gonzalez@email.com</div>
+            </div>
+        </div>
+
+        <!-- ALERTA ÉXITO (visible en modo-ver después de guardar) -->
+        <div class="alert-success" id="alertSuccess">
+            ✅ Datos guardados correctamente. Cooperadora fue notificada del cambio.
+        </div>
+
+        <!-- FORMULARIO EDICIÓN -->
+        <div class="form-section">
+            <div class="section-header" style="margin-top:24px;">
+                <div class="section-title">✏️ Modificar Datos</div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label for="razon_social">Razón Social / Nombre Completo <span class="req">*</span></label>
+                    <input type="text" id="razon_social" placeholder="Tal como figura en tu DNI o constancia de AFIP">
+                    <div class="helper">Tal como figura en tu DNI o constancia de AFIP</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cuit">CUIT <span class="req">*</span></label>
+                    <input type="text" id="cuit" placeholder="27-12345678-3">
+                </div>
+
+                <div class="form-group">
+                    <label for="condicion_iva">Condición IVA <span class="req">*</span></label>
+                    <select id="condicion_iva">
+                        <option value="">Seleccionar...</option>
+                        <option value="Consumidor Final">Consumidor Final</option>
+                        <option value="Responsable Inscripto">Responsable Inscripto</option>
+                        <option value="Monotributista">Monotributista</option>
+                        <option value="Exento">Exento</option>
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label for="direccion">Dirección Fiscal <span class="req">*</span></label>
+                    <input type="text" id="direccion" placeholder="Calle, Número, Localidad">
+                </div>
+
+                <div class="form-group">
+                    <label for="provincia">Provincia <span class="req">*</span></label>
+                    <select id="provincia">
+                        <option value="">Seleccionar...</option>
+                        <option value="Mendoza">Mendoza</option>
+                        <option value="Buenos Aires">Buenos Aires</option>
+                        <option value="Ciudad de Buenos Aires">Ciudad de Buenos Aires</option>
+                        <option value="Córdoba">Córdoba</option>
+                        <option value="Santa Fe">Santa Fe</option>
+                        <option value="Tucumán">Tucumán</option>
+                        <option value="Salta">Salta</option>
+                        <option value="Entre Ríos">Entre Ríos</option>
+                        <option value="Misiones">Misiones</option>
+                        <option value="Chaco">Chaco</option>
+                        <option value="Corrientes">Corrientes</option>
+                        <option value="Santiago del Estero">Santiago del Estero</option>
+                        <option value="San Juan">San Juan</option>
+                        <option value="Jujuy">Jujuy</option>
+                        <option value="Río Negro">Río Negro</option>
+                        <option value="Neuquén">Neuquén</option>
+                        <option value="Formosa">Formosa</option>
+                        <option value="Chubut">Chubut</option>
+                        <option value="San Luis">San Luis</option>
+                        <option value="Catamarca">Catamarca</option>
+                        <option value="La Rioja">La Rioja</option>
+                        <option value="La Pampa">La Pampa</option>
+                        <option value="Santa Cruz">Santa Cruz</option>
+                        <option value="Tierra del Fuego">Tierra del Fuego</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cp">Código Postal <span class="req">*</span></label>
+                    <input type="text" id="cp" placeholder="5500" maxlength="8">
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono">Teléfono de contacto</label>
+                    <input type="tel" id="telefono" placeholder="2615-123456">
+                </div>
+
+                <div class="form-group">
+                    <label for="email_alt">Email para comprobantes</label>
+                    <input type="email" id="email_alt" placeholder="otro@email.com">
+                    <div class="helper">Recibirás copia de tus comprobantes en este email</div>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="cancelarEdicion()">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarDatos()">💾 Guardar Cambios</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CARD DATOS BANCARIOS -->
+    <div class="card">
+        <div class="section-header">
+            <div class="section-title">🏦 Datos Bancarios para Transferencias</div>
+        </div>
+        <div class="banco-box">
+            <div><strong>Banco:</strong> Banco Patagonia</div>
+            <div><strong>CBU:</strong> 2850590940090418135201</div>
+            <div><strong>Alias:</strong> COOPERADORA.FCE.UNCUYO</div>
+            <div><strong>Titular:</strong> Cooperadora FCE UNCUYO</div>
+        </div>
+        <p style="margin-top:12px; font-size:13px; color:#888;">
+            Después de realizar la transferencia, subí el comprobante desde
+            <a href="portal_estudiante_3_cuotas.html" style="color:var(--primary); font-weight:600;">Mis Cuotas</a>
+            para que Cooperadora lo apruebe.
+        </p>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+// Datos actuales (en producción vienen de google.script.run)
+const datos = {
+    razon:    'María González',
+    cuit:     '27-12345678-3',
+    iva:      'Consumidor Final',
+    cp:       '5500',
+    provincia:'Mendoza',
+    telefono: '2615-551234',
+    direccion:'Av. San Martín 1450, Godoy Cruz, Mendoza',
+    email:    'maria.gonzalez@email.com',
+};
+
+function activarEdicion() {
+    document.getElementById('razon_social').value  = datos.razon;
+    document.getElementById('cuit').value          = datos.cuit;
+    document.getElementById('condicion_iva').value = datos.iva;
+    document.getElementById('cp').value            = datos.cp;
+    document.getElementById('provincia').value     = datos.provincia;
+    document.getElementById('telefono').value      = datos.telefono;
+    document.getElementById('direccion').value     = datos.direccion;
+    document.getElementById('email_alt').value     = datos.email;
+    document.getElementById('mainCard').className  = 'card modo-edit';
+    document.getElementById('alertSuccess').classList.remove('show');
+}
+
+function cancelarEdicion() {
+    document.getElementById('mainCard').className = 'card modo-ver';
+}
+
+function guardarDatos() {
+    const obligatorios = [
+        { id:'razon_social', label:'Razón Social' },
+        { id:'cuit',         label:'CUIT' },
+        { id:'condicion_iva',label:'Condición IVA' },
+        { id:'direccion',    label:'Dirección Fiscal' },
+        { id:'provincia',    label:'Provincia' },
+        { id:'cp',           label:'Código Postal' },
+    ];
+    for (const c of obligatorios) {
+        if (!document.getElementById(c.id).value.trim()) {
+            alert(`⚠️ El campo "${c.label}" es obligatorio.`);
+            document.getElementById(c.id).focus();
+            return;
+        }
+    }
+
+    // Actualizar objeto (en producción → google.script.run.guardarDatosFacturacion(...))
+    datos.razon     = document.getElementById('razon_social').value.trim();
+    datos.cuit      = document.getElementById('cuit').value.trim();
+    datos.iva       = document.getElementById('condicion_iva').value;
+    datos.cp        = document.getElementById('cp').value.trim();
+    datos.provincia = document.getElementById('provincia').value;
+    datos.telefono  = document.getElementById('telefono').value.trim();
+    datos.direccion = document.getElementById('direccion').value.trim();
+    datos.email     = document.getElementById('email_alt').value.trim();
+
+    // Refrescar vista
+    document.getElementById('v-razon').textContent    = datos.razon;
+    document.getElementById('v-cuit').textContent     = datos.cuit;
+    document.getElementById('v-iva').textContent      = datos.iva;
+    document.getElementById('v-cp').textContent       = datos.cp;
+    document.getElementById('v-provincia').textContent= datos.provincia;
+    document.getElementById('v-telefono').textContent = datos.telefono || '—';
+    document.getElementById('v-direccion').textContent= datos.direccion;
+    document.getElementById('v-email').textContent    = datos.email || '—';
+
+    // Volver a modo vista y mostrar éxito
+    document.getElementById('mainCard').className = 'card modo-ver';
+    document.getElementById('alertSuccess').classList.add('show');
+
+    /* En producción: google.script.run.guardarDatosFacturacion(datos); */
+}
+
+function cerrarEdicion() {
+    document.getElementById('mainCard').className = 'card modo-ver';
+}
+</script>
+
+<script>
+    /* Navegación y sesión proporcionadas por supabase.js */
+    
+        /* ══ CAMPANA ══ */
+    var _notifs = [];
+    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+    function renderNotificaciones(datos) {
+        _notifs = datos || [];
+        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+        var lista = document.getElementById('notif-list');
+        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+        var iconos = { pago:'💰', mora:'🔴', cuota:'📅', reclamo:'⚠️', alerta:'🚨' };
+        var colores = { pago:'#dcfce7', mora:'#fee2e2', cuota:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
+        lista.innerHTML = _notifs.map(function(n) {
+            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+        }).join('');
+    }
+    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
+    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+    (function() {
+        if (typeof google !== 'undefined' && google.script) { google.script.run.withSuccessHandler(renderNotificaciones).obtenerNotificaciones('ESTUDIANTE'); }
+        else { renderNotificaciones([{id:'n1',tipo:'cuota',mensaje:'Tu cuota <stro
+</body>
+</html>

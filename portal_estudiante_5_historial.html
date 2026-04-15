@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial - Portal Estudiante FCE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+
+        .navbar { background: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .nav-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--primary); }
+        .nav-links { display: flex; gap: 24px; }
+        .nav-link { text-decoration: none; color: #666; font-weight: 500; padding: 8px 16px; border-radius: 6px; transition: all 0.3s; }
+        .nav-link:hover, .nav-link.active { background: var(--accent); color: white; }
+
+        .container { max-width: 1400px; margin: 32px auto; padding: 0 32px; }
+
+        .header { margin-bottom: 32px; }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 32px; color: var(--primary); margin-bottom: 8px; }
+
+        .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .section-title { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 20px; }
+
+        /* Stats resumen */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px; }
+        .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .stat-icon { font-size: 28px; margin-bottom: 10px; }
+        .stat-value { font-size: 24px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+        .stat-label { font-size: 13px; color: #666; }
+        .stat-sub { font-size: 12px; color: #10b981; margin-top: 4px; font-weight: 500; }
+
+        /* Gráfico de barras simple */
+        .chart-container { margin-bottom: 8px; }
+        .chart-title { font-size: 14px; font-weight: 600; color: #444; margin-bottom: 16px; }
+        .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .bar { width: 100%; border-radius: 4px 4px 0 0; transition: opacity 0.2s; cursor: default; min-height: 4px; }
+        .bar:hover { opacity: 0.8; }
+        .bar-label { font-size: 11px; color: #888; }
+        .bar-val { font-size: 11px; font-weight: 700; color: var(--primary); }
+
+        /* Distribución por carrera */
+        .distrib-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .distrib-card { border: 2px solid #f0f0f0; border-radius: 10px; padding: 16px; }
+        .distrib-nombre { font-weight: 700; color: var(--primary); font-size: 14px; margin-bottom: 12px; }
+        .distrib-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+        .distrib-label { color: #666; }
+        .distrib-valor { font-weight: 600; color: var(--primary); }
+        .distrib-progress { height: 6px; background: #e0e0e0; border-radius: 3px; margin-top: 10px; }
+        .distrib-progress-fill { height: 100%; border-radius: 3px; }
+
+        /* Línea de tiempo */
+        .timeline { position: relative; padding-left: 28px; }
+        .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: #e0e0e0; }
+        .timeline-item { position: relative; margin-bottom: 20px; }
+        .timeline-dot { position: absolute; left: -24px; top: 4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px currentColor; }
+        .dot-success { color: var(--success); background: var(--success); }
+        .dot-warning { color: var(--warning); background: var(--warning); }
+        .dot-danger  { color: var(--danger);  background: var(--danger);  }
+        .dot-info    { color: #3b82f6;         background: #3b82f6;        }
+        .timeline-content { background: #fafafa; border-radius: 8px; padding: 12px 16px; }
+        .timeline-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+        .timeline-titulo { font-weight: 700; font-size: 14px; color: var(--primary); }
+        .timeline-fecha { font-size: 12px; color: #888; }
+        .timeline-desc { font-size: 13px; color: #666; }
+        .timeline-monto { font-size: 15px; font-weight: 700; margin-top: 4px; }
+
+        /* Filtros y tabla */
+        .filtros { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+        .filtro-select { padding: 8px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; background: white; cursor: pointer; color: #444; }
+        .filtro-label { font-size: 14px; color: #666; font-weight: 500; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { border-bottom: 2px solid #f0f0f0; }
+        th { text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 14px 12px; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: #fafafa; }
+
+        .estado-badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .estado-abonada  { background: #d1fae5; color: #065f46; }
+        .estado-mora     { background: #fee2e2; color: #991b1b; }
+        .estado-pendiente{ background: #fef3c7; color: #92400e; }
+        .estado-parcial  { background: #dbeafe; color: #1e40af; }
+        .estado-noabonada{ background: #e0e7ff; color: #3730a3; }
+        .estado-adefinir { background: #f3f4f6; color: #6b7280; }
+
+        .carrera-tag { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+        .tag-costos { background: #eff6ff; color: #1e40af; }
+        .tag-mbm    { background: #fdf4ff; color: #7e22ce; }
+        .tag-ods    { background: #f0fdf4; color: #166534; }
+
+        .monto-pos { font-weight: 700; color: var(--success); }
+        .monto-neg { font-weight: 700; color: var(--danger); }
+
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 13px; }
+        .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+
+        /* ── PAGINACIÓN ── */
+        .paginacion {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .pag-info { font-size: 13px; color: #666; }
+        .pag-info strong { color: var(--primary); }
+        .pag-controles { display: flex; align-items: center; gap: 6px; }
+        .pag-btn {
+            width: 32px; height: 32px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+            color: var(--primary);
+            font-family: 'DM Sans', sans-serif;
+        }
+        .pag-btn:hover:not(:disabled) { border-color: var(--primary); background: #eff6ff; }
+        .pag-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .pag-num { font-size: 13px; color: #666; min-width: 90px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="nav-brand">
+            <span>Portal de Estudiantes</span>
+        </div>
+        <div class="nav-links">
+            <a href="portal_estudiante_2_dashboard.html" class="nav-link">🏠 Dashboard</a>
+            <a href="portal_estudiante_3_cuotas.html" class="nav-link">💳 Mis Cuotas</a>
+            <a href="portal_estudiante_4_facturacion.html" class="nav-link">📄 Facturación</a>
+            <a href="portal_estudiante_5_historial.html" class="nav-link active">📊 Historial</a>
+            <!-- Campana -->
+            <div class="notif-wrapper" style="position:relative;display:inline-flex;">
+                <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:6px 8px;border-radius:6px;transition:background 0.2s;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
+                </button>
+                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                    </div>
+                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                </div>
+            </div>
+            <a href="portal_login.html" class="nav-link" onclick="return cerrarSesion(event)">🚪 Salir</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>📊 Mi Historial de Pagos</h1>
+            <p style="color: #666;">Resumen completo de tu actividad financiera en todos los programas</p>
+        </div>
+
+        <!-- Cards resumen global -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value">$1.287.000</div>
+                <div class="stat-label">Total abonado histórico</div>
+                <div class="stat-sub">↑ En todos los programas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-value">$85.500</div>
+                <div class="stat-label">Promedio mensual pagado</div>
+                <div class="stat-sub">Últimos 6 meses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value">16</div>
+                <div class="stat-label">Cuotas abonadas en total</div>
+                <div class="stat-sub">Sobre 36 cuotas totales</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-value">$8.550</div>
+                <div class="stat-label">Intereses generados</div>
+                <div class="stat-sub" style="color: var(--danger);">↑ Por mora en 2 cuotas</div>
+            </div>
+        </div>
+
+        <!-- Actividad por mes -->
+        <div class="section">
+            <div class="section-title">📈 Pagos por Mes (2025)</div>
+            <div class="chart-container">
+                <div class="bar-chart" id="barChart"></div>
+                <div style="display:flex; gap:8px; margin-top:8px;" id="barLabels"></div>
+            </div>
+        </div>
+
+        <!-- Distribución por carrera -->
+        <div class="section">
+            <div class="section-title">🎓 Distribución por Carrera</div>
+            <div class="distrib-grid">
+                <div class="distrib-card">
+                    <div class="distrib-nombre">Esp. Costos y Gestión</div>
+                    <div class="distrib-row"><span class="distrib-label">Pagado</span><span class="distrib-valor" style="color:var(--success)">$513.000</span></div>
+                    <div class="distrib-row"><span class="distrib-label">Pendiente</span><span class="distrib-valor" style="color:var(--danger)">$513.000</span></div>
+                    <div class="distrib-row"><span class="distrib-label">Progreso</span><span class="distrib-valor">6/12</span></div>
+                    <div class="distrib-progress"><div class="distrib-progress-fill" style="width:50%; background:#3b82f6;"></div></div>
+                </div>
+                <div class="distrib-card">
+                    <div class="distrib-nombre">Maestría MBM</div>
+                    <div class="distrib-row"><span class="distrib-label">Pagado</span><span class="distrib-valor" style="color:var(--success)">$342.000</span></div>
+                    <div class="distrib-row"><span class="distrib-label">Pendiente</span><span class="distrib-valor" style="color:var(--danger)">$1.710.000</span></div>
+                    <div class="distrib-row"><span class="distrib-label">Progreso</span><span class="distrib-valor">4/18 (parcial)</span></div>
+                    <div class="distrib-progress"><div class="distrib-progress-fill" style="width:22%; background:#7c3aed;"></div></div>
+                </div>
+                <div class="distrib-card">
+                    <div class="distrib-nombre">Diplomado ODS</div>
+                    <div class="distrib-row"><span class="distrib-label">Pagado</span><span class="distrib-valor" style="color:var(--success)">$360.000</span></div>
+                    <div class="distrib-row"><span class="distrib-label">Pendiente</span><span class="distrib-valor" style="color:var(--success)">$0</span></div>
+                    <div class="distrib-row"><span class="distrib-label">Progreso</span><span class="distrib-valor">6/6 ✅</span></div>
+                    <div class="distrib-progress"><div class="distrib-progress-fill" style="width:100%; background:var(--success);"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Línea de tiempo reciente -->
+        <div class="section">
+            <div class="section-title">🕐 Actividad Reciente</div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-success"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <div class="timeline-titulo">✅ Pago aprobado - Cuota 03/18 MBM</div>
+                            <div class="timeline-fecha">12 ago 2025, 14:30 hs</div>
+                        </div>
+                        <div class="timeline-desc">Cuota 03/18 de Maestría MBM · Aprobado por Cooperadora</div>
+                        <div class="timeline-monto monto-pos">+$114.000</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-danger"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <div class="timeline-titulo">⚠️ Interés por mora generado - Cuota 08/12 Esp. Costos</div>
+                            <div class="timeline-fecha">16 oct 2025, 00:30 hs</div>
+                        </div>
+                        <div class="timeline-desc">Se generó interés del 5% por mora en cuota 08/12 (automático)</div>
+                        <div class="timeline-monto monto-neg">+$4.275 mora</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-danger"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <div class="timeline-titulo">⚠️ Interés por mora generado - Cuota 07/12 Esp. Costos</div>
+                            <div class="timeline-fecha">16 sep 2025, 00:30 hs</div>
+                        </div>
+                        <div class="timeline-desc">Se generó interés del 5% por mora en cuota 07/12 (automático)</div>
+                        <div class="timeline-monto monto-neg">+$4.275 mora</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-info"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <div class="timeline-titulo">📎 Comprobante recibido - Cuota 04/18 MBM (pago parcial)</div>
+                            <div class="timeline-fecha">12 jun 2025, 09:15 hs</div>
+                        </div>
+                        <div class="timeline-desc">Pago parcial de $50.000 · Saldo restante: $64.000 · Pendiente aprobación</div>
+                        <div class="timeline-monto" style="color:#3b82f6;">Pago parcial: $50.000</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-success"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <div class="timeline-titulo">✅ Pago aprobado - Cuota 04/12 Esp. Costos</div>
+                            <div class="timeline-fecha">10 jun 2025, 11:00 hs</div>
+                        </div>
+                        <div class="timeline-desc">Cuota 04/12 de Especialización en Costos · Aprobado por Cooperadora</div>
+                        <div class="timeline-monto monto-pos">+$85.500</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-success"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <div class="timeline-titulo">🏅 Certificado de libre deuda emitido - Diplomado ODS</div>
+                            <div class="timeline-fecha">15 ene 2025, 08:00 hs</div>
+                        </div>
+                        <div class="timeline-desc">Todas las cuotas del Diplomado en ODS fueron abonadas. Certificado disponible en Facturación.</div>
+                        <div class="timeline-monto" style="color:var(--success);">Libre deuda ✅</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla completa -->
+        <div class="section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div class="section-title" style="margin-bottom:0;">📋 Registro Completo</div>
+                <button class="btn btn-outline" onclick="exportar()">📥 Exportar historial</button>
+            </div>
+
+            <div class="filtros">
+                <span class="filtro-label">Filtrar:</span>
+                <select class="filtro-select" onchange="filtrarCarrera(this.value)">
+                    <option value="todas">Todas las carreras</option>
+                    <option value="costos">Esp. Costos</option>
+                    <option value="mbm">Maestría MBM</option>
+                    <option value="ods">Diplomado ODS</option>
+                </select>
+                <select class="filtro-select" onchange="filtrarTipo(this.value)">
+                    <option value="todos">Todos los tipos</option>
+                    <option value="ABONADA">Pagos aprobados</option>
+                    <option value="NO_ABONADA">No abonada</option>
+                    <option value="PENDIENTE">Pendiente de revisión</option>
+                    <option value="EN_MORA">En mora</option>
+                    <option value="PAGO_PARCIAL">Parciales</option>
+                    <option value="A_DEFINIR">A definir</option>
+                </select>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Carrera</th>
+                        <th>Concepto</th>
+                        <th>Monto Original</th>
+                        <th>Descuento</th>
+                        <th>Monto Final</th>
+                        <th>Saldo</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaHistorial"></tbody>
+            </table>
+
+            <!-- PAGINACIÓN -->
+            <div class="paginacion" id="paginacion">
+                <div class="pag-info" id="pagInfo"></div>
+                <div class="pag-controles">
+                    <button class="pag-btn" id="btnAnterior" onclick="cambiarPagina(-1)" title="Anterior">&#8249;</button>
+                    <span class="pag-num" id="pagNum"></span>
+                    <button class="pag-btn" id="btnSiguiente" onclick="cambiarPagina(1)" title="Siguiente">&#8250;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+        const movimientos = [
+            { fecha:'15/08/2025', carreraId:'mbm',    carreraTag:'tag-mbm',    concepto:'Cuota 03/18', orig:120000, desc:5, final:114000, saldo:0,      estado:'ABONADA' },
+            { fecha:'15/07/2025', carreraId:'mbm',    carreraTag:'tag-mbm',    concepto:'Cuota 02/18', orig:120000, desc:5, final:114000, saldo:0,      estado:'ABONADA' },
+            { fecha:'15/06/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 04/12', orig:90000,  desc:5, final:85500,  saldo:0,      estado:'ABONADA' },
+            { fecha:'15/06/2025', carreraId:'mbm',    carreraTag:'tag-mbm',    concepto:'Cuota 04/18', orig:120000, desc:5, final:114000, saldo:64000,  estado:'PAGO_PARCIAL' },
+            { fecha:'15/05/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 03/12', orig:90000,  desc:5, final:85500,  saldo:0,      estado:'ABONADA' },
+            { fecha:'15/05/2025', carreraId:'mbm',    carreraTag:'tag-mbm',    concepto:'Cuota 01/18', orig:120000, desc:5, final:114000, saldo:0,      estado:'ABONADA' },
+            { fecha:'15/04/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 02/12', orig:90000,  desc:5, final:85500,  saldo:0,      estado:'ABONADA' },
+            { fecha:'15/09/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 07/12', orig:90000,  desc:5, final:85500,  saldo:85500,  estado:'EN_MORA' },
+            { fecha:'15/10/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 08/12', orig:90000,  desc:5, final:85500,  saldo:85500,  estado:'EN_MORA' },
+            { fecha:'15/03/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 01/12', orig:90000,  desc:5, final:85500,  saldo:0,      estado:'ABONADA' },
+            { fecha:'15/01/2025', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 06/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
+            { fecha:'15/12/2024', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 05/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
+            { fecha:'15/11/2024', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 04/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
+            { fecha:'15/10/2024', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 03/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
+            { fecha:'15/09/2024', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 02/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
+            { fecha:'15/08/2024', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 01/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
+        ];
+
+        const nombreCarrera = { costos:'Esp. Costos', mbm:'Maestría MBM', ods:'Diplomado ODS' };
+        const estadoMap = {
+            'ABONADA':     ['estado-abonada',  '✅ Abonada'],
+            'EN_MORA':     ['estado-mora',      '🔴 En mora'],
+            'PENDIENTE':   ['estado-pendiente', '🕐 Pendiente de revisión'],
+            'NO_ABONADA':  ['estado-noabonada', '🔵 No abonada'],
+            'PAGO_PARCIAL':['estado-parcial',   '🔵 Parcial'],
+            'A_DEFINIR':   ['estado-adefinir',  '⚙️ A definir'],
+        };
+
+        let fCarrera = 'todas', fTipo = 'todos';
+        let paginaActual = 1;
+        const POR_PAGINA = 10;
+        let listaFiltrada = [];
+
+        function formatM(n) { return '$' + n.toLocaleString('es-AR'); }
+
+        function filtrarCarrera(v) { fCarrera = v; paginaActual = 1; renderTabla(); }
+        function filtrarTipo(v)    { fTipo = v;    paginaActual = 1; renderTabla(); }
+
+        function cambiarPagina(delta) {
+            const totalPaginas = Math.max(1, Math.ceil(listaFiltrada.length / POR_PAGINA));
+            paginaActual = Math.max(1, Math.min(paginaActual + delta, totalPaginas));
+            renderTabla();
+        }
+
+        function renderTabla() {
+            listaFiltrada = movimientos.slice();
+            if (fCarrera !== 'todas') listaFiltrada = listaFiltrada.filter(m => m.carreraId === fCarrera);
+            if (fTipo !== 'todos')    listaFiltrada = listaFiltrada.filter(m => m.estado === fTipo);
+
+            const total = listaFiltrada.length;
+            const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
+            if (paginaActual > totalPaginas) paginaActual = totalPaginas;
+
+            const desde = (paginaActual - 1) * POR_PAGINA;
+            const hasta = Math.min(desde + POR_PAGINA, total);
+            const pagina = listaFiltrada.slice(desde, hasta);
+
+            document.getElementById('tablaHistorial').innerHTML = pagina.length ? pagina.map(m => {
+                const [cls, txt] = estadoMap[m.estado] || ['estado-pendiente', m.estado];
+                return `
+                    <tr>
+                        <td>${m.fecha}</td>
+                        <td><span class="carrera-tag ${m.carreraTag}">${nombreCarrera[m.carreraId]}</span></td>
+                        <td>${m.concepto}</td>
+                        <td>${m.desc > 0 ? '<span style="text-decoration:line-through;color:#bbb;font-size:12px;">' + formatM(m.orig) + '</span>' : formatM(m.orig)}</td>
+                        <td>${m.desc > 0 ? '<span style="color:var(--success);font-weight:600;">-' + m.desc + '%</span>' : '&mdash;'}</td>
+                        <td style="font-weight:700;">${formatM(m.final)}</td>
+                        <td style="font-weight:700; color:${m.saldo > 0 ? 'var(--danger)':'var(--success)'};">${formatM(m.saldo)}</td>
+                        <td><span class="estado-badge ${cls}">${txt}</span></td>
+                    </tr>
+                `;
+            }).join('') : '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:24px;">Sin resultados</td></tr>';
+
+            // Paginación
+            document.getElementById('pagInfo').innerHTML =
+                total > 0
+                ? '<strong>' + (desde+1) + '–' + hasta + '</strong> de <strong>' + total + '</strong>'
+                : '0 resultados';
+            document.getElementById('pagNum').textContent = 'Página ' + paginaActual + ' de ' + totalPaginas;
+            document.getElementById('btnAnterior').disabled = paginaActual === 1;
+            document.getElementById('btnSiguiente').disabled = paginaActual >= totalPaginas;
+        }
+
+        // Gráfico de barras
+        function renderChart() {
+            const meses = ['Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+            const valores = [85500, 85500, 171000, 249500, 114000, 114000, 85500, 85500, 0, 0];
+            const maxVal = Math.max(...valores);
+
+            const chart = document.getElementById('barChart');
+            const labels = document.getElementById('barLabels');
+            chart.innerHTML = '';
+            labels.innerHTML = '';
+
+            meses.forEach((mes, i) => {
+                const h = maxVal > 0 ? Math.round((valores[i] / maxVal) * 110) : 4;
+                const esMora = mes === 'Sep' || mes === 'Oct';
+                const color = esMora ? 'var(--danger)' : (valores[i] === 0 ? '#e0e0e0' : 'var(--primary)');
+                chart.innerHTML += `
+                    <div class="bar-col">
+                        <div class="bar-val" style="font-size:10px; color:${valores[i]>0?'var(--primary)':'#ccc'}">
+                            ${valores[i] > 0 ? '$'+(valores[i]/1000)+'k' : '—'}
+                        </div>
+                        <div class="bar" style="height:${Math.max(h,4)}px; background:${color};" title="${mes}: ${formatM(valores[i])}"></div>
+                        <div class="bar-label">${mes}</div>
+                    </div>
+                `;
+            });
+
+            labels.innerHTML = `
+                <span style="font-size:12px; color:#666;">
+                    <span style="display:inline-block; width:10px; height:10px; background:var(--primary); border-radius:2px; margin-right:4px;"></span>Pagado
+                    <span style="display:inline-block; width:10px; height:10px; background:var(--danger); border-radius:2px; margin-left:12px; margin-right:4px;"></span>Con mora
+                </span>
+            `;
+        }
+
+        function exportar() {
+            alert('📥 Exportando historial completo... (En producción genera un archivo Excel/PDF desde Apps Script)');
+        }
+
+        renderTabla();
+        renderChart();
+    
+    /* Navegación y sesión proporcionadas por supabase.js */
+    
+        /* ══ CAMPANA ══ */
+    var _notifs = [];
+    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+    function renderNotificaciones(datos) {
+        _notifs = datos || [];
+        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+        var lista = document.getElementById('notif-list');
+        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨', cuota:'📅' };
+        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3', cuota:'#dbeafe' };
+        lista.innerHTML = _notifs.map(function(n) {
+            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+        }).join('');
+    }
+    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
+    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+    // Notificaciones cargadas por supabase.js automáticamente
+
+</script>
+</body>
+</html>

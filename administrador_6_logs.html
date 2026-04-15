@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs y Auditoría - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #1e3a5f; --accent: #d4af37; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white; padding: 20px 40px;
+            display: flex; align-items: flex-start; justify-content: space-between;
+        }
+        .header-left { flex: 1; }
+        .breadcrumb { font-size: 14px; margin-bottom: 12px; }
+        .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 24px; }
+        .header p { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+        .btn-logout {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 18px; background: rgba(255,255,255,0.12);
+            border: 1.5px solid rgba(255,255,255,0.35);
+            color: white; border-radius: 8px; font-size: 14px; font-weight: 600;
+            cursor: pointer; text-decoration: none; font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s, border-color 0.2s;
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.6); }
+
+        /* LAYOUT */
+        .container { max-width: 1400px; margin: 40px auto; padding: 0 40px; }
+
+        /* FILTERS */
+        .filters {
+            background: white; padding: 20px 32px;
+            border-radius: 12px 12px 0 0; border-bottom: 2px solid #f0ede8;
+            display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
+        }
+        .filter-group { display: flex; flex-direction: column; }
+        .filter-label { font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .filter-group select, .filter-group input[type="date"], .filter-group input[type="text"] {
+            padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px;
+            font-size: 14px; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s;
+        }
+        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: #1e3a5f; }
+        .input-icon-wrap { position: relative; display: flex; align-items: center; }
+        .input-icon-wrap svg { position: absolute; left: 10px; color: #aaa; pointer-events: none; flex-shrink: 0; }
+        .input-icon-wrap input { padding-left: 32px !important; }
+        mark { background: #fff3cd; color: #856404; border-radius: 2px; padding: 0 2px; font-weight: 700; }
+
+        /* BOTONES */
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.15s; }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: #e0e0e0; color: #333; }
+        .btn-export { background: #2d7a4f; color: white; }
+
+        /* RESULTADO INFO */
+        .result-info {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 24px; background: #f0f4ff;
+            border-left: 3px solid #4a7cdc; font-size: 13px; color: #1a4ab0; font-weight: 600;
+        }
+        .result-info.hidden { display: none; }
+
+        /* LOGS */
+        .logs-container { background: white; border-radius: 0 0 12px 12px; padding: 24px; }
+        .log-entry {
+            padding: 16px; background: #f8f6f1;
+            border-left: 4px solid #e0e0e0; border-radius: 4px;
+            margin-bottom: 12px; font-family: 'Courier New', monospace; font-size: 13px;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .log-entry.hidden { display: none; }
+        .log-entry.info    { border-left-color: #1976d2; }
+        .log-entry.warning { border-left-color: #f57c00; }
+        .log-entry.error   { border-left-color: #d32f2f; }
+        .log-entry.success { border-left-color: #388e3c; }
+        .log-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; flex-wrap: wrap; gap: 4px; }
+        .log-timestamp { color: #666; }
+        .log-user { color: var(--primary); }
+        .log-action { color: #333; margin-bottom: 6px; }
+        .log-details { color: #666; line-height: 1.6; }
+        .no-results { text-align: center; padding: 48px 24px; color: #aaa; font-size: 15px; font-style: italic; display: none; }
+        .no-results.visible { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <div class="breadcrumb"><a href="administrador_2_dashboard.html" onclick="navegar('administrador_2_dashboard.html'); return false;">← Volver al Dashboard</a></div>
+        <h1>📋 Logs y Auditoría</h1>
+        <p>Registro de actividad y trazabilidad del sistema</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;">
+        <!-- Campana de Notificaciones -->
+        <div class="notif-wrapper" style="position:relative;">
+            <button onclick="toggleNotif()" title="Notificaciones" aria-label="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;transition:background 0.2s;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+            </button>
+            <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                    <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                </div>
+                <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+            </div>
+        </div>
+        <a href="portal_login.html" class="btn-logout" onclick="return cerrarSesion(event)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Cerrar sesión
+        </a>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="filters">
+        <div class="filter-group">
+            <label class="filter-label">Tipo de Evento</label>
+            <select id="f-tipo" style="width: 190px;">
+                <option value="">Todos</option>
+                <option value="PAGO">Aprobación de Pagos</option>
+                <option value="PLAN DE CUOTAS">Creación de Cuotas</option>
+                <option value="MORA">Aplicación de Mora</option>
+                <option value="RECLAMO">Reclamos Enviados</option>
+                <option value="DESCUENTO">Modificación de Descuentos</option>
+                <option value="CONFIGURACIÓN">Configuración</option>
+                <option value="LOGIN">Login / Logout</option>
+                <option value="USUARIO">Gestión de Usuarios</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Rol de Usuario</label>
+            <select id="f-rol" style="width: 180px;">
+                <option value="">Todos</option>
+                <option value="admin">Admin Sistema</option>
+                <option value="cooperadora">Cooperadora</option>
+                <option value="coordinador">Coordinadores</option>
+                <option value="estudiante">Estudiantes</option>
+                <option value="sistema">Sistema Automático</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Buscar por correo electrónico</label>
+            <div class="input-icon-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="f-email" placeholder="ej: cooperadora@fce..." style="width: 240px;" oninput="aplicarFiltros()">
+            </div>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Fecha Desde</label>
+            <input type="date" id="f-desde" value="2026-03-01">
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Fecha Hasta</label>
+            <input type="date" id="f-hasta" value="2026-03-28">
+        </div>
+        <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Filtrar</button>
+        <button class="btn btn-secondary" onclick="limpiarFiltros()">✕ Limpiar</button>
+        <button class="btn btn-export" onclick="exportarLogs()">📥 Exportar</button>
+    </div>
+
+    <div class="result-info hidden" id="result-info">
+        <span id="result-text"></span>
+        <span id="result-email-badge" style="display:none; background:#1e3a5f; color:white; padding:2px 10px; border-radius:999px; font-size:12px;"></span>
+    </div>
+
+    <div class="logs-container" id="logs-container">
+
+        <div class="log-entry success" data-tipo="PAGO" data-user="cooperadora@fce.uncuyo.edu.ar" data-rol="cooperadora" data-fecha="2026-03-28">
+            <div class="log-header">
+                <span class="log-timestamp">2026-03-28 14:23:15</span>
+                <span class="log-user">cooperadora@fce.uncuyo.edu.ar</span>
+            </div>
+            <div class="log-action">✓ PAGO APROBADO</div>
+            <div class="log-details">
+                Estudiante: María González (DNI: 23456789)<br>
+                Cuota: Cuota 5 - Diciembre 2025<br>
+                Monto aprobado: $70.000 (pago parcial)<br>
+                Saldo pendiente: $45.762,50<br>
+                Recibo subido: recibo_parcial_1_maria_cuota5.pdf
+            </div>
+        </div>
+
+        <div class="log-entry info" data-tipo="PLAN DE CUOTAS" data-user="carlos.mendez@fce.uncuyo.edu.ar" data-rol="coordinador" data-fecha="2026-03-28">
+            <div class="log-header">
+                <span class="log-timestamp">2026-03-28 12:15:42</span>
+                <span class="log-user">carlos.mendez@fce.uncuyo.edu.ar</span>
+            </div>
+            <div class="log-action">📝 PLAN DE CUOTAS CREADO</div>
+            <div class="log-details">
+                Programa: Esp. en Costos 2025-2026<br>
+                Cuotas creadas: 5 (Readmisión, Inscripción, Cuota 1, Cuota 14, Cuota 15)<br>
+                Aplicado a: Toda la cohorte (15 estudiantes)<br>
+                Total registros: 75<br>
+                Cuotas "A DEFINIR": 2 (Cuota 14, Cuota 15)
+            </div>
+        </div>
+
+        <div class="log-entry warning" data-tipo="MORA" data-user="SISTEMA AUTOMÁTICO" data-rol="sistema" data-fecha="2026-03-28">
+            <div class="log-header">
+                <span class="log-timestamp">2026-03-28 10:30:28</span>
+                <span class="log-user">SISTEMA AUTOMÁTICO</span>
+            </div>
+            <div class="log-action">⚠️ APLICACIÓN DE MORA</div>
+            <div class="log-details">
+                Día de corte: 16 de marzo 2026<br>
+                Estudiantes afectados: 78<br>
+                Cuotas con mora aplicada: 142<br>
+                Tasa aplicada: 5% mensual acumulativo<br>
+                Monto total de mora generada: $2.847.325
+            </div>
+        </div>
+
+        <div class="log-entry info" data-tipo="CONFIGURACIÓN" data-user="admin@fce.uncuyo.edu.ar" data-rol="admin" data-fecha="2026-03-28">
+            <div class="log-header">
+                <span class="log-timestamp">2026-03-28 09:15:10</span>
+                <span class="log-user">admin@fce.uncuyo.edu.ar</span>
+            </div>
+            <div class="log-action">⚙️ CONFIGURACIÓN MODIFICADA</div>
+            <div class="log-details">
+                Parámetro: Tasa de mora mensual<br>
+                Valor anterior: 4.5%<br>
+                Valor nuevo: 5.0%<br>
+                Aplica desde: 01/04/2026
+            </div>
+        </div>
+
+        <div class="log-entry success" data-tipo="RECLAMO" data-user="cooperadora@fce.uncuyo.edu.ar" data-rol="cooperadora" data-fecha="2026-03-27">
+            <div class="log-header">
+                <span class="log-timestamp">2026-03-27 16:45:33</span>
+                <span class="log-user">cooperadora@fce.uncuyo.edu.ar</span>
+            </div>
+            <div class="log-action">📧 RECLAMOS ENVIADOS</div>
+            <div class="log-details">
+                Plantilla utilizada: Plantilla Formal<br>
+                Destinatarios: 3 estudiantes<br>
+                Cuotas reclamadas: 15 cuotas en mora<br>
+                Monto total reclamado: $897.575<br>
+                Estudiantes: María González, Ana Ruiz, Carlos López
+            </div>
+        </div>
+
+        <div class="log-entry info" data-tipo="DESCUENTO" data-user="carlos.mendez@fce.uncuyo.edu.ar" data-rol="coordinador" data-fecha="2026-03-27">
+            <div class="log-header">
+                <span class="log-timestamp">2026-03-27 14:20:18</span>
+                <span class="log-user">carlos.mendez@fce.uncuyo.edu.ar</span>
+            </div>
+            <div class="log-action">💰 DESCUENTO MODIFICADO</div>
+            <div class="log-details">
+                Estudiante: Ruiz, Ana Carolina (DNI: 28765432)<br>
+                Descuento anterior: 10%<br>
+                Descuento nuevo: 15%<br>
+                Motivo: Beca por rendimiento académico<br>
+                Aplicación: Solo cuotas futuras
+            </div>
+        </div>
+
+        <div class="log-entry error" data-tipo="LOGIN" data-user="maria.gonzalez@email.com" data-rol="estudiante" data-fecha="2026-03-27">
+            <div class="log-header">
+                <span class="log-timestamp">2026-03-27 11:08:52</span>
+                <span class="log-user">maria.gonzalez@email.com</span>
+            </div>
+            <div class="log-action">❌ INTENTO DE LOGIN FALLIDO</div>
+            <div class="log-details">
+                Usuario: maria.gonzalez@email.com<br>
+                DNI intentado: 23456789<br>
+                Razón: Contraseña incorrecta<br>
+                IP: 181.47.xxx.xxx<br>
+                Intentos fallidos consecutivos: 2
+            </div>
+        </div>
+
+        <div class="log-entry success" data-tipo="USUARIO" data-user="admin@fce.uncuyo.edu.ar" data-rol="admin" data-fecha="2026-03-27">
+            <div class="log-header">
+                <span class="log-timestamp">2026-03-27 09:30:05</span>
+                <span class="log-user">admin@fce.uncuyo.edu.ar</span>
+            </div>
+            <div class="log-action">👥 USUARIO CREADO</div>
+            <div class="log-details">
+                Nuevo usuario: Dr. Roberto Fernández<br>
+                Email: rfernandez@fce.uncuyo.edu.ar<br>
+                Rol: Coordinador<br>
+                Programa asignado: Maestría en Responsabilidad Social<br>
+                Estado: Activo<br>
+                Debe cambiar contraseña: Sí
+            </div>
+        </div>
+
+        <div class="no-results" id="no-results">
+            🔍 No se encontraron registros con los filtros aplicados.
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+    /* ══════════════════════════════════════════════
+       NAVEGACIÓN
+       ══════════════════════════════════════════════ */
+    function navegar(pagina) {
+        if (typeof google !== 'undefined' && google.script) {
+            window.top.location.href = '?page=' + pagina.replace('.html', '');
+            window.location.href = pagina;
+        }
+    }
+
+        /* ══════════════════════════════════════════════
+       CAMPANA DE NOTIFICACIONES
+       ══════════════════════════════════════════════ */
+    var _notifs = [];
+    function toggleNotif() {
+        var dd = document.getElementById('notif-dropdown');
+        dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('click', function(e) {
+        var wrapper = document.querySelector('.notif-wrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            document.getElementById('notif-dropdown').style.display = 'none';
+        }
+    });
+    function renderNotificaciones(datos) {
+        _notifs = datos || [];
+        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+        var badge = document.getElementById('notif-badge');
+        badge.textContent = sinLeer;
+        badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+        var lista = document.getElementById('notif-list');
+        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
+        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
+        lista.innerHTML = _notifs.map(function(n) {
+            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+                + '<div style="flex:1;min-width:0;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p>'
+                + '<div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+        }).join('');
+    }
+    function leerNotif(id) {
+        _notifs.forEach(function(n) { if (n.id === id) n.leida = true; });
+        renderNotificaciones(_notifs);
+        if (typeof google !== 'undefined' && google.script) google.script.run.marcarNotificacionLeida(id);
+    }
+    function marcarTodasLeidas() {
+        _notifs.forEach(function(n) { n.leida = true; });
+        renderNotificaciones(_notifs);
+        if (typeof google !== 'undefined' && google.script) google.script.run.marcarTodasNotificacionesLeidas();
+    }
+    function cargarNotificaciones() {
+        if (typeof google !== 'undefined' && google.script) {
+            google.script.run.withSuccessHandler(renderNotificaciones).obtenerNotificaciones('ADMINISTRADOR');
+            renderNotificaciones([
+                { id:'n1', tipo:'pago', mensaje:'<strong>María González</strong> realizó un pago de <strong>$85.500</strong>', tiempo:'Hace 15 min', leida:false },
+                { id:'n2', tipo:'mora', mensaje:'<strong>3 estudiantes</strong> nuevos en mora', tiempo:'Hace 1 hora', leida:false },
+                { id:'n3', tipo:'alerta', mensaje:'Error en proceso automático de <strong>cálculo de mora</strong>', tiempo:'Hace 5 horas', leida:true }
+            ]);
+        }
+    }
+
+    /* ══════════════════════════════════════════════
+       FILTRADO
+       ══════════════════════════════════════════════ */
+    var entries = Array.from(document.querySelectorAll('.log-entry'));
+
+    function aplicarFiltros() {
+        var tipo  = document.getElementById('f-tipo').value.trim().toLowerCase();
+        var rol   = document.getElementById('f-rol').value.trim().toLowerCase();
+        var email = document.getElementById('f-email').value.trim().toLowerCase();
+        var desde = document.getElementById('f-desde').value;
+        var hasta = document.getElementById('f-hasta').value;
+
+        var visibles = 0;
+
+        entries.forEach(function(entry) {
+            var eTipo  = (entry.dataset.tipo  || '').toLowerCase();
+            var eRol   = (entry.dataset.rol   || '').toLowerCase();
+            var eUser  = (entry.dataset.user  || '').toLowerCase();
+            var eFecha = (entry.dataset.fecha || '');
+
+            var okTipo  = !tipo  || eTipo.includes(tipo);
+            var okRol   = !rol   || eRol === rol;
+            var okEmail = !email || eUser.includes(email);
+            var okDesde = !desde || eFecha >= desde;
+            var okHasta = !hasta || eFecha <= hasta;
+
+            var visible = okTipo && okRol && okEmail && okDesde && okHasta;
+            entry.classList.toggle('hidden', !visible);
+
+            // highlight del email buscado
+            var userSpan = entry.querySelector('.log-user');
+            if (userSpan) {
+                var originalText = entry.dataset.user || userSpan.textContent;
+                if (email && visible) {
+                    var regex = new RegExp('(' + email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+                    userSpan.innerHTML = originalText.replace(regex, '<mark>$1</mark>');
+                    userSpan.textContent = originalText;
+                }
+            }
+
+            if (visible) visibles++;
+        });
+
+        // Barra de resultados
+        var info     = document.getElementById('result-info');
+        var text     = document.getElementById('result-text');
+        var badge    = document.getElementById('result-email-badge');
+        var noResult = document.getElementById('no-results');
+
+        var hayFiltro = tipo || rol || email || desde || hasta;
+        if (hayFiltro) {
+            info.classList.remove('hidden');
+            text.textContent = visibles === 0
+                ? 'Sin resultados'
+                : visibles + ' registro' + (visibles !== 1 ? 's' : '') + ' encontrado' + (visibles !== 1 ? 's' : '');
+            if (email) {
+                badge.style.display = 'inline';
+                badge.textContent = '📧 ' + email;
+                badge.style.display = 'none';
+            }
+            info.classList.add('hidden');
+        }
+
+        noResult.classList.toggle('visible', visibles === 0);
+    }
+
+    function limpiarFiltros() {
+        document.getElementById('f-tipo').value  = '';
+        document.getElementById('f-rol').value   = '';
+        document.getElementById('f-email').value = '';
+        document.getElementById('f-desde').value = '2026-03-01';
+        document.getElementById('f-hasta').value = '2026-03-28';
+        aplicarFiltros();
+        entries.forEach(function(e) {
+            var span = e.querySelector('.log-user');
+            if (span && e.dataset.user) span.textContent = e.dataset.user;
+        });
+        document.getElementById('result-info').classList.add('hidden');
+        document.getElementById('no-results').classList.remove('visible');
+    }
+
+    // Filtrar al cambiar selects y fechas
+    ['f-tipo','f-rol','f-desde','f-hasta'].forEach(function(id) {
+        document.getElementById(id).addEventListener('change', aplicarFiltros);
+    });
+
+    /* ══════════════════════════════════════════════
+       EXPORTAR A EXCEL
+       ══════════════════════════════════════════════ */
+    function exportarLogs() {
+        if (typeof google !== 'undefined' && google.script) {
+            // Pasar los filtros actuales al backend para generar el Excel
+            var filtros = {
+                tipo:  document.getElementById('f-tipo').value,
+                rol:   document.getElementById('f-rol').value,
+                email: document.getElementById('f-email').value,
+                desde: document.getElementById('f-desde').value,
+                hasta: document.getElementById('f-hasta').value
+            };
+            google.script.run.withSuccessHandler(function(url) {
+                if (url) window.open(url, '_blank');
+            }).exportarLogsExcel(filtros);
+            return;
+        }
+
+        // Fallback local: exportar los visibles como TSV
+        var visibles = entries.filter(function(e) { return !e.classList.contains('hidden'); });
+        if (visibl
+</body>
+</html>

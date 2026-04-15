@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Cuotas - Portal Estudiante FCE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1e3a5f;
+            --accent:  #d4af37;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger:  #ef4444;
+            --info:    #3b82f6;
+            --gray:    #9ca3af;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+
+        /* ── NAVBAR ── */
+        .navbar { background: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .nav-brand { font-weight: 700; color: var(--primary); font-size: 15px; }
+        .nav-links  { display: flex; gap: 8px; }
+        .nav-link   { text-decoration: none; color: #666; font-weight: 500; padding: 8px 14px; border-radius: 6px; transition: all 0.2s; font-size: 14px; }
+        .nav-link:hover, .nav-link.active { background: var(--accent); color: white; }
+
+        /* ── LAYOUT ── */
+        .container { max-width: 1100px; margin: 32px auto; padding: 0 28px; }
+        .header { margin-bottom: 24px; }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 30px; color: var(--primary); margin-bottom: 4px; }
+        .header p  { color: #888; font-size: 14px; }
+
+        /* ── FILTROS ── */
+        .filters-bar {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            flex-wrap: wrap;
+        }
+        .filter-select {
+            padding: 9px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            color: #374151;
+            background: white;
+            cursor: pointer;
+            min-width: 200px;
+            transition: border-color 0.2s;
+        }
+        .filter-select:focus { outline: none; border-color: var(--primary); }
+
+        /* ── RESUMEN ── */
+        .resumen-bar {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .resumen-pill {
+            background: white;
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-left: 4px solid transparent;
+        }
+        .resumen-pill.r-total     { border-color: var(--primary); }
+        .resumen-pill.r-abonada   { border-color: var(--success); }
+        .resumen-pill.r-mora      { border-color: var(--danger);  }
+        .resumen-pill.r-pendiente { border-color: var(--warning); }
+        .resumen-pill.r-indefinida{ border-color: var(--gray);    }
+        .pill-num   { font-size: 22px; font-weight: 700; color: var(--primary); line-height: 1; }
+        .pill-label { font-size: 12px; color: #666; line-height: 1.3; }
+
+        /* ── CARDS ── */
+        .cuota-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-left: 5px solid #e0e0e0;
+            transition: box-shadow 0.2s;
+        }
+        .cuota-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09); }
+        .cuota-card.estado-ABONADA      { border-color: var(--success); }
+        .cuota-card.estado-EN_MORA      { border-color: var(--danger);  }
+        .cuota-card.estado-PENDIENTE    { border-color: var(--warning); }
+        .cuota-card.estado-NO_ABONADA   { border-color: #6366f1; }
+        .cuota-card.estado-PAGO_PARCIAL { border-color: var(--info);    }
+        .cuota-card.estado-A_DEFINIR    { border-color: var(--gray);    }
+
+        .cuota-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .cuota-title { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .cuota-title small { font-size: 12px; font-weight: 400; color: #888; margin-left: 8px; }
+
+        .badge {
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .badge-ABONADA      { background: #d1fae5; color: #065f46; }
+        .badge-EN_MORA      { background: #fee2e2; color: #991b1b; }
+        .badge-PENDIENTE    { background: #fef3c7; color: #92400e; }
+        .badge-NO_ABONADA   { background: #e0e7ff; color: #3730a3; }
+        .badge-PAGO_PARCIAL { background: #dbeafe; color: #1e40af; }
+        .badge-A_DEFINIR    { background: #f3f4f6; color: #6b7280; }
+
+        .cuota-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px 20px;
+            margin-bottom: 16px;
+        }
+        .detail-label { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+        .detail-value { font-size: 14px; font-weight: 600; color: #1f2937; }
+        .detail-value.highlight-danger  { color: var(--danger); font-size: 16px; }
+        .detail-value.highlight-success { color: var(--success); }
+        .detail-value.highlight-info    { color: var(--info);    }
+        .detail-value.highlight-gray    { color: var(--gray); font-style: italic; }
+
+        .cuota-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 14px;
+            border-top: 1px solid #f0f0f0;
+            gap: 12px;
+        }
+        .cuota-footer-left { font-size: 12px; color: #aaa; }
+
+        .btn { padding: 9px 18px; border: none; border-radius: 7px; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+        .btn-primary:hover  { background: #2d5a87; }
+        .btn-primary  { background: var(--primary); color: white; }
+        .btn-success  { background: var(--success); color: white; }
+        .btn-success:hover  { background: #059669; }
+        .btn-outline  { background: white; color: var(--primary); border: 2px solid #d1d5db; }
+        .btn-outline:hover  { border-color: var(--primary); }
+        .btn-sm { padding: 7px 14px; font-size: 12px; }
+
+        /* avisos internos de card */
+        .mora-box {
+            background: #fff5f5;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #991b1b;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .indefinida-box {
+            background: #f9fafb;
+            border: 1px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* barra pago parcial */
+        .parcial-bar-wrap { margin-bottom: 14px; }
+        .parcial-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 4px; }
+        .parcial-bar { height: 7px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+        .parcial-bar-fill { height: 100%; background: var(--info); border-radius: 4px; }
+
+        /* sin resultados */
+        .empty-state { text-align: center; padding: 60px 20px; color: #9ca3af; background: white; border-radius: 12px; }
+        .empty-state div { font-size: 40px; margin-bottom: 12px; }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 92vh;
+            overflow-y: auto;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+        .modal-title  { font-family: 'Crimson Pro', serif; font-size: 22px; color: var(--primary); }
+        .modal-sub    { font-size: 13px; color: #888; margin-bottom: 22px; }
+        .modal-close  { background: none; border: none; font-size: 22px; cursor: pointer; color: #9ca3af; line-height: 1; padding: 2px; }
+        .modal-close:hover { color: #374151; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-label { font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 6px; }
+        .req { color: var(--danger); }
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            transition: border-color 0.2s;
+            color: #1f2937;
+        }
+        .form-input:focus { outline: none; border-color: var(--primary); }
+
+        /* drag & drop */
+        .drop-zone {
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            padding: 28px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fafafa;
+        }
+        .drop-zone:hover, .drop-zone.dragover { border-color: var(--primary); background: #eff6ff; }
+        .drop-zone-icon { font-size: 36px; margin-bottom: 8px; }
+        .drop-zone-text { font-size: 13px; color: #6b7280; line-height: 1.6; }
+        .drop-zone-text span { color: var(--primary); font-weight: 600; }
+        #fileInput { display: none; }
+
+        .file-preview {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-top: 10px;
+        }
+        .file-preview.visible { display: flex; }
+        .file-preview-name { font-size: 13px; color: #065f46; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-remove { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 18px; }
+        .file-remove:hover { color: var(--danger); }
+
+        .info-note {
+            background: #fef9ec;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 11px 14px;
+            font-size: 12px;
+            color: #92400e;
+        }
+
+        .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+        .modal-cuota-ref {
+            background: #f8f6f1;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .modal-cuota-ref strong { display: block; color: var(--primary); font-size: 15px; margin-bottom: 2px; }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: #1f2937;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+            max-width: 340px;
+        }
+        .toast.show    { opacity: 1; transform: translateY(0); }
+        .toast.success { background: #065f46; }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-brand">Portal de Estudiantes</div>
+    <div class="nav-links">
+        <a href="portal_estudiante_2_dashboard.html" class="nav-link">🏠 Dashboard</a>
+        <a href="portal_estudiante_3_cuotas.html"    class="nav-link active">💳 Mis Cuotas</a>
+        <a href="portal_estudiante_4_facturacion.html" class="nav-link">📄 Facturación</a>
+        <a href="portal_estudiante_5_historial.html"  class="nav-link">📊 Historial</a>
+        <!-- Campana -->
+            <div class="notif-wrapper" style="position:relative;display:inline-flex;">
+                <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:6px 8px;border-radius:6px;transition:background 0.2s;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
+                </button>
+                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                    </div>
+                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                </div>
+            </div>
+            <a href="portal_login.html" class="nav-link" onclick="return cerrarSesion(event)">🚪 Salir</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>💳 Mis Cuotas</h1>
+        <p>Seleccioná una carrera y cohorte para ver la composición completa de tus cuotas</p>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filters-bar">
+        <select class="filter-select" id="selPrograma" onchange="onProgramaChange()">
+        </select>
+        <select class="filter-select" id="selCohorte" onchange="render()">
+        </select>
+        <select class="filter-select" id="selEstado" onchange="render()">
+            <option value="">Todos los estados</option>
+            <option value="NO_ABONADA">No abonada</option>
+            <option value="PENDIENTE">Pendiente de revisión</option>
+            <option value="EN_MORA">En mora</option>
+            <option value="PAGO_PARCIAL">Pago parcial</option>
+            <option value="ABONADA">Abonada</option>
+            <option value="A_DEFINIR">A definir</option>
+        </select>
+    </div>
+
+    <!-- RESUMEN -->
+    <div class="resumen-bar" id="resumenBar"></div>
+
+    <!-- LISTA -->
+    <div id="listaCuotas"></div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- MODAL SUBIR COMPROBANTE                    -->
+<!-- ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">📎 Subir Comprobante</div>
+            <button class="modal-close" onclick="cerrarModal()">×</button>
+        </div>
+        <div class="modal-sub">Cargá el comprobante de tu transferencia para que Cooperadora pueda verificarlo.</div>
+
+        <div class="modal-cuota-ref" id="modalCuotaRef"></div>
+
+        <div class="form-group">
+            <label class="form-label">Comprobante de transferencia <span class="req">*</span></label>
+            <div class="drop-zone" id="dropZone"
+                 onclick="document.getElementById('fileInput').click()"
+                 ondragover="onDragOver(event)"
+                 ondragleave="onDragLeave(event)"
+                 ondrop="onDrop(event)">
+                <div class="drop-zone-icon">📂</div>
+                <div class="drop-zone-text">
+                    Arrastrá el archivo acá, o <span>hacé clic para seleccionar</span><br>
+                    <small style="color:#bbb; margin-top:4px; display:block;">PDF, JPG o PNG · Máx. 10 MB</small>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="onFileSelect(event)">
+            <div class="file-preview" id="filePreview">
+                <span style="font-size:20px;">📄</span>
+                <span class="file-preview-name" id="filePreviewName"></span>
+                <button class="file-remove" onclick="removeFile()" title="Quitar">×</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">N° de operación / referencia <span class="req">*</span></label>
+            <input type="text" class="form-input" id="inputNroOp" placeholder="Ej: 123456789">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Monto transferido (ARS) <span class="req">*</span></label>
+            <input type="number" class="form-input" id="inputMonto" placeholder="Ej: 90000" min="1">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Observaciones <span style="color:#aaa; font-weight:400;">(opcional)</span></label>
+            <textarea class="form-input" id="inputObs" rows="2" placeholder="Ej: Pago parcial acordado con la administración..." style="resize:vertical;"></textarea>
+        </div>
+
+        <div class="info-note">
+            ⏱️ Una vez enviado, Cooperadora revisa y aprueba en <strong>24 a 48 hs hábiles</strong>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="cerrarModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="enviarComprobante()">📤 Enviar Comprobante</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+// ════════════════════════════════════════════════════════
+// DATOS — en producción vienen de google.script.run
+// ════════════════════════════════════════════════════════
+const PROGRAMAS = [
+    { id:1, nombre:'Especialización en Costos y Gestión Empresarial' },
+    { id:2, nombre:'Maestría en Dirección de Negocios (MBM)' },
+    { id:3, nombre:'Diplomado en ODS' },
+];
+
+const COHORTES = [
+    { id:1, programa_id:1, nombre:'Cohorte 2025-2026' },
+    { id:2, programa_id:2, nombre:'Cohorte 2025-2026' },
+    { id:3, programa_id:3, nombre:'6ª Edición 2024' },
+    { id:4, programa_id:3, nombre:'7ª Edición 2025' },
+];
+
+// Estados: ABONADA | EN_MORA | PENDIENTE | NO_ABONADA | PAGO_PARCIAL | A_DEFINIR
+const CUOTAS = [
+    // ── Esp. Costos · Cohorte 2025-2026 (12 cuotas) ──
+    { id:1,  prog_id:1, coh_id:1, num:'01/12', periodo:'Marzo 2025',  venc:'15/03/2025', original:90000, desc:5, monto:85500,  saldo:0,      estado:'ABONADA',      fechaPago:'10/03/2025' },
+    { id:2,  prog_id:1, coh_id:1, num:'02/12', periodo:'Abril 2025',  venc:'15/04/2025', original:90000, desc:5, monto:85500,  saldo:0,      estado:'ABONADA',      fechaPago:'14/04/2025' },
+    { id:3,  prog_id:1, coh_id:1, num:'03/12', periodo:'Mayo 2025',   venc:'15/05/2025', original:90000, desc:5, monto:85500,  saldo:0,      estado:'ABONADA',      fechaPago:'12/05/2025' },
+    { id:4,  prog_id:1, coh_id:1, num:'04/12', periodo:'Junio 2025',  venc:'15/06/2025', original:90000, desc:5, monto:85500,  saldo:0,      estado:'ABONADA',      fechaPago:'10/06/2025' },
+    { id:5,  prog_id:1, coh_id:1, num:'05/12', periodo:'Julio 2025',  venc:'15/07/2025', original:90000, desc:5, monto:85500,  saldo:42750,  estado:'PAGO_PARCIAL',  pagado:42750 },
+    { id:6,  prog_id:1, coh_id:1, num:'06/12', periodo:'Agosto 2025', venc:'15/08/2025', original:90000, desc:5, monto:85500,  saldo:85500,  estado:'EN_MORA',      diasMora:52, intereses:8977 },
+    { id:7,  prog_id:1, coh_id:1, num:'07/12', periodo:'Sept. 2025',  venc:'15/09/2025', original:90000, desc:5, monto:85500,  saldo:85500,  estado:'EN_MORA',      diasMora:21, intereses:4275 },
+    { id:8,  prog_id:1, coh_id:1, num:'08/12', periodo:'Oct. 2025',   venc:'15/10/2025', original:90000, desc:5, monto:85500,  saldo:85500,  estado:'PENDIENTE', comprobante:'transferencia_octubre.pdf', fechaComprobante:'05/10/2025' },
+    { id:9,  prog_id:1, coh_id:1, num:'09/12', periodo:'Nov. 2025',   venc:'15/11/2025', original:90000, desc:5, monto:85500,  saldo:85500,  estado:'NO_ABONADA' },
+    { id:10, prog_id:1, coh_id:1, num:'10/12', periodo:'Dic. 2025',   venc:'15/12/2025', original:90000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:11, prog_id:1, coh_id:1, num:'11/12', periodo:'Enero 2026',  venc:'15/01/2026', original:90000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:12, prog_id:1, coh_id:1, num:'12/12', periodo:'Feb. 2026',   venc:'15/02/2026', original:90000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+
+    // ── MBM · Cohorte 2025-2026 (18 cuotas) ──
+    { id:13, prog_id:2, coh_id:2, num:'01/18', periodo:'Marzo 2025',  venc:'15/03/2025', original:120000, desc:5, monto:114000, saldo:0,      estado:'ABONADA',  fechaPago:'10/03/2025' },
+    { id:14, prog_id:2, coh_id:2, num:'02/18', periodo:'Abril 2025',  venc:'15/04/2025', original:120000, desc:5, monto:114000, saldo:0,      estado:'ABONADA',  fechaPago:'12/04/2025' },
+    { id:15, prog_id:2, coh_id:2, num:'03/18', periodo:'Mayo 2025',   venc:'15/05/2025', original:120000, desc:5, monto:114000, saldo:114000, estado:'EN_MORA',  diasMora:30, intereses:5700 },
+    { id:16, prog_id:2, coh_id:2, num:'04/18', periodo:'Junio 2025',  venc:'15/06/2025', original:120000, desc:5, monto:114000, saldo:114000, estado:'PENDIENTE' },
+    { id:17, prog_id:2, coh_id:2, num:'05/18', periodo:'Julio 2025',  venc:'15/07/2025', original:120000, desc:5, monto:114000, saldo:114000, estado:'PENDIENTE' },
+    { id:18, prog_id:2, coh_id:2, num:'06/18', periodo:'Agosto 2025', venc:'15/08/2025', original:120000, desc:5, monto:114000, saldo:114000, estado:'PENDIENTE' },
+    { id:19, prog_id:2, coh_id:2, num:'07/18', periodo:'Sept. 2025',  venc:'15/09/2025', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:20, prog_id:2, coh_id:2, num:'08/18', periodo:'Oct. 2025',   venc:'15/10/2025', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:21, prog_id:2, coh_id:2, num:'09/18', periodo:'Nov. 2025',   venc:'15/11/2025', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:22, prog_id:2, coh_id:2, num:'10/18', periodo:'Dic. 2025',   venc:'15/12/2025', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:23, prog_id:2, coh_id:2, num:'11/18', periodo:'Enero 2026',  venc:'15/01/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:24, prog_id:2, coh_id:2, num:'12/18', periodo:'Feb. 2026',   venc:'15/02/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:25, prog_id:2, coh_id:2, num:'13/18', periodo:'Mar. 2026',   venc:'15/03/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:26, prog_id:2, coh_id:2, num:'14/18', periodo:'Abr. 2026',   venc:'15/04/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:27, prog_id:2, coh_id:2, num:'15/18', periodo:'May. 2026',   venc:'15/05/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:28, prog_id:2, coh_id:2, num:'16/18', periodo:'Jun. 2026',   venc:'15/06/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:29, prog_id:2, coh_id:2, num:'17/18', periodo:'Jul. 2026',   venc:'15/07/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+    { id:30, prog_id:2, coh_id:2, num:'18/18', periodo:'Ago. 2026',   venc:'15/08/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
+
+    // ── Diplomado ODS · 6ª Edición 2024 (6 cuotas — todo pago) ──
+    { id:31, prog_id:3, coh_id:3, num:'01/06', periodo:'Agosto 2024', venc:'15/08/2024', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'10/08/2024' },
+    { id:32, prog_id:3, coh_id:3, num:'02/06', periodo:'Sept. 2024',  venc:'15/09/2024', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'12/09/2024' },
+    { id:33, prog_id:3, coh_id:3, num:'03/06', periodo:'Oct. 2024',   venc:'15/10/2024', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'14/10/2024' },
+    { id:34, prog_id:3, coh_id:3, num:'04/06', periodo:'Nov. 2024',   venc:'15/11/2024', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'10/11/2024' },
+    { id:35, prog_id:3, coh_id:3, num:'05/06', periodo:'Dic. 2024',   venc:'15/12/2024', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'13/12/2024' },
+    { id:36, prog_id:3, coh_id:3, num:'06/06', periodo:'Ene. 2025',   venc:'15/01/2025', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'09/01/2025' },
+
+    // ── Diplomado ODS · 7ª Edición 2025 (4 cuotas) ──
+    { id:37, prog_id:3, coh_id:4, num:'01/04', periodo:'Marzo 2025',  venc:'15/03/2025', original:70000, desc:0, monto:70000, saldo:0,     estado:'ABONADA',  fechaPago:'10/03/2025' },
+    { id:38, prog_id:3, coh_id:4, num:'02/04', periodo:'Junio 2025',  venc:'15/06/2025', original:70000, desc:0, monto:70000, saldo:70000, estado:'PENDIENTE' },
+    { id:39, prog_id:3, coh_id:4, num:'03/04', periodo:'Sept. 2025',  venc:'15/09/2025', original:70000, desc:0, monto:null,  saldo:null,  estado:'A_DEFINIR' },
+    { id:40, prog_id:3, coh_id:4, num:'04/04', periodo:'Dic. 2025',   venc:'15/12/2025', original:70000, desc:0, monto:null,  saldo:null,  estado:'A_DEFINIR' },
+];
+
+// ════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════
+const fmt = n => n != null ? '$' + Number(n).toLocaleString('es-AR') : '—';
+
+const ETIQUETAS = {
+    ABONADA:      '✅ Abonada',
+    EN_MORA:      '🔴 En mora',
+    PENDIENTE:    '🕐 Pendiente',
+    PAGO_PARCIAL: '🔵 Pago parcial',
+    A_DEFINIR:    '⚙️ A definir',
+};
+
+const RESUMEN_META = [
+    { key:'total',       label:'Total',      cls:'r-total',     icon:'📋' },
+    { key:'ABONADA',     label:'Abonadas',   cls:'r-abonada',   icon:'✅' },
+    { key:'EN_MORA',     label:'En mora',    cls:'r-mora',      icon:'🔴' },
+    { key:'PENDIENTE',   label:'Pendientes', cls:'r-pendiente', icon:'🕐' },
+    { key:'A_DEFINIR',   label:'A definir',  cls:'r-indefinida',icon:'⚙️' },
+];
+
+// ════════════════════════════════════════════════════════
+// POBLAR SELECTS
+// ════════════════════════════════════════════════════════
+function poblarProgramas() {
+    const sel = document.getElementById('selPrograma');
+    PROGRAMAS.forEach(p => {
+        const o = document.createElement('option');
+        o.value = p.id; o.textContent = p.nombre;
+        sel.appendChild(o);
+    });
+}
+
+function onProgramaChange() {
+    const progId = +document.getElementById('selPrograma').value;
+    const sel = document.getElementById('selCohorte');
+    sel.innerHTML = '';
+    COHORTES
+        .filter(c => !progId || c.programa_id === progId)
+        .forEach(c => {
+            const o = document.createElement('option');
+            o.value = c.id; o.textContent = c.nombre;
+            sel.appendChild(o);
+        });
+    render();
+}
+
+// ════════════════════════════════════════════════════════
+// FILTRAR
+// ════════════════════════════════════════════════════════
+function cuotasFiltradas() {
+    const progId  = +document.getElementById('selPrograma').value || null;
+    const cohId   = +document.getElementById('selCohorte').value  || null;
+    const estado  =  document.getElementById('selEstado').value   || null;
+    return CUOTAS.filter(c => {
+        if (progId && c.prog_id !== progId) return false;
+        if (cohId  && c.coh_id  !== cohId)  return false;
+        if (estado && c.estado  !== estado) return false;
+        return true;
+    });
+}
+
+// ════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════
+function render() {
+    const lista = cuotasFiltradas();
+    renderResumen(lista);
+    renderCuotas(lista);
+}
+
+function renderResumen(lista) {
+    const cnt = { total: lista.length };
+    ['ABONADA','EN_MORA','PENDIENTE','PAGO_PARCIAL','A_DEFINIR'].forEach(e => {
+        cnt[e] = lista.filter(c => c.estado === e).length;
+    });
+    document.getElementById('resumenBar').innerHTML = RESUMEN_META.map(m => `
+        <div class="resumen-pill ${m.cls}">
+            <div>
+                <div class="pill-num">${cnt[m.key] ?? 0}</div>
+                <div class="pill-label">${m.icon} ${m.label}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderCuotas(lista) {
+    const cont = document.getElementById('listaCuotas');
+    if (!lista.length) {
+        cont.innerHTML = `<div class="empty-state"><div>🔍</div><p>No hay cuotas que coincidan con los filtros seleccionados.</p></div>`;
+        return;
+    }
+    cont.innerHTML = lista.map(c => buildCard(c)).join('');
+}
+
+function buildCard(c) {
+    const prog    = PROGRAMAS.find(p => p.id === c.prog_id);
+    const cohorte = COHORTES.find(co => co.id === c.coh_id);
+    let infoExtra = '', gridHtml = '', footerBtn = '', footerLeft = '';
+
+    if (c.estado === 'ABONADA') {
+        gridHtml = `
+            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
+            <div><div class="detail-label">Vencimiento</div><div class="detail-value">${c.venc}</div></div>
+            <div><div class="detail-label">Monto abonado</div><div class="detail-value highlight-success">${fmt(c.monto)}</div></div>
+            <div><div class="detail-label">Fecha de pago</div><div class="detail-value highlight-success">${c.fechaPago}</div></div>
+            ${c.desc > 0 ? `
+            <div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">${fmt(c.original)}</div></div>
+            <div><div class="detail-label">Descuento aplicado</div><div class="detail-value highlight-success">-${c.desc}%</div></div>` : ''}
+        `;
+        footerBtn  = `<button class="btn btn-success btn-sm">📥 Descargar Recibo</button>`;
+        footerLeft = `Pagada el ${c.fechaPago}`;
+
+    } else if (c.estado === 'EN_MORA') {
+        const totalMora = (c.monto || 0) + (c.intereses || 0);
+        infoExtra = `<div class="mora-box">⚠️ <strong>${c.diasMora} días de atraso</strong> · Intereses acumulados: ${fmt(c.intereses)} (5% mensual compuesto)</div>`;
+        gridHtml = `
+            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
+            <div><div class="detail-label">Vencía el</div><div class="detail-value" style="color:var(--danger);">${c.venc}</div></div>
+            <div><div class="detail-label">Cuota original</div><div class="detail-value">${fmt(c.monto)}</div></div>
+            <div><div class="detail-label">Intereses</div><div class="detail-value highlight-danger">+${fmt(c.intereses)}</div></div>
+            <div><div class="detail-label">Total a pagar hoy</div><div class="detail-value highlight-danger">${fmt(totalMora)}</div></div>
+            ${c.desc > 0 ? `<div><div class="detail-label">Descuento</div><div class="detail-value" style="color:#bbb;font-size:12px;">-${c.desc}% perdido por mora</div></div>` : ''}
+        `;
+        footerBtn  = `<button class="btn btn-primary btn-sm" onclick='abrirModal(${JSON.stringify(c)})'>📤 Subir Comprobante</button>`;
+        footerLeft = `<span style="color:var(--danger);">⚠️ ${c.diasMora} días de atraso</span>`;
+
+    } else if (c.estado === 'PAGO_PARCIAL') {
+        const pct = Math.round((c.pagado / c.monto) * 100);
+        infoExtra = `
+            <div class="parcial-bar-wrap">
+                <div class="parcial-bar-label"><span>Pagado: ${fmt(c.pagado)} (${pct}%)</span><span>Saldo: ${fmt(c.saldo)}</span></div>
+                <div class="parcial-bar"><div class="parcial-bar-fill" style="width:${pct}%"></div></div>
+            </div>`;
+        gridHtml = `
+            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
+            <div><div class="detail-label">Vencimiento</div><div class="detail-value">${c.venc}</div></div>
+            <div><div class="detail-label">Cuota total</div><div class="detail-value">${fmt(c.monto)}</div></div>
+            <div><div class="detail-label">Ya pagaste</div><div class="detail-value highlight-info">${fmt(c.pagado)}</div></div>
+            <div><div class="detail-label">Saldo pendiente</div><div class="detail-value highlight-danger">${fmt(c.saldo)}</div></div>
+            ${c.desc > 0 ? `<div><div class="detail-label">Descuento aplicado</div><div class="detail-value highlight-success">-${c.desc}%</div></div>` : ''}
+        `;
+        footerBtn  = `<button class="btn btn-primary btn-sm" onclick='abrirModal(${JSON.stringify(c)})'>📤 Completar Pago</button>`;
+        footerLeft = `Pago parcial registrado · Saldo restante: ${fmt(c.saldo)}`;
+
+    } else if (c.estado === 'PENDIENTE') {
+        /* PENDIENTE = comprobante subido, esperando revisión de Cooperadora */
+        infoExtra = `<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;color:#92400e;">🕐 <strong>Comprobante enviado</strong> — Esperando revisión de Cooperadora${c.fechaComprobante ? ' (enviado el ' + c.fechaComprobante + ')' : ''}</div>`;
+        gridHtml = `
+            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
+            <div><div class="detail-label">Vencimiento</div><div class="detail-value">${c.venc}</div></div>
+            <div><div class="detail-label">Monto a pagar</div><div class="detail-value">${fmt(c.monto)}</div></div>
+            ${c.comprobante ? `<div><div class="detail-label">Comprobante</div><div class="detail-value" style="color:#1e3a5f;">📎 ${c.comprobante}</div></div>` : ''}
+            ${c.desc > 0 ? `
+            <div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">${fmt(c.original)}</div></div>
+            <div><div class="detail-label">Descuento</div><div class="detail-value highlight-success">-${c.desc}%</div></div>` : ''}
+        `;
+        footerBtn  = `<button class="btn btn-warning btn-sm" style="background:#f59e0b;color:#fff;" onclick="verComprobante('${c.comprobante || ''}')">👁️ Ver comprobante enviado</button>`;
+        footerLeft = `Pendiente de verificación por Cooperadora`;
+
+    } else if (c.estado === 'NO_ABONADA') {
+        /* NO_ABONADA = cuota con monto, no venció, sin comprobante */
+        gridHtml = `
+            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
+            <div><div class="detail-label">Vencimiento</div><div class="detail-value">${c.venc}</div></div>
+            <div><div class="detail-label">Monto a pagar</div><div class="detail-value">${fmt(c.monto)}</div></div>
+            ${c.desc > 0 ? `
+            <div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">${fmt(c.original)}</div></div>
+            <div><div class="detail-label">Descuento</div><div class="detail-value highlight-success">-${c.desc}%</div></div>` : ''}
+        `;
+        footerBtn  = `<button class="btn btn-primary btn-sm" onclick='abrirModal(${JSON.stringify(c)})'>📤 Subir Comprobante</button>`;
+        footerLeft = `Vence el ${c.venc}`;
+
+    } else if (c.estado === 'A_DEFINIR') {
+        infoExtra = `<div class="indefinida-box">⚙️ El monto de esta cuota aún no fue definido por la administración. Te notificaremos cuando esté disponible.</div>`;
+        gridHtml = `
+            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
+            <div><div class="detail-label">Vencimiento estimado</div><div class="detail-value">${c.venc}</div></div>
+            <div><div class="detail-label">Monto</div><div class="detail-value highlight-gray">Por definir</div></div>
+        `;
+        footerLeft = 'Pendiente de confirmación por la administración';
+        // Sin botón — cuota no habilitada todavía
+    }
+
+    return `
+        <div class="cuota-card estado-${c.estado}">
+            <div class="cuota-header">
+                <div class="cuota-title">
+                    Cuota ${c.num}
+                    <small>${prog ? prog.nombre : ''} · ${cohorte ? cohorte.nombre : ''}</small>
+                </div>
+                <span class="badge badge-${c.estado}">${ETIQUETAS[c.estado]}</span>
+            </div>
+            ${infoExtra}
+            <div class="cuota-grid">${gridHtml}</div>
+            <div class="cuota-footer">
+                <div class="cuota-footer-left">${footerLeft}</div>
+                <div>${footerBtn}</div>
+            </div>
+        </div>
+    `;
+}
+
+// ════════════════════════════════════════════════════════
+// MODAL
+// ════════════════════════════════════════════════════════
+function abrirModal(c) {
+    const prog    = PROGRAMAS.find(p => p.id === c.prog_id);
+    const cohorte = COHORTES.find(co => co.id === c.coh_id);
+    const saldoModal = c.saldo || c.monto;
+
+    document.getElementById('modalCuotaRef').innerHTML = `
+        <strong>Cuota ${c.num} · ${ETIQUETAS[c.estado]}</strong>
+        ${prog ? prog.nombre : ''} · ${cohorte ? cohorte.nombre : ''}<br>
+        Período: ${c.periodo} · Saldo a pagar: <strong style="color:var(--danger);">${fmt(saldoModal)}</strong>
+    `;
+    document.getElementById('inputMonto').value = saldoModal || '';
+    removeFile();
+    document.getElementById('inputNroOp').value = '';
+    document.getElementById('inputObs').value   = '';
+    document.getElementById('modalOverlay').classList.add('open');
+}
+
+function cerrarModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function verComprobante(nombre) {
+    if (!nombre) {
+        alert('No hay comprobante disponible para esta cuota.');
+        return;
+    }
+    /* En producción: google.script.run.obtenerUrlComprobante(nombre) y abrir en nueva pestaña */
+    alert('📎 Comprobante: ' + nombre + '\n\nEn producción se abrirá el archivo desde Google Drive.');
+}
+
+// Drag & Drop
+function onDragOver(e)  { e.preventDefault(); document.getElementById('dropZone').classList.add('dragover'); }
+function onDragLeave()  { document.getElementById('dropZone').classList.remove('dragover'); }
+function onDrop(e)      { e.preventDefault(); document.getElementById('dropZone').classList.remove('dragover'); const f = e.dataTransfer.files[0]; if (f) procesarArchivo(f); }
+function onFileSelect(e){ const f = e.target.files[0]; if (f) procesarArchivo(f); }
+
+function procesarArchivo(file) {
+    const ok = ['application/pdf','image/jpeg','image/png','image/jpg'];
+    if (!ok.includes(file.type)) { mostrarToast('❌ Solo PDF, JPG o PNG', false); return; }
+    if (file.size > 10 * 1024 * 1024) { mostrarToast('❌ El archivo supera los 10 MB', false); return; }
+    document.getElementById('filePreviewName').textContent = file.name;
+    document.getElementById('filePreview').classList.add('visible');
+    document.getElementById('dropZone').style.display = 'none';
+}
+
+function removeFile() {
+    document.getElementById('filePreview').classList.remove('visible');
+    document.getElementById('fileInput').value = '';
+    document.getElementById('dropZone').style.display = '';
+}
+
+function enviarComprobante() {
+    const hayArchivo = document.getElementById('filePreview').classList.contains('visible');
+    const nroOp = document.getElementById('inputNroOp').value.trim();
+    const monto  = document.getElementById('inputMonto').value.trim();
+    if (!hayArchivo) { mostrarToast('⚠️ Adjuntá el comprobante de transferencia', false); return; }
+    if (!nroOp)      { mostrarToast('⚠️ Ingresá el número de operación', false); return; }
+    if (!monto || +monto <= 0) { mostrarToast('⚠️ Ingresá el monto transferido', false); return; }
+    // → google.script.run.withSuccessHandler(...).subirComprobante({nroOp, monto, obs, archivo})
+    cerrarModal();
+    mostrarToast('✅ Comprobante enviado. Cooperadora lo revisará en 24-48 hs hábiles.', true);
+}
+
+// ════════════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════════════
+function mostrarToast(msg, ok) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (ok ? ' success' : '');
+    clearTimeout(t._to);
+    t._to = setTimeout(() => { t.className = 'toast'; }, 4500);
+}
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal();
+});
+
+// ════════════════════════════════════════════════════════
+// INIT — preselecciona la carrera/cohorte con deuda urgente
+// Prioridad: EN_MORA > PAGO_PARCIAL > PENDIENTE > primera disponible
+// ════════════════════════════════════════════════════════
+function init() {
+    poblarProgramas();
+
+    // Buscar la cohorte con la situación más urgente
+    const PRIORIDAD = ['EN_MORA', 'PAGO_PARCIAL', 'PENDIENTE'];
+    let cohSeleccionada = null;
+
+    for (const estado of PRIORIDAD) {
+        const cuota = CUOTAS.find(c => c.estado === estado);
+        if (cuota) { cohSeleccionada = cuota.coh_id; break; }
+    }
+
+    // Si no hay ninguna urgente, tomar la primera cohorte disponible
+    if (!cohSeleccionada && CUOTAS.length) {
+        cohSeleccionada = CUOTAS[0].coh_id;
+    }
+
+    if (cohSeleccionada) {
+        const cohorte = COHORTES.find(c => c.id === cohSeleccionada);
+        if (cohorte) {
+            // Seleccionar programa en el primer select
+            document.getElementById('selPrograma').value = cohorte.programa_id;
+            // Poblar cohortes de ese programa
+            const selCoh = document.getElementById('selCohorte');
+            selCoh.innerHTML = '';
+            COHORTES
+                .filter(c => c.programa_id === cohorte.programa_id)
+                .forEach(c => {
+                    const o = document.createElement('option');
+                    o.value = c.id; o.textContent = c.nombre;
+                    selCoh.appendChild(o);
+                });
+            // Seleccionar la cohorte específica
+            selCoh.value = cohSeleccionada;
+        }
+    }
+
+    render();
+}
+
+init();
+
+    /* Navegación y sesión proporcionadas por supabase.js */
+    
+        /* ══ CAMPANA ══ */
+    var _notifs = [];
+    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+    function renderNotificaciones(datos) {
+        _notifs = datos || [];
+        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+        var lista = document.getElementById('notif-list');
+        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨', cuota:'📅' };
+        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3', cuota:'#dbeafe' };
+        lista.innerHTML = _notifs.map(function(n) {
+            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+        }).join('');
+    }
+    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
+    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+    // Notificaciones cargadas por supabase.js automáticamente
+
+</script>
+</body>
+</html>
