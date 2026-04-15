@@ -337,6 +337,44 @@ async function obtenerDetallePrograma(programaId) {
     };
 }
 
+async function guardarPrograma(datos) {
+    const sb = await getSupabase();
+    if (datos.programa_id) {
+        const { error } = await sb.from('programas').update(datos).eq('programa_id', datos.programa_id);
+        return { ok: !error, mensaje: error ? error.message : null };
+    }
+    const { error } = await sb.from('programas').insert(datos);
+    return { ok: !error, mensaje: error ? error.message : null };
+}
+
+async function eliminarPrograma(programaId) {
+    const sb = await getSupabase();
+    const { error } = await sb.from('programas').delete().eq('programa_id', programaId);
+    return { ok: !error };
+}
+
+async function guardarCohorte(datos) {
+    const sb = await getSupabase();
+    if (datos.cohorte_id) {
+        const { error } = await sb.from('cohortes').update(datos).eq('cohorte_id', datos.cohorte_id);
+        return { ok: !error, mensaje: error ? error.message : null };
+    }
+    const { error } = await sb.from('cohortes').insert(datos);
+    return { ok: !error, mensaje: error ? error.message : null };
+}
+
+async function eliminarCohorte(cohorteId) {
+    const sb = await getSupabase();
+    const { error } = await sb.from('cohortes').delete().eq('cohorte_id', cohorteId);
+    return { ok: !error };
+}
+
+async function cambiarEstadoCohorte(cohorteId, estado) {
+    const sb = await getSupabase();
+    const { error } = await sb.from('cohortes').update({ estado: estado }).eq('cohorte_id', cohorteId);
+    return { ok: !error };
+}
+
 // ══════════════════════════════════════════════════════════════
 // FUNCIONES DE DATOS — COBROS (CUOTAS)
 // ══════════════════════════════════════════════════════════════
@@ -687,11 +725,13 @@ var _gasFunctions = {
     // Programas / Cohortes
     obtenerDetallePrograma: obtenerDetallePrograma,
     getProgramas: obtenerProgramas,
-    cambiarEstadoCohorte: async function(id, estado) {
-        var sb = await getSupabase();
-        var r = await sb.from('cohortes').update({ estado: estado }).eq('cohorte_id', id);
-        return { ok: !r.error };
-    },
+    obtenerProgramas: obtenerProgramas,
+    obtenerCohortes: obtenerCohortes,
+    guardarPrograma: guardarPrograma,
+    eliminarPrograma: eliminarPrograma,
+    guardarCohorte: guardarCohorte,
+    eliminarCohorte: eliminarCohorte,
+    cambiarEstadoCohorte: cambiarEstadoCohorte,
 
     // Cobros
     subirComprobante: subirComprobante,
