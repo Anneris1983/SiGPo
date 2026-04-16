@@ -248,10 +248,16 @@ function cargarNotificaciones() {
 function toggleEstado(cohorteId, nuevoEstado, event) {
     if (event) event.stopPropagation();
     var accion = nuevoEstado === 'ACTIVO' ? 'activar' : 'cerrar';
-    if (!confirm('¿Querés ' + accion + ' esta cohorte?')) return;
+    var tipoPrograma = window._programaTipo || '';
+    var labelNom = typeof getLabelNomenclatura === 'function' ? getLabelNomenclatura(tipoPrograma).toLowerCase() : 'cohorte';
+    if (!confirm('¿Querés ' + accion + ' esta ' + labelNom + '?')) return;
 
     getSupabase().then(function(sb) {
-        sb.from('cohortes').update({ estado: nuevoEstado }).eq('cohorte_id', cohorteId).then(function() {
+        sb.from('cohortes').update({ estado: nuevoEstado }).eq('cohorte_id', cohorteId).then(function(res) {
+            if (res && res.error) {
+                alert('Error al actualizar: ' + (res.error.message || 'Sin detalles'));
+                return;
+            }
             cargarPrograma();
         });
     });
@@ -266,13 +272,14 @@ function renderPrograma(data) {
         return;
     }
 
-    var iconosTipo = { 'DOCTORADO': '🎓', 'MAESTRIA': '📊', 'ESPECIALIZACION': '💼', 'DIPLOMATURA': '📜', 'MICRO_MAESTRIA': '🔬' };
-    var icono = iconosTipo[data.tipo] || '📚';
+    var icono    = typeof getIconoTipo            === 'function' ? getIconoTipo(data.tipo)              : '📚';
+    var labelPl  = typeof getLabelNomenclaturaPlural === 'function' ? getLabelNomenclaturaPlural(data.tipo) : 'Cohortes';
+    window._programaTipo = data.tipo;
     document.getElementById('header-titulo').textContent = icono + ' ' + (data.nombre || 'Programa');
 
     var cohortes = data.cohortes || [];
     var totalEstudiantes = cohortes.reduce(function(s, c) { return s + (c.estudiantes || 0); }, 0);
-    document.getElementById('page-subtitle').textContent = cohortes.length + ' cohortes • ' + totalEstudiantes + ' estudiantes totales';
+    document.getElementById('page-subtitle').textContent = cohortes.length + ' ' + labelPl.toLowerCase() + ' • ' + totalEstudiantes + ' estudiantes totales';
 
     var lista = document.getElementById('cohortes-list');
     if (cohortes.length === 0) {
@@ -281,24 +288,28 @@ function renderPrograma(data) {
     }
 
     lista.innerHTML = cohortes.map(function(c) {
-        var esActiva = c.estado === 'ACTIVO';
-        var claseCard = 'cohorte-card' + (esActiva ? ' active' : '');
+        var esActiva   = c.estado === 'ACTIVO';
+        var claseCard  = 'cohorte-card' + (esActiva ? ' active' : '');
         var claseBadge = esActiva ? 'badge active' : 'badge closed';
         var textoBadge = esActiva ? 'Activa' : 'Cerrada';
-        var claseBtn = esActiva ? 'btn-toggle cerrar' : 'btn-toggle activar';
-        var textoBtn = esActiva ? '🔒 Cerrar' : '✅ Activar';
+        var claseBtn   = esActiva ? 'btn-toggle cerrar' : 'btn-toggle activar';
+        var textoBtn   = esActiva ? '🔒 Cerrar' : '✅ Activar';
         var nuevoEstado = esActiva ? 'CERRADO' : 'ACTIVO';
-        var saldo = (c.recaudado || 0) - (c.egresos || 0);
-        var claseSaldo = saldo >= 0 ? 'saldo-positivo' : 'saldo-negativo';
+        var saldo      = (c.saldo !== undefined) ? c.saldo : ((c.recaudado || 0) - (c.egresos || 0));
+        var claseSaldo = saldo >= 0 ? ' success' : ' danger';
+        var labelNomSing = labelPl.slice(0, -1) || 'Cohorte';
 
         return '<div class="' + claseCard + '" id="cohorte-' + c.id + '" onclick="irACohorte(' + c.id + ', event)">'
             + '<div class="cohorte-left">'
-            + '<div class="cohorte-title">' + (c.nombre || 'Cohorte') + '</div>'
+            + '<div class="cohorte-title">' + (c.nombre || labelNomSing) + '</div>'
             + '<div class="cohorte-dates">' + (c.fechaInicio || '') + ' – ' + (c.fechaFin || '') + '</div>'
             + '<div class="cohorte-stats">'
             + '<div class="stat-box"><div class="stat-label">Estudiantes</div><div class="stat-value">' + (c.estudiantes || 0) + '</div></div>'
             + '<div class="stat-box"><div class="stat-label">Al día</div><div class="stat-value success">' + (c.alDia || 0) + '</div></div>'
             + '<div class="stat-box"><div class="stat-label">En mora</div><div class="stat-value' + ((c.enMora || 0) > 0 ? ' danger' : '') + '">' + (c.enMora || 0) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">Recaudado</div><div class="stat-value">' + fMillones(c.recaudado || 0) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">Egresos</div><div class="stat-value' + ((c.egresos || 0) > 0 ? ' danger' : '') + '">' + fMillones(c.egresos || 0) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">Saldo</div><div class="stat-value' + claseSaldo + '">' + fMillones(saldo) + '</div></div>'
             + '</div></div>'
             + '<div class="cohorte-right">'
             + '<span class="' + claseBadge + '">' + textoBadge + '</span>'
