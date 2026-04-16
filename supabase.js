@@ -180,34 +180,39 @@ const RUTAS_POR_ROL = {
 // Cursos: DIPLOMADO, DIPLOMATURA, CURSO → sub-unidad: Edición
 // ══════════════════════════════════════════════════════════════
 
-var TIPOS_PROGRAMA = ['DOCTORADO', 'MAESTRIA', 'ESPECIALIZACION'];
-var TIPOS_CURSO    = ['DIPLOMADO', 'DIPLOMATURA', 'CURSO'];
+var TIPOS_PROGRAMA = ['DOCTORADO', 'MAESTRIA', 'ESPECIALIZACION',
+                      'doctorado', 'maestria', 'especializacion'];
+var TIPOS_CURSO    = ['DIPLOMADO', 'DIPLOMATURA', 'CURSO',
+                      'diplomado', 'diplomatura', 'curso'];
 
 /**
- * Devuelve 'Programa' o 'Curso' según el tipo
+ * Devuelve 'Programa' o 'Curso' según el tipo (case-insensitive)
  */
 function getCategoriaPrograma(tipo) {
-    return TIPOS_PROGRAMA.indexOf(tipo) >= 0 ? 'Programa' : 'Curso';
+    if (!tipo) return 'Programa';
+    return TIPOS_PROGRAMA.indexOf(tipo.toUpperCase()) >= 0 ||
+           TIPOS_PROGRAMA.indexOf(tipo) >= 0 ? 'Programa' : 'Curso';
 }
 
 /**
- * Devuelve 'Cohorte' o 'Edición' según el tipo de programa
+ * Devuelve 'Cohorte' o 'Edición' según el tipo de programa (case-insensitive)
  */
 function getLabelNomenclatura(tipo) {
-    return TIPOS_PROGRAMA.indexOf(tipo) >= 0 ? 'Cohorte' : 'Edición';
+    return getCategoriaPrograma(tipo) === 'Programa' ? 'Cohorte' : 'Edición';
 }
 
 /**
- * Devuelve 'Cohortes' o 'Ediciones' (plural)
+ * Devuelve 'Cohortes' o 'Ediciones' (plural, case-insensitive)
  */
 function getLabelNomenclaturaPlural(tipo) {
-    return TIPOS_PROGRAMA.indexOf(tipo) >= 0 ? 'Cohortes' : 'Ediciones';
+    return getCategoriaPrograma(tipo) === 'Programa' ? 'Cohortes' : 'Ediciones';
 }
 
 /**
- * Ícono por tipo de programa/curso
+ * Ícono por tipo de programa/curso (case-insensitive)
  */
 function getIconoTipo(tipo) {
+    var t = (tipo || '').toUpperCase();
     var iconos = {
         'DOCTORADO':      '🎓',
         'MAESTRIA':       '📊',
@@ -216,7 +221,7 @@ function getIconoTipo(tipo) {
         'DIPLOMATURA':    '📜',
         'CURSO':          '📖'
     };
-    return iconos[tipo] || '📚';
+    return iconos[t] || '📚';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -643,8 +648,8 @@ async function obtenerDashboardAdmin() {
         if (cobros.some(function (c) { return c.dni === est.dni && c.estado === 'EN_MORA'; })) enMora++;
     });
 
-    var totalProgramasPosgrado = programas.filter(function(p) { return TIPOS_PROGRAMA.indexOf(p.tipo) >= 0; }).length;
-    var totalCursos = programas.filter(function(p) { return TIPOS_CURSO.indexOf(p.tipo) >= 0; }).length;
+    var totalProgramasPosgrado = programas.filter(function(p) { return getCategoriaPrograma(p.tipo) === 'Programa'; }).length;
+    var totalCursos = programas.filter(function(p) { return getCategoriaPrograma(p.tipo) === 'Curso'; }).length;
 
     return {
         totalProgramas: programas.length,
