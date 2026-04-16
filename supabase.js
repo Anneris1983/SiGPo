@@ -354,17 +354,19 @@ async function obtenerEstudiantes(programaId, cohorteId) {
 
 async function obtenerDetallePrograma(programaId) {
     const sb = await getSupabase();
-    const [progRes, cohRes, estRes, cobRes] = await Promise.all([
+    const [progRes, cohRes, estRes, cobRes, egrRes] = await Promise.all([
         sb.from('programas').select('*').eq('programa_id', programaId).single(),
         sb.from('cohortes').select('*').eq('programa_id', programaId).order('fecha_inicio', { ascending: false }),
         sb.from('estudiantes').select('*').eq('programa_id', programaId),
-        sb.from('cobros').select('*').eq('programa_id', programaId)
+        sb.from('cobros').select('*').eq('programa_id', programaId),
+        sb.from('egresos').select('egreso_id,cohorte_id,monto_pagado').eq('programa_id', programaId)
     ]);
     var prog = progRes.data;
     if (!prog) return null;
     var cohortes = cohRes.data || [];
     var estudiantes = estRes.data || [];
     var cobros = cobRes.data || [];
+    var egresos = egrRes.data || [];
 
     return {
         id: prog.programa_id,
@@ -373,15 +375,23 @@ async function obtenerDetallePrograma(programaId) {
         cohortes: cohortes.map(function(coh) {
             var estsCoh = estudiantes.filter(function(e) { return e.cohorte_id === coh.cohorte_id; });
             var cobrosCoh = cobros.filter(function(c) { return c.cohorte_id === coh.cohorte_id; });
+            var egresosCoh = egresos.filter(function(e) { return e.cohorte_id === coh.cohorte_id; });
             var enMora = 0, alDia = 0;
             estsCoh.forEach(function(est) {
                 if (cobrosCoh.some(function(c) { return c.dni === est.dni && c.estado === 'EN_MORA'; })) enMora++;
                 else alDia++;
             });
+            var recaudado = cobrosCoh.reduce(function(s, c) {
+                return s + (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0));
+            }, 0);
+            var egresosMonto = egresosCoh.reduce(function(s, e) {
+                return s + Number(e.monto_pagado || 0);
+            }, 0);
             return {
                 id: coh.cohorte_id, nombre: coh.nombre, estado: coh.estado,
                 fechaInicio: coh.fecha_inicio, fechaFin: coh.fecha_fin,
-                estudiantes: estsCoh.length, alDia: alDia, enMora: enMora
+                estudiantes: estsCoh.length, alDia: alDia, enMora: enMora,
+                recaudado: recaudado, egresos: egresosMonto, saldo: recaudado - egresosMonto
             };
         })
     };
