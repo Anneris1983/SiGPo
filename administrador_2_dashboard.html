@@ -338,6 +338,8 @@ function renderDashboard(data) {
         if (p.estudiantes > 0 && (p.alDia / p.estudiantes) < 0.7) colorAlDia = '#e67e22';
         if (p.estudiantes > 0 && (p.alDia / p.estudiantes) < 0.5) colorAlDia = '#c0392b';
 
+        var colorSaldo = (p.saldo || 0) >= 0 ? '#2d7a4f' : '#c0392b';
+
         return '<div class="program-card" onclick="navegar(\'administrador_3_Programas_de_posgrado.html?id=' + p.id + '\')">'
             + '<div class="program-icon">' + icono + '</div>'
             + '<div class="program-name">' + p.nombre + '</div>'
@@ -346,6 +348,8 @@ function renderDashboard(data) {
             + '<div class="program-stat"><span>Cohortes:</span><strong>' + (p.cohortes || 0) + '</strong></div>'
             + '<div class="program-stat"><span>Al día:</span><strong style="color:' + colorAlDia + ';">' + (p.alDia || 0) + '</strong></div>'
             + '<div class="program-stat"><span>Recaudado:</span><strong>' + fMillones(p.recaudado) + '</strong></div>'
+            + '<div class="program-stat"><span>Egresos:</span><strong style="color:#e67e22;">' + fMillones(p.egresos) + '</strong></div>'
+            + '<div class="program-stat"><span>Saldo:</span><strong style="color:' + colorSaldo + ';">' + fMillones(p.saldo) + '</strong></div>'
             + '</div></div>';
     }).join('');
 }
