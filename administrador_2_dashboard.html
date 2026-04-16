@@ -323,17 +323,10 @@ function renderDashboard(data) {
     var programas = data.programas || [];
     document.getElementById('programs-title').textContent = '📚 Programas de Posgrado (' + programas.length + ')';
 
-    var iconosTipo = {
-        'DOCTORADO': '🎓',
-        'MAESTRIA': '📊',
-        'ESPECIALIZACION': '💼',
-        'DIPLOMATURA': '📜',
-        'MICRO_MAESTRIA': '🔬'
-    };
-
     var grid = document.getElementById('programs-grid');
     grid.innerHTML = programas.map(function(p) {
-        var icono = iconosTipo[p.tipo] || '📚';
+        var icono     = typeof getIconoTipo            === 'function' ? getIconoTipo(p.tipo)             : '📚';
+        var labelCoh  = typeof getLabelNomenclaturaPlural === 'function' ? getLabelNomenclaturaPlural(p.tipo) : 'Cohortes';
         var colorAlDia = '#2d7a4f';
         if (p.estudiantes > 0 && (p.alDia / p.estudiantes) < 0.7) colorAlDia = '#e67e22';
         if (p.estudiantes > 0 && (p.alDia / p.estudiantes) < 0.5) colorAlDia = '#c0392b';
@@ -345,7 +338,7 @@ function renderDashboard(data) {
             + '<div class="program-name">' + p.nombre + '</div>'
             + '<div class="program-stats">'
             + '<div class="program-stat"><span>Estudiantes:</span><strong>' + (p.estudiantes || 0) + '</strong></div>'
-            + '<div class="program-stat"><span>Cohortes:</span><strong>' + (p.cohortes || 0) + '</strong></div>'
+            + '<div class="program-stat"><span>' + labelCoh + ':</span><strong>' + (p.cohortes || 0) + '</strong></div>'
             + '<div class="program-stat"><span>Al día:</span><strong style="color:' + colorAlDia + ';">' + (p.alDia || 0) + '</strong></div>'
             + '<div class="program-stat"><span>Recaudado:</span><strong>' + fMillones(p.recaudado) + '</strong></div>'
             + '<div class="program-stat"><span>Egresos:</span><strong style="color:#e67e22;">' + fMillones(p.egresos) + '</strong></div>'
