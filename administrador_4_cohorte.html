@@ -429,7 +429,7 @@
                     <label class="plan-radio-opcion">
                         <input type="radio" name="plan-dest" value="cohorte" checked onchange="planDestChange()">
                         <div>
-                            <div style="font-weight:700;font-size:13px;color:var(--primary);">Toda la cohorte</div>
+                            <div id="plan-toda-label" style="font-weight:700;font-size:13px;color:var(--primary);">Toda la cohorte</div>
                             <div style="font-size:11px;color:#666;margin-top:2px;">Se creará el plan para los <strong id="plan-n-todos">—</strong> estudiantes.</div>
                         </div>
                     </label>
@@ -931,10 +931,13 @@ function renderHeader() {
     var p  = V.data.programa;
     var c  = V.data.cohorte;
     var es = V.data.estudiantes;
-    document.getElementById('hdr-programa').textContent = p.nombre;
+    var icono    = typeof getIconoTipo        === 'function' ? getIconoTipo(p.tipo)             : '📚';
+    var labelNom = typeof getLabelNomenclatura === 'function' ? getLabelNomenclatura(p.tipo)     : 'Cohorte';
+    document.getElementById('hdr-programa').textContent = icono + ' ' + p.nombre;
     document.getElementById('hdr-sub').textContent =
-        c.nombre + ' • ' + es.length + ' estudiante' + (es.length !== 1 ? 's' : '')
+        labelNom + ': ' + c.nombre + ' • ' + es.length + ' estudiante' + (es.length !== 1 ? 's' : '')
         + ' • ' + (c.fecha_inicio || '') + ' → ' + (c.fecha_fin || '');
+    document.title = icono + ' ' + p.nombre + ' — ' + labelNom + ' ' + c.nombre + ' | SiGPo';
 }
 
 /* ══════════════════════════════════════════════════
@@ -945,13 +948,14 @@ function renderTabla() {
     var estudiantes = V.data.estudiantes;
     var thead = document.getElementById('t-head');
     var tbody = document.getElementById('t-body');
+    var labelNom = typeof getLabelNomenclatura === 'function' ? getLabelNomenclatura(V.data.programa.tipo) : 'Cohorte';
 
     thead.innerHTML = '<tr>'
         + '<th class="col-check"><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>'
         + '<th class="col-name">Apellido y Nombre</th>'
         + '<th style="min-width:64px;text-align:center;">Desc %</th>'
         + '<th class="col-email">Correo electrónico</th>'
-        + '<th style="min-width:76px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>Cohorte</th>'
+        + '<th style="min-width:76px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>' + labelNom + '</th>'
         + columnas.map(function(c) {
             return '<th class="col-cuota">' + escapeHtml(c.concepto_base) + '<br><span style="font-weight:400;color:#888;font-size:9px;">' + escapeHtml(c.periodo || '') + '</span></th>';
           }).join('')
@@ -1240,8 +1244,10 @@ function abrirCrearCuota() {
     var total = V.data ? V.data.estudiantes.length : 0;
     document.getElementById('plan-n-todos').textContent = total;
     if (V.data) {
+        var labelNom = typeof getLabelNomenclatura === 'function' ? getLabelNomenclatura(V.data.programa.tipo) : 'Cohorte';
         document.getElementById('cuota-sub').textContent =
             V.data.programa.nombre + ' · ' + V.data.cohorte.nombre;
+        document.getElementById('plan-toda-label').textContent = 'Toda la ' + labelNom.toLowerCase();
     }
     planFilas = [
         { nombre: 'Inscripción', periodo: planPeriodoSiguiente(0), monto: '', vencimiento: planFechaDefault(0) },
@@ -1393,7 +1399,8 @@ function confirmarCambioEstado(dni, nombre, nuevoEstado) {
     hdr.style.background = esBaja
         ? 'linear-gradient(135deg,#e65100 0%,#f59e0b 100%)'
         : 'linear-gradient(135deg,#2d7a4f 0%,#4caf50 100%)';
-    document.getElementById('mbc-titulo').textContent = esBaja ? '⛔ Dar de baja (PASIVO)' : '✅ Alta en esta cohorte';
+    var labelNomBaja = typeof getLabelNomenclatura === 'function' && V.data ? getLabelNomenclatura(V.data.programa.tipo).toLowerCase() : 'cohorte';
+    document.getElementById('mbc-titulo').textContent = esBaja ? '⛔ Dar de baja (PASIVO)' : '✅ Alta en esta ' + labelNomBaja;
     document.getElementById('mbc-sub').textContent    = V.data ? V.data.programa.nombre + ' · ' + V.data.cohorte.nombre : '';
     var btn = document.getElementById('mbc-btn');
     btn.textContent       = esBaja ? '⛔ Confirmar Baja (PASIVO)' : '✅ Confirmar Alta';
