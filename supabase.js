@@ -609,12 +609,33 @@ async function obtenerDashboardAdmin() {
         programas: programas.map(function (p) {
             var estsProg = estudiantes.filter(function (e) { return e.programa_id === p.programa_id; });
             var cohsProg = cohortes.filter(function (c) { return c.programa_id === p.programa_id; });
+            var cobrosProg = cobros.filter(function (c) { return c.programa_id === p.programa_id; });
+            var egresosProg = egresos.filter(function (e) { return e.programa_id === p.programa_id; });
+
+            var enMoraProg = 0;
+            estsProg.forEach(function (est) {
+                if (cobrosProg.some(function (c) { return c.dni === est.dni && c.estado === 'EN_MORA'; })) enMoraProg++;
+            });
+
+            var recaudadoProg = cobrosProg.reduce(function (s, c) {
+                return s + (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0));
+            }, 0);
+
+            var egresosPagadosProg = egresosProg.reduce(function (s, e) {
+                return s + Number(e.monto_pagado || 0);
+            }, 0);
+
             return {
                 id: p.programa_id,
                 nombre: p.nombre,
                 tipo: p.tipo,
                 estudiantes: estsProg.length,
-                cohortes: cohsProg.length
+                cohortes: cohsProg.length,
+                alDia: estsProg.length - enMoraProg,
+                enMora: enMoraProg,
+                recaudado: recaudadoProg,
+                egresos: egresosPagadosProg,
+                saldo: recaudadoProg - egresosPagadosProg
             };
         })
     };
