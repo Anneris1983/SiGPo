@@ -175,6 +175,51 @@ const RUTAS_POR_ROL = {
 };
 
 // ══════════════════════════════════════════════════════════════
+// TAXONOMÍA: PROGRAMAS vs CURSOS
+// Programas (posgrado): DOCTORADO, MAESTRIA, ESPECIALIZACION → sub-unidad: Cohorte
+// Cursos: DIPLOMADO, DIPLOMATURA, CURSO → sub-unidad: Edición
+// ══════════════════════════════════════════════════════════════
+
+var TIPOS_PROGRAMA = ['DOCTORADO', 'MAESTRIA', 'ESPECIALIZACION'];
+var TIPOS_CURSO    = ['DIPLOMADO', 'DIPLOMATURA', 'CURSO'];
+
+/**
+ * Devuelve 'Programa' o 'Curso' según el tipo
+ */
+function getCategoriaPrograma(tipo) {
+    return TIPOS_PROGRAMA.indexOf(tipo) >= 0 ? 'Programa' : 'Curso';
+}
+
+/**
+ * Devuelve 'Cohorte' o 'Edición' según el tipo de programa
+ */
+function getLabelNomenclatura(tipo) {
+    return TIPOS_PROGRAMA.indexOf(tipo) >= 0 ? 'Cohorte' : 'Edición';
+}
+
+/**
+ * Devuelve 'Cohortes' o 'Ediciones' (plural)
+ */
+function getLabelNomenclaturaPlural(tipo) {
+    return TIPOS_PROGRAMA.indexOf(tipo) >= 0 ? 'Cohortes' : 'Ediciones';
+}
+
+/**
+ * Ícono por tipo de programa/curso
+ */
+function getIconoTipo(tipo) {
+    var iconos = {
+        'DOCTORADO':      '🎓',
+        'MAESTRIA':       '📊',
+        'ESPECIALIZACION':'💼',
+        'DIPLOMADO':      '🏅',
+        'DIPLOMATURA':    '📜',
+        'CURSO':          '📖'
+    };
+    return iconos[tipo] || '📚';
+}
+
+// ══════════════════════════════════════════════════════════════
 // NOTIFICACIONES (campana)
 // ══════════════════════════════════════════════════════════════
 
@@ -598,8 +643,13 @@ async function obtenerDashboardAdmin() {
         if (cobros.some(function (c) { return c.dni === est.dni && c.estado === 'EN_MORA'; })) enMora++;
     });
 
+    var totalProgramasPosgrado = programas.filter(function(p) { return TIPOS_PROGRAMA.indexOf(p.tipo) >= 0; }).length;
+    var totalCursos = programas.filter(function(p) { return TIPOS_CURSO.indexOf(p.tipo) >= 0; }).length;
+
     return {
         totalProgramas: programas.length,
+        totalProgramasPosgrado: totalProgramasPosgrado,
+        totalCursos: totalCursos,
         estudiantesActivos: estudiantes.length,
         alDia: estudiantes.length - enMora,
         enMora: enMora,
@@ -629,6 +679,8 @@ async function obtenerDashboardAdmin() {
                 id: p.programa_id,
                 nombre: p.nombre,
                 tipo: p.tipo,
+                categoria: getCategoriaPrograma(p.tipo),
+                labelNomenclatura: getLabelNomenclaturaPlural(p.tipo),
                 estudiantes: estsProg.length,
                 cohortes: cohsProg.length,
                 alDia: estsProg.length - enMoraProg,
