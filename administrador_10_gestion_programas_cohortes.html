@@ -3,952 +3,689 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Programas y Cohortes - Admin</title>
+    <title>Gestión de Programas y Cohortes - SiGPo</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #2d7a4f; }
+        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #2d7a4f; --danger: #dc2626; }
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
-        
+
         .header { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 20px 40px; }
         .header-content { display: flex; justify-content: space-between; align-items: flex-start; }
-        .header-left { flex: 1; }
         .breadcrumb { font-size: 14px; margin-bottom: 12px; }
         .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
         .header h1 { font-family: 'Crimson Pro', serif; font-size: 24px; }
-        .logout-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
-        
-        .container { max-width: 1200px; margin: 40px auto; padding: 0 40px; }
-        
-        .tabs { display: flex; gap: 0; margin-bottom: 32px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .tab { flex: 1; padding: 16px 24px; text-align: center; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s; }
-        .tab:hover { background: #f8f6f1; }
+        .header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+        .logout-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+        .container { max-width: 1200px; margin: 32px auto; padding: 0 32px; }
+
+        .tabs { display: flex; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 28px; }
+        .tab { flex: 1; padding: 16px 24px; text-align: center; font-weight: 600; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; color: #666; }
+        .tab:hover { background: #f8f6f1; color: var(--primary); }
         .tab.active { border-bottom-color: var(--accent); color: var(--primary); background: #f8f6f1; }
-        
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        
-        .card { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-        .card-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px; }
-        .stat-box { background: #f8f6f1; padding: 20px; border-radius: 8px; text-align: center; }
-        .stat-value { font-size: 32px; font-weight: 700; color: var(--primary); }
-        .stat-label { font-size: 13px; color: #666; margin-top: 4px; }
-        
-        .toolbar { display: flex; gap: 12px; margin-bottom: 24px; align-items: center; }
-        .search-box { flex: 1; position: relative; }
-        .search-box input { width: 100%; padding: 12px 16px 12px 40px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
-        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999; }
-        
-        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: 'DM Sans', sans-serif; }
+
+        .card { background: white; border-radius: 12px; padding: 28px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .card-title { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e8e8e8; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .stat-box { background: #f8f6f1; padding: 16px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 11px; color: #666; margin-top: 4px; }
+
+        .toolbar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 200px; position: relative; }
+        .search-box input { width: 100%; padding: 10px 16px 10px 36px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; }
+        .search-box input:focus { outline: none; border-color: var(--accent); }
+        .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #999; }
+
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
-        .btn-secondary { background: #e0e0e0; color: #2c2c2c; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .btn-small { padding: 8px 16px; font-size: 13px; }
-        
-        .program-section { margin-bottom: 32px; }
-        .section-header { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 16px; padding: 12px 16px; background: #f8f6f1; border-radius: 8px; }
-        
-        .program-card { background: white; border: 2px solid #e8e8e8; border-radius: 12px; padding: 20px; margin-bottom: 16px; transition: all 0.3s; }
-        .program-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
-        .program-name { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
-        .program-meta { font-size: 13px; color: #666; margin-bottom: 12px; }
-        .program-meta span { margin-right: 16px; }
-        .program-actions { display: flex; gap: 8px; }
-        
-        .cohorte-card { background: #f8f6f1; border: 2px solid #e0e0e0; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-        .cohorte-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .cohorte-name { font-size: 16px; font-weight: 700; color: var(--primary); }
-        .cohorte-status { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-        .status-active { background: #d4edda; color: #155724; }
-        .status-closed { background: #f8d7da; color: #721c24; }
-        .cohorte-info { font-size: 13px; color: #666; line-height: 1.6; }
-        .cohorte-actions { margin-top: 16px; display: flex; gap: 8px; }
-        
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal-content { background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { padding: 24px; border-bottom: 2px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
-        .modal-title { font-size: 20px; font-weight: 700; color: var(--primary); }
-        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
-        .modal-body { padding: 24px; }
-        .modal-footer { padding: 24px; border-top: 2px solid #e0e0e0; display: flex; gap: 12px; justify-content: flex-end; }
-        
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--primary); font-size: 14px; }
-        .form-input, .form-select, .form-textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; }
-        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
-        .form-textarea { resize: vertical; min-height: 80px; }
-        
-        .radio-group { display: flex; gap: 20px; }
-        .radio-option { display: flex; align-items: center; gap: 8px; }
-        .radio-option input[type="radio"] { width: 18px; height: 18px; }
-        
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        
-        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
-        .empty-state-icon { font-size: 64px; margin-bottom: 16px; }
-        .empty-state-text { font-size: 16px; }
-        
-        .program-selector { margin-bottom: 24px; }
+        .btn-secondary { background: #f0f0f0; color: #333; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        .section-hdr { font-size: 14px; font-weight: 700; color: var(--primary); padding: 9px 14px; background: #eef2f7; border-radius: 8px; margin-bottom: 10px; margin-top: 18px; display: flex; justify-content: space-between; align-items: center; }
+        .section-count { font-size: 11px; background: var(--primary); color: white; padding: 2px 8px; border-radius: 10px; }
+
+        .prog-card { border: 2px solid #e8e8e8; border-radius: 10px; padding: 16px; margin-bottom: 10px; transition: all 0.2s; }
+        .prog-card:hover { border-color: var(--accent); box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+        .prog-name { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+        .prog-meta { font-size: 12px; color: #666; margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
+        .prog-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .coh-card { border: 2px solid #e8e8e8; border-radius: 10px; padding: 16px; margin-bottom: 10px; }
+        .coh-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .coh-name { font-size: 15px; font-weight: 700; color: var(--primary); }
+        .badge { padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+        .badge-active { background: #d1fae5; color: #065f46; }
+        .badge-closed { background: #fee2e2; color: #991b1b; }
+        .badge-finished { background: #e5e7eb; color: #374151; }
+        .coh-info { font-size: 12px; color: #555; line-height: 1.8; }
+        .coh-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .empty { text-align: center; padding: 48px 20px; color: #aaa; }
+        .empty-icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-text { font-size: 15px; }
+
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; border-radius: 14px; width: 90%; max-width: 540px; max-height: 92vh; overflow-y: auto; }
+        .modal-hdr { padding: 20px 24px; border-bottom: 2px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 1; }
+        .modal-hdr h2 { font-size: 17px; font-weight: 700; color: var(--primary); }
+        .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #999; }
+        .modal-body { padding: 22px 24px; }
+        .modal-footer { padding: 16px 24px; border-top: 2px solid #e8e8e8; display: flex; gap: 10px; justify-content: flex-end; }
+
+        .mfield { margin-bottom: 16px; }
+        .mfield label { display: block; font-weight: 600; font-size: 13px; color: var(--primary); margin-bottom: 5px; }
+        .mfield input, .mfield select, .mfield textarea { width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; }
+        .mfield input:focus, .mfield select:focus, .mfield textarea:focus { outline: none; border-color: var(--accent); }
+        .mfield textarea { resize: vertical; min-height: 70px; }
+        .mgrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .mhint { font-size: 11px; color: #888; margin-top: 4px; }
+
+        .prog-selector { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; }
+        .prog-selector > div { flex: 1; min-width: 200px; }
+        .prog-selector label { display: block; font-weight: 600; font-size: 13px; color: var(--primary); margin-bottom: 5px; }
+        .prog-selector select { width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; }
+        .prog-selector select:focus { outline: none; border-color: var(--accent); }
+
+        .spinner { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.7); z-index: 9999; align-items: center; justify-content: center; }
+        .spinner.active { display: flex; }
+        .spin-c { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #toasts { position: fixed; bottom: 24px; right: 24px; z-index: 9998; display: flex; flex-direction: column; gap: 8px; }
+        .toast { padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; color: white; background: #333; box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: si 0.3s ease; }
+        .toast.ok { background: var(--success); }
+        .toast.err { background: var(--danger); }
+        @keyframes si { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .notif-wrapper { position: relative; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <div class="header-left">
-                <div class="breadcrumb"><a href="administrador_2_dashboard.html" onclick="navegar('administrador_2_dashboard.html'); return false;">← Volver al Dashboard</a></div>
-                <h1>📚 Gestión de Programas/Cursos y Cohortes/Ediciones</h1>
-                <p>Administración de cursos, maestrías, doctorados y sus ediciones</p>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px;">
-                <!-- Campana -->
-                <div class="notif-wrapper" style="position:relative;">
-                    <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
-                    </button>
-                    <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
-                        <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                            <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
-                            <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
-                        </div>
-                        <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
-                    </div>
-                </div>
-                <button class="logout-btn" onclick="cerrarSesion(event)">Cerrar Sesión</button>
-            </div>
+
+<div class="header">
+    <div class="header-content">
+        <div>
+            <div class="breadcrumb"><a href="administrador_2_dashboard.html">← Volver al Dashboard</a></div>
+            <h1>📚 Gestión de Programas y Cohortes</h1>
+            <p>Administración de programas de posgrado y sus cohortes/ediciones</p>
         </div>
-    </div>
-
-    <div class="container">
-        <!-- TABS -->
-        <div class="tabs">
-            <div class="tab active" onclick="switchTab('programas')">📚 Programas/Cursos</div>
-            <div class="tab" onclick="switchTab('cohortes')">📖 Cohortes/Ediciones</div>
-        </div>
-
-        <!-- TAB: PROGRAMAS -->
-        <div id="tab-programas" class="tab-content active">
-            <div class="card">
-                <h2 class="card-title">📊 Resumen General</h2>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-value">15</div>
-                        <div class="stat-label">Total Programas</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-value">3</div>
-                        <div class="stat-label">Doctorados</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-value">7</div>
-                        <div class="stat-label">Maestrías</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-value">5</div>
-                        <div class="stat-label">Especializaciones</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="toolbar">
-                    <div class="search-box">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" placeholder="Buscar programa por nombre o código...">
-                    </div>
-                    <button class="btn btn-primary" onclick="openModal('modalPrograma')">+ Nuevo Programa/Curso</button>
-                </div>
-
-                <!-- DOCTORADOS -->
-                <div class="program-section">
-                    <div class="section-header">🎓 DOCTORADOS (3)</div>
-                    
-                    <div class="program-card">
-                        <div class="program-name">Doctorado en Ciencias Económicas</div>
-                        <div class="program-meta">
-                            <span>📋 Código: DOCT-CE-001</span>
-                            <span>📖 2 cohortes activas</span>
-                            <span>👨‍🏫 Coord: Dr. Juan Pérez</span>
-                        </div>
-                        <div class="program-actions">
-                            <button class="btn btn-secondary btn-small" onclick="editProgram(1)">✏️ Editar</button>
-                            <button class="btn btn-secondary btn-small" onclick="viewCohortes(1)">👁️ Ver Cohortes</button>
-                            <button class="btn btn-danger btn-small">🗑️ Eliminar</button>
-                        </div>
-                    </div>
-
-                    <div class="program-card">
-                        <div class="program-name">Doctorado en Administración</div>
-                        <div class="program-meta">
-                            <span>📋 Código: DOCT-ADM-001</span>
-                            <span>📖 1 cohorte activa</span>
-                            <span>👨‍🏫 Coord: Dra. Laura Martínez</span>
-                        </div>
-                        <div class="program-actions">
-                            <button class="btn btn-secondary btn-small" onclick="editProgram(2)">✏️ Editar</button>
-                            <button class="btn btn-secondary btn-small" onclick="viewCohortes(2)">👁️ Ver Cohortes</button>
-                            <button class="btn btn-danger btn-small">🗑️ Eliminar</button>
-                        </div>
-                    </div>
-
-                    <div class="program-card">
-                        <div class="program-name">Doctorado en Relaciones Internacionales</div>
-                        <div class="program-meta">
-                            <span>📋 Código: DOCT-RI-001</span>
-                            <span>📖 1 cohorte activa</span>
-                            <span>👨‍🏫 Coord: Dr. Carlos Gómez</span>
-                        </div>
-                        <div class="program-actions">
-                            <button class="btn btn-secondary btn-small" onclick="editProgram(3)">✏️ Editar</button>
-                            <button class="btn btn-secondary btn-small" onclick="viewCohortes(3)">👁️ Ver Cohortes</button>
-                            <button class="btn btn-danger btn-small">🗑️ Eliminar</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MAESTRÍAS -->
-                <div class="program-section">
-                    <div class="section-header">📊 MAESTRÍAS (7)</div>
-                    
-                    <div class="program-card">
-                        <div class="program-name">Maestría en Dirección de Negocios (MBM)</div>
-                        <div class="program-meta">
-                            <span>📋 Código: MAES-MBM-001</span>
-                            <span>📖 3 cohortes activas</span>
-                            <span>👨‍🏫 Coord: Mg. María González</span>
-                        </div>
-                        <div class="program-actions">
-                            <button class="btn btn-secondary btn-small" onclick="editProgram(4)">✏️ Editar</button>
-                            <button class="btn btn-secondary btn-small" onclick="viewCohortes(4)">👁️ Ver Cohortes</button>
-                            <button class="btn btn-danger btn-small">🗑️ Eliminar</button>
-                        </div>
-                    </div>
-
-                    <div class="program-card">
-                        <div class="program-name">Maestría en Gestión de Negocios Agroalimentarios</div>
-                        <div class="program-meta">
-                            <span>📋 Código: MAES-MAGNAGRO-001</span>
-                            <span>📖 2 cohortes activas</span>
-                            <span>👨‍🏫 Coord: Mg. Alfredo Fonzar</span>
-                        </div>
-                        <div class="program-actions">
-                            <button class="btn btn-secondary btn-small" onclick="editProgram(5)">✏️ Editar</button>
-                            <button class="btn btn-secondary btn-small" onclick="viewCohortes(5)">👁️ Ver Cohortes</button>
-                            <button class="btn btn-danger btn-small">🗑️ Eliminar</button>
-                        </div>
-                    </div>
-
-                    <div class="program-card">
-                        <div class="program-name">Maestría en Responsabilidad Social (MRS)</div>
-                        <div class="program-meta">
-                            <span>📋 Código: MAES-MRS-001</span>
-                            <span>📖 1 cohorte activa</span>
-                            <span>👨‍🏫 Coord: Mg. Ana Ruiz</span>
-                        </div>
-                        <div class="program-actions">
-                            <button class="btn btn-secondary btn-small" onclick="editProgram(6)">✏️ Editar</button>
-                            <button class="btn btn-secondary btn-small" onclick="viewCohortes(6)">👁️ Ver Cohortes</button>
-                            <button class="btn btn-danger btn-small">🗑️ Eliminar</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ESPECIALIZACIONES -->
-                <div class="program-section">
-                    <div class="section-header">💼 ESPECIALIZACIONES (5)</div>
-                    
-                    <div class="program-card">
-                        <div class="program-name">Especialización en Costos y Gestión Empresarial</div>
-                        <div class="program-meta">
-                            <span>📋 Código: ESPE-CGE-001</span>
-                            <span>📖 2 cohortes activas</span>
-                            <span>👨‍🏫 Coord: Esp. Carlos Ruiz</span>
-                        </div>
-                        <div class="program-actions">
-                            <button class="btn btn-secondary btn-small" onclick="editProgram(7)">✏️ Editar</button>
-                            <button class="btn btn-secondary btn-small" onclick="viewCohortes(7)">👁️ Ver Cohortes</button>
-                            <button class="btn btn-danger btn-small">🗑️ Eliminar</button>
-                        </div>
-                    </div>
-
-                    <div class="program-card">
-                        <div class="program-name">Especialización en Tributación</div>
-                        <div class="program-meta">
-                            <span>📋 Código: ESPE-TRIB-001</span>
-                            <span>📖 1 cohorte activa</span>
-                            <span>👨‍🏫 Coord: Esp. Roberto Díaz</span>
-                        </div>
-                        <div class="program-actions">
-                            <button class="btn btn-secondary btn-small" onclick="editProgram(8)">✏️ Editar</button>
-                            <button class="btn btn-secondary btn-small" onclick="viewCohortes(8)">👁️ Ver Cohortes</button>
-                            <button class="btn btn-danger btn-small">🗑️ Eliminar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB: COHORTES -->
-        <div id="tab-cohortes" class="tab-content">
-            <div class="card">
-                <div class="program-selector">
-                    <label class="form-label">Seleccionar Programa:</label>
-                    <select class="form-select" onchange="loadCohortes(this.value)">
-                        <option value="">-- Seleccionar programa --</option>
-                        <option value="1">Doctorado en Ciencias Económicas</option>
-                        <option value="4">Maestría en Dirección de Negocios (MBM)</option>
-                        <option value="7" selected>Especialización en Costos y Gestión Empresarial</option>
-                    </select>
-                </div>
-
-                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-                    <button class="btn btn-primary" onclick="openModal('modalCohorte')">+ Nueva Cohorte/Edición</button>
-                    <button class="btn btn-success" onclick="openModal('modalImportarCohorte')">📥 Importar Cohorte</button>
-                </div>
-
-                <h2 class="card-title">📚 Cohortes de: Especialización en Costos y Gestión Empresarial</h2>
-
-                <!-- COHORTE ACTIVA -->
-                <div class="cohorte-card">
-                    <div class="cohorte-header">
-                        <div class="cohorte-name">📖 Cohorte 2025-2026</div>
-                        <div class="cohorte-status status-active">🟢 ACTIVA</div>
-                    </div>
-                    <div class="cohorte-info">
-                        <div><strong>Período:</strong> 01/03/2025 - 30/11/2026</div>
-                        <div><strong>Estudiantes:</strong> 18 activos, 2 baja</div>
-                        <div><strong>Cuotas:</strong> 12 mensuales</div>
-                        <div><strong>Recaudado:</strong> $8.450.000 de $12.000.000 estimado</div>
-                    </div>
-                    <div class="cohorte-actions">
-                        <button class="btn btn-secondary btn-small" onclick="editCohorte(1)">✏️ Editar</button>
-                        <button class="btn btn-secondary btn-small">👥 Ver Estudiantes</button>
-                        <button class="btn btn-danger btn-small">🔒 Cerrar Cohorte</button>
-                        <button class="btn btn-danger btn-small">🗑️ Eliminar</button>
-                    </div>
-                </div>
-
-                <!-- COHORTE CERRADA -->
-                <div class="cohorte-card">
-                    <div class="cohorte-header">
-                        <div class="cohorte-name">📖 Cohorte 2024-2025</div>
-                        <div class="cohorte-status status-closed">🔴 CERRADA</div>
-                    </div>
-                    <div class="cohorte-info">
-                        <div><strong>Período:</strong> 01/03/2024 - 30/11/2025</div>
-                        <div><strong>Estudiantes:</strong> 22 egresados, 3 abandono</div>
-                        <div><strong>Cuotas:</strong> 12 mensuales</div>
-                        <div><strong>Recaudado:</strong> $11.200.000 (100% completado)</div>
-                        <div><strong>Fecha de cierre:</strong> 15/12/2025</div>
-                    </div>
-                    <div class="cohorte-actions">
-                        <button class="btn btn-secondary btn-small">👁️ Ver Detalles</button>
-                        <button class="btn btn-secondary btn-small">📊 Reporte Final</button>
-                    </div>
-                </div>
-
-                <div class="cohorte-card">
-                    <div class="cohorte-header">
-                        <div class="cohorte-name">📖 Cohorte 2023-2024</div>
-                        <div class="cohorte-status status-closed">🔴 CERRADA</div>
-                    </div>
-                    <div class="cohorte-info">
-                        <div><strong>Período:</strong> 01/03/2023 - 30/11/2024</div>
-                        <div><strong>Estudiantes:</strong> 20 egresados, 1 abandono</div>
-                        <div><strong>Cuotas:</strong> 12 mensuales</div>
-                        <div><strong>Recaudado:</strong> $9.800.000 (100% completado)</div>
-                        <div><strong>Fecha de cierre:</strong> 20/12/2024</div>
-                    </div>
-                    <div class="cohorte-actions">
-                        <button class="btn btn-secondary btn-small">👁️ Ver Detalles</button>
-                        <button class="btn btn-secondary btn-small">📊 Reporte Final</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: CREAR/EDITAR PROGRAMA -->
-    <div id="modalPrograma" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">✏️ Nuevo Programa</div>
-                <button class="modal-close" onclick="closeModal('modalPrograma')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Tipo de Programa</label>
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" name="tipo" value="doctorado" id="tipo1">
-                            <label for="tipo1">Doctorado</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="tipo" value="maestria" id="tipo2" checked>
-                            <label for="tipo2">Maestría</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="tipo" value="especializacion" id="tipo3">
-                            <label for="tipo3">Especialización</label>
-                        </div>
-                    </div>
-                    <div class="radio-group" style="margin-top: 8px;">
-                        <div class="radio-option">
-                            <input type="radio" name="tipo" value="diplomado" id="tipo4">
-                            <label for="tipo4">Diplomado</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="tipo" value="micromaestria" id="tipo5">
-                            <label for="tipo5">Micro Maestría</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Nombre Completo del Programa</label>
-                    <input type="text" class="form-input" placeholder="Ej: Maestría en Dirección de Negocios">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Código del Programa</label>
-                    <input type="text" class="form-input" placeholder="Ej: MAES-MBM-001">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Coordinador</label>
-                    <select class="form-select">
-                        <option value="">-- Seleccionar coordinador --</option>
-                        <option value="1">Dr. Juan Pérez</option>
-                        <option value="2">Dra. Laura Martínez</option>
-                        <option value="3">Mg. María González</option>
-                        <option value="4">Mg. Alfredo Fonzar</option>
-                        <option value="5">Esp. Carlos Ruiz</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Email del Coordinador</label>
-                    <input type="email" class="form-input" placeholder="coordinador@fce.uncu.edu.ar">
-                </div>
-
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Duración (meses)</label>
-                        <input type="number" class="form-input" value="24">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Cantidad de Cuotas (por defecto)</label>
-                        <input type="number" class="form-input" value="12">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Estado</label>
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" name="estado_prog" value="activo" id="estado1" checked>
-                            <label for="estado1">Activo</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="estado_prog" value="inactivo" id="estado2">
-                            <label for="estado2">Inactivo</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Observaciones (Opcional)</label>
-                    <textarea class="form-textarea" placeholder="Información adicional sobre el programa..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('modalPrograma')">❌ Cancelar</button>
-                <button class="btn btn-success">✅ Guardar Programa</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: CREAR/EDITAR COHORTE -->
-    <div id="modalCohorte" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">✏️ Nueva Cohorte</div>
-                <button class="modal-close" onclick="closeModal('modalCohorte')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Programa</label>
-                    <select class="form-select">
-                        <option value="">-- Seleccionar programa --</option>
-                        <option value="1">Doctorado en Ciencias Económicas</option>
-                        <option value="4">Maestría en Dirección de Negocios (MBM)</option>
-                        <option value="7" selected>Especialización en Costos y Gestión Empresarial</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Nombre de la Cohorte/Edición</label>
-                    <input type="text" class="form-input" placeholder="Ej: Cohorte 2026-2027" value="Cohorte 2026-2027">
-                </div>
-
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Año de Inicio</label>
-                        <input type="number" class="form-input" value="2026">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Año de Fin</label>
-                        <input type="number" class="form-input" value="2027">
-                    </div>
-                </div>
-
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Fecha de Inicio</label>
-                        <input type="date" class="form-input" value="2026-03-01">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Fecha de Fin</label>
-                        <input type="date" class="form-input" value="2027-11-30">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Cantidad de Cuotas</label>
-                    <input type="number" class="form-input" value="12">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Estado</label>
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" name="estado_coh" value="activa" id="estado_coh1" checked>
-                            <label for="estado_coh1">Activa</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="estado_coh" value="cerrada" id="estado_coh2">
-                            <label for="estado_coh2">Cerrada</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Observaciones (Opcional)</label>
-                    <textarea class="form-textarea" placeholder="Información adicional sobre la cohorte..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('modalCohorte')">❌ Cancelar</button>
-                <button class="btn btn-success">✅ Crear Cohorte</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: IMPORTAR COHORTE -->
-    <div id="modalImportarCohorte" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <div class="modal-title">📥 Importar Cohorte desde Excel</div>
-                <button class="modal-close" onclick="closeModal('modalImportarCohorte')">×</button>
-            </div>
-            <div class="modal-body">
-                <div style="background: #e0f2fe; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                    <h3 style="font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 12px;">📋 Formato del Excel</h3>
-                    <p style="font-size: 14px; color: #666; margin-bottom: 12px;">El archivo Excel debe tener las siguientes columnas:</p>
-                    <div style="background: white; padding: 12px; border-radius: 6px; font-size: 13px; font-family: 'Courier New', monospace; overflow-x: auto;">
-                        <strong>Columnas obligatorias:</strong><br>
-                        • Programa<br>
-                        • Cohorte<br>
-                        • DNI<br>
-                        • Apellido<br>
-                        • Nombre<br>
-                        • Email<br>
-                        • Descuento %<br>
-                        • Cantidad Cuotas<br><br>
-                        <strong>Por cada cuota (C1, C2, C3...):</strong><br>
-                        • C1_Monto<br>
-                        • C1_Estado (Abonada/Pendiente/Mora/Parcial/vacío)<br>
-                        • C1_Fecha_Pago (DD/MM/AAAA)<br>
-                        • C1_Abonado (monto pagado, solo si es parcial)<br>
-                        ...repetir para C2, C3, etc.
-                    </div>
-                </div>
-
-                <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                    <h4 style="font-size: 14px; font-weight: 700; color: #92400e; margin-bottom: 8px;">⚠️ Importante:</h4>
-                    <ul style="font-size: 13px; color: #92400e; margin-left: 20px; line-height: 1.6;">
-                        <li>La columna "Cantidad Cuotas" define cuántas cuotas debe el estudiante</li>
-                        <li>Las fechas de pago son obligatorias si Estado = "Abonada" o "Parcial"</li>
-                        <li>El formato de fecha debe ser DD/MM/AAAA o AAAA-MM-DD</li>
-                        <li>Si Estado = "Parcial", debe completar C#_Abonado con el monto pagado</li>
-                    </ul>
-                </div>
-
-                <div class="form-group">
-                    <button class="btn btn-primary" style="width: 100%;" onclick="descargarTemplate()">
-                        📄 Descargar Template Excel (.xlsx)
-                    </button>
-                </div>
-
-                <div class="form-group" style="margin-top: 24px;">
-                    <label class="form-label">Seleccionar archivo Excel</label>
-                    <input type="file" id="file-excel-import" accept=".xlsx,.xls" class="form-input" 
-                           onchange="procesarArchivoExcel(event)" style="padding: 10px;">
-                </div>
-
-                <div id="preview-import" style="display: none; margin-top: 24px;">
-                    <h3 style="font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 12px;">
-                        ✅ Vista Previa de Importación
-                    </h3>
-                    <div style="background: #f8f6f1; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
-                            <div>
-                                <div style="font-size: 12px; color: #666;">Programa</div>
-                                <div id="preview-programa" style="font-size: 16px; font-weight: 700; color: var(--primary);"></div>
-                            </div>
-                            <div>
-                                <div style="font-size: 12px; color: #666;">Cohorte</div>
-                                <div id="preview-cohorte" style="font-size: 16px; font-weight: 700; color: var(--primary);"></div>
-                            </div>
-                            <div>
-                                <div style="font-size: 12px; color: #666;">Estudiantes</div>
-                                <div id="preview-estudiantes" style="font-size: 16px; font-weight: 700; color: var(--primary);"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="max-height: 300px; overflow-y: auto; border: 2px solid #e0e0e0; border-radius: 8px;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                            <thead style="background: #f8f6f1; position: sticky; top: 0;">
-                                <tr>
-                                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e0e0e0;">DNI</th>
-                                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e0e0e0;">Apellido y Nombre</th>
-                                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid #e0e0e0;">Descuento</th>
-                                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid #e0e0e0;">Cant. Cuotas</th>
-                                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid #e0e0e0;">Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody id="preview-table-body">
-                                <!-- Se llenará dinámicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="errores-import" style="display: none; margin-top: 20px; background: #fee2e2; padding: 16px; border-radius: 8px; border: 2px solid #f87171;">
-                    <h4 style="font-size: 14px; font-weight: 700; color: #991b1b; margin-bottom: 8px;">❌ Errores de Validación:</h4>
-                    <ul id="lista-errores" style="font-size: 13px; color: #991b1b; margin-left: 20px; line-height: 1.8;"></ul>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('modalImportarCohorte')">❌ Cancelar</button>
-                <button class="btn btn-success" id="btn-confirmar-import" onclick="confirmarImportacion()" disabled>
-                    ✅ Confirmar Importación
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="notif-wrapper">
+                <button onclick="toggleNotif()" style="background:none;border:none;cursor:pointer;padding:8px;border-radius:8px;position:relative;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;border:2px solid #1e3a5f;">0</span>
                 </button>
+                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:360px;max-height:440px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                    <div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:14px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasNotificacionesLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;">Marcar leídas</button>
+                    </div>
+                    <div id="notif-list"><div style="padding:32px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div></div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="cerrarSesion(event)">⬡ Cerrar Sesión</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('programas')">📚 Programas/Cursos</div>
+        <div class="tab" onclick="switchTab('cohortes')">📖 Cohortes/Ediciones</div>
+    </div>
+
+    <!-- TAB PROGRAMAS -->
+    <div id="tab-programas" class="tab-content active">
+        <div class="card">
+            <h2 class="card-title">📊 Resumen General</h2>
+            <div class="stats-grid">
+                <div class="stat-box"><div class="stat-value" id="stat-total">—</div><div class="stat-label">Total Programas</div></div>
+                <div class="stat-box"><div class="stat-value" id="stat-doc">—</div><div class="stat-label">Doctorados</div></div>
+                <div class="stat-box"><div class="stat-value" id="stat-mae">—</div><div class="stat-label">Maestrías</div></div>
+                <div class="stat-box"><div class="stat-value" id="stat-esp">—</div><div class="stat-label">Especializaciones</div></div>
+                <div class="stat-box"><div class="stat-value" id="stat-cur">—</div><div class="stat-label">Cursos/Diplomados</div></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="toolbar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="buscar-prog" placeholder="Buscar programa..." oninput="filtrarProgramas()">
+                </div>
+                <button class="btn btn-primary" onclick="abrirModalPrograma()">+ Nuevo Programa</button>
+            </div>
+            <div id="lista-programas">
+                <div class="empty"><div class="empty-icon">📚</div><div class="empty-text">Cargando...</div></div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- TAB COHORTES -->
+    <div id="tab-cohortes" class="tab-content">
+        <div class="card">
+            <div class="prog-selector">
+                <div>
+                    <label>Seleccionar Programa:</label>
+                    <select id="sel-prog" onchange="cargarCohortes()">
+                        <option value="">-- Seleccionar programa --</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="btn-nueva-coh" onclick="abrirModalCohorte()" disabled>+ Nueva Cohorte</button>
+            </div>
+            <div id="lista-cohortes">
+                <div class="empty"><div class="empty-icon">📖</div><div class="empty-text">Seleccioná un programa para ver sus cohortes</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PROGRAMA -->
+<div class="modal-overlay" id="modal-prog">
+    <div class="modal-box">
+        <div class="modal-hdr">
+            <h2 id="tit-prog">✏️ Nuevo Programa</h2>
+            <button class="modal-close" onclick="cerrarModal('modal-prog')">×</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="prog-id">
+            <div class="mfield">
+                <label>Tipo de Programa *</label>
+                <select id="prog-tipo">
+                    <option value="DOCTORADO">Doctorado</option>
+                    <option value="MAESTRIA" selected>Maestría</option>
+                    <option value="ESPECIALIZACION">Especialización</option>
+                    <option value="DIPLOMADO">Diplomado</option>
+                    <option value="DIPLOMATURA">Diplomatura</option>
+                    <option value="MICRO_MAESTRIA">Micro Maestría</option>
+                    <option value="CURSO">Curso</option>
+                </select>
+            </div>
+            <div class="mfield">
+                <label>Nombre Completo *</label>
+                <input type="text" id="prog-nombre" placeholder="Ej: Maestría en Dirección de Negocios">
+            </div>
+            <div class="mfield">
+                <label>Coordinador(es)</label>
+                <select id="prog-coords" multiple style="min-height:90px;">
+                    <option disabled>Cargando...</option>
+                </select>
+                <div class="mhint">Mantené Ctrl/Cmd para seleccionar varios</div>
+            </div>
+            <div class="mfield">
+                <label>Descripción</label>
+                <textarea id="prog-desc" placeholder="Observaciones adicionales..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="cerrarModal('modal-prog')">Cancelar</button>
+            <button class="btn btn-success" onclick="guardarPrograma()">💾 Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL COHORTE -->
+<div class="modal-overlay" id="modal-coh">
+    <div class="modal-box">
+        <div class="modal-hdr">
+            <h2 id="tit-coh">✏️ Nueva Cohorte</h2>
+            <button class="modal-close" onclick="cerrarModal('modal-coh')">×</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="coh-id">
+            <div class="mfield">
+                <label>Nombre *</label>
+                <input type="text" id="coh-nombre" placeholder="Ej: Cohorte 2026-2027">
+            </div>
+            <div class="mgrid2">
+                <div class="mfield"><label>Fecha Inicio *</label><input type="date" id="coh-inicio"></div>
+                <div class="mfield"><label>Fecha Fin *</label><input type="date" id="coh-fin"></div>
+            </div>
+            <div class="mfield">
+                <label>Estado</label>
+                <select id="coh-estado">
+                    <option value="ACTIVO">Activo</option>
+                    <option value="CERRADO">Cerrado</option>
+                    <option value="FINALIZADO">Finalizado</option>
+                </select>
+            </div>
+            <div class="mfield">
+                <label>Observaciones</label>
+                <textarea id="coh-obs" placeholder="Info adicional..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="cerrarModal('modal-coh')">Cancelar</button>
+            <button class="btn btn-success" onclick="guardarCohorte()">💾 Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="spinner" id="spinner"><div class="spin-c"></div></div>
+<div id="toasts"></div>
+
 <script src="supabase.js"></script>
 <script>
-        var datosImportacion = null;
+var _programas = [];
+var _progActual = null;
 
-        function descargarTemplate() {
-            alert('📄 Generando template Excel...\n\n' +
-                  'El template incluirá:\n' +
-                  '- Todas las columnas obligatorias\n' +
-                  '- Ejemplos de datos de estudiantes\n' +
-                  '- Formato correcto para fechas\n' +
-                  '- Columnas dinámicas de cuotas (C1-C15)\n\n' +
-                  'Aquí se integraría con Google Apps Script para generar el archivo XLSX');
-            
-            // Aquí iría la integración con Google Apps Script para generar el Excel
-            console.log('Generando template con formato:');
-            console.log({
-                columnas: [
-                    'Programa', 'Cohorte', 'DNI', 'Apellido', 'Nombre', 'Email', 
-                    'Descuento %', 'Cantidad Cuotas',
-                    'C1_Monto', 'C1_Estado', 'C1_Fecha_Pago', 'C1_Abonado',
-                    'C2_Monto', 'C2_Estado', 'C2_Fecha_Pago', 'C2_Abonado',
-                    // ... hasta C15
-                ]
+// ── INIT ──────────────────────────────────
+document.addEventListener('DOMContentLoaded', async function() {
+    var ses = await requireAuth();
+    if (!ses) return;
+    if (ses.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
+    await cargarProgramas();
+    obtenerNotificaciones(ses.rol).then(renderNotificaciones);
+});
+
+// ── TABS ──────────────────────────────────
+function switchTab(tab) {
+    ['programas','cohortes'].forEach(function(t) {
+        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    });
+    document.querySelectorAll('.tab').forEach(function(el, i) {
+        el.classList.toggle('active', (i===0&&tab==='programas')||(i===1&&tab==='cohortes'));
+    });
+    if (tab === 'cohortes') poblarSelProg();
+}
+
+// ── HELPERS ───────────────────────────────
+function spin(on) { document.getElementById('spinner').classList.toggle('active', on); }
+function toast(msg, t) {
+    var d = document.createElement('div');
+    d.className = 'toast '+(t||'');
+    d.textContent = msg;
+    document.getElementById('toasts').appendChild(d);
+    setTimeout(function(){d.remove();}, 3500);
+}
+function abrirModal(id) { document.getElementById(id).classList.add('active'); }
+function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(function(m) {
+    m.addEventListener('click', function(e){ if(e.target===m) cerrarModal(m.id); });
+});
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fMonto(n) { return '$'+Math.round(Number(n)||0).toLocaleString('es-AR'); }
+
+function iconoTipo(t) {
+    return {DOCTORADO:'🎓',MAESTRIA:'📊',ESPECIALIZACION:'💼',DIPLOMADO:'🏅',DIPLOMATURA:'📜',MICRO_MAESTRIA:'🔬',CURSO:'📖'}[t]||'📚';
+}
+function labelTipo(t) {
+    return {DOCTORADO:'Doctorado',MAESTRIA:'Maestría',ESPECIALIZACION:'Especialización',DIPLOMADO:'Diplomado',DIPLOMATURA:'Diplomatura',MICRO_MAESTRIA:'Micro Maestría',CURSO:'Curso'}[t]||t;
+}
+
+// ── CARGAR PROGRAMAS ──────────────────────
+async function cargarProgramas() {
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var [progRes, cohRes, coordRes] = await Promise.all([
+            sb.from('programas').select('*').order('nombre'),
+            sb.from('cohortes').select('cohorte_id,programa_id,estado'),
+            sb.from('coordinadores_programas').select('programa_id,usuarios(nombre_completo)')
+        ]);
+        _programas = progRes.data || [];
+        var cohs = cohRes.data || [];
+        var coords = coordRes.data || [];
+
+        // Estudiantes activos por cohorte
+        var cohIds = cohs.map(function(c){return c.cohorte_id;});
+        var inscData = [];
+        if (cohIds.length) {
+            var ir = await sb.from('inscripciones').select('cohorte_id,estado_academico').in('cohorte_id',cohIds);
+            inscData = ir.data || [];
+        }
+
+        _programas = _programas.map(function(p) {
+            var cp = cohs.filter(function(c){return c.programa_id===p.programa_id;});
+            var cids = cp.map(function(c){return c.cohorte_id;});
+            var estAct = inscData.filter(function(i){return cids.indexOf(i.cohorte_id)>=0&&i.estado_academico==='ACTIVO';}).length;
+            var coordNombres = coords.filter(function(c){return c.programa_id===p.programa_id;})
+                .map(function(c){return c.usuarios?c.usuarios.nombre_completo:'';}).filter(Boolean);
+            return Object.assign({},p,{
+                cohortes_activas: cp.filter(function(c){return c.estado==='ACTIVO';}).length,
+                total_cohortes: cp.length,
+                est_activos: estAct,
+                coordinadores: coordNombres
+            });
+        });
+
+        // Stats
+        document.getElementById('stat-total').textContent = _programas.length;
+        document.getElementById('stat-doc').textContent   = _programas.filter(function(p){return p.tipo==='DOCTORADO';}).length;
+        document.getElementById('stat-mae').textContent   = _programas.filter(function(p){return p.tipo==='MAESTRIA';}).length;
+        document.getElementById('stat-esp').textContent   = _programas.filter(function(p){return p.tipo==='ESPECIALIZACION';}).length;
+        document.getElementById('stat-cur').textContent   = _programas.filter(function(p){return ['DIPLOMADO','DIPLOMATURA','MICRO_MAESTRIA','CURSO'].indexOf(p.tipo)>=0;}).length;
+
+        renderProgramas(_programas);
+    } catch(e) {
+        console.error(e);
+        toast('Error al cargar programas: '+e.message,'err');
+    } finally { spin(false); }
+}
+
+function renderProgramas(lista) {
+    var cont = document.getElementById('lista-programas');
+    if (!lista.length) {
+        cont.innerHTML = '<div class="empty"><div class="empty-icon">📚</div><div class="empty-text">No hay programas cargados aún.<br>Creá el primero con el botón de arriba.</div></div>';
+        return;
+    }
+    var grupos = {};
+    lista.forEach(function(p){ var t=p.tipo||'OTRO'; if(!grupos[t])grupos[t]=[]; grupos[t].push(p); });
+    var orden = ['DOCTORADO','MAESTRIA','ESPECIALIZACION','DIPLOMADO','DIPLOMATURA','MICRO_MAESTRIA','CURSO','OTRO'];
+    var html = '';
+    orden.forEach(function(tipo) {
+        if (!grupos[tipo]||!grupos[tipo].length) return;
+        html += '<div class="section-hdr">'+iconoTipo(tipo)+' '+labelTipo(tipo).toUpperCase()+'S<span class="section-count">'+grupos[tipo].length+'</span></div>';
+        grupos[tipo].forEach(function(p) {
+            var coordStr = p.coordinadores&&p.coordinadores.length ? '👤 '+esc(p.coordinadores.join(', ')) : '👤 Sin coordinador';
+            html += '<div class="prog-card">'
+                +'<div class="prog-name">'+iconoTipo(p.tipo)+' '+esc(p.nombre)+'</div>'
+                +'<div class="prog-meta">'
+                +'<span>📖 '+p.cohortes_activas+' cohorte'+(p.cohortes_activas!==1?'s':'')+' activa'+(p.cohortes_activas!==1?'s':'')+' · '+p.total_cohortes+' total</span>'
+                +'<span>👥 '+p.est_activos+' estudiante'+(p.est_activos!==1?'s':'')+' activo'+(p.est_activos!==1?'s':'')+' </span>'
+                +'<span>'+coordStr+'</span>'
+                +'</div>'
+                +'<div class="prog-actions">'
+                +'<button class="btn btn-secondary btn-sm" onclick="editarPrograma('+p.programa_id+')">✏️ Editar</button>'
+                +'<button class="btn btn-secondary btn-sm" onclick="irCohortes('+p.programa_id+')">📖 Ver Cohortes</button>'
+                +'<button class="btn btn-danger btn-sm" onclick="eliminarPrograma('+p.programa_id+',\''+esc(p.nombre).replace(/'/g,"\\'")+'\')">🗑️ Eliminar</button>'
+                +'</div></div>';
+        });
+    });
+    cont.innerHTML = html;
+}
+
+function filtrarProgramas() {
+    var q = document.getElementById('buscar-prog').value.toLowerCase();
+    renderProgramas(q ? _programas.filter(function(p){return p.nombre.toLowerCase().indexOf(q)>=0;}) : _programas);
+}
+
+function irCohortes(pid) {
+    switchTab('cohortes');
+    setTimeout(function(){
+        document.getElementById('sel-prog').value = String(pid);
+        cargarCohortes();
+    }, 80);
+}
+
+// ── MODAL PROGRAMA ────────────────────────
+async function abrirModalPrograma(id) {
+    document.getElementById('tit-prog').textContent = id ? '✏️ Editar Programa' : '✏️ Nuevo Programa';
+    document.getElementById('prog-id').value = id || '';
+    document.getElementById('prog-tipo').value = 'MAESTRIA';
+    document.getElementById('prog-nombre').value = '';
+    document.getElementById('prog-desc').value = '';
+    await cargarCoordsSelect([]);
+    if (id) {
+        var p = _programas.find(function(x){return x.programa_id===id;});
+        if (p) {
+            document.getElementById('prog-tipo').value = p.tipo||'MAESTRIA';
+            document.getElementById('prog-nombre').value = p.nombre||'';
+            document.getElementById('prog-desc').value = p.descripcion||'';
+            // Coordinadores asignados
+            var sb = await getSupabase();
+            var {data:asign} = await sb.from('coordinadores_programas').select('coordinador_id').eq('programa_id',id);
+            var selIds = (asign||[]).map(function(a){return a.coordinador_id;});
+            await cargarCoordsSelect(selIds);
+        }
+    }
+    abrirModal('modal-prog');
+}
+
+async function editarPrograma(id) { await abrirModalPrograma(id); }
+
+async function cargarCoordsSelect(selIds) {
+    var sb = await getSupabase();
+    var {data} = await sb.from('usuarios').select('usuario_id,nombre_completo').eq('rol','COORDINADOR').eq('activo',true).order('nombre_completo');
+    var sel = document.getElementById('prog-coords');
+    if (!data||!data.length) {
+        sel.innerHTML = '<option value="" disabled>No hay coordinadores registrados</option>';
+        return;
+    }
+    sel.innerHTML = data.map(function(u){
+        return '<option value="'+u.usuario_id+'"'+(selIds.indexOf(u.usuario_id)>=0?' selected':'')+'>'+esc(u.nombre_completo)+'</option>';
+    }).join('');
+}
+
+async function guardarPrograma() {
+    var id     = document.getElementById('prog-id').value;
+    var tipo   = document.getElementById('prog-tipo').value;
+    var nombre = document.getElementById('prog-nombre').value.trim();
+    var desc   = document.getElementById('prog-desc').value.trim();
+    if (!nombre) { toast('El nombre es obligatorio','err'); return; }
+    var coordIds = Array.from(document.getElementById('prog-coords').selectedOptions)
+        .map(function(o){return parseInt(o.value);}).filter(Boolean);
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var datos = {tipo:tipo, nombre:nombre, descripcion:desc||null};
+        var progId;
+        if (id) {
+            progId = parseInt(id);
+            var {error} = await sb.from('programas').update(datos).eq('programa_id',progId);
+            if (error) throw error;
+            toast('Programa actualizado ✓','ok');
+        } else {
+            var {data:nuevo,error:e2} = await sb.from('programas').insert(datos).select().single();
+            if (e2) throw e2;
+            progId = nuevo.programa_id;
+            toast('Programa creado ✓','ok');
+        }
+        // Coordinadores
+        await sb.from('coordinadores_programas').delete().eq('programa_id',progId);
+        if (coordIds.length) {
+            await sb.from('coordinadores_programas').insert(coordIds.map(function(cid){return {programa_id:progId,coordinador_id:cid};}));
+        }
+        cerrarModal('modal-prog');
+        await cargarProgramas();
+    } catch(e) { toast('Error: '+e.message,'err'); console.error(e); }
+    finally { spin(false); }
+}
+
+async function eliminarPrograma(id, nombre) {
+    if (!confirm('¿Eliminar "'+nombre+'"?\n\nSolo se puede si no tiene estudiantes inscriptos.')) return;
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var {data:cohs} = await sb.from('cohortes').select('cohorte_id').eq('programa_id',id);
+        var cids = (cohs||[]).map(function(c){return c.cohorte_id;});
+        if (cids.length) {
+            var {data:insc} = await sb.from('inscripciones').select('id').in('cohorte_id',cids).limit(1);
+            if (insc&&insc.length) { toast('No se puede eliminar: tiene estudiantes inscriptos','err'); return; }
+        }
+        await sb.from('coordinadores_programas').delete().eq('programa_id',id);
+        if (cids.length) {
+            await sb.from('cobros').delete().in('cohorte_id',cids);
+            await sb.from('cohortes').delete().eq('programa_id',id);
+        }
+        var {error} = await sb.from('programas').delete().eq('programa_id',id);
+        if (error) throw error;
+        toast('Programa eliminado ✓','ok');
+        await cargarProgramas();
+    } catch(e) { toast('Error: '+e.message,'err'); console.error(e); }
+    finally { spin(false); }
+}
+
+// ── COHORTES ──────────────────────────────
+function poblarSelProg() {
+    var sel = document.getElementById('sel-prog');
+    var prev = sel.value;
+    sel.innerHTML = '<option value="">-- Seleccionar programa --</option>';
+    _programas.forEach(function(p){
+        sel.innerHTML += '<option value="'+p.programa_id+'">'+esc(p.nombre)+'</option>';
+    });
+    if (prev) sel.value = prev;
+}
+
+async function cargarCohortes() {
+    var pid = document.getElementById('sel-prog').value;
+    var btn = document.getElementById('btn-nueva-coh');
+    var cont = document.getElementById('lista-cohortes');
+    if (!pid) {
+        btn.disabled = true;
+        cont.innerHTML = '<div class="empty"><div class="empty-icon">📖</div><div class="empty-text">Seleccioná un programa</div></div>';
+        return;
+    }
+    btn.disabled = false;
+    _progActual = parseInt(pid);
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var {data:cohs,error} = await sb.from('cohortes').select('*').eq('programa_id',pid).order('fecha_inicio',{ascending:false});
+        if (error) throw error;
+
+        var cids = (cohs||[]).map(function(c){return c.cohorte_id;});
+        var inscData=[], cobrosData=[];
+        if (cids.length) {
+            var [ir,cr] = await Promise.all([
+                sb.from('inscripciones').select('cohorte_id,estado_academico').in('cohorte_id',cids),
+                sb.from('cobros').select('cohorte_id,monto_final,saldo_pendiente').in('cohorte_id',cids)
+            ]);
+            inscData = ir.data||[];
+            cobrosData = cr.data||[];
+        }
+
+        var prog = _programas.find(function(p){return p.programa_id===parseInt(pid);});
+        var html = '<h2 style="font-size:16px;font-weight:700;color:var(--primary);margin-bottom:16px;">📚 '+esc(prog?prog.nombre:'')+'</h2>';
+
+        if (!cohs||!cohs.length) {
+            html += '<div class="empty"><div class="empty-icon">📖</div><div class="empty-text">No hay cohortes aún</div></div>';
+        } else {
+            var badgeMap = {ACTIVO:'badge-active',CERRADO:'badge-closed',FINALIZADO:'badge-finished'};
+            var labelMap = {ACTIVO:'🟢 ACTIVO',CERRADO:'🔴 CERRADO',FINALIZADO:'⚫ FINALIZADO'};
+            cohs.forEach(function(c) {
+                var act  = inscData.filter(function(i){return i.cohorte_id===c.cohorte_id&&i.estado_academico==='ACTIVO';}).length;
+                var baja = inscData.filter(function(i){return i.cohorte_id===c.cohorte_id&&i.estado_academico==='BAJA';}).length;
+                var cobs = cobrosData.filter(function(x){return x.cohorte_id===c.cohorte_id;});
+                var rec  = cobs.reduce(function(s,x){return s+Math.max(0,(Number(x.monto_final)||0)-(Number(x.saldo_pendiente)||0));},0);
+                var tot  = cobs.reduce(function(s,x){return s+(Number(x.monto_final)||0);},0);
+                var nomSafe = esc(c.nombre).replace(/'/g,"\\'");
+                html += '<div class="coh-card">'
+                    +'<div class="coh-header">'
+                    +'<div class="coh-name">📖 '+esc(c.nombre)+'</div>'
+                    +'<span class="badge '+(badgeMap[c.estado]||'')+'">'+(labelMap[c.estado]||c.estado)+'</span>'
+                    +'</div>'
+                    +'<div class="coh-info">'
+                    +'<div><strong>Período:</strong> '+(c.fecha_inicio||'—')+' → '+(c.fecha_fin||'—')+'</div>'
+                    +'<div><strong>Estudiantes:</strong> '+act+' activo'+(act!==1?'s':'')+(baja?' · '+baja+' baja':'')+'</div>'
+                    +'<div><strong>Recaudado:</strong> '+fMonto(rec)+' de '+fMonto(tot)+'</div>'
+                    +'</div>'
+                    +'<div class="coh-actions">'
+                    +'<button class="btn btn-secondary btn-sm" onclick="editarCohorte('+c.cohorte_id+')">✏️ Editar</button>'
+                    +'<a href="administrador_4_cohorte.html?cohorte_id='+c.cohorte_id+'&programa_id='+pid+'" class="btn btn-secondary btn-sm">👥 Estudiantes</a>'
+                    +(c.estado==='ACTIVO'
+                        ? '<button class="btn btn-warning btn-sm" onclick="cambiarEstCoh('+c.cohorte_id+',\'CERRADO\')">🔒 Cerrar</button>'
+                        : '<button class="btn btn-success btn-sm" onclick="cambiarEstCoh('+c.cohorte_id+',\'ACTIVO\')">🔓 Activar</button>')
+                    +'<button class="btn btn-danger btn-sm" onclick="eliminarCohorte('+c.cohorte_id+',\''+nomSafe+'\')">🗑️ Eliminar</button>'
+                    +'</div></div>';
             });
         }
+        cont.innerHTML = html;
+    } catch(e) { toast('Error: '+e.message,'err'); console.error(e); }
+    finally { spin(false); }
+}
 
-        function procesarArchivoExcel(event) {
-            var file = event.target.files[0];
-            
-            if (!file) {
-                return;
-            }
+// ── MODAL COHORTE ─────────────────────────
+function abrirModalCohorte() {
+    if (!_progActual) { toast('Seleccioná un programa primero','err'); return; }
+    document.getElementById('tit-coh').textContent = '✏️ Nueva Cohorte';
+    document.getElementById('coh-id').value = '';
+    document.getElementById('coh-nombre').value = '';
+    document.getElementById('coh-inicio').value = '';
+    document.getElementById('coh-fin').value = '';
+    document.getElementById('coh-estado').value = 'ACTIVO';
+    document.getElementById('coh-obs').value = '';
+    abrirModal('modal-coh');
+}
 
-            if (!file.name.match(/\.(xlsx|xls)$/)) {
-                alert('❌ Por favor seleccioná un archivo Excel válido (.xlsx o .xls)');
-                return;
-            }
+async function editarCohorte(id) {
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var {data:c} = await sb.from('cohortes').select('*').eq('cohorte_id',id).single();
+        if (!c) { toast('Cohorte no encontrada','err'); return; }
+        document.getElementById('tit-coh').textContent = '✏️ Editar Cohorte';
+        document.getElementById('coh-id').value = id;
+        document.getElementById('coh-nombre').value = c.nombre||'';
+        document.getElementById('coh-inicio').value = c.fecha_inicio||'';
+        document.getElementById('coh-fin').value = c.fecha_fin||'';
+        document.getElementById('coh-estado').value = c.estado||'ACTIVO';
+        document.getElementById('coh-obs').value = c.observaciones||'';
+        abrirModal('modal-coh');
+    } finally { spin(false); }
+}
 
-            // Mostrar loading
-            document.getElementById('preview-import').style.display = 'none';
-            document.getElementById('errores-import').style.display = 'none';
-            document.getElementById('btn-confirmar-import').disabled = true;
-
-            // Aquí iría la integración con una librería como SheetJS para leer el Excel
-            // Por ahora simulo datos de ejemplo
-            setTimeout(function() {
-                simularLecturaExcel(file.name);
-            }, 1000);
+async function guardarCohorte() {
+    var id     = document.getElementById('coh-id').value;
+    var nombre = document.getElementById('coh-nombre').value.trim();
+    var inicio = document.getElementById('coh-inicio').value;
+    var fin    = document.getElementById('coh-fin').value;
+    var estado = document.getElementById('coh-estado').value;
+    var obs    = document.getElementById('coh-obs').value.trim();
+    if (!nombre) { toast('El nombre es obligatorio','err'); return; }
+    if (!inicio||!fin) { toast('Las fechas son obligatorias','err'); return; }
+    if (fin < inicio) { toast('La fecha de fin debe ser posterior al inicio','err'); return; }
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var datos = {nombre:nombre,fecha_inicio:inicio,fecha_fin:fin,estado:estado,observaciones:obs||null};
+        if (id) {
+            var {error} = await sb.from('cohortes').update(datos).eq('cohorte_id',parseInt(id));
+            if (error) throw error;
+            toast('Cohorte actualizada ✓','ok');
+        } else {
+            datos.programa_id = _progActual;
+            var {error:e2} = await sb.from('cohortes').insert(datos);
+            if (e2) throw e2;
+            toast('Cohorte creada ✓','ok');
         }
+        cerrarModal('modal-coh');
+        await cargarCohortes();
+        await cargarProgramas();
+    } catch(e) { toast('Error: '+e.message,'err'); console.error(e); }
+    finally { spin(false); }
+}
 
-        function simularLecturaExcel(fileName) {
-            // DATOS DE EJEMPLO - En producción esto vendría del Excel parseado
-            var datosEjemplo = {
-                programa: 'Especialización en Costos y Gestión Empresarial',
-                cohorte: '2023-2024',
-                estudiantes: [
-                    {
-                        dni: '23456789',
-                        apellido: 'González',
-                        nombre: 'María',
-                        email: 'maria.gonzalez@mail.com',
-                        descuento: 10,
-                        cantidadCuotas: 8,
-                        cuotas: [
-                            { numero: 1, monto: 90000, estado: 'Abonada', fechaPago: '15/08/2023', abonado: 90000 },
-                            { numero: 2, monto: 90000, estado: 'Abonada', fechaPago: '20/09/2023', abonado: 90000 },
-                            { numero: 3, monto: 90000, estado: 'Parcial', fechaPago: '18/10/2023', abonado: 50000 },
-                            { numero: 4, monto: 90000, estado: 'Pendiente', fechaPago: null, abonado: 0 },
-                            { numero: 5, monto: 90000, estado: 'Pendiente', fechaPago: null, abonado: 0 },
-                            { numero: 6, monto: 90000, estado: 'Pendiente', fechaPago: null, abonado: 0 },
-                            { numero: 7, monto: 90000, estado: 'Pendiente', fechaPago: null, abonado: 0 },
-                            { numero: 8, monto: 90000, estado: 'Pendiente', fechaPago: null, abonado: 0 }
-                        ]
-                    },
-                    {
-                        dni: '34567890',
-                        apellido: 'Pérez',
-                        nombre: 'Juan',
-                        email: 'juan.perez@mail.com',
-                        descuento: 0,
-                        cantidadCuotas: 6,
-                        cuotas: [
-                            { numero: 1, monto: 85000, estado: 'Abonada', fechaPago: '10/08/2023', abonado: 85000 },
-                            { numero: 2, monto: 85000, estado: 'Abonada', fechaPago: '15/09/2023', abonado: 85000 },
-                            { numero: 3, monto: 85000, estado: 'Abonada', fechaPago: '12/10/2023', abonado: 85000 },
-                            { numero: 4, monto: 85000, estado: 'Abonada', fechaPago: '18/11/2023', abonado: 85000 },
-                            { numero: 5, monto: 85000, estado: 'Abonada', fechaPago: '20/12/2023', abonado: 85000 },
-                            { numero: 6, monto: 85000, estado: 'Abonada', fechaPago: '15/01/2024', abonado: 85000 }
-                        ]
-                    }
-                ]
-            };
+async function cambiarEstCoh(id, nuevoEstado) {
+    if (!confirm('¿'+(nuevoEstado==='CERRADO'?'Cerrar':'Activar')+' esta cohorte?')) return;
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var {error} = await sb.from('cohortes').update({estado:nuevoEstado}).eq('cohorte_id',id);
+        if (error) throw error;
+        toast('Cohorte '+(nuevoEstado==='CERRADO'?'cerrada':'activada')+' ✓','ok');
+        await cargarCohortes();
+        await cargarProgramas();
+    } catch(e) { toast('Error: '+e.message,'err'); }
+    finally { spin(false); }
+}
 
-            // Validar datos
-            var errores = validarDatos(datosEjemplo);
-
-            if (errores.length > 0) {
-                mostrarErrores(errores);
-                return;
-            }
-
-            // Mostrar vista previa
-            datosImportacion = datosEjemplo;
-            mostrarVistaPrevia(datosEjemplo);
-            document.getElementById('btn-confirmar-import').disabled = false;
-        }
-
-        function validarDatos(datos) {
-            var errores = [];
-
-            // Validar campos obligatorios
-            if (!datos.programa) errores.push('Falta el nombre del programa');
-            if (!datos.cohorte) errores.push('Falta el nombre de la cohorte');
-            if (!datos.estudiantes || datos.estudiantes.length === 0) {
-                errores.push('No se encontraron estudiantes en el archivo');
-            }
-
-            // Validar cada estudiante
-            if (datos.estudiantes) {
-                datos.estudiantes.forEach(function(est, index) {
-                    var fila = index + 2; // +2 porque Excel empieza en 1 y hay header
-                    
-                    if (!est.dni) errores.push('Fila ' + fila + ': Falta DNI');
-                    if (!est.apellido) errores.push('Fila ' + fila + ': Falta apellido');
-                    if (!est.nombre) errores.push('Fila ' + fila + ': Falta nombre');
-                    if (!est.email) errores.push('Fila ' + fila + ': Falta email');
-                    if (est.descuento === undefined) errores.push('Fila ' + fila + ': Falta descuento');
-                    if (!est.cantidadCuotas) errores.push('Fila ' + fila + ': Falta cantidad de cuotas');
-
-                    // Validar cuotas
-                    if (est.cuotas) {
-                        est.cuotas.forEach(function(cuota) {
-                            if ((cuota.estado === 'Abonada' || cuota.estado === 'Parcial') && !cuota.fechaPago) {
-                                errores.push('Fila ' + fila + ', Cuota ' + cuota.numero + ': Falta fecha de pago');
-                            }
-                            if (cuota.estado === 'Parcial' && !cuota.abonado) {
-                                errores.push('Fila ' + fila + ', Cuota ' + cuota.numero + ': Falta monto abonado');
-                            }
-                        });
-                    }
-                });
-            }
-
-            return errores;
-        }
-
-        function mostrarErrores(errores) {
-            document.getElementById('errores-import').style.display = 'block';
-            var listaErrores = document.getElementById('lista-errores');
-            listaErrores.innerHTML = '';
-            
-            errores.forEach(function(error) {
-                var li = document.createElement('li');
-                li.textContent = error;
-                listaErrores.appendChild(li);
-            });
-
-            document.getElementById('preview-import').style.display = 'none';
-        }
-
-        function mostrarVistaPrevia(datos) {
-            document.getElementById('preview-import').style.display = 'block';
-            document.getElementById('errores-import').style.display = 'none';
-
-            // Llenar resumen
-            document.getElementById('preview-programa').textContent = datos.programa;
-            document.getElementById('preview-cohorte').textContent = datos.cohorte;
-            document.getElementById('preview-estudiantes').textContent = datos.estudiantes.length + ' estudiantes';
-
-            // Llenar tabla
-            var tbody = document.getElementById('preview-table-body');
-            tbody.innerHTML = '';
-
-            datos.estudiantes.forEach(function(est) {
-                var cuotasAbonadas = est.cuotas.filter(function(c) { return c.estado === 'Abonada'; }).length;
-                var cuotasPendientes = est.cuotas.filter(function(c) { return c.estado === 'Pendiente'; }).length;
-                var estado = cuotasPendientes === 0 ? '✅ Completo' : '⏱️ ' + cuotasAbonadas + '/' + est.cantidadCuotas;
-
-                var tr = document.createElement('tr');
-                tr.innerHTML = 
-                    '<td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">' + est.dni + '</td>' +
-                    '<td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">' + est.apellido + ', ' + est.nombre + '</td>' +
-                    '<td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">' + est.descuento + '%</td>' +
-                    '<td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">' + est.cantidadCuotas + '</td>' +
-                    '<td style="padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">' + estado + '</td>';
-                tbody.appendChild(tr);
-            });
-        }
-
-        function confirmarImportacion() {
-            if (!datosImportacion) {
-                alert('❌ No hay datos para importar');
-                return;
-            }
-
-            if (!confirm('¿Confirmar la importación de ' + datosImportacion.estudiantes.length + ' estudiantes?\n\n' +
-                         'Programa: ' + datosImportacion.programa + '\n' +
-                         'Cohorte: ' + datosImportacion.cohorte)) {
-                return;
-            }
-
-            // Aquí iría la integración con Google Apps Script
-            console.log('Importando datos:', datosImportacion);
-
-            alert('✅ Importación exitosa!\n\n' +
-                  'Se importaron ' + datosImportacion.estudiantes.length + ' estudiantes\n' +
-                  'Programa: ' + datosImportacion.programa + '\n' +
-                  'Cohorte: ' + datosImportacion.cohorte + '\n\n' +
-                  'Los datos ya están disponibles para el CashFlow');
-
-            closeModal('modalImportarCohorte');
-            
-            // Limpiar formulario
-            document.getElementById('file-excel-import').value = '';
-            document.getElementById('preview-import').style.display = 'none';
-            datosImportacion = null;
-        }
-
-        function switchTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // Show selected tab
-            document.getElementById('tab-' + tabName).classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        function editProgram(id) {
-            openModal('modalPrograma');
-            // Aquí cargarías los datos del programa
-        }
-
-        function viewCohortes(programId) {
-            switchTab('cohortes');
-            // Aquí cargarías las cohortes del programa
-        }
-
-        function editCohorte(id) {
-            openModal('modalCohorte');
-            // Aquí cargarías los datos de la cohorte
-        }
-
-        function loadCohortes(programId) {
-            if (!programId) return;
-            // Aquí cargarías las cohortes del programa seleccionado
-            console.log('Cargando cohortes del programa:', programId);
-        }
-
-        // Cerrar modal al hacer click fuera
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.classList.remove('active');
-            }
-        }
-
-        /* Navegación y sesión proporcionadas por supabase.js */
-    
-                /* ── CAMPANA ── */
-        var _notifs = [];
-        function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
-        document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
-        function renderNotificaciones(datos) {
-            _notifs = datos || [];
-            var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-            var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-            var lista = document.getElementById('notif-list');
-            if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-            var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
-            var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
-            lista.innerHTML = _notifs.map(function(n) {
-                return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-                    + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-                    + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
-            }).join('');
-        }
-        function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
-        function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
-        // Notificaciones cargadas por supabase.js automáticamente
-    </script>
+async function eliminarCohorte(id, nombre) {
+    if (!confirm('¿Eliminar la cohorte "'+nombre+'"?\n\nSolo se puede si no tiene estudiantes inscriptos.')) return;
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var {data:insc} = await sb.from('inscripciones').select('id').eq('cohorte_id',id).limit(1);
+        if (insc&&insc.length) { toast('No se puede eliminar: tiene estudiantes inscriptos','err'); return; }
+        await sb.from('cobros').delete().eq('cohorte_id',id);
+        var {error} = await sb.from('cohortes').delete().eq('cohorte_id',id);
+        if (error) throw error;
+        toast('Cohorte eliminada ✓','ok');
+        await cargarCohortes();
+        await cargarProgramas();
+    } catch(e) { toast('Error: '+e.message,'err'); }
+    finally { spin(false); }
+}
+</script>
 </body>
 </html>
