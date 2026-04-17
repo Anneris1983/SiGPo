@@ -1102,20 +1102,17 @@ function renderTabla() {
             else                                txt = fMonto(c.monto_final);
 
             /*
-             * Botones por estado — Administrador actúa como Cooperadora:
-             * NO_ABONADA  → sin Aprobar/Rechazar (no hay comprobante)
-             * PENDIENTE   → Ver comp + Aprobar + Rechazar
-             * ABONADA     → Ver comp + Ver recibo (solo consulta)
-             * PAGO_PARCIAL→ Ver comp + Ver recibo parcial
-             * EN_MORA     → sin Aprobar/Rechazar (sin comp. válido)
-             * A_DEFINIR   → sin acción (sin monto)
+             * Botones por estado — Administrador: SOLO CONSULTA
+             * Aprobar/Rechazar es exclusivo de Cooperadora
+             * PENDIENTE    → Ver comprobante (solo lectura)
+             * ABONADA      → Ver comprobante + Ver recibo
+             * PAGO_PARCIAL → Ver comprobante + Ver recibo parcial
+             * resto        → sin botones
              */
             var btns = '';
             if (estado === 'PENDIENTE') {
                 if (c.comprobante_url)
                     btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
-                btns += '<button class="cbtn cbtn-aprobar" onclick="abrirAprobacion(' + idCobro + ')">✔ Aprobar</button>';
-                btns += '<button class="cbtn cbtn-rechazar" onclick="rechazarCuotaDirecto(' + idCobro + ')">✕ Rechazar</button>';
             } else if (estado === 'ABONADA') {
                 if (c.comprobante_url)
                     btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
@@ -1127,7 +1124,7 @@ function renderTabla() {
                 if (c.recibo_url)
                     btns += '<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\'' + encodeAttr(c.recibo_url) + '\',\'Recibo parcial\',\'' + encodeAttr(c.concepto) + '\')">🧾 Recibo</button>';
             }
-            // EN_MORA, NO_ABONADA, A_DEFINIR: sin botones de aprobar/rechazar
+            // EN_MORA, NO_ABONADA, A_DEFINIR: sin botones
 
             var title = encodeAttr(c.concepto + ' · ' + (c.periodo||'')
                 + ' | Estado: ' + etiquetaEstado(estado)
@@ -2023,7 +2020,17 @@ function renderEditarCuotas() {
         var bloqueada = ['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado);
         var bg = c._eliminar ? '#fdecea' : (colorEstado[estado] || '#f8f6f1');
         var opac = c._eliminar ? '0.55' : '1';
-        var montoValor = c.monto_final == null ? '' : c.monto_final;
+        // Mostrar siempre el precio BASE (monto_original) para que el usuario edite ese valor
+        var montoBase = c.monto_original != null ? c.monto_original : c.monto_final;
+        var montoBaseValor = montoBase == null ? '' : montoBase;
+        var descPct = Number(c.descuento_porcentaje) || 0;
+        // Calcular monto con descuento para mostrar como referencia
+        var montoConDesc = (montoBase != null && descPct > 0)
+            ? Math.round(montoBase * (1 - descPct / 100) * 100) / 100
+            : montoBase;
+        var descInfo = (descPct > 0 && montoBase != null && estado !== 'EN_MORA')
+            ? '<div style="font-size:9px;color:#2d7a4f;margin-top:2px;">Con ' + descPct + '% desc: ' + fMonto(montoConDesc) + '</div>'
+            : (estado === 'EN_MORA' ? '<div style="font-size:9px;color:#dc2626;margin-top:2px;">En mora: sin descuento</div>' : '');
         return `
         <div style="background:${bg};border-radius:10px;padding:12px 14px;margin-bottom:10px;border:2px solid ${c._eliminar ? '#f1a8b0' : '#e0e0e0'};opacity:${opac};transition:all 0.2s;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;">
@@ -2045,8 +2052,9 @@ function renderEditarCuotas() {
                     <input type="text" value="${escapeHtml(c.periodo || '')}" ${c._eliminar ? 'disabled' : ''} onchange="_ecCuotasEditadas[${i}].periodo=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
                 </div>
                 <div>
-                    <label style="font-size:10px;font-weight:600;color:#777;display:block;margin-bottom:3px;">MONTO ($)</label>
-                    <input type="number" value="${montoValor}" ${(c._eliminar || bloqueada) ? 'disabled' : ''} onchange="var raw=this.value;if(raw===''){_ecCuotasEditadas[${i}].monto_final=null;_ecCuotasEditadas[${i}].saldo_pendiente=null;}else{var v=parseFloat(raw)||0;_ecCuotasEditadas[${i}].monto_final=v;_ecCuotasEditadas[${i}].saldo_pendiente=Math.max(0,v-(_ecCuotasEditadas[${i}].monto_abonado||0));}actualizarResumenEC();" style="width:100%;padding:6px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
+                    <label style="font-size:10px;font-weight:600;color:#777;display:block;margin-bottom:3px;">MONTO BASE ($)</label>
+                    <input type="number" value="${montoBaseValor}" ${(c._eliminar || bloqueada) ? 'disabled' : ''} onchange="var raw=this.value;if(raw===''){_ecCuotasEditadas[${i}].monto_original=null;_ecCuotasEditadas[${i}].monto_final=null;_ecCuotasEditadas[${i}].saldo_pendiente=null;}else{var base=parseFloat(raw)||0;var pct=Number(_ecCuotasEditadas[${i}].descuento_porcentaje)||0;var final=Math.round(base*(1-pct/100)*100)/100;_ecCuotasEditadas[${i}].monto_original=base;_ecCuotasEditadas[${i}].monto_final=final;_ecCuotasEditadas[${i}].saldo_pendiente=Math.max(0,final-(_ecCuotasEditadas[${i}].monto_abonado||0));}actualizarResumenEC();" style="width:100%;padding:6px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
+                    ${descInfo}
                 </div>
                 <div>
                     <label style="font-size:10px;font-weight:600;color:#777;display:block;margin-bottom:3px;">VENCIMIENTO</label>
@@ -2112,23 +2120,23 @@ async function guardarEdicionCuotas() {
 
         for (var j = 0; j < aEditar.length; j++) {
             var c = aEditar[j];
-            var montoFinal = c.monto_final === null || c.monto_final === '' ? null : redondear2(c.monto_final);
+            // El usuario edita MONTO BASE (monto_original)
+            // monto_final = monto_original * (1 - descuento/100)
+            var montoOriginal = c.monto_original === null || c.monto_original === '' ? null : redondear2(c.monto_original);
+            var descPct = Number(c.descuento_porcentaje) || 0;
+            var montoFinal = montoOriginal === null ? null
+                : (descPct > 0 ? redondear2(montoOriginal * (1 - descPct / 100)) : montoOriginal);
             var saldoPendiente = montoFinal === null ? null : redondear2(Math.max(0, montoFinal - (Number(c.monto_abonado) || 0)));
             var estadoNuevo = montoFinal === null ? 'A_DEFINIR' : normalizarEstadoCuota(montoFinal, saldoPendiente, c.fecha_vencimiento, c.estado);
-            // monto_original = precio base SIN descuento
-            // Al editar manualmente, el usuario ingresa el monto FINAL (ya con descuento)
-            // Si el cobro tiene descuento, recalculamos el original: monto_final / (1 - pct/100)
-            var descPct = Number(c.descuento_porcentaje) || 0;
-            var nuevoOriginal = (montoFinal === null) ? null
-                : (descPct > 0 ? redondear2(montoFinal / (1 - descPct / 100)) : montoFinal);
             var upd = {
-                concepto:          c.concepto,
-                periodo:           c.periodo,
-                monto_original:    nuevoOriginal,
-                monto_final:       montoFinal,
-                saldo_pendiente:   saldoPendiente,
-                fecha_vencimiento: c.fecha_vencimiento || null,
-                estado:            estadoNuevo
+                concepto:             c.concepto,
+                periodo:              c.periodo,
+                monto_original:       montoOriginal,
+                descuento_porcentaje: descPct,
+                monto_final:          montoFinal,
+                saldo_pendiente:      saldoPendiente,
+                fecha_vencimiento:    c.fecha_vencimiento || null,
+                estado:               estadoNuevo
             };
             var upRes = await sb.from('cobros').update(upd).eq('cobro_id', c.cobro_id);
             if (upRes.error) errores.push('Error al actualizar ' + c.concepto + ': ' + upRes.error.message);
