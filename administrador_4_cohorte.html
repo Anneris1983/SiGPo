@@ -981,17 +981,27 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
             if (fHoy.getDate() < 16) mesesMora = Math.max(0, mesesMora - 1);
             if (mesesMora <= 0) continue;
 
-            var montoOriginal = Number(c.monto_original) || Number(c.monto_final) || 0;
+            // Precio base SIN descuento = monto_original / (1 - descuento/100)
+            // Si el cobro se creó con descuento, monto_original ya tiene el precio base real
+            // pero descuento_porcentaje indica si hay que revertirlo
+            var precioBase;
+            var descPct = Number(c.descuento_porcentaje) || 0;
+            if (descPct > 0 && Number(c.monto_original) > 0) {
+                // monto_original fue guardado ANTES de aplicar descuento → es el precio real
+                precioBase = Number(c.monto_original);
+            } else {
+                precioBase = Number(c.monto_original) || Number(c.monto_final) || 0;
+            }
             var nuevoMonto, nuevoSaldo;
 
             if (mesesMora === 1) {
-                // Mes 1: pierde descuento, sin interés
-                nuevoMonto = montoOriginal;
-                nuevoSaldo = montoOriginal;
+                // Mes 1: pierde descuento → vuelve al precio base sin descuento
+                nuevoMonto = precioBase;
+                nuevoSaldo = precioBase;
             } else {
-                // Mes 2+: 5% compuesto, el primer mes es solo pérdida de descuento
-                nuevoSaldo = Math.round(montoOriginal * Math.pow(1.05, mesesMora - 1) * 100) / 100;
-                nuevoMonto = nuevoSaldo; // monto_final siempre = saldo cuando no hay pagos parciales
+                // Mes 2+: 5% compuesto sobre precio base (sin descuento)
+                nuevoSaldo = Math.round(precioBase * Math.pow(1.05, mesesMora - 1) * 100) / 100;
+                nuevoMonto = nuevoSaldo;
             }
 
             // Solo actualizar si hay cambio real
@@ -1302,10 +1312,13 @@ async function guardarDescuento() {
         for (var i = 0; i < est.cobros.length; i++) {
             var c = est.cobros[i];
             var estado = resolverEstadoCobro(c);
-            if (['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado)) continue;
+
+            // Nunca tocar cobros pagados, parciales, pendientes o EN MORA
+            // (en mora ya perdió el descuento — lo maneja aplicarMoraCohorteJS)
+            if (['ABONADA','PAGO_PARCIAL','PENDIENTE','EN_MORA'].includes(estado)) continue;
 
             if (!tieneMontoDefinido(c)) {
-                // Cuotas A_DEFINIR: solo actualizar el descuento guardado
+                // Cuotas A_DEFINIR: solo registrar el descuento, sin cambiar montos
                 var updDef = await sb.from('cobros').update({
                     descuento_porcentaje: pct
                 }).eq('cobro_id', c.cobro_id);
@@ -1313,7 +1326,8 @@ async function guardarDescuento() {
                 continue;
             }
 
-            // Recalcular desde monto_original
+            // Recalcular SIEMPRE desde monto_original (precio base sin descuento)
+            // monto_original nunca debe cambiar — es el precio base de referencia
             var baseOriginal = (c.monto_original !== null && c.monto_original !== undefined && c.monto_original !== '')
                 ? Number(c.monto_original)
                 : Number(c.monto_final || 0);
@@ -1327,6 +1341,7 @@ async function guardarDescuento() {
                 monto_final:          nuevoMontoFinal,
                 saldo_pendiente:      nuevoSaldo,
                 estado:               nuevoEstado
+                // monto_original NO se toca — es inmutable después de creado
             }).eq('cobro_id', c.cobro_id);
             if (resCobro.error) throw resCobro.error;
         }
