@@ -817,7 +817,7 @@ var _ecCuotasEditadas = [];
 async function obtenerCohorteDetalle(cohorteId, programaId) {
     const sb = await getSupabase();
 
-    const [progRes, cohRes, estRes, cobRes] = await Promise.all([
+    const [progRes, cohRes, inscRes, cobRes] = await Promise.all([
         sb.from('programas')
           .select('programa_id, nombre, tipo')
           .eq('programa_id', programaId)
@@ -826,10 +826,10 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
           .select('cohorte_id, nombre, estado, fecha_inicio, fecha_fin')
           .eq('cohorte_id', cohorteId)
           .single(),
-        sb.from('estudiantes')
-          .select('dni, nombre, apellido, email, descuento_porcentaje, estado_academico, cohorte_id')
-          .eq('cohorte_id', cohorteId)
-          .order('apellido'),
+        // CAMBIO: ahora busca estudiantes via tabla inscripciones (N:N)
+        sb.from('inscripciones')
+          .select('id, estudiante_id, descuento_porcentaje, estado_academico')
+          .eq('cohorte_id', cohorteId),
         sb.from('cobros')
           .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, estado, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id')
           .eq('cohorte_id', cohorteId)
@@ -839,10 +839,43 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
 
     if (progRes.error || cohRes.error) return null;
 
-    var programa    = progRes.data;
-    var cohorte     = cohRes.data;
-    var estudiantes = estRes.data || [];
-    var cobros      = cobRes.data || [];
+    var programa      = progRes.data;
+    var cohorte       = cohRes.data;
+    var inscripciones = inscRes.data || [];
+    var cobros        = cobRes.data || [];
+
+    // Sin inscripciones → cohorte vacía, no es error
+    if (!inscripciones.length) {
+        return { programa, cohorte, columnas: [], estudiantes: [] };
+    }
+
+    // Traer datos completos de los estudiantes inscriptos
+    var estIds = inscripciones.map(function(i) { return i.estudiante_id; });
+    var estRes = await sb.from('estudiantes')
+        .select('id, dni, nombre, apellido, email')
+        .in('id', estIds)
+        .order('apellido');
+    var estudiantesDB = estRes.data || [];
+
+    // Mapa inscripcion por estudiante_id
+    var inscMap = {};
+    inscripciones.forEach(function(i) { inscMap[i.estudiante_id] = i; });
+
+    // Fusionar datos del estudiante con datos de inscripción de esta cohorte
+    var estudiantes = estudiantesDB.map(function(est) {
+        var insc = inscMap[est.id] || {};
+        return {
+            id:                   est.id,
+            dni:                  est.dni,
+            nombre:               est.nombre,
+            apellido:             est.apellido,
+            email:                est.email,
+            descuento_porcentaje: insc.descuento_porcentaje !== undefined ? insc.descuento_porcentaje : 0,
+            estado_academico:     insc.estado_academico || 'ACTIVO',
+            inscripcion_id:       insc.id || null,
+            cohorte_id:           cohorteId
+        };
+    });
 
     // Construir columnas dinámicas: conceptos únicos en orden de vencimiento
     var conceptosVistos = [];
@@ -863,8 +896,6 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
         cobrosPorDni[c.dni].push(c);
     });
 
-    // Enriquecer cada estudiante con su array de cobros
-    // monto_abonado no existe en DB → se calcula como monto_final - saldo_pendiente
     var estudiantesEnriquecidos = estudiantes.map(function(est) {
         var cobrosEst = (cobrosPorDni[String(est.dni)] || []).map(function(c) {
             return Object.assign({}, c, {
@@ -1034,7 +1065,7 @@ function renderTabla() {
                 + '</div></td>';
         }).join('');
 
-        var esPasivo = est.estado_academico === 'PASIVO';
+        var esPasivo = est.estado_academico === 'BAJA';
         var nombreEsc = String(est.apellido + ', ' + est.nombre).replace(/'/g, "\'");
         var descuentoInfo = JSON.stringify({dni:est.dni, apellido:est.apellido, nombre:est.nombre, pct:est.descuento_porcentaje}).replace(/'/g, '&apos;');
         var filaHtml = `
@@ -1048,7 +1079,7 @@ function renderTabla() {
             <td style="text-align:center;border-right:1px solid #ebebeb;">
                 ${esPasivo
                     ? `<button class="btn-alta-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','ACTIVO')">✅ Alta (ACTIVO)</button>`
-                    : `<button class="btn-baja-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','PASIVO')">⛔ Baja (PASIVO)</button>`}
+                    : `<button class="btn-baja-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','BAJA')">⛔ Baja</button>`}
             </td>
             ${celdas}
             <td class="cell-tot-pagar">${fMonto(totP)}</td>
@@ -1388,15 +1419,15 @@ async function guardarCuotas() {
 ══════════════════════════════════════════════════ */
 function confirmarCambioEstado(dni, nombre, nuevoEstado) {
     _bcDni = dni; _bcNombre = nombre; _bcNuevoEstado = nuevoEstado;
-    var esBaja = nuevoEstado === 'PASIVO';
+    var esBaja = nuevoEstado === 'BAJA';
     var hdr = document.getElementById('mbc-hdr');
     hdr.style.background = esBaja
         ? 'linear-gradient(135deg,#e65100 0%,#f59e0b 100%)'
         : 'linear-gradient(135deg,#2d7a4f 0%,#4caf50 100%)';
-    document.getElementById('mbc-titulo').textContent = esBaja ? '⛔ Dar de baja (PASIVO)' : '✅ Alta en esta cohorte';
+    document.getElementById('mbc-titulo').textContent = esBaja ? '⛔ Dar de baja' : '✅ Alta en esta cohorte';
     document.getElementById('mbc-sub').textContent    = V.data ? V.data.programa.nombre + ' · ' + V.data.cohorte.nombre : '';
     var btn = document.getElementById('mbc-btn');
-    btn.textContent       = esBaja ? '⛔ Confirmar Baja (PASIVO)' : '✅ Confirmar Alta';
+    btn.textContent       = esBaja ? '⛔ Confirmar Baja' : '✅ Confirmar Alta';
     btn.style.background  = esBaja ? '#ea580c' : '#2d7a4f';
     document.getElementById('mbc-cuerpo').innerHTML = esBaja
         ? '<p style="font-size:13px;color:#555;">Va a dar de baja a <strong>' + nombre + '</strong> solo en esta cohorte/edición.</p>'
@@ -1412,31 +1443,26 @@ async function ejecutarCambioEstado() {
     spin(true);
     try {
         var sb = await getSupabase();
-        /*
-         * NOTA SUPABASE — enum estado_academico:
-         * Valores correctos: ACTIVO, PASIVO
-         * Si obtenés error "invalid input value for enum", ejecutar en SQL Editor:
-         *   ALTER TYPE estado_academico ADD VALUE IF NOT EXISTS 'PASIVO';
-         * EGRESADO no se usa en esta vista.
-         */
-        // Si el enum de Supabase no incluye BAJA, agregarlo en:
-        // Supabase → Database → Types → estado_academico → Add value: BAJA
-        var { error } = await sb.from('estudiantes')
-            .update({ estado_academico: _bcNuevoEstado })
-            .eq('dni', String(_bcDni))
-            .eq('cohorte_id', COHORTE_ID);
-        if (error) {
-            // Error común: el enum no acepta BAJA
-            if (error.code === '22P02' || (error.message && error.message.includes('invalid input value'))) {
-                toast('⚠️ Falta agregar BAJA al enum estado_academico en Supabase. Ver consola.', 'err');
-                console.error('Solución: En Supabase → Database → Types → estado_academico → agregar valor BAJA');
-            } else {
-                throw error;
-            }
+        // Obtener el id numérico del estudiante por DNI
+        var estRes = await sb.from('estudiantes').select('id').eq('dni', String(_bcDni)).single();
+        if (estRes.error || !estRes.data) {
+            toast('No se encontró el estudiante con DNI ' + _bcDni, 'err');
             return;
         }
-        toast(_bcNuevoEstado === 'PASIVO'
-            ? _bcNombre + ' → PASIVO en esta cohorte ✓'
+        var estudianteId = estRes.data.id;
+        // CAMBIO: actualiza inscripciones (por cohorte), no estudiantes globalmente
+        // El enum en la BD acepta: ACTIVO | BAJA
+        var { error } = await sb.from('inscripciones')
+            .update({ estado_academico: _bcNuevoEstado })
+            .eq('estudiante_id', estudianteId)
+            .eq('cohorte_id', COHORTE_ID);
+        if (error) {
+            toast('Error al cambiar estado: ' + error.message, 'err');
+            console.error(error);
+            return;
+        }
+        toast(_bcNuevoEstado === 'BAJA'
+            ? _bcNombre + ' → BAJA en esta cohorte ✓'
             : _bcNombre + ' → ACTIVO en esta cohorte ✓', 'ok');
         cerrar('modal-baja-cohorte');
         await cargar();
