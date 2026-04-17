@@ -904,12 +904,15 @@ async function cargar() {
             toast('No se encontró la cohorte o el programa', 'err');
             return;
         }
+        // Aplicar reglas de mora a todos los estudiantes de la cohorte
+        await aplicarMoraCohorteJS(V.data.estudiantes, COHORTE_ID);
+        // Recargar datos con mora ya aplicada
+        V.data = await obtenerCohorteDetalle(COHORTE_ID, PROGRAMA_ID);
         renderHeader();
         renderTabla();
         actualizarStats();
         actualizarFiltros();
         initFiltros();
-        // Notificaciones — usa la función de supabase.js
         var sesion = getSesion();
         if (sesion) {
             obtenerNotificaciones(sesion.rol).then(function(datos) {
@@ -921,6 +924,78 @@ async function cargar() {
         toast('Error al cargar los datos: ' + e.message, 'err');
     } finally {
         spin(false);
+    }
+}
+
+/**
+ * Aplica reglas de mora a todos los cobros vencidos de la cohorte.
+ * Regla 1 (mes 1): pierde el descuento (monto_final = monto_original)
+ * Regla 2 (mes 2+): 5% compuesto sobre monto_original desde mes 2
+ * Actualiza directamente en Supabase solo si hay cambios.
+ */
+async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
+    var sb = await getSupabase();
+    var hoyStr = new Date().toISOString().split('T')[0];
+
+    for (var ie = 0; ie < estudiantes.length; ie++) {
+        var est = estudiantes[ie];
+
+        for (var ic = 0; ic < est.cobros.length; ic++) {
+            var c = est.cobros[ic];
+
+            // Solo cobros con monto definido, vencidos, sin pago aprobado
+            if (!tieneMontoDefinido(c)) continue;
+            if (!c.fecha_vencimiento) continue;
+            if (c.fecha_vencimiento >= hoyStr) continue;
+            if (c.recibo_url && String(c.recibo_url).trim() !== '') continue;
+            if (String(c.estado) === 'ABONADA') continue;
+
+            var fVenc = new Date(c.fecha_vencimiento + 'T00:00:00');
+            var fHoy  = new Date(hoyStr + 'T00:00:00');
+
+            // Meses completos en mora
+            var mesesMora = (fHoy.getFullYear() - fVenc.getFullYear()) * 12
+                          + (fHoy.getMonth() - fVenc.getMonth());
+            // Si no pasó el día 16 del mes corriente, no cuenta el mes actual
+            if (fHoy.getDate() < 16) mesesMora = Math.max(0, mesesMora - 1);
+            if (mesesMora <= 0) continue;
+
+            var montoOriginal = Number(c.monto_original) || Number(c.monto_final) || 0;
+            var nuevoMonto, nuevoSaldo;
+
+            if (mesesMora === 1) {
+                // Mes 1: pierde descuento, sin interés
+                nuevoMonto = montoOriginal;
+                nuevoSaldo = montoOriginal;
+            } else {
+                // Mes 2+: 5% compuesto, el primer mes es solo pérdida de descuento
+                nuevoMonto = montoOriginal;
+                nuevoSaldo = Math.round(montoOriginal * Math.pow(1.05, mesesMora - 1) * 100) / 100;
+            }
+
+            // Solo actualizar si hay cambio real
+            var montoActual = Math.round(Number(c.monto_final) * 100) / 100;
+            var saldoActual = Math.round(Number(c.saldo_pendiente) * 100) / 100;
+            var hayDiff = Math.abs(nuevoMonto - montoActual) > 0.01
+                       || Math.abs(nuevoSaldo - saldoActual) > 0.01
+                       || String(c.estado) !== 'EN_MORA';
+
+            if (hayDiff) {
+                var fechaMora = c.fecha_mora;
+                if (!fechaMora) {
+                    var dMora = new Date(fVenc.getTime() + 86400000);
+                    fechaMora = dMora.toISOString().split('T')[0];
+                }
+                await sb.from('cobros').update({
+                    estado:               'EN_MORA',
+                    monto_final:          nuevoMonto,
+                    saldo_pendiente:      nuevoSaldo,
+                    descuento_porcentaje: 0,
+                    meses_mora:           mesesMora,
+                    fecha_mora:           fechaMora
+                }).eq('cobro_id', c.cobro_id);
+            }
+        }
     }
 }
 
@@ -1917,7 +1992,9 @@ function renderEditarCuotas() {
 
 function ecMarcarEliminar(i) {
     var c = _ecCuotasEditadas[i];
-    if (['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(c.estado) || c.recibo_url) {
+    // Bloquear solo si tiene recibo REAL (no string vacío) o está abonada/parcial/pendiente
+    var tieneReciboReal = c.recibo_url && String(c.recibo_url).trim() !== '';
+    if (['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(c.estado) || tieneReciboReal) {
         toast('No se puede eliminar una cuota abonada, parcial o pendiente', 'err');
         return;
     }
