@@ -841,7 +841,7 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
 
     // Obtener estudiantes via inscripciones (fuente de verdad para descuento y estado)
     var inscRes = await sb.from('inscripciones')
-        .select('estudiante_id, descuento_porcentaje, estado_academico')
+        .select('estudiante_id, descuento_porcentaje, estado_academico, descuento_motivo, descuento_desde, descuento_hasta')
         .eq('cohorte_id', cohorteId);
     var inscripciones = inscRes.data || [];
     var inscIds = inscripciones.map(function(i) { return i.estudiante_id; });
@@ -858,7 +858,10 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
             var insc = inscMap[est.id] || {};
             return Object.assign({}, est, {
                 descuento_porcentaje: Number(insc.descuento_porcentaje) || 0,
-                estado_academico:     insc.estado_academico || 'ACTIVO'
+                estado_academico:     insc.estado_academico || 'ACTIVO',
+                descuento_motivo:     insc.descuento_motivo || null,
+                descuento_desde:      insc.descuento_desde || null,
+                descuento_hasta:      insc.descuento_hasta || null
             });
         });
     }
@@ -987,8 +990,8 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
                 nuevoSaldo = montoOriginal;
             } else {
                 // Mes 2+: 5% compuesto, el primer mes es solo pérdida de descuento
-                nuevoMonto = montoOriginal;
                 nuevoSaldo = Math.round(montoOriginal * Math.pow(1.05, mesesMora - 1) * 100) / 100;
+                nuevoMonto = nuevoSaldo; // monto_final siempre = saldo cuando no hay pagos parciales
             }
 
             // Solo actualizar si hay cambio real
@@ -1132,7 +1135,15 @@ function renderTabla() {
             <td style="text-align:center;"><input type="checkbox" class="chk-e" data-dni="${est.dni}" onchange="onChk()"></td>
             <td class="cell-name" onclick="irEstudiante(${est.dni})">${escapeHtml(est.apellido + ', ' + est.nombre)}</td>
             <td class="cell-desc" style="color:${est.descuento_porcentaje > 0 ? 'var(--success)' : '#aaa'};">
-                ${est.descuento_porcentaje}%
+                <div style="font-weight:700;font-size:13px;">${est.descuento_porcentaje}%</div>
+                ${(function(){
+                    var ml={DOCENTE_FCE:'Docente FCE',EGRESADO_FCE:'Egresado FCE',BECA:'Beca',CONVENIO:'Convenio',OTRO:'Otro'};
+                    var motStr=est.descuento_motivo?(ml[est.descuento_motivo]||est.descuento_motivo):'';
+                    var ff=function(f){return f?f.split('-').reverse().join('/'):'';};
+                    var vig=est.descuento_desde?(ff(est.descuento_desde)+(est.descuento_hasta?' → '+ff(est.descuento_hasta):'')):'';
+                    return (motStr?'<div style="font-size:9px;color:#555;font-weight:600;text-transform:uppercase;line-height:1.2;">'+motStr+'</div>':'')
+                          +(vig?'<div style="font-size:9px;color:#888;line-height:1.2;">'+vig+'</div>':'');
+                })()}
                 <button class="edit-btn" title="Editar descuento" onclick='abrirDescuento(${descuentoInfo},this)'>✏️</button>
             </td>
             <td class="cell-email">${escapeHtml(est.email || '—')}</td>
@@ -1277,7 +1288,12 @@ async function guardarDescuento() {
 
         // FUENTE DE VERDAD: actualizar descuento en inscripciones (no en estudiantes)
         var resInsc = await sb.from('inscripciones')
-            .update({ descuento_porcentaje: pct })
+            .update({
+                descuento_porcentaje: pct,
+                descuento_motivo:     motivo || null,
+                descuento_desde:      desde || null,
+                descuento_hasta:      hasta || null
+            })
             .eq('estudiante_id', est.id)
             .eq('cohorte_id', COHORTE_ID);
         if (resInsc.error) throw resInsc.error;
