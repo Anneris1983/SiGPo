@@ -914,10 +914,10 @@ document.addEventListener('DOMContentLoaded', function() {
         toast('Faltan parámetros cohorte_id y programa_id en la URL', 'err');
         return;
     }
-    cargar();
+    cargar(true); // true = aplicar mora solo en el primer load
 });
 
-async function cargar() {
+async function cargar(aplicarMora) {
     spin(true);
     try {
         V.data = await obtenerCohorteDetalle(COHORTE_ID, PROGRAMA_ID);
@@ -925,10 +925,11 @@ async function cargar() {
             toast('No se encontró la cohorte o el programa', 'err');
             return;
         }
-        // Aplicar reglas de mora a todos los estudiantes de la cohorte
-        await aplicarMoraCohorteJS(V.data.estudiantes, COHORTE_ID);
-        // Recargar datos con mora ya aplicada
-        V.data = await obtenerCohorteDetalle(COHORTE_ID, PROGRAMA_ID);
+        // aplicarMora solo en el primer load, NO en recargas post-guardado
+        if (aplicarMora) {
+            await aplicarMoraCohorteJS(V.data.estudiantes, COHORTE_ID);
+            V.data = await obtenerCohorteDetalle(COHORTE_ID, PROGRAMA_ID);
+        }
         renderHeader();
         renderTabla();
         actualizarStats();
