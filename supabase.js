@@ -354,44 +354,97 @@ async function obtenerEstudiantes(programaId, cohorteId) {
 
 async function obtenerDetallePrograma(programaId) {
     const sb = await getSupabase();
-    const [progRes, cohRes, estRes, cobRes, egrRes] = await Promise.all([
+    console.log('🚀 [obtenerDetallePrograma] Iniciando:', programaId);
+    
+    const [progRes, cohRes, inscRes, cobRes, egrRes] = await Promise.all([
         sb.from('programas').select('*').eq('programa_id', programaId).single(),
         sb.from('cohortes').select('*').eq('programa_id', programaId).order('fecha_inicio', { ascending: false }),
-        sb.from('estudiantes').select('*').eq('programa_id', programaId),
+        sb.from('inscripciones').select('*').eq('cohorte_id', programaId),  // ✅ INSCRIPCIONES, NO ESTUDIANTES
         sb.from('cobros').select('*').eq('programa_id', programaId),
         sb.from('egresos').select('egreso_id,cohorte_id,monto_pagado').eq('programa_id', programaId)
     ]);
+    
     var prog = progRes.data;
-    if (!prog) return null;
+    if (!prog) {
+        console.error('❌ Programa NO ENCONTRADO');
+        return null;
+    }
+    
     var cohortes = cohRes.data || [];
-    var estudiantes = estRes.data || [];
+    var inscripciones = inscRes.data || [];  // ✅ CAMBIO CRÍTICO
     var cobros = cobRes.data || [];
     var egresos = egrRes.data || [];
+
+    console.log('📊 Datos cargados:', { 
+        cohortes: cohortes.length, 
+        inscripciones: inscripciones.length, 
+        cobros: cobros.length 
+    });
 
     return {
         id: prog.programa_id,
         nombre: prog.nombre,
         tipo: prog.tipo,
         cohortes: cohortes.map(function(coh) {
-            var estsCoh = estudiantes.filter(function(e) { return e.cohorte_id === coh.cohorte_id; });
-            var cobrosCoh = cobros.filter(function(c) { return c.cohorte_id === coh.cohorte_id; });
-            var egresosCoh = egresos.filter(function(e) { return e.cohorte_id === coh.cohorte_id; });
-            var enMora = 0, alDia = 0;
-            estsCoh.forEach(function(est) {
-                if (cobrosCoh.some(function(c) { return c.dni === est.dni && c.estado === 'EN_MORA'; })) enMora++;
-                else alDia++;
+            // ✅ USAR INSCRIPCIONES, NO ESTUDIANTES
+            var inscCoh = inscripciones.filter(function(i) { 
+                return i.cohorte_id === coh.cohorte_id; 
             });
+            
+            var cobrosCoh = cobros.filter(function(c) { 
+                return c.cohorte_id === coh.cohorte_id; 
+            });
+            
+            var egresosCoh = egresos.filter(function(e) { 
+                return e.cohorte_id === coh.cohorte_id; 
+            });
+            
+            // ✅ CONTAR POR INSCRIPCIÓN (no por estudiante)
+            var enMora = 0, alDia = 0;
+            inscCoh.forEach(function(insc) {
+                // Buscar si este estudiante tiene EN_MORA
+                var tieneEnMora = cobrosCoh.some(function(c) { 
+                    return c.dni && insc.estudiante_id && c.estado === 'EN_MORA'; 
+                });
+                if (tieneEnMora) {
+                    enMora++;
+                } else {
+                    alDia++;
+                }
+            });
+            
+            // ✅ SOLO CONTAR RECAUDADO SI ESTÁ ABONADA O PAGO_PARCIAL
             var recaudado = cobrosCoh.reduce(function(s, c) {
-                return s + (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0));
+                if (c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL') {
+                    var mAbonado = Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
+                    return s + mAbonado;
+                }
+                return s;
             }, 0);
+            
             var egresosMonto = egresosCoh.reduce(function(s, e) {
                 return s + Number(e.monto_pagado || 0);
             }, 0);
+            
+            console.log('💰', coh.nombre, {
+                inscripciones: inscCoh.length,
+                alDia: alDia,
+                enMora: enMora,
+                recaudado: recaudado
+            });
+            
             return {
-                id: coh.cohorte_id, nombre: coh.nombre, estado: coh.estado,
-                fechaInicio: coh.fecha_inicio, fechaFin: coh.fecha_fin,
-                estudiantes: estsCoh.length, alDia: alDia, enMora: enMora,
-                recaudado: recaudado, egresos: egresosMonto, saldo: recaudado - egresosMonto
+                id: coh.cohorte_id,
+                nombre: coh.nombre,
+                estado: coh.estado,
+                fechaInicio: coh.fecha_inicio,
+                fechaFin: coh.fecha_fin,
+                estudiantes: inscCoh.length,
+                alDia: alDia,
+                enMora: enMora,
+                recaudado: recaudado,
+                egresos: egresosMonto,
+                saldo: recaudado - egresosMonto
             };
         })
     };
