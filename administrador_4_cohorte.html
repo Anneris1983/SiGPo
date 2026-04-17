@@ -970,6 +970,9 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
             if (c.fecha_vencimiento >= hoyStr) continue;
             if (c.recibo_url && String(c.recibo_url).trim() !== '') continue;
             if (String(c.estado) === 'ABONADA') continue;
+            // Si ya tiene meses_mora calculado y está EN_MORA, no recalcular
+            // (evita pisar ediciones manuales en cada carga)
+            if (String(c.estado) === 'EN_MORA' && Number(c.meses_mora) > 0) continue;
 
             var fVenc = new Date(c.fecha_vencimiento + 'T00:00:00');
             var fHoy  = new Date(hoyStr + 'T00:00:00');
@@ -2111,17 +2114,21 @@ async function guardarEdicionCuotas() {
             var montoFinal = c.monto_final === null || c.monto_final === '' ? null : redondear2(c.monto_final);
             var saldoPendiente = montoFinal === null ? null : redondear2(Math.max(0, montoFinal - (Number(c.monto_abonado) || 0)));
             var estadoNuevo = montoFinal === null ? 'A_DEFINIR' : normalizarEstadoCuota(montoFinal, saldoPendiente, c.fecha_vencimiento, c.estado);
+            // monto_original = precio base SIN descuento
+            // Al editar manualmente, el usuario ingresa el monto FINAL (ya con descuento)
+            // Si el cobro tiene descuento, recalculamos el original: monto_final / (1 - pct/100)
+            var descPct = Number(c.descuento_porcentaje) || 0;
+            var nuevoOriginal = (montoFinal === null) ? null
+                : (descPct > 0 ? redondear2(montoFinal / (1 - descPct / 100)) : montoFinal);
             var upd = {
                 concepto:          c.concepto,
                 periodo:           c.periodo,
+                monto_original:    nuevoOriginal,
                 monto_final:       montoFinal,
                 saldo_pendiente:   saldoPendiente,
                 fecha_vencimiento: c.fecha_vencimiento || null,
                 estado:            estadoNuevo
             };
-            if (c.monto_original === null || c.monto_original === undefined || Number(c.monto_original) === Number(c.monto_final || 0)) {
-                upd.monto_original = montoFinal;
-            }
             var upRes = await sb.from('cobros').update(upd).eq('cobro_id', c.cobro_id);
             if (upRes.error) errores.push('Error al actualizar ' + c.concepto + ': ' + upRes.error.message);
         }
