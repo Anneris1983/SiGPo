@@ -359,7 +359,7 @@ async function obtenerDetallePrograma(programaId) {
     const [progRes, cohRes, inscRes, cobRes, egrRes] = await Promise.all([
         sb.from('programas').select('*').eq('programa_id', programaId).single(),
         sb.from('cohortes').select('*').eq('programa_id', programaId).order('fecha_inicio', { ascending: false }),
-        sb.from('inscripciones').select('*').eq('cohorte_id', programaId),  // ✅ INSCRIPCIONES, NO ESTUDIANTES
+        sb.from('inscripciones').select('*'),  // ✅ INSCRIPCIONES, NO ESTUDIANTES
         sb.from('cobros').select('*').eq('programa_id', programaId),
         sb.from('egresos').select('egreso_id,cohorte_id,monto_pagado').eq('programa_id', programaId)
     ]);
