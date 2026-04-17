@@ -981,12 +981,9 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
                        || String(c.estado) !== 'EN_MORA';
 
             if (hayDiff) {
-                var fechaMora = c.fecha_mora;
-                if (!fechaMora) {
-                    var dMora = new Date(fVenc.getTime() + 86400000);
-                    fechaMora = dMora.toISOString().split('T')[0];
-                }
-                await sb.from('cobros').update({
+                var dMora = new Date(fVenc.getTime() + 86400000);
+                var fechaMora = c.fecha_mora || dMora.toISOString().split('T')[0];
+                var res = await sb.from('cobros').update({
                     estado:               'EN_MORA',
                     monto_final:          nuevoMonto,
                     saldo_pendiente:      nuevoSaldo,
@@ -994,6 +991,7 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
                     meses_mora:           mesesMora,
                     fecha_mora:           fechaMora
                 }).eq('cobro_id', c.cobro_id);
+                if (res.error) console.error('mora update error cobro', c.cobro_id, res.error);
             }
         }
     }
