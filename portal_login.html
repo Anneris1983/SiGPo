@@ -208,29 +208,33 @@ async function iniciarSesion() {
     btn.disabled = true;
 
     try {
-        // 1. Login con Supabase Auth (email = dni@sigpo.fce)
-        var email = dni + '@sigpo.fce';
-        mostrarError('Conectando con Supabase...');
-        var resultado = await sb.auth.signInWithPassword({ email: email, password: password });
+        // 1. Buscar el email real del usuario por DNI
+        var respPre = await sb.from('usuarios').select('rol, nombre_completo, email, programa_id, dni, activo').eq('dni', dni).single();
+
+        if (respPre.error || !respPre.data) {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            mostrarError('DNI o contraseña incorrectos');
+            return;
+        }
+        if (!respPre.data.activo) {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            mostrarError('Usuario inactivo');
+            return;
+        }
+
+        // 2. Login con el email real del usuario
+        var resultado = await sb.auth.signInWithPassword({ email: respPre.data.email, password: password });
 
         if (resultado.error) {
             btn.classList.remove('loading');
             btn.disabled = false;
-            mostrarError('Error Supabase: ' + resultado.error.message + ' (status: ' + (resultado.error.status || 'N/A') + ')');
+            mostrarError('DNI o contraseña incorrectos');
             return;
         }
 
-        // 2. Obtener rol del usuario desde la tabla usuarios
-        var resp = await sb.from('usuarios').select('rol, nombre_completo, email, programa_id, dni').eq('dni', dni).eq('activo', true).single();
-
-        if (resp.error || !resp.data) {
-            btn.classList.remove('loading');
-            btn.disabled = false;
-            mostrarError('Usuario no encontrado o inactivo');
-            return;
-        }
-
-        var usuario = resp.data;
+        var usuario = respPre.data;
 
         // 3. Guardar datos en localStorage
         localStorage.setItem('sigpo_rol', usuario.rol);
