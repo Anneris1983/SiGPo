@@ -817,7 +817,7 @@ var _ecCuotasEditadas = [];
 async function obtenerCohorteDetalle(cohorteId, programaId) {
     const sb = await getSupabase();
 
-    const [progRes, cohRes, estRes, cobRes] = await Promise.all([
+    const [progRes, cohRes, cobRes] = await Promise.all([
         sb.from('programas')
           .select('programa_id, nombre, tipo')
           .eq('programa_id', programaId)
@@ -826,10 +826,6 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
           .select('cohorte_id, nombre, estado, fecha_inicio, fecha_fin')
           .eq('cohorte_id', cohorteId)
           .single(),
-        sb.from('estudiantes')
-          .select('dni, nombre, apellido, email, descuento_porcentaje, estado_academico, cohorte_id')
-          .eq('cohorte_id', cohorteId)
-          .order('apellido'),
         sb.from('cobros')
           .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, estado, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id')
           .eq('cohorte_id', cohorteId)
@@ -839,10 +835,33 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
 
     if (progRes.error || cohRes.error) return null;
 
-    var programa    = progRes.data;
-    var cohorte     = cohRes.data;
-    var estudiantes = estRes.data || [];
-    var cobros      = cobRes.data || [];
+    var programa = progRes.data;
+    var cohorte  = cohRes.data;
+    var cobros   = cobRes.data || [];
+
+    // Obtener estudiantes via inscripciones (fuente de verdad para descuento y estado)
+    var inscRes = await sb.from('inscripciones')
+        .select('estudiante_id, descuento_porcentaje, estado_academico')
+        .eq('cohorte_id', cohorteId);
+    var inscripciones = inscRes.data || [];
+    var inscIds = inscripciones.map(function(i) { return i.estudiante_id; });
+
+    var estudiantes = [];
+    if (inscIds.length) {
+        var estRes = await sb.from('estudiantes')
+            .select('id, dni, nombre, apellido, email')
+            .in('id', inscIds)
+            .order('apellido');
+        var inscMap = {};
+        inscripciones.forEach(function(i) { inscMap[i.estudiante_id] = i; });
+        estudiantes = (estRes.data || []).map(function(est) {
+            var insc = inscMap[est.id] || {};
+            return Object.assign({}, est, {
+                descuento_porcentaje: Number(insc.descuento_porcentaje) || 0,
+                estado_academico:     insc.estado_academico || 'ACTIVO'
+            });
+        });
+    }
 
     // Construir columnas dinámicas: conceptos únicos en orden de vencimiento
     var conceptosVistos = [];
@@ -864,7 +883,6 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
     });
 
     // Enriquecer cada estudiante con su array de cobros
-    // monto_abonado no existe en DB → se calcula como monto_final - saldo_pendiente
     var estudiantesEnriquecidos = estudiantes.map(function(est) {
         var cobrosEst = (cobrosPorDni[String(est.dni)] || []).map(function(c) {
             return Object.assign({}, c, {
@@ -1254,47 +1272,49 @@ async function guardarDescuento() {
     spin(true);
     try {
         var sb = await getSupabase();
-        var resEst = await sb.from('estudiantes')
-            .update({ descuento_porcentaje: pct })
-            .eq('dni', String(V.descTarget.dni))
-            .eq('cohorte_id', COHORTE_ID);
-        if (resEst.error) throw resEst.error;
-
         var est = V.data.estudiantes.find(function(e) { return String(e.dni) === String(V.descTarget.dni); });
-        if (est) {
-            for (var i = 0; i < est.cobros.length; i++) {
-                var c = est.cobros[i];
-                var estado = resolverEstadoCobro(c);
-                if (['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado)) continue;
+        if (!est) throw new Error('Estudiante no encontrado');
 
-                if (!tieneMontoDefinido(c)) {
-                    var updDef = await sb.from('cobros').update({
-                        descuento_porcentaje: pct,
-                        estado: 'A_DEFINIR'
-                    }).eq('cobro_id', c.cobro_id);
-                    if (updDef.error) throw updDef.error;
-                    continue;
-                }
+        // FUENTE DE VERDAD: actualizar descuento en inscripciones (no en estudiantes)
+        var resInsc = await sb.from('inscripciones')
+            .update({ descuento_porcentaje: pct })
+            .eq('estudiante_id', est.id)
+            .eq('cohorte_id', COHORTE_ID);
+        if (resInsc.error) throw resInsc.error;
 
-                var baseOriginal = c.monto_original !== null && c.monto_original !== undefined && c.monto_original !== ''
-                    ? Number(c.monto_original)
-                    : Number(c.monto_final || 0);
-                var montoAbonado = calcMontoAbonado(c);
-                var nuevoMontoFinal = redondear2(baseOriginal * (1 - pct / 100));
-                var nuevoSaldo = redondear2(Math.max(0, nuevoMontoFinal - montoAbonado));
-                var nuevoEstado = normalizarEstadoCuota(nuevoMontoFinal, nuevoSaldo, c.fecha_vencimiento, c.estado);
+        // Recalcular todos los cobros no pagados con el nuevo descuento
+        for (var i = 0; i < est.cobros.length; i++) {
+            var c = est.cobros[i];
+            var estado = resolverEstadoCobro(c);
+            if (['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado)) continue;
 
-                var resCobro = await sb.from('cobros').update({
-                    descuento_porcentaje: pct,
-                    monto_final: nuevoMontoFinal,
-                    saldo_pendiente: nuevoSaldo,
-                    estado: nuevoEstado
+            if (!tieneMontoDefinido(c)) {
+                // Cuotas A_DEFINIR: solo actualizar el descuento guardado
+                var updDef = await sb.from('cobros').update({
+                    descuento_porcentaje: pct
                 }).eq('cobro_id', c.cobro_id);
-                if (resCobro.error) throw resCobro.error;
+                if (updDef.error) throw updDef.error;
+                continue;
             }
+
+            // Recalcular desde monto_original
+            var baseOriginal = (c.monto_original !== null && c.monto_original !== undefined && c.monto_original !== '')
+                ? Number(c.monto_original)
+                : Number(c.monto_final || 0);
+            var montoAbonado = calcMontoAbonado(c);
+            var nuevoMontoFinal = redondear2(baseOriginal * (1 - pct / 100));
+            var nuevoSaldo = redondear2(Math.max(0, nuevoMontoFinal - montoAbonado));
+            var nuevoEstado = normalizarEstadoCuota(nuevoMontoFinal, nuevoSaldo, c.fecha_vencimiento, c.estado);
+
+            var resCobro = await sb.from('cobros').update({
+                descuento_porcentaje: pct,
+                monto_final:          nuevoMontoFinal,
+                saldo_pendiente:      nuevoSaldo,
+                estado:               nuevoEstado
+            }).eq('cobro_id', c.cobro_id);
+            if (resCobro.error) throw resCobro.error;
         }
 
-        console.log('Descuento actualizado', { dni: V.descTarget.dni, porcentaje: pct, desde: desde, hasta: hasta, motivo: motivo });
         toast('Descuento actualizado ✓', 'ok');
         cerrar('modal-descuento');
         await cargar();
@@ -1418,25 +1438,39 @@ async function guardarCuotas() {
     spin(true);
     try {
         var sb = await getSupabase();
+
+        // Construir mapa dni → descuento_porcentaje desde inscripciones (fuente de verdad)
+        var descuentoMap = {};
+        V.data.estudiantes.forEach(function(est) {
+            // descuento_porcentaje viene de inscripciones via obtenerEstudiantes()
+            descuentoMap[String(est.dni)] = Number(est.descuento_porcentaje) || 0;
+        });
+
         var registros = [];
         dnis.forEach(function(dni) {
+            var pct = descuentoMap[String(dni)] || 0;
             planFilas.forEach(function(f) {
                 var tieneMonto = f.monto !== '' && f.monto !== null && f.monto !== undefined && !isNaN(parseFloat(f.monto));
-                var monto = tieneMonto ? redondear2(parseFloat(f.monto)) : null;
+                var montoOriginal = tieneMonto ? redondear2(parseFloat(f.monto)) : null;
+                // Aplicar descuento del estudiante sobre el monto_original
+                var montoFinal = (tieneMonto && pct > 0)
+                    ? redondear2(montoOriginal * (1 - pct / 100))
+                    : montoOriginal;
                 var estado = !tieneMonto
                     ? 'A_DEFINIR'
-                    : normalizarEstadoCuota(monto, monto, f.vencimiento || null, 'NO_ABONADA');
+                    : normalizarEstadoCuota(montoFinal, montoFinal, f.vencimiento || null, 'NO_ABONADA');
                 registros.push({
-                    dni:               String(dni),
-                    programa_id:       PROGRAMA_ID,
-                    cohorte_id:        COHORTE_ID,
-                    concepto:          (f.nombre || '').trim(),
-                    periodo:           (f.periodo || '').trim(),
-                    fecha_vencimiento: f.vencimiento || null,
-                    monto_original:    monto,
-                    monto_final:       monto,
-                    saldo_pendiente:   monto,
-                    estado:            estado
+                    dni:                  String(dni),
+                    programa_id:          PROGRAMA_ID,
+                    cohorte_id:           COHORTE_ID,
+                    concepto:             (f.nombre || '').trim(),
+                    periodo:              (f.periodo || '').trim(),
+                    fecha_vencimiento:    f.vencimiento || null,
+                    monto_original:       montoOriginal,
+                    descuento_porcentaje: pct,
+                    monto_final:          montoFinal,
+                    saldo_pendiente:      montoFinal,
+                    estado:               estado
                 });
             });
         });
