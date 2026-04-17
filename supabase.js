@@ -40,24 +40,32 @@ async function getSupabase() {
 
 async function login(dni, password) {
     const sb = await getSupabase();
-    const email = dni + '@sigpo.fce';
 
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    // Primero buscar el email real del usuario por DNI
+    const { data: usuarioPre, error: errPre } = await sb
+        .from('usuarios')
+        .select('rol, nombre_completo, email, programa_id, dni, activo')
+        .eq('dni', String(dni))
+        .single();
+
+    if (errPre || !usuarioPre) {
+        return { ok: false, mensaje: 'DNI o contraseña incorrectos' };
+    }
+    if (!usuarioPre.activo) {
+        return { ok: false, mensaje: 'Usuario inactivo' };
+    }
+
+    // Login con el email real del usuario
+    const { data, error } = await sb.auth.signInWithPassword({
+        email: usuarioPre.email,
+        password: password
+    });
 
     if (error) {
         return { ok: false, mensaje: 'DNI o contraseña incorrectos' };
     }
 
-    const { data: usuario, error: errUser } = await sb
-        .from('usuarios')
-        .select('rol, nombre_completo, email, programa_id, dni')
-        .eq('dni', dni)
-        .eq('activo', true)
-        .single();
-
-    if (errUser || !usuario) {
-        return { ok: false, mensaje: 'Usuario no encontrado o inactivo' };
-    }
+    const usuario = usuarioPre;
 
     localStorage.setItem('sigpo_rol', usuario.rol);
     localStorage.setItem('sigpo_nombre', usuario.nombre_completo);
