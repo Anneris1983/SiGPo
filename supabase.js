@@ -12,19 +12,16 @@ const SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
 // INICIALIZAR CLIENTE
 // ══════════════════════════════════════════════════════════════
 
-// Cargar el SDK de Supabase desde CDN (se carga una vez)
 let _supabase = null;
 
 async function getSupabase() {
     if (_supabase) return _supabase;
 
-    // Si supabase ya fue cargado por un <script> tag
     if (window.supabase && window.supabase.createClient) {
         _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         return _supabase;
     }
 
-    // Cargar dinámicamente
     await new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
@@ -41,33 +38,35 @@ async function getSupabase() {
 // AUTENTICACIÓN
 // ══════════════════════════════════════════════════════════════
 
-/**
- * Login con email + password
- * Los usuarios se crean con email = "{dni}@sigpo.fce" para simplificar
- */
 async function login(dni, password) {
     const sb = await getSupabase();
-    const email = dni + '@sigpo.fce';
 
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    // Primero buscar el email real del usuario por DNI
+    const { data: usuarioPre, error: errPre } = await sb
+        .from('usuarios')
+        .select('rol, nombre_completo, email, programa_id, dni, activo')
+        .eq('dni', String(dni))
+        .single();
+
+    if (errPre || !usuarioPre) {
+        return { ok: false, mensaje: 'DNI o contraseña incorrectos' };
+    }
+    if (!usuarioPre.activo) {
+        return { ok: false, mensaje: 'Usuario inactivo' };
+    }
+
+    // Login con el email real del usuario
+    const { data, error } = await sb.auth.signInWithPassword({
+        email: usuarioPre.email,
+        password: password
+    });
 
     if (error) {
         return { ok: false, mensaje: 'DNI o contraseña incorrectos' };
     }
 
-    // Obtener rol del usuario desde la tabla usuarios
-    const { data: usuario, error: errUser } = await sb
-        .from('usuarios')
-        .select('rol, nombre_completo, email, programa_id, dni')
-        .eq('dni', dni)
-        .eq('activo', true)
-        .single();
+    const usuario = usuarioPre;
 
-    if (errUser || !usuario) {
-        return { ok: false, mensaje: 'Usuario no encontrado o inactivo' };
-    }
-
-    // Guardar en localStorage para acceso rápido
     localStorage.setItem('sigpo_rol', usuario.rol);
     localStorage.setItem('sigpo_nombre', usuario.nombre_completo);
     localStorage.setItem('sigpo_dni', usuario.dni);
@@ -82,9 +81,6 @@ async function login(dni, password) {
     };
 }
 
-/**
- * Logout
- */
 async function logout() {
     const sb = await getSupabase();
     await sb.auth.signOut();
@@ -96,9 +92,6 @@ async function logout() {
     return { ok: true };
 }
 
-/**
- * Obtener sesión actual
- */
 function getSesion() {
     const rol = localStorage.getItem('sigpo_rol');
     if (!rol) return null;
@@ -111,9 +104,6 @@ function getSesion() {
     };
 }
 
-/**
- * Verificar si hay sesión activa, redirigir a login si no
- */
 async function requireAuth() {
     const sb = await getSupabase();
     const { data: { session } } = await sb.auth.getSession();
@@ -124,11 +114,7 @@ async function requireAuth() {
     return getSesion();
 }
 
-/**
- * Recuperar contraseña
- */
 async function recuperarPassword(dni) {
-    // En producción: buscar email real del usuario y enviar reset
     const sb = await getSupabase();
     const { data: usuario } = await sb
         .from('usuarios')
@@ -138,7 +124,6 @@ async function recuperarPassword(dni) {
 
     if (!usuario) return { ok: false };
 
-    // Supabase envía email de reset
     const { error } = await sb.auth.resetPasswordForEmail(usuario.email);
     if (error) return { ok: false };
 
@@ -165,17 +150,59 @@ function cerrarSesion(e) {
     return false;
 }
 
-// Rutas por rol para redirigir después del login
 const RUTAS_POR_ROL = {
-    'ESTUDIANTE': 'portal_estudiante_2_dashboard.html',
-    'COORDINADOR': 'coordinador_1_dashboard.html',
-    'SECRETARIA': 'secretaria_1_dashboard.html',
-    'COOPERADORA': 'cooperadora_2_Dashboard.html',
+    'ESTUDIANTE':    'portal_estudiante_2_dashboard.html',
+    'COORDINADOR':   'coordinador_1_dashboard.html',
+    'SECRETARIA':    'secretaria_1_dashboard.html',
+    'COOPERADORA':   'cooperadora_2_Dashboard.html',
     'ADMINISTRADOR': 'administrador_2_dashboard.html'
 };
 
 // ══════════════════════════════════════════════════════════════
-// NOTIFICACIONES (campana)
+// TAXONOMÍA: PROGRAMAS vs CURSOS
+// Programas (posgrado): DOCTORADO, MAESTRIA, ESPECIALIZACION → Cohorte
+// Cursos: DIPLOMADO, DIPLOMATURA, CURSO, MICRO_MAESTRIA     → Edición
+// ══════════════════════════════════════════════════════════════
+
+var TIPOS_PROGRAMA = ['DOCTORADO', 'MAESTRIA', 'ESPECIALIZACION'];
+var TIPOS_CURSO    = ['DIPLOMADO', 'DIPLOMATURA', 'CURSO', 'MICRO_MAESTRIA'];
+
+function getCategoriaPrograma(tipo) {
+    if (!tipo) return 'Programa';
+    return TIPOS_PROGRAMA.indexOf((tipo || '').toUpperCase()) >= 0 ? 'Programa' : 'Curso';
+}
+
+function getLabelNomenclatura(tipo) {
+    return getCategoriaPrograma(tipo) === 'Programa' ? 'Cohorte' : 'Edición';
+}
+
+function getLabelNomenclaturaPlural(tipo) {
+    return getCategoriaPrograma(tipo) === 'Programa' ? 'Cohortes' : 'Ediciones';
+}
+
+function getIconoTipo(tipo) {
+    var t = (tipo || '').toUpperCase();
+    var iconos = {
+        'DOCTORADO':      '🎓',
+        'MAESTRIA':       '📊',
+        'ESPECIALIZACION':'💼',
+        'DIPLOMADO':      '🏅',
+        'DIPLOMATURA':    '📜',
+        'CURSO':          '📖',
+        'MICRO_MAESTRIA': '🔬'
+    };
+    return iconos[t] || '📚';
+}
+
+// ══════════════════════════════════════════════════════════════
+// ESTADOS ACADÉMICOS — constantes centralizadas
+// El enum en la BD tiene: ACTIVO, BAJA
+// ══════════════════════════════════════════════════════════════
+var ESTADO_ACTIVO = 'ACTIVO';
+var ESTADO_BAJA   = 'BAJA';
+
+// ══════════════════════════════════════════════════════════════
+// NOTIFICACIONES
 // ══════════════════════════════════════════════════════════════
 
 var _notifs = [];
@@ -231,9 +258,9 @@ function tiempoRelativo(fecha) {
     return new Date(fecha).toLocaleDateString('es-AR');
 }
 
-// Funciones de UI para la campana (usadas por todas las vistas)
 function toggleNotif() {
     var dd = document.getElementById('notif-dropdown');
+    if (!dd) return;
     dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
 }
 
@@ -266,7 +293,6 @@ function leerNotif(id) {
     marcarNotificacionLeida(id);
 }
 
-// Cerrar dropdown al click fuera
 document.addEventListener('click', function (e) {
     var w = document.querySelector('.notif-wrapper');
     if (w && !w.contains(e.target)) {
@@ -276,7 +302,7 @@ document.addEventListener('click', function (e) {
 });
 
 // ══════════════════════════════════════════════════════════════
-// FUNCIONES DE DATOS — PROGRAMAS / COHORTES / ESTUDIANTES
+// PROGRAMAS
 // ══════════════════════════════════════════════════════════════
 
 async function obtenerProgramas() {
@@ -293,49 +319,138 @@ async function obtenerCohortes(programaId) {
     return data || [];
 }
 
+/**
+ * Obtener estudiantes de una cohorte.
+ * CAMBIO: ahora usa la tabla inscripciones (N:N) en vez de
+ * los campos directos estudiantes.programa_id / cohorte_id
+ */
 async function obtenerEstudiantes(programaId, cohorteId) {
     const sb = await getSupabase();
-    let query = sb.from('estudiantes').select('*');
-    if (programaId) query = query.eq('programa_id', programaId);
-    if (cohorteId) query = query.eq('cohorte_id', cohorteId);
-    const { data } = await query.order('apellido');
+
+    if (cohorteId) {
+        // Obtener IDs de estudiantes inscritos en esta cohorte
+        const { data: insc } = await sb
+            .from('inscripciones')
+            .select('estudiante_id, descuento_porcentaje, estado_academico, fecha_inscripcion')
+            .eq('cohorte_id', cohorteId);
+
+        if (!insc || !insc.length) return [];
+
+        const ids = insc.map(function(i) { return i.estudiante_id; });
+        const { data: ests } = await sb
+            .from('estudiantes')
+            .select('*')
+            .in('id', ids)
+            .order('apellido');
+
+        // Fusionar datos de inscripción en cada estudiante
+        const inscMap = {};
+        insc.forEach(function(i) { inscMap[i.estudiante_id] = i; });
+
+        return (ests || []).map(function(e) {
+            var i = inscMap[e.id] || {};
+            return Object.assign({}, e, {
+                descuento_porcentaje: i.descuento_porcentaje !== undefined ? i.descuento_porcentaje : e.descuento_porcentaje,
+                estado_academico:     i.estado_academico || e.estado_academico,
+                cohorte_id:           cohorteId,
+                inscripcion_id:       i.id || null
+            });
+        });
+    }
+
+    if (programaId) {
+        // Cohortes del programa → inscripciones → estudiantes
+        const { data: cohs } = await sb
+            .from('cohortes')
+            .select('cohorte_id')
+            .eq('programa_id', programaId);
+        if (!cohs || !cohs.length) return [];
+
+        const cohIds = cohs.map(function(c) { return c.cohorte_id; });
+        const { data: insc } = await sb
+            .from('inscripciones')
+            .select('estudiante_id')
+            .in('cohorte_id', cohIds);
+        if (!insc || !insc.length) return [];
+
+        const ids = [...new Set(insc.map(function(i) { return i.estudiante_id; }))];
+        const { data: ests } = await sb
+            .from('estudiantes')
+            .select('*')
+            .in('id', ids)
+            .order('apellido');
+        return ests || [];
+    }
+
+    // Sin filtros: todos
+    const { data } = await sb.from('estudiantes').select('*').order('apellido');
     return data || [];
 }
 
+/**
+ * Detalle de programa con sus cohortes y estadísticas.
+ * CAMBIO: cuenta estudiantes por cohorte via inscripciones
+ */
 async function obtenerDetallePrograma(programaId) {
     const sb = await getSupabase();
-    const [progRes, cohRes, estRes, cobRes] = await Promise.all([
+    const [progRes, cohRes, cobRes, egrRes] = await Promise.all([
         sb.from('programas').select('*').eq('programa_id', programaId).single(),
         sb.from('cohortes').select('*').eq('programa_id', programaId).order('fecha_inicio', { ascending: false }),
-        sb.from('estudiantes').select('*').eq('programa_id', programaId),
-        sb.from('cobros').select('*').eq('programa_id', programaId)
+        sb.from('cobros').select('cobro_id,dni,cohorte_id,estado,monto_final,saldo_pendiente').eq('programa_id', programaId),
+        sb.from('egresos').select('egreso_id,cohorte_id,monto_pagado').eq('programa_id', programaId)
     ]);
+
     var prog = progRes.data;
     if (!prog) return null;
+
     var cohortes = cohRes.data || [];
-    var estudiantes = estRes.data || [];
-    var cobros = cobRes.data || [];
+    var cobros   = cobRes.data || [];
+    var egresos  = egrRes.data || [];
+
+    // Contar estudiantes por cohorte via inscripciones
+    var cohIds = cohortes.map(function(c) { return c.cohorte_id; });
+    var inscRes = cohIds.length
+        ? await sb.from('inscripciones').select('cohorte_id, estado_academico').in('cohorte_id', cohIds)
+        : { data: [] };
+    var inscripciones = inscRes.data || [];
 
     return {
-        id: prog.programa_id,
+        id:     prog.programa_id,
         nombre: prog.nombre,
-        tipo: prog.tipo,
+        tipo:   prog.tipo,
         cohortes: cohortes.map(function(coh) {
-            var estsCoh = estudiantes.filter(function(e) { return e.cohorte_id === coh.cohorte_id; });
-            var cobrosCoh = cobros.filter(function(c) { return c.cohorte_id === coh.cohorte_id; });
-            var enMora = 0, alDia = 0;
-            estsCoh.forEach(function(est) {
-                if (cobrosCoh.some(function(c) { return c.dni === est.dni && c.estado === 'EN_MORA'; })) enMora++;
-                else alDia++;
-            });
+            var inscCoh    = inscripciones.filter(function(i) { return i.cohorte_id === coh.cohorte_id; });
+            var cobrosCoh  = cobros.filter(function(c) { return c.cohorte_id === coh.cohorte_id; });
+            var egresosCoh = egresos.filter(function(e) { return e.cohorte_id === coh.cohorte_id; });
+
+            // DNIs únicos con mora en esta cohorte
+            var dnisConMora = new Set(
+                cobrosCoh.filter(function(c) { return c.estado === 'EN_MORA'; }).map(function(c) { return c.dni; })
+            );
+            var totalEst = inscCoh.length;
+            var enMora   = dnisConMora.size;
+            var alDia    = Math.max(0, totalEst - enMora);
+
+            var recaudado = cobrosCoh.reduce(function(s, c) {
+                return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
+            }, 0);
+            var egresosMonto = egresosCoh.reduce(function(s, e) {
+                return s + Number(e.monto_pagado || 0);
+            }, 0);
+
             return {
                 id: coh.cohorte_id, nombre: coh.nombre, estado: coh.estado,
                 fechaInicio: coh.fecha_inicio, fechaFin: coh.fecha_fin,
-                estudiantes: estsCoh.length, alDia: alDia, enMora: enMora
+                estudiantes: totalEst, alDia: alDia, enMora: enMora,
+                recaudado: recaudado, egresos: egresosMonto, saldo: recaudado - egresosMonto
             };
         })
     };
 }
+
+// ══════════════════════════════════════════════════════════════
+// PROGRAMAS / COHORTES — CRUD
+// ══════════════════════════════════════════════════════════════
 
 async function guardarPrograma(datos) {
     const sb = await getSupabase();
@@ -376,17 +491,17 @@ async function cambiarEstadoCohorte(cohorteId, estado) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// FUNCIONES DE DATOS — COBROS (CUOTAS)
+// COBROS (CUOTAS)
 // ══════════════════════════════════════════════════════════════
 
 async function obtenerCobros(filtros) {
     const sb = await getSupabase();
     let query = sb.from('cobros').select('*');
     if (filtros) {
-        if (filtros.dni) query = query.eq('dni', filtros.dni);
+        if (filtros.dni)         query = query.eq('dni', filtros.dni);
         if (filtros.programa_id) query = query.eq('programa_id', filtros.programa_id);
-        if (filtros.cohorte_id) query = query.eq('cohorte_id', filtros.cohorte_id);
-        if (filtros.estado) query = query.eq('estado', filtros.estado);
+        if (filtros.cohorte_id)  query = query.eq('cohorte_id', filtros.cohorte_id);
+        if (filtros.estado)      query = query.eq('estado', filtros.estado);
     }
     const { data } = await query.order('fecha_vencimiento');
     return data || [];
@@ -397,7 +512,6 @@ async function subirComprobante(cobroId, file) {
     const sesion = getSesion();
     if (!sesion) return { ok: false };
 
-    // 1. Subir archivo a Storage
     const fileName = sesion.dni + '/' + Date.now() + '_' + file.name;
     const { data: uploadData, error: uploadErr } = await sb.storage
         .from('comprobantes')
@@ -405,10 +519,8 @@ async function subirComprobante(cobroId, file) {
 
     if (uploadErr) return { ok: false, mensaje: 'Error al subir archivo: ' + uploadErr.message };
 
-    // 2. Obtener URL pública
     const { data: urlData } = sb.storage.from('comprobantes').getPublicUrl(fileName);
 
-    // 3. Actualizar cobro → estado PENDIENTE
     const { error: updateErr } = await sb.from('cobros').update({
         estado: 'PENDIENTE',
         comprobante_url: urlData.publicUrl,
@@ -422,7 +534,6 @@ async function subirComprobante(cobroId, file) {
 async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
     const sb = await getSupabase();
 
-    // 1. Subir recibo (obligatorio según reglas)
     let reciboUrl = null;
     if (reciboFile) {
         const fileName = 'recibos/' + cobroId + '/' + Date.now() + '_' + reciboFile.name;
@@ -434,12 +545,10 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
 
     if (!reciboUrl) return { ok: false, mensaje: 'Sin recibo, no se puede aprobar (Regla 1)' };
 
-    // 2. Obtener cobro actual
     const { data: cobro } = await sb.from('cobros').select('*').eq('cobro_id', cobroId).single();
     if (!cobro) return { ok: false, mensaje: 'Cobro no encontrado' };
 
     if (tipo === 'COMPLETO') {
-        // Pago completo → ABONADA
         await sb.from('cobros').update({
             estado: 'ABONADA',
             saldo_pendiente: 0,
@@ -447,7 +556,6 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
             recibo_url: reciboUrl
         }).eq('cobro_id', cobroId);
     } else {
-        // Pago parcial → PAGO_PARCIAL
         var nuevoSaldo = cobro.monto_final - montoAprobado;
         await sb.from('cobros').update({
             estado: 'PAGO_PARCIAL',
@@ -455,7 +563,6 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
             recibo_url: reciboUrl
         }).eq('cobro_id', cobroId);
 
-        // Registrar pago parcial
         await sb.from('pagos').insert({
             cobro_id: cobroId,
             monto: montoAprobado,
@@ -470,26 +577,19 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
 async function rechazarPago(cobroId) {
     const sb = await getSupabase();
 
-    // Obtener cobro para determinar estado real post-rechazo
     const { data: cobro } = await sb.from('cobros').select('*').eq('cobro_id', cobroId).single();
     if (!cobro) return { ok: false };
 
-    var nuevoEstado = 'NO_ABONADA'; // default
+    var nuevoEstado = 'NO_ABONADA';
 
-    // Regla de rechazo: volver al estado real
     if (!cobro.monto_final || cobro.monto_final === 0) {
         nuevoEstado = 'A_DEFINIR';
     } else if (cobro.fecha_vencimiento && new Date(cobro.fecha_vencimiento) < new Date()) {
         nuevoEstado = 'EN_MORA';
     } else {
-        // Verificar si tiene pagos parciales previos
         const { data: pagos } = await sb.from('pagos').select('monto').eq('cobro_id', cobroId);
         var totalPagado = (pagos || []).reduce(function (s, p) { return s + Number(p.monto); }, 0);
-        if (totalPagado > 0) {
-            nuevoEstado = 'PAGO_PARCIAL';
-        } else {
-            nuevoEstado = 'NO_ABONADA';
-        }
+        nuevoEstado = totalPagado > 0 ? 'PAGO_PARCIAL' : 'NO_ABONADA';
     }
 
     await sb.from('cobros').update({
@@ -502,7 +602,40 @@ async function rechazarPago(cobroId) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// FUNCIONES DE DATOS — EGRESOS
+// INSCRIPCIONES — alta/baja de estudiante en una cohorte
+// CAMBIO: ya no toca estudiantes.estado_academico sino inscripciones
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Cambiar estado académico de un estudiante EN UNA COHORTE específica.
+ * nuevoEstado debe ser 'ACTIVO' o 'BAJA' (valores del enum en la BD).
+ */
+async function cambiarEstadoInscripcion(estudianteId, cohorteId, nuevoEstado) {
+    const sb = await getSupabase();
+    const { error } = await sb
+        .from('inscripciones')
+        .update({ estado_academico: nuevoEstado })
+        .eq('estudiante_id', estudianteId)
+        .eq('cohorte_id', cohorteId);
+    return { ok: !error, error: error };
+}
+
+/**
+ * Obtener el estado académico de un estudiante en una cohorte concreta.
+ */
+async function getEstadoInscripcion(estudianteId, cohorteId) {
+    const sb = await getSupabase();
+    const { data } = await sb
+        .from('inscripciones')
+        .select('estado_academico, descuento_porcentaje, id')
+        .eq('estudiante_id', estudianteId)
+        .eq('cohorte_id', cohorteId)
+        .single();
+    return data || null;
+}
+
+// ══════════════════════════════════════════════════════════════
+// EGRESOS
 // ══════════════════════════════════════════════════════════════
 
 async function obtenerEgresos(filtros) {
@@ -510,8 +643,8 @@ async function obtenerEgresos(filtros) {
     let query = sb.from('egresos').select('*');
     if (filtros) {
         if (filtros.programa_id) query = query.eq('programa_id', filtros.programa_id);
-        if (filtros.cohorte_id) query = query.eq('cohorte_id', filtros.cohorte_id);
-        if (filtros.tipo) query = query.eq('tipo', filtros.tipo);
+        if (filtros.cohorte_id)  query = query.eq('cohorte_id', filtros.cohorte_id);
+        if (filtros.tipo)        query = query.eq('tipo', filtros.tipo);
     }
     const { data } = await query.order('fecha_estimada');
     return data || [];
@@ -535,7 +668,7 @@ async function eliminarEgreso(egresoId) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// FUNCIONES DE DATOS — CONFIGURACIÓN
+// CONFIGURACIÓN
 // ══════════════════════════════════════════════════════════════
 
 async function obtenerConfiguracion() {
@@ -549,13 +682,13 @@ async function obtenerConfiguracion() {
 async function guardarConfiguracion(datos) {
     const sb = await getSupabase();
     for (var clave in datos) {
-        await sb.from('configuracion').upsert({ clave: clave, valor: datos[clave] }, { onConflict: 'clave' });
+        await sb.from('configuracion').upsert({ clave: clave, valor: String(datos[clave]) }, { onConflict: 'clave' });
     }
     return { ok: true };
 }
 
 // ══════════════════════════════════════════════════════════════
-// FUNCIONES DE DATOS — CATEGORÍAS DE GASTOS
+// CATEGORÍAS DE GASTOS
 // ══════════════════════════════════════════════════════════════
 
 async function obtenerCategoriasGastos() {
@@ -573,13 +706,41 @@ async function guardarCategoriasGastos(cambios) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// FUNCIONES DE DATOS — USUARIOS
+// USUARIOS
 // ══════════════════════════════════════════════════════════════
 
 async function obtenerUsuarios() {
     const sb = await getSupabase();
     const { data } = await sb.from('usuarios').select('*').order('nombre_completo');
     return data || [];
+}
+
+/**
+ * Obtener programas asignados a un coordinador (via coordinadores_programas)
+ */
+async function obtenerProgramasCoordinador(usuarioId) {
+    const sb = await getSupabase();
+    const { data } = await sb
+        .from('coordinadores_programas')
+        .select('programa_id, programas(nombre, tipo)')
+        .eq('coordinador_id', usuarioId);
+    return data || [];
+}
+
+/**
+ * Asignar programas a un coordinador (reemplaza los existentes)
+ */
+async function asignarProgramasCoordinador(usuarioId, programaIds) {
+    const sb = await getSupabase();
+    // Borrar asignaciones previas
+    await sb.from('coordinadores_programas').delete().eq('coordinador_id', usuarioId);
+    if (!programaIds || !programaIds.length) return { ok: true };
+    // Insertar nuevas
+    const rows = programaIds.map(function(pid) {
+        return { coordinador_id: usuarioId, programa_id: pid };
+    });
+    const { error } = await sb.from('coordinadores_programas').insert(rows);
+    return { ok: !error };
 }
 
 async function guardarUsuario(datos) {
@@ -606,66 +767,131 @@ async function darDeAlta(usuarioId) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// FUNCIONES DE DATOS — DASHBOARD ADMIN
+// DASHBOARD ADMIN
+// CAMBIO: cuenta estudiantes via inscripciones, no via programa_id directo
 // ══════════════════════════════════════════════════════════════
 
 async function obtenerDashboardAdmin() {
     const sb = await getSupabase();
 
-    const [progRes, cohRes, estRes, cobRes, egrRes] = await Promise.all([
+    const [progRes, cohRes, cobRes, egrRes, inscRes] = await Promise.all([
         sb.from('programas').select('*'),
         sb.from('cohortes').select('*'),
-        sb.from('estudiantes').select('*').eq('estado_academico', 'ACTIVO'),
-        sb.from('cobros').select('*'),
-        sb.from('egresos').select('*')
+        sb.from('cobros').select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente'),
+        sb.from('egresos').select('egreso_id,programa_id,cohorte_id,monto_pagado'),
+        sb.from('inscripciones').select('id,estudiante_id,cohorte_id,estado_academico')
     ]);
 
-    var programas = progRes.data || [];
-    var cohortes = cohRes.data || [];
-    var estudiantes = estRes.data || [];
-    var cobros = cobRes.data || [];
-    var egresos = egrRes.data || [];
+    var programas     = progRes.data || [];
+    var cohortes      = cohRes.data || [];
+    var cobros        = cobRes.data || [];
+    var egresos       = egrRes.data || [];
+    var inscripciones = inscRes.data || [];
+
+    // IDs de estudiantes activos (via inscripciones activas)
+    var inscActivas = inscripciones.filter(function(i) { return i.estado_academico === ESTADO_ACTIVO; });
+    var estIdsActivos = new Set(inscActivas.map(function(i) { return i.estudiante_id; }));
+    var totalEstActivos = estIdsActivos.size;
+
+    // Construir mapa: cohorte_id → programa_id
+    var cohProgMap = {};
+    cohortes.forEach(function(c) { cohProgMap[c.cohorte_id] = c.programa_id; });
 
     var totalRecaudado = cobros.reduce(function (s, c) {
-        return s + (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0));
+        return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
     }, 0);
     var totalEgresos = egresos.reduce(function (s, e) { return s + Number(e.monto_pagado || 0); }, 0);
 
-    var enMora = 0;
-    estudiantes.forEach(function (est) {
-        if (cobros.some(function (c) { return c.dni === est.dni && c.estado === 'EN_MORA'; })) enMora++;
-    });
+    // Estudiantes en mora: tienen al menos 1 cobro EN_MORA
+    var dnisConMora = new Set(
+        cobros.filter(function(c) { return c.estado === 'EN_MORA'; }).map(function(c) { return c.dni; })
+    );
+
+    var totalProgramasPosgrado = programas.filter(function(p) { return getCategoriaPrograma(p.tipo) === 'Programa'; }).length;
+    var totalCursos            = programas.filter(function(p) { return getCategoriaPrograma(p.tipo) === 'Curso'; }).length;
 
     return {
-        totalProgramas: programas.length,
-        estudiantesActivos: estudiantes.length,
-        alDia: estudiantes.length - enMora,
-        enMora: enMora,
-        recaudado: totalRecaudado,
-        egresos: totalEgresos,
-        saldo: totalRecaudado - totalEgresos,
+        totalProgramas:          programas.length,
+        totalProgramasPosgrado:  totalProgramasPosgrado,
+        totalCursos:             totalCursos,
+        estudiantesActivos:      totalEstActivos,
+        alDia:                   totalEstActivos - dnisConMora.size,
+        enMora:                  dnisConMora.size,
+        recaudado:               totalRecaudado,
+        egresos:                 totalEgresos,
+        saldo:                   totalRecaudado - totalEgresos,
         programas: programas.map(function (p) {
-            var estsProg = estudiantes.filter(function (e) { return e.programa_id === p.programa_id; });
-            var cohsProg = cohortes.filter(function (c) { return c.programa_id === p.programa_id; });
+            // Cohortes del programa
+            var cohsProg = cohortes.filter(function(c) { return c.programa_id === p.programa_id; });
+            var cohIdsProg = cohsProg.map(function(c) { return c.cohorte_id; });
+
+            // Inscripciones en esas cohortes
+            var inscProg = inscripciones.filter(function(i) { return cohIdsProg.indexOf(i.cohorte_id) >= 0; });
+            var estIdsProg = new Set(inscProg.map(function(i) { return i.estudiante_id; }));
+
+            var cobrosProg  = cobros.filter(function(c) { return c.programa_id === p.programa_id; });
+            var egresosProg = egresos.filter(function(e) { return e.programa_id === p.programa_id; });
+
+            var dnisConMoraProg = new Set(
+                cobrosProg.filter(function(c) { return c.estado === 'EN_MORA'; }).map(function(c) { return c.dni; })
+            );
+
+            var recaudadoProg = cobrosProg.reduce(function (s, c) {
+                return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
+            }, 0);
+            var egresosPagadosProg = egresosProg.reduce(function (s, e) {
+                return s + Number(e.monto_pagado || 0);
+            }, 0);
+
+            var totalEstProg = estIdsProg.size;
+            var enMoraProg   = dnisConMoraProg.size;
+
             return {
-                id: p.programa_id,
-                nombre: p.nombre,
-                tipo: p.tipo,
-                estudiantes: estsProg.length,
-                cohortes: cohsProg.length
+                id:               p.programa_id,
+                nombre:           p.nombre,
+                tipo:             p.tipo,
+                categoria:        getCategoriaPrograma(p.tipo),
+                labelNomenclatura: getLabelNomenclaturaPlural(p.tipo),
+                estudiantes:      totalEstProg,
+                cohortes:         cohsProg.length,
+                alDia:            Math.max(0, totalEstProg - enMoraProg),
+                enMora:           enMoraProg,
+                recaudado:        recaudadoProg,
+                egresos:          egresosPagadosProg,
+                saldo:            recaudadoProg - egresosPagadosProg
             };
         })
     };
 }
 
 // ══════════════════════════════════════════════════════════════
-// DATOS FACTURACIÓN (ESTUDIANTE)
+// FACTURACIÓN (ESTUDIANTE)
 // ══════════════════════════════════════════════════════════════
 
 async function guardarDatosFacturacion(datos) {
-    // TODO: Crear tabla facturacion o agregar campos a estudiantes
     console.log('Datos facturación:', datos);
     return { ok: true };
+}
+
+// ══════════════════════════════════════════════════════════════
+// PERFIL DE USUARIO
+// ══════════════════════════════════════════════════════════════
+
+async function obtenerPerfilUsuario() {
+    var sesion = getSesion();
+    if (!sesion) return null;
+    const sb = await getSupabase();
+    var r = await sb.from('usuarios').select('*').eq('dni', sesion.dni).single();
+    if (!r.data) return null;
+    // Separar apellido / nombre desde nombre_completo (formato "Apellido Nombre")
+    var partes = (r.data.nombre_completo || '').trim().split(' ');
+    return {
+        apellido: partes.slice(-1)[0] || '',
+        nombre:   partes.slice(0, -1).join(' ') || r.data.nombre_completo,
+        dni:      r.data.dni,
+        email:    r.data.email,
+        rol:      r.data.rol
+    };
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -680,58 +906,45 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 });
 
-async function obtenerPerfilUsuario() {
-    var sesion = getSesion();
-    if (!sesion) return null;
-    const sb = await getSupabase();
-    var r = await sb.from('usuarios').select('*').eq('dni', sesion.dni).single();
-    if (!r.data) return null;
-    return {
-        apellido: (r.data.nombre_completo || '').split(' ').slice(-1)[0] || '',
-        nombre: (r.data.nombre_completo || '').split(' ').slice(0, -1).join(' ') || '',
-        dni: r.data.dni,
-        email: r.data.email,
-        rol: r.data.rol
-    };
-}
-
 // ══════════════════════════════════════════════════════════════
 // POLYFILL: google.script.run → Supabase
-// Intercepta TODAS las llamadas a google.script.run que existen
-// en las 54 vistas y las redirige a funciones de supabase.js
+// Intercepta las llamadas antiguas de GAS y las redirige a Supabase
 // ══════════════════════════════════════════════════════════════
 
-// Mapa de funciones GAS → funciones Supabase
 var _gasFunctions = {
     // Auth
-    login: login,
-    logout: logout,
-    getSesion: getSesion,
-    recuperarPassword: recuperarPassword,
-    obtenerPerfilUsuario: obtenerPerfilUsuario,
+    login:                    login,
+    logout:                   logout,
+    getSesion:                getSesion,
+    recuperarPassword:        recuperarPassword,
+    obtenerPerfilUsuario:     obtenerPerfilUsuario,
 
     // Notificaciones
-    obtenerNotificaciones: obtenerNotificaciones,
-    marcarNotificacionLeida: marcarNotificacionLeida,
-    marcarTodasNotificacionesLeidas: marcarTodasNotificacionesLeidas,
-    obtenerNotificacionesCoordinador: function() { return obtenerNotificaciones('COORDINADOR'); },
-    marcarNotificacionesCooperadoraLeidas: marcarTodasNotificacionesLeidas,
-    marcarNotificacionesCoordinadorLeidas: marcarTodasNotificacionesLeidas,
+    obtenerNotificaciones:                      obtenerNotificaciones,
+    marcarNotificacionLeida:                    marcarNotificacionLeida,
+    marcarTodasNotificacionesLeidas:            marcarTodasNotificacionesLeidas,
+    obtenerNotificacionesCoordinador:           function() { return obtenerNotificaciones('COORDINADOR'); },
+    marcarNotificacionesCooperadoraLeidas:      marcarTodasNotificacionesLeidas,
+    marcarNotificacionesCoordinadorLeidas:      marcarTodasNotificacionesLeidas,
 
     // Dashboard
-    obtenerDashboardAdmin: obtenerDashboardAdmin,
+    obtenerDashboardAdmin:       obtenerDashboardAdmin,
     obtenerDashboardCoordinador: async function() { return obtenerDashboardAdmin(); },
 
     // Programas / Cohortes
     obtenerDetallePrograma: obtenerDetallePrograma,
-    getProgramas: obtenerProgramas,
-    obtenerProgramas: obtenerProgramas,
-    obtenerCohortes: obtenerCohortes,
-    guardarPrograma: guardarPrograma,
-    eliminarPrograma: eliminarPrograma,
-    guardarCohorte: guardarCohorte,
-    eliminarCohorte: eliminarCohorte,
-    cambiarEstadoCohorte: cambiarEstadoCohorte,
+    getProgramas:           obtenerProgramas,
+    obtenerProgramas:       obtenerProgramas,
+    obtenerCohortes:        obtenerCohortes,
+    guardarPrograma:        guardarPrograma,
+    eliminarPrograma:       eliminarPrograma,
+    guardarCohorte:         guardarCohorte,
+    eliminarCohorte:        eliminarCohorte,
+    cambiarEstadoCohorte:   cambiarEstadoCohorte,
+
+    // Inscripciones / estado académico por cohorte
+    cambiarEstadoInscripcion: cambiarEstadoInscripcion,
+    getEstadoInscripcion:     getEstadoInscripcion,
 
     // Cobros
     subirComprobante: subirComprobante,
@@ -742,17 +955,19 @@ var _gasFunctions = {
     },
 
     // Configuración
-    obtenerConfiguracion: obtenerConfiguracion,
-    guardarConfiguracion: guardarConfiguracion,
+    obtenerConfiguracion:    obtenerConfiguracion,
+    guardarConfiguracion:    guardarConfiguracion,
     obtenerCategoriasGastos: obtenerCategoriasGastos,
     guardarCategoriasGastos: guardarCategoriasGastos,
 
     // Usuarios
-    guardarUsuario: guardarUsuario,
-    darDeBaja: darDeBaja,
-    darDeAlta: darDeAlta,
-    eliminarUsuario: async function(id) { return darDeBaja(id); },
-    eliminarRegistroCompleto: async function(id) {
+    guardarUsuario:                 guardarUsuario,
+    darDeBaja:                      darDeBaja,
+    darDeAlta:                      darDeAlta,
+    eliminarUsuario:                async function(id) { return darDeBaja(id); },
+    obtenerProgramasCoordinador:    obtenerProgramasCoordinador,
+    asignarProgramasCoordinador:    asignarProgramasCoordinador,
+    eliminarRegistroCompleto:       async function(id) {
         var sb = await getSupabase();
         await sb.from('usuarios').delete().eq('usuario_id', id);
         return { ok: true };
@@ -766,19 +981,19 @@ var _gasFunctions = {
     // Facturación
     guardarDatosFacturacion: guardarDatosFacturacion,
 
-    // Reportes / Exportaciones
-    getDatosComparativo: async function() { return { periodos: [], datos: [] }; },
-    exportarCashflow: async function() { alert('Exportación en desarrollo'); return null; },
-    exportarReporteExcel: async function() { alert('Exportación en desarrollo'); return null; },
-    exportarEstadoPagosExcel: async function() { alert('Exportación en desarrollo'); return null; },
-    exportarEstadoPagosPDF: async function() { alert('Exportación en desarrollo'); return null; },
-    exportarDesercionExcel: async function() { alert('Exportación en desarrollo'); return null; },
-    exportarDesercionPDF: async function() { alert('Exportación en desarrollo'); return null; },
-    exportarImpactoDescuentosExcel: async function() { alert('Exportación en desarrollo'); return null; },
-    exportarImpactoDescuentosPDF: async function() { alert('Exportación en desarrollo'); return null; },
-    exportarComparativoExcel: async function() { alert('Exportación en desarrollo'); return null; },
-    exportarComparativoPDF: async function() { alert('Exportación en desarrollo'); return null; },
-    exportarLogsExcel: async function() { alert('Exportación en desarrollo'); return null; },
+    // Reportes / Exportaciones (en desarrollo)
+    getDatosComparativo:              async function() { return { periodos: [], datos: [] }; },
+    exportarCashflow:                 async function() { alert('Exportación en desarrollo'); return null; },
+    exportarReporteExcel:             async function() { alert('Exportación en desarrollo'); return null; },
+    exportarEstadoPagosExcel:         async function() { alert('Exportación en desarrollo'); return null; },
+    exportarEstadoPagosPDF:           async function() { alert('Exportación en desarrollo'); return null; },
+    exportarDesercionExcel:           async function() { alert('Exportación en desarrollo'); return null; },
+    exportarDesercionPDF:             async function() { alert('Exportación en desarrollo'); return null; },
+    exportarImpactoDescuentosExcel:   async function() { alert('Exportación en desarrollo'); return null; },
+    exportarImpactoDescuentosPDF:     async function() { alert('Exportación en desarrollo'); return null; },
+    exportarComparativoExcel:         async function() { alert('Exportación en desarrollo'); return null; },
+    exportarComparativoPDF:           async function() { alert('Exportación en desarrollo'); return null; },
+    exportarLogsExcel:                async function() { alert('Exportación en desarrollo'); return null; },
 
     // Coordinador
     enviarSolicitudProgramaCurso: async function(datos) {
@@ -791,18 +1006,17 @@ var _gasFunctions = {
         var sb = await getSupabase();
         var query = sb.from('cobros').select('*');
         if (programaId) query = query.eq('programa_id', programaId);
-        if (cohorteId) query = query.eq('cohorte_id', cohorteId);
+        if (cohorteId)  query = query.eq('cohorte_id', cohorteId);
         var r = await query.order('fecha_vencimiento');
         return r.data || [];
     }
 };
 
-// Crear el objeto google.script.run que intercepta las llamadas
+// Proxy para interceptar google.script.run
 window.google = window.google || {};
 window.google.script = window.google.script || {};
 window.google.script.run = new Proxy({}, {
     get: function(target, prop) {
-        // withSuccessHandler / withFailureHandler — retornar un builder
         if (prop === 'withSuccessHandler') {
             return function(successFn) {
                 return new Proxy({}, {
@@ -816,8 +1030,7 @@ window.google.script.run = new Proxy({}, {
                                             var fn = _gasFunctions[prop3];
                                             if (fn) {
                                                 Promise.resolve(fn.apply(null, args))
-                                                    .then(successFn)
-                                                    .catch(failFn);
+                                                    .then(successFn).catch(failFn);
                                             } else {
                                                 console.warn('GAS polyfill: función no encontrada:', prop3);
                                                 failFn(new Error('Función no implementada: ' + prop3));
@@ -827,7 +1040,6 @@ window.google.script.run = new Proxy({}, {
                                 });
                             };
                         }
-                        // Direct call after withSuccessHandler
                         return function() {
                             var args = Array.from(arguments);
                             var fn = _gasFunctions[prop2];
@@ -856,8 +1068,7 @@ window.google.script.run = new Proxy({}, {
                                             var fn = _gasFunctions[prop3];
                                             if (fn) {
                                                 Promise.resolve(fn.apply(null, args))
-                                                    .then(successFn)
-                                                    .catch(failFn);
+                                                    .then(successFn).catch(failFn);
                                             } else {
                                                 failFn(new Error('Función no implementada: ' + prop3));
                                             }
@@ -877,7 +1088,7 @@ window.google.script.run = new Proxy({}, {
                 });
             };
         }
-        // Direct call: google.script.run.functionName()
+        // Llamada directa: google.script.run.functionName()
         return function() {
             var args = Array.from(arguments);
             var fn = _gasFunctions[prop];

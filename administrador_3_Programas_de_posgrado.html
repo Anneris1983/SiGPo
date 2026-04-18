@@ -266,13 +266,13 @@ function renderPrograma(data) {
         return;
     }
 
-    var iconosTipo = { 'DOCTORADO': '🎓', 'MAESTRIA': '📊', 'ESPECIALIZACION': '💼', 'DIPLOMATURA': '📜', 'MICRO_MAESTRIA': '🔬' };
-    var icono = iconosTipo[data.tipo] || '📚';
+    var icono = getIconoTipo(data.tipo);
     document.getElementById('header-titulo').textContent = icono + ' ' + (data.nombre || 'Programa');
 
     var cohortes = data.cohortes || [];
     var totalEstudiantes = cohortes.reduce(function(s, c) { return s + (c.estudiantes || 0); }, 0);
-    document.getElementById('page-subtitle').textContent = cohortes.length + ' cohortes • ' + totalEstudiantes + ' estudiantes totales';
+    var labelPlural = getLabelNomenclaturaPlural(data.tipo);
+    document.getElementById('page-subtitle').textContent = cohortes.length + ' ' + labelPlural.toLowerCase() + ' • ' + totalEstudiantes + ' estudiantes totales';
 
     var lista = document.getElementById('cohortes-list');
     if (cohortes.length === 0) {
@@ -299,6 +299,9 @@ function renderPrograma(data) {
             + '<div class="stat-box"><div class="stat-label">Estudiantes</div><div class="stat-value">' + (c.estudiantes || 0) + '</div></div>'
             + '<div class="stat-box"><div class="stat-label">Al día</div><div class="stat-value success">' + (c.alDia || 0) + '</div></div>'
             + '<div class="stat-box"><div class="stat-label">En mora</div><div class="stat-value' + ((c.enMora || 0) > 0 ? ' danger' : '') + '">' + (c.enMora || 0) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">Recaudado</div><div class="stat-value">' + fMillones(c.recaudado) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">Egresos</div><div class="stat-value warning">' + fMillones(c.egresos) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">Saldo</div><div class="stat-value ' + ((c.saldo || 0) >= 0 ? 'success' : 'danger') + '">' + fMillones(c.saldo) + '</div></div>'
             + '</div></div>'
             + '<div class="cohorte-right">'
             + '<span class="' + claseBadge + '">' + textoBadge + '</span>'
