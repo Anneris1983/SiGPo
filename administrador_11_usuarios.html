@@ -550,32 +550,21 @@ async function guardarU(){
             }
             toast('Usuario actualizado ✓','ok');
         } else {
-            // ── CREAR ──
-            // Paso 1: crear en Auth
-            var {data:ad, error:ea} = await sb.auth.signUp({ email:em, password:pw });
-            if (ea) throw ea;
-            if (!ad.user) throw new Error('No se pudo crear el usuario en Auth');
-            var authId = ad.user.id;
-
-            // Paso 2: insertar en tabla usuarios
-            var {data:nu, error:ei} = await sb.from('usuarios').insert({
-                auth_user_id:   authId,
-                nombre_completo: nc,
-                dni:            dn,
-                email:          em,
-                rol:            rol,
-                activo:         true,
-                estado_usuario: 'ACTIVO'
-            }).select('usuario_id').single();
-            if (ei) throw ei;
-
-            // Paso 3: programas si es coordinador
-            if (cids.length && nu){
-                await sb.from('coordinadores_programas').insert(
-                    cids.map(function(pid){ return {coordinador_id:nu.usuario_id,programa_id:pid}; })
-                );
-            }
-            toast('Usuario creado ✓. Debe confirmar su email para activar el acceso.','ok');
+            // ── CREAR ── via Edge Function (usa service_role internamente)
+            var sess = await sb.auth.getSession();
+            var token = sess.data.session ? sess.data.session.access_token : '';
+            var resp = await fetch('https://fdevypdowdhqaxvfiywt.supabase.co/functions/v1/crear-usuario', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZXZ5cGRvd2RocWF4dmZpeXd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzM3NTIsImV4cCI6MjA2MDUwOTc1Mn0.VXZFGGfj96H0AMbq9qRHLlYRqJr0CJCXPKkuLYkVKiM'
+                },
+                body: JSON.stringify({ email:em, password:pw, nombre_completo:nc, dni:dn, rol:rol, programa_ids:cids })
+            });
+            var result = await resp.json();
+            if (!resp.ok || result.error) throw new Error(result.error || 'Error al crear usuario');
+            toast('Usuario creado ✓ — puede iniciar sesión de inmediato','ok');
         }
         cerM('m-u');
         await cargar();
@@ -699,16 +688,15 @@ async function doImp(){
             if(!ap||!no||!dn||!em||!pw){ errs.push('Fila '+(i+2)+': faltan campos'); continue; }
             if(!rolesOK.includes(rl)){ errs.push('Fila '+(i+2)+': rol "'+rl+'" inválido'); continue; }
 
-            var {data:ad,error:ea}=await sb.auth.signUp({email:em,password:pw});
-            if(ea){ errs.push('Fila '+(i+2)+' ('+dn+'): '+ea.message); continue; }
-            var authId=ad.user?ad.user.id:null;
-            if(!authId){ errs.push('Fila '+(i+2)+': sin UUID de Auth'); continue; }
-
-            var {error:ei}=await sb.from('usuarios').insert({
-                auth_user_id:authId, nombre_completo:ap+' '+no,
-                dni:dn, email:em, rol:rl, activo:true, estado_usuario:'ACTIVO'
+            var sess2=await sb.auth.getSession();
+            var tok2=sess2.data.session?sess2.data.session.access_token:'';
+            var r2=await fetch('https://fdevypdowdhqaxvfiywt.supabase.co/functions/v1/crear-usuario',{
+                method:'POST',
+                headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok2,'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZXZ5cGRvd2RocWF4dmZpeXd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzM3NTIsImV4cCI6MjA2MDUwOTc1Mn0.VXZFGGfj96H0AMbq9qRHLlYRqJr0CJCXPKkuLYkVKiM'},
+                body:JSON.stringify({email:em,password:pw,nombre_completo:ap+' '+no,dni:dn,rol:rl,programa_ids:[]})
             });
-            if(ei){ errs.push('Fila '+(i+2)+' ('+dn+'): '+ei.message); continue; }
+            var j2=await r2.json();
+            if(!r2.ok||j2.error){ errs.push('Fila '+(i+2)+' ('+dn+'): '+(j2.error||'Error')); continue; }
             ok++;
         }
 
