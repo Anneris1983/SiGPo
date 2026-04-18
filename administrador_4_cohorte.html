@@ -1042,7 +1042,7 @@ function renderHeader() {
     document.getElementById('hdr-programa').textContent = p.nombre;
     document.getElementById('hdr-sub').textContent =
         c.nombre + ' • ' + es.length + ' estudiante' + (es.length !== 1 ? 's' : '')
-        + ' • ' + (c.fecha_inicio || '') + ' → ' + (c.fecha_fin || '');
+        + ' • ' + fFecha(c.fecha_inicio) + ' → ' + fFecha(c.fecha_fin);
 }
 
 /* ══════════════════════════════════════════════════
@@ -1130,7 +1130,7 @@ function renderTabla() {
                 + ' | Estado: ' + etiquetaEstado(estado)
                 + ' | Abonado: ' + fMonto(montoAbonado)
                 + ' | Saldo: ' + fMonto(c.saldo_pendiente)
-                + (c.fecha_vencimiento ? ' | Vence: ' + c.fecha_vencimiento : ''));
+                + (c.fecha_vencimiento ? ' | Vence: ' + fFecha(c.fecha_vencimiento) : ''));
 
             return '<td data-est="' + estado + '" title="' + title + '">'
                 + '<div class="cuota-cell-wrap">'
