@@ -1791,11 +1791,41 @@ function dlPlantilla() {
     } else { _dlPlantilla(); }
 }
 function _dlPlantilla() {
-    var cols = [['dni','apellido','nombre','email','telefono','descuento_porcentaje','concepto','periodo','fecha_vencimiento','monto_original','saldo_pendiente','fecha_pago']];
-    var ws = XLSX.utils.aoa_to_sheet(cols);
+    // Fila 1: cabeceras
+    // Fila 2: instrucciones
+    // Fila 3: ejemplo
+    var cabecera = [
+        'dni','apellido','nombre','email','telefono',
+        'descuento_porcentaje','descuento_desde','descuento_hasta',
+        'concepto','periodo','fecha_vencimiento','monto_original','monto_abonado','fecha_pago'
+    ];
+    var instrucciones = [
+        'Obligatorio','Obligatorio','Obligatorio','Obligatorio','Opcional',
+        'Obligatorio (0 si no tiene)',
+        'DD/MM/AAAA (vacío = aplica a todas las cuotas)','DD/MM/AAAA (opcional)',
+        'Ej: Inscripción / Cuota 1','Ej: Abril de 2026','DD/MM/AAAA',
+        'Precio base sin descuento','0 si no pagó nada','DD/MM/AAAA (solo si monto_abonado > 0)'
+    ];
+    var ejemplo = [
+        '30123456','González','María','maria@email.com','2616000000',
+        '5','01/04/2026','',
+        'Inscripción','Abril de 2026','15/04/2026','90000','0',''
+    ];
+    var ejemplo2 = [
+        '30123456','González','María','maria@email.com','2616000000',
+        '5','01/04/2026','',
+        'Cuota 1','Mayo de 2026','15/05/2026','90000','0',''
+    ];
+
+    var ws = XLSX.utils.aoa_to_sheet([cabecera, instrucciones, ejemplo, ejemplo2]);
+
+    // Ancho de columnas
+    ws['!cols'] = cabecera.map(function(h) { return { wch: Math.max(h.length + 4, 18) }; });
+
     var wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
-    XLSX.writeFile(wb, 'plantilla_importacion.xlsx');
+
+    XLSX.writeFile(wb, 'plantilla_importacion_SiGPo.xlsx');
 }
 
 function dOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('dragover'); }
@@ -1829,40 +1859,148 @@ async function _procesarImport(file) {
         var data = await file.arrayBuffer();
         var wb   = XLSX.read(data, { type: 'array', cellDates: true });
         var ws   = wb.Sheets[wb.SheetNames[0]];
-        var rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        // Saltar fila de instrucciones (fila 2) — leer desde fila 1 (cabecera) y fila 3+ (datos)
+        var allRows = XLSX.utils.sheet_to_json(ws, { defval: '', header: 1 });
+        if (allRows.length < 3) { toast('El archivo no tiene datos (mínimo 3 filas: cabecera + instrucciones + datos)', 'err'); spin(false); return; }
 
-        if (!rows.length) { toast('El archivo está vacío', 'err'); spin(false); return; }
+        // Fila 0 = cabeceras, Fila 1 = instrucciones (ignorar), Fila 2+ = datos
+        var headers = allRows[0].map(function(h) { return String(h).trim().toLowerCase().replace(/ /g,'_'); });
+        var dataRows = allRows.slice(2).filter(function(r) { return r.some(function(c){ return c !== ''; }); });
+        if (!dataRows.length) { toast('No hay datos para importar', 'err'); spin(false); return; }
 
-        var sb = await getSupabase();
-        var registros = rows.map(function(r) {
-            var montoRaw = r.monto_original;
-            var tieneMonto = montoRaw !== '' && montoRaw !== null && montoRaw !== undefined && !isNaN(parseFloat(montoRaw));
-            var monto = tieneMonto ? redondear2(parseFloat(montoRaw)) : null;
-            var abonado  = redondear2(parseFloat(r.monto_abonado) || 0);
-            var saldo = monto === null ? null : redondear2(Math.max(0, monto - abonado));
-            var fechaVto = r.fecha_vencimiento ? new Date(r.fecha_vencimiento).toISOString().split('T')[0] : null;
-            var estado = monto === null
-                ? 'A_DEFINIR'
-                : (abonado >= monto ? 'ABONADA' : (abonado > 0 ? 'PAGO_PARCIAL' : normalizarEstadoCuota(monto, saldo, fechaVto, 'NO_ABONADA')));
-            return {
-                dni:               String(r.dni),
-                programa_id:       PROGRAMA_ID,
-                cohorte_id:        COHORTE_ID,
-                concepto:          String(r.concepto || ''),
-                periodo:           String(r.periodo  || ''),
-                fecha_vencimiento: fechaVto,
-                monto_original:    monto,
-                monto_final:       monto,
-                saldo_pendiente:   saldo,
-                estado:            estado,
-                fecha_pago:        r.fecha_pago ? new Date(r.fecha_pago).toISOString().split('T')[0] : null
-            };
+        // Convertir a objetos
+        var rows = dataRows.map(function(r) {
+            var obj = {};
+            headers.forEach(function(h, i) { obj[h] = r[i] !== undefined ? r[i] : ''; });
+            return obj;
         });
 
-        var res = await sb.from('cobros').upsert(registros, { onConflict: 'dni,cohorte_id,programa_id,concepto,periodo' });
-        if (res.error) throw res.error;
+        var sb = await getSupabase();
 
-        toast(registros.length + ' registro' + (registros.length !== 1 ? 's' : '') + ' importado' + (registros.length !== 1 ? 's' : '') + ' ✓', 'ok');
+        // Helper: parsear fecha DD/MM/AAAA o Date de Excel → YYYY-MM-DD
+        function parseFecha(val) {
+            if (!val || val === '') return null;
+            if (val instanceof Date) return val.toISOString().split('T')[0];
+            var s = String(val).trim();
+            // DD/MM/AAAA
+            var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+            // AAAA-MM-DD
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+            // número serial de Excel
+            if (!isNaN(Number(s))) {
+                var d = new Date(Math.round((Number(s) - 25569) * 86400 * 1000));
+                return d.toISOString().split('T')[0];
+            }
+            return null;
+        }
+
+        // Agrupar filas por DNI para procesar estudiantes únicos
+        var estMap = {};
+        rows.forEach(function(r) {
+            var dni = String(r.dni || '').trim();
+            if (!dni) return;
+            if (!estMap[dni]) {
+                estMap[dni] = {
+                    dni:                   dni,
+                    apellido:              String(r.apellido || '').trim(),
+                    nombre:                String(r.nombre || '').trim(),
+                    email:                 String(r.email || '').trim(),
+                    telefono:              String(r.telefono || '').trim() || null,
+                    descuento_porcentaje:  redondear2(parseFloat(r.descuento_porcentaje) || 0),
+                    descuento_desde:       parseFecha(r.descuento_desde),
+                    descuento_hasta:       parseFecha(r.descuento_hasta),
+                    cuotas: []
+                };
+            }
+            // Agregar cuota al estudiante
+            var montoRaw = r.monto_original;
+            var tieneMonto = montoRaw !== '' && montoRaw !== null && !isNaN(parseFloat(montoRaw));
+            var montoOrig = tieneMonto ? redondear2(parseFloat(montoRaw)) : null;
+            var pct = estMap[dni].descuento_porcentaje;
+            // Aplicar descuento si no hay periodo de vigencia, o si la cuota cae dentro del periodo
+            var fechaVto = parseFecha(r.fecha_vencimiento);
+            var aplicaDescuento = pct > 0;
+            if (aplicaDescuento && estMap[dni].descuento_desde && fechaVto) {
+                aplicaDescuento = fechaVto >= estMap[dni].descuento_desde;
+            }
+            if (aplicaDescuento && estMap[dni].descuento_hasta && fechaVto) {
+                aplicaDescuento = aplicaDescuento && (fechaVto <= estMap[dni].descuento_hasta);
+            }
+            var montoFinal = (montoOrig !== null && aplicaDescuento)
+                ? redondear2(montoOrig * (1 - pct / 100))
+                : montoOrig;
+            var abonado = redondear2(parseFloat(r.monto_abonado) || 0);
+            var saldo = montoFinal === null ? null : redondear2(Math.max(0, montoFinal - abonado));
+            var estado = montoFinal === null
+                ? 'A_DEFINIR'
+                : (abonado >= montoFinal ? 'ABONADA'
+                    : (abonado > 0 ? 'PAGO_PARCIAL'
+                        : normalizarEstadoCuota(montoFinal, saldo, fechaVto, 'NO_ABONADA')));
+            estMap[dni].cuotas.push({
+                concepto:          String(r.concepto || '').trim(),
+                periodo:           String(r.periodo || '').trim(),
+                fecha_vencimiento: fechaVto,
+                monto_original:    montoOrig,
+                descuento_porcentaje: aplicaDescuento ? pct : 0,
+                monto_final:       montoFinal,
+                saldo_pendiente:   saldo,
+                estado:            estado,
+                fecha_pago:        parseFecha(r.fecha_pago)
+            });
+        });
+
+        var dnis = Object.keys(estMap);
+        if (!dnis.length) { toast('No se encontraron registros válidos (revisá que la columna dni tenga datos)', 'err'); spin(false); return; }
+
+        var estudiantesCreados = 0, inscripcionesCreadas = 0, cobrosCreados = 0, errores = [];
+
+        for (var di = 0; di < dnis.length; di++) {
+            var est = estMap[dnis[di]];
+
+            // 1. Upsert estudiante
+            var { data: estData, error: estErr } = await sb.from('estudiantes')
+                .upsert({ dni: est.dni, apellido: est.apellido, nombre: est.nombre, email: est.email, telefono: est.telefono }, { onConflict: 'dni' })
+                .select('id').single();
+            if (estErr) { errores.push('Estudiante ' + est.dni + ': ' + estErr.message); continue; }
+            estudiantesCreados++;
+
+            var estId = estData.id;
+
+            // 2. Upsert inscripción con descuento
+            var { error: inscErr } = await sb.from('inscripciones')
+                .upsert({
+                    estudiante_id:        estId,
+                    cohorte_id:           COHORTE_ID,
+                    descuento_porcentaje: est.descuento_porcentaje,
+                    descuento_desde:      est.descuento_desde,
+                    descuento_hasta:      est.descuento_hasta,
+                    estado_academico:     'ACTIVO'
+                }, { onConflict: 'estudiante_id,cohorte_id' });
+            if (inscErr) { errores.push('Inscripción ' + est.dni + ': ' + inscErr.message); continue; }
+            inscripcionesCreadas++;
+
+            // 3. Insertar cobros
+            var cobrosEst = est.cuotas.map(function(c) {
+                return Object.assign({}, c, {
+                    dni:        est.dni,
+                    programa_id: PROGRAMA_ID,
+                    cohorte_id:  COHORTE_ID
+                });
+            });
+            var { error: cobErr } = await sb.from('cobros')
+                .upsert(cobrosEst, { onConflict: 'dni,cohorte_id,programa_id,concepto,periodo' });
+            if (cobErr) { errores.push('Cobros ' + est.dni + ': ' + cobErr.message); continue; }
+            cobrosCreados += cobrosEst.length;
+        }
+
+        if (errores.length) {
+            console.error('Errores importación:', errores);
+            toast('Importado con ' + errores.length + ' error' + (errores.length !== 1 ? 'es' : '') + '. Ver consola.', 'err');
+        } else {
+            toast(estudiantesCreados + ' estudiante' + (estudiantesCreados !== 1 ? 's' : '') + ' · ' + cobrosCreados + ' cuota' + (cobrosCreados !== 1 ? 's' : '') + ' importada' + (cobrosCreados !== 1 ? 's' : '') + ' ✓', 'ok');
+        }
+
         cerrar('modal-importar');
         document.getElementById('imp-prev').classList.remove('show');
         document.getElementById('btn-imp').disabled = true;
