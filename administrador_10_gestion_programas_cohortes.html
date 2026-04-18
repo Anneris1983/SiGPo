@@ -154,7 +154,7 @@
                 <div class="stat-box"><div class="stat-value" id="stat-doc">—</div><div class="stat-label">Doctorados</div></div>
                 <div class="stat-box"><div class="stat-value" id="stat-mae">—</div><div class="stat-label">Maestrías</div></div>
                 <div class="stat-box"><div class="stat-value" id="stat-esp">—</div><div class="stat-label">Especializaciones</div></div>
-                <div class="stat-box"><div class="stat-value" id="stat-cur">—</div><div class="stat-label">Cursos/Diplomados</div></div>
+                <div class="stat-box"><div class="stat-value" id="stat-cur">—</div><div class="stat-label">Cursos</div></div>
             </div>
         </div>
         <div class="card">
@@ -204,11 +204,9 @@
                 <select id="prog-tipo">
                     <option value="DOCTORADO">Doctorado</option>
                     <option value="MAESTRIA" selected>Maestría</option>
+                    <option value="MICRO_MAESTRIA">Maestría (Micro Maestría)</option>
                     <option value="ESPECIALIZACION">Especialización</option>
-                    <option value="DIPLOMADO">Diplomado</option>
-                    <option value="DIPLOMATURA">Diplomatura</option>
-                    <option value="MICRO_MAESTRIA">Micro Maestría</option>
-                    <option value="CURSO">Curso</option>
+                    <option value="CURSO">Curso (Diplomado, Diplomatura, etc.)</option>
                 </select>
             </div>
             <div class="mfield">
@@ -317,10 +315,10 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function fMonto(n) { return '$'+Math.round(Number(n)||0).toLocaleString('es-AR'); }
 
 function iconoTipo(t) {
-    return {DOCTORADO:'🎓',MAESTRIA:'📊',ESPECIALIZACION:'💼',DIPLOMADO:'🏅',DIPLOMATURA:'📜',MICRO_MAESTRIA:'🔬',CURSO:'📖'}[t]||'📚';
+    return {DOCTORADO:'🎓',MAESTRIA:'📊',ESPECIALIZACION:'💼',DIPLOMADO:'📖',DIPLOMATURA:'📖',MICRO_MAESTRIA:'📖',CURSO:'📖'}[t]||'📖';
 }
 function labelTipo(t) {
-    return {DOCTORADO:'Doctorado',MAESTRIA:'Maestría',ESPECIALIZACION:'Especialización',DIPLOMADO:'Diplomado',DIPLOMATURA:'Diplomatura',MICRO_MAESTRIA:'Micro Maestría',CURSO:'Curso'}[t]||t;
+    return {DOCTORADO:'Doctorado',MAESTRIA:'Maestría',ESPECIALIZACION:'Especialización',DIPLOMADO:'Curso',DIPLOMATURA:'Curso',MICRO_MAESTRIA:'Curso',CURSO:'Curso'}[t]||t;
 }
 
 // ── CARGAR PROGRAMAS ──────────────────────
@@ -362,7 +360,7 @@ async function cargarProgramas() {
         // Stats
         document.getElementById('stat-total').textContent = _programas.length;
         document.getElementById('stat-doc').textContent   = _programas.filter(function(p){return p.tipo==='DOCTORADO';}).length;
-        document.getElementById('stat-mae').textContent   = _programas.filter(function(p){return p.tipo==='MAESTRIA';}).length;
+        document.getElementById('stat-mae').textContent   = _programas.filter(function(p){return p.tipo==='MAESTRIA'||p.tipo==='MICRO_MAESTRIA';}).length;
         document.getElementById('stat-esp').textContent   = _programas.filter(function(p){return p.tipo==='ESPECIALIZACION';}).length;
         document.getElementById('stat-cur').textContent   = _programas.filter(function(p){return ['DIPLOMADO','DIPLOMATURA','MICRO_MAESTRIA','CURSO'].indexOf(p.tipo)>=0;}).length;
 
@@ -380,8 +378,15 @@ function renderProgramas(lista) {
         return;
     }
     var grupos = {};
-    lista.forEach(function(p){ var t=p.tipo||'OTRO'; if(!grupos[t])grupos[t]=[]; grupos[t].push(p); });
-    var orden = ['DOCTORADO','MAESTRIA','ESPECIALIZACION','DIPLOMADO','DIPLOMATURA','MICRO_MAESTRIA','CURSO','OTRO'];
+    lista.forEach(function(p){
+        var t = p.tipo||'OTRO';
+        // Agrupar tipos
+        if (['DIPLOMADO','DIPLOMATURA'].indexOf(t) >= 0) t = 'CURSO';
+        if (t === 'MICRO_MAESTRIA') t = 'MAESTRIA';
+        if(!grupos[t]) grupos[t]=[];
+        grupos[t].push(p);
+    });
+    var orden = ['DOCTORADO','MAESTRIA','ESPECIALIZACION','CURSO','OTRO'];
     var html = '';
     orden.forEach(function(tipo) {
         if (!grupos[tipo]||!grupos[tipo].length) return;
