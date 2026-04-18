@@ -426,14 +426,12 @@ async function abrirModalPrograma(id) {
     document.getElementById('prog-id').value = id || '';
     document.getElementById('prog-tipo').value = 'MAESTRIA';
     document.getElementById('prog-nombre').value = '';
-    document.getElementById('prog-desc').value = '';
     await cargarCoordsSelect([]);
     if (id) {
         var p = _programas.find(function(x){return x.programa_id===id;});
         if (p) {
             document.getElementById('prog-tipo').value = p.tipo||'MAESTRIA';
             document.getElementById('prog-nombre').value = p.nombre||'';
-            // descripcion no existe en la tabla
             // Coordinadores asignados
             var sb = await getSupabase();
             var {data:asign} = await sb.from('coordinadores_programas').select('coordinador_id').eq('programa_id',id);
@@ -463,7 +461,6 @@ async function guardarPrograma() {
     var id     = document.getElementById('prog-id').value;
     var tipo   = document.getElementById('prog-tipo').value;
     var nombre = document.getElementById('prog-nombre').value.trim();
-    var desc   = document.getElementById('prog-desc').value.trim();
     if (!nombre) { toast('El nombre es obligatorio','err'); return; }
     var coordIds = Array.from(document.getElementById('prog-coords').selectedOptions)
         .map(function(o){return parseInt(o.value);}).filter(Boolean);
