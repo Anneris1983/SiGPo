@@ -200,11 +200,10 @@
             </div>
             <div id="g-coord">
                 <div class="mf">
-                    <label>Programa(s) asignado(s)</label>
-                    <select id="u-progs" multiple style="min-height:85px;">
-                        <option disabled>Cargando...</option>
-                    </select>
-                    <div class="mhint">Ctrl/Cmd para seleccionar varios</div>
+                    <label>Asignaciones <span style="font-weight:400;color:#888;font-size:11px;">(programa + cohorte opcional)</span></label>
+                    <div id="coord-asignaciones" style="display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;padding:4px 0;"></div>
+                    <button type="button" onclick="coordAgregar()" style="margin-top:8px;padding:6px 12px;border:2px dashed #7c3aed;background:none;border-radius:8px;color:#7c3aed;font-size:12px;font-weight:600;cursor:pointer;width:100%;">+ Agregar asignación</button>
+                    <div class="mhint">Dejá Cohorte en "Todo el programa" para coordinar todas las cohortes.</div>
                 </div>
             </div>
             <div id="g-est">
@@ -395,11 +394,15 @@ async function cargar(){
 
         // 3. Programas de coordinadores (opcional)
         var cm = {};
-        var rc = await sb.from('coordinadores_programas').select('coordinador_id,programas(nombre)');
+        var rc = await sb.from('coordinadores_programas').select('coordinador_id,programas(nombre),cohortes(nombre)');
         if (!rc.error) {
             (rc.data||[]).forEach(function(c){
                 if (!cm[c.coordinador_id]) cm[c.coordinador_id]=[];
-                if (c.programas) cm[c.coordinador_id].push(c.programas.nombre);
+                if (c.programas) {
+                    var lbl = c.programas.nombre;
+                    if (c.cohortes) lbl += ' · '+c.cohortes.nombre;
+                    cm[c.coordinador_id].push(lbl);
+                }
             });
         }
         _us = _us.map(function(u){
@@ -479,11 +482,8 @@ async function abrirU(id){
     document.getElementById('ph2').style.display = id ? 'block' : 'none';
     document.getElementById('g-coord').style.display = 'none';
     document.getElementById('g-est').style.display = 'none';
-    // Cargar programas en selector
-    var sel = document.getElementById('u-progs');
-    sel.innerHTML = _pr.length
-        ? _pr.map(function(p){ return '<option value="'+p.programa_id+'">'+esc(p.nombre)+'</option>'; }).join('')
-        : '<option disabled>No hay programas</option>';
+    _coordAsigs = [];
+    coordRenderAsig([]);
 
     if (id){
         var u = _us.find(function(x){ return x.usuario_id===id; });
@@ -494,12 +494,16 @@ async function abrirU(id){
             document.getElementById('u-em').value = u.email||'';
             document.getElementById('u-rol').value = u.rol||'';
             onRol();
-            // Marcar programas asignados
             if (u.rol==='COORDINADOR'){
                 var sb = await getSupabase();
-                var ra = await sb.from('coordinadores_programas').select('programa_id').eq('coordinador_id',id);
-                var aids = (ra.data||[]).map(function(a){ return a.programa_id; });
-                Array.from(sel.options).forEach(function(o){ o.selected = aids.indexOf(parseInt(o.value))>=0; });
+                var ra = await sb.from('coordinadores_programas')
+                    .select('programa_id,cohorte_id').eq('coordinador_id',id);
+                _coordAsigs = (ra.data||[]).map(function(a){
+                    return {programa_id:a.programa_id, cohorte_id:a.cohorte_id||null};
+                });
+                if (!_coordAsigs.length) _coordAsigs = [{programa_id:null,cohorte_id:null}];
+                await cargarCohortesXProg();
+                coordRenderAsig(_coordAsigs);
             }
         }
     }
@@ -510,6 +514,68 @@ function onRol(){
     var r = document.getElementById('u-rol').value;
     document.getElementById('g-coord').style.display = r==='COORDINADOR' ? 'block' : 'none';
     document.getElementById('g-est').style.display  = r==='ESTUDIANTE'  ? 'block' : 'none';
+    if (r==='COORDINADOR' && !_coordAsigs.length){
+        cargarCohortesXProg().then(function(){
+            _coordAsigs = [{programa_id:null,cohorte_id:null}];
+            coordRenderAsig(_coordAsigs);
+        });
+    }
+}
+
+// ═══════════════════════════════════════════
+// COORDINADORES — ASIGNACIONES PROGRAMA+COHORTE
+// ═══════════════════════════════════════════
+var _coordAsigs = [];
+var _cohProg = {};
+
+async function cargarCohortesXProg(){
+    var sb = await getSupabase();
+    var r = await sb.from('cohortes').select('cohorte_id,programa_id,nombre').order('nombre');
+    _cohProg = {};
+    (r.data||[]).forEach(function(c){
+        if(!_cohProg[c.programa_id]) _cohProg[c.programa_id]=[];
+        _cohProg[c.programa_id].push(c);
+    });
+}
+
+function coordRenderAsig(asigs){
+    var cont = document.getElementById('coord-asignaciones');
+    if(!cont) return;
+    if(!asigs.length){
+        cont.innerHTML = '<div style="font-size:12px;color:#aaa;padding:8px 0;">Sin asignaciones. Usá el botón para agregar.</div>';
+        return;
+    }
+    cont.innerHTML = asigs.map(function(a,i){
+        var progOpts = '<option value="">— Programa —</option>' + _pr.map(function(p){
+            return '<option value="'+p.programa_id+'"'+(a.programa_id===p.programa_id?' selected':'')+'>'+esc(p.nombre)+'</option>';
+        }).join('');
+        var cohs = a.programa_id ? (_cohProg[a.programa_id]||[]) : [];
+        var cohOpts = '<option value="">Todo el programa</option>' + cohs.map(function(c){
+            return '<option value="'+c.cohorte_id+'"'+(a.cohorte_id===c.cohorte_id?' selected':'')+'>'+esc(c.nombre)+'</option>';
+        }).join('');
+        return '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;background:#f8f6f1;border-radius:8px;padding:8px 10px;">'
+            +'<select onchange="coordCambiarProg('+i+',this.value)" style="padding:7px;border:2px solid #e0e0e0;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;">'+progOpts+'</select>'
+            +'<select id="coh-sel-'+i+'" onchange="coordCambiarCoh('+i+',this.value)" style="padding:7px;border:2px solid #e0e0e0;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;">'+cohOpts+'</select>'
+            +'<button type="button" onclick="coordEliminar('+i+')" style="padding:5px 9px;border:none;background:#fce4ec;color:#c62828;border-radius:6px;cursor:pointer;font-size:15px;font-weight:700;line-height:1;">×</button>'
+            +'</div>';
+    }).join('');
+}
+
+function coordAgregar(){
+    _coordAsigs.push({programa_id:null,cohorte_id:null});
+    coordRenderAsig(_coordAsigs);
+}
+function coordEliminar(i){
+    _coordAsigs.splice(i,1);
+    coordRenderAsig(_coordAsigs);
+}
+function coordCambiarProg(i,pid){
+    _coordAsigs[i].programa_id = pid ? parseInt(pid) : null;
+    _coordAsigs[i].cohorte_id  = null;
+    coordRenderAsig(_coordAsigs);
+}
+function coordCambiarCoh(i,cid){
+    _coordAsigs[i].cohorte_id = cid ? parseInt(cid) : null;
 }
 
 async function guardarU(){
@@ -525,10 +591,10 @@ async function guardarU(){
     if (!id && !pw){ toast('La contraseña es obligatoria para usuarios nuevos','err'); return; }
     if (pw && pw.length<8){ toast('La contraseña debe tener al menos 8 caracteres','err'); return; }
 
-
     var nc = ap+' '+no;
-    var cids = rol==='COORDINADOR'
-        ? Array.from(document.getElementById('u-progs').selectedOptions).map(function(o){ return parseInt(o.value); }).filter(Boolean)
+    // Asignaciones válidas: programa_id requerido, cohorte_id opcional
+    var asigs = rol==='COORDINADOR'
+        ? _coordAsigs.filter(function(a){ return a.programa_id; })
         : [];
 
     spin(true);
@@ -539,11 +605,11 @@ async function guardarU(){
             // ── EDITAR ──
             var {error:e1} = await sb.from('usuarios').update({ apellido:ap, nombre:no, nombre_completo:nc, email:em, rol:rol }).eq('usuario_id',parseInt(id));
             if (e1) throw e1;
-            // Actualizar programas coordinador
+            // Reemplazar asignaciones coordinador
             await sb.from('coordinadores_programas').delete().eq('coordinador_id',parseInt(id));
-            if (cids.length){
+            if (asigs.length){
                 var {error:e2} = await sb.from('coordinadores_programas').insert(
-                    cids.map(function(pid){ return {coordinador_id:parseInt(id),programa_id:pid}; })
+                    asigs.map(function(a){ return {coordinador_id:parseInt(id), programa_id:a.programa_id, cohorte_id:a.cohorte_id||null}; })
                 );
                 if (e2) throw e2;
             }
@@ -559,7 +625,7 @@ async function guardarU(){
                     'Authorization': 'Bearer ' + token,
                     'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZXZ5cGRvd2RocWF4dmZpeXd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzM3NTIsImV4cCI6MjA2MDUwOTc1Mn0.VXZFGGfj96H0AMbq9qRHLlYRqJr0CJCXPKkuLYkVKiM'
                 },
-                body: JSON.stringify({ email:em, password:pw, apellido:ap, nombre:no, nombre_completo:nc, dni:dn, rol:rol, programa_ids:cids })
+                body: JSON.stringify({ email:em, password:pw, apellido:ap, nombre:no, nombre_completo:nc, dni:dn, rol:rol, asignaciones:asigs })
             });
             var result = await resp.json();
             if (!resp.ok || result.error) throw new Error(result.error || 'Error al crear usuario');
