@@ -3,788 +3,704 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Usuarios - Admin</title>
+    <title>Gestión de Usuarios - SiGPo</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #2d7a4f; --danger: #dc2626; --warning: #f59e0b; }
-        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#1e3a5f; --accent:#d4af37; --success:#2d7a4f; --danger:#dc2626; --warning:#f59e0b; }
+        body { font-family:'DM Sans',sans-serif; background:#f8f6f1; }
 
-        /* HEADER */
-        .header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
-            color: white;
-            padding: 16px 40px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .header-left {}
-        .breadcrumb { font-size: 14px; margin-bottom: 8px; }
-        .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
-        .header h1 { font-family: 'Crimson Pro', serif; font-size: 24px; }
-        .header-subtitle { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+        .header { background:linear-gradient(135deg,#1e3a5f 0%,#2d5a87 100%); color:white; padding:16px 40px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+        .breadcrumb { font-size:14px; margin-bottom:8px; }
+        .breadcrumb a { color:white; text-decoration:none; opacity:0.9; }
+        .header h1 { font-family:'Crimson Pro',serif; font-size:24px; }
+        .header-subtitle { font-size:13px; opacity:0.8; margin-top:2px; }
+        .btn-logout { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.15); border:1.5px solid rgba(255,255,255,0.4); color:white; padding:9px 18px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-logout:hover { background:rgba(255,255,255,0.25); }
+        .notif-wrapper { position:relative; }
 
-        /* CERRAR SESIÓN */
-        .btn-logout {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255,255,255,0.15);
-            border: 1.5px solid rgba(255,255,255,0.4);
-            color: white;
-            padding: 9px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'DM Sans', sans-serif;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        .btn-logout:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.7); }
+        .container { max-width:1400px; margin:32px auto; padding:0 32px; }
 
-        .container { max-width: 1700px; margin: 40px auto; padding: 0 40px; }
+        .toolbar { background:white; padding:18px 24px; border-radius:12px 12px 0 0; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; border-bottom:2px solid #e8e8e8; }
+        .search-box { flex:1; min-width:260px; position:relative; }
+        .search-box input { width:100%; padding:10px 16px 10px 38px; border:2px solid #e0e0e0; border-radius:8px; font-size:14px; font-family:'DM Sans',sans-serif; }
+        .search-box input:focus { outline:none; border-color:var(--accent); }
+        .search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#999; }
 
-        .toolbar { background: white; padding: 20px 32px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .search-box { flex: 1; min-width: 300px; }
-        .search-box input { padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; width: 100%; font-size: 14px; }
-        .toolbar-actions { display: flex; gap: 12px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: 'DM Sans', sans-serif; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-warning-import { background: var(--warning); color: white; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .filters { display:flex; gap:6px; flex-wrap:wrap; }
+        .filter-btn { padding:7px 14px; border:2px solid #e0e0e0; background:white; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+        .filter-btn:hover { border-color:var(--primary); color:var(--primary); }
+        .filter-btn.active { background:var(--primary); color:white; border-color:var(--primary); }
 
-        .table-container { background: white; border-radius: 0 0 12px 12px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        thead { background: #f8f6f1; }
-        th { padding: 14px 10px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #666; border-bottom: 2px solid #e0e0e0; white-space: nowrap; }
-        td { padding: 13px 10px; border-bottom: 1px solid #e8e8e8; font-size: 14px; }
-        tr:hover { background: #f8f6f1; }
+        .toolbar-actions { display:flex; gap:10px; }
+        .btn { padding:9px 18px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s; }
+        .btn:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,0.15); }
+        .btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-success { background:var(--success); color:white; }
+        .btn-danger  { background:var(--danger); color:white; }
+        .btn-warning { background:var(--warning); color:white; }
+        .btn-gray    { background:#e0e0e0; color:#555; }
+        .btn-orange  { background:#ea580c; color:white; }
+        .btn-purple  { background:#7c3aed; color:white; }
 
-        .user-name { font-weight: 700; color: var(--primary); }
-        .email-cell { font-size: 13px; color: #444; }
+        .table-wrap { background:white; border-radius:0 0 12px 12px; overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        thead { background:#f0ede6; position:sticky; top:0; z-index:5; }
+        th { padding:11px 10px; text-align:left; font-weight:600; font-size:11px; text-transform:uppercase; color:#555; border-bottom:2px solid #d5d2cc; white-space:nowrap; }
+        td { padding:12px 10px; border-bottom:1px solid #e8e8e8; vertical-align:middle; }
+        tr:hover td { background:#f8f6f1; }
 
-        .role-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
-        .role-badge.administrador { background: #e3f2fd; color: #1976d2; }
-        .role-badge.cooperadora   { background: #f3e5f5; color: #7b1fa2; }
-        .role-badge.coordinador   { background: #fff3e0; color: #e65100; }
-        .role-badge.estudiante    { background: #e8f5e9; color: #2e7d32; }
-        .role-badge.secretario    { background: #fce4ec; color: #c2185b; }
+        .user-name { font-weight:700; color:var(--primary); }
+        .email-cell { font-size:12px; color:#444; }
 
-        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-        .status-badge.activo   { background: #d4edda; color: var(--success); }
-        .status-badge.pasivo   { background: #fff3cd; color: #856404; }
-        .status-badge.inactivo { background: #f0f0f0; color: #666; }
+        .role-badge { padding:3px 9px; border-radius:10px; font-size:11px; font-weight:700; text-transform:uppercase; white-space:nowrap; }
+        .role-ADMINISTRADOR { background:#e3f2fd; color:#1565c0; }
+        .role-COOPERADORA   { background:#f3e5f5; color:#7b1fa2; }
+        .role-COORDINADOR   { background:#fff3e0; color:#e65100; }
+        .role-ESTUDIANTE    { background:#e8f5e9; color:#2e7d32; }
+        .role-SECRETARIA    { background:#fce4ec; color:#c2185b; }
 
-        /* ACCIONES */
-        .action-btns { display: flex; gap: 4px; align-items: center; }
-        .btn-action {
-            display: flex; align-items: center; gap: 5px;
-            padding: 5px 10px; border: none; border-radius: 6px;
-            cursor: pointer; font-size: 12px; font-weight: 600;
-            font-family: 'DM Sans', sans-serif;
-            transition: all 0.2s; white-space: nowrap;
-        }
-        .btn-action.edit   { background: #e3f2fd; color: #1565c0; }
-        .btn-action.baja   { background: #fff8e1; color: #e65100; }
-        .btn-action.alta   { background: #d4edda; color: #1e7e44; }
-        .btn-action.delete { background: #fce4ec; color: #c62828; }
-        .btn-action.erase  { background: #f3e5f5; color: #6a1b9a; }
-        .btn-action:hover  { transform: scale(1.05); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
-        .btn-action:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .status-badge { padding:3px 9px; border-radius:10px; font-size:11px; font-weight:700; }
+        .status-ACTIVO    { background:#d1fae5; color:#065f46; }
+        .status-PASIVO    { background:#fef3c7; color:#92400e; }
+        .status-BLOQUEADO { background:#fee2e2; color:#991b1b; }
+
+        .action-btns { display:flex; gap:4px; flex-wrap:wrap; }
+        .btn-act { padding:5px 10px; border:none; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; display:inline-flex; align-items:center; gap:4px; transition:all 0.2s; white-space:nowrap; }
+        .btn-act:hover { transform:scale(1.05); box-shadow:0 2px 8px rgba(0,0,0,0.12); }
+        .btn-act:disabled { opacity:0.35; cursor:not-allowed; transform:none; }
+        .btn-edit   { background:#e3f2fd; color:#1565c0; }
+        .btn-baja   { background:#fff8e1; color:#e65100; }
+        .btn-alta   { background:#d4edda; color:#1e7e44; }
+        .btn-del    { background:#fce4ec; color:#c62828; }
+        .btn-erase  { background:#f3e5f5; color:#6a1b9a; }
+
+        .empty { text-align:center; padding:48px; color:#aaa; }
+        .empty-icon { font-size:48px; margin-bottom:12px; }
+
+        .legend { background:white; border-radius:12px; padding:14px 24px; margin-top:16px; display:flex; gap:20px; flex-wrap:wrap; font-size:12px; color:#555; }
+        .legend strong { color:var(--primary); }
 
         /* MODALES */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal-content { background: white; border-radius: 12px; width: 90%; max-width: 620px; max-height: 90vh; overflow-y: auto; }
-        .modal-content.sm { max-width: 480px; }
-        .modal-header { padding: 22px 24px; border-bottom: 2px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
-        .modal-title { font-size: 20px; font-weight: 700; color: var(--primary); }
-        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
-        .modal-body { padding: 24px; }
-        .modal-footer { padding: 20px 24px; border-top: 2px solid #e0e0e0; display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; }
+        .modal-overlay.active { display:flex; }
+        .modal-box { background:white; border-radius:14px; width:90%; max-width:580px; max-height:92vh; overflow-y:auto; }
+        .modal-box.sm { max-width:460px; }
+        .modal-hdr { padding:20px 24px; border-bottom:2px solid #e8e8e8; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg,#1e3a5f,#2d5a87); color:white; border-radius:14px 14px 0 0; }
+        .modal-hdr h2 { font-family:'Crimson Pro',serif; font-size:20px; }
+        .modal-hdr p { font-size:12px; opacity:0.85; margin-top:2px; }
+        .modal-close { background:none; border:none; font-size:22px; cursor:pointer; color:rgba(255,255,255,0.8); }
+        .modal-body { padding:22px 24px; }
+        .modal-footer { padding:16px 24px; border-top:2px solid #e8e8e8; display:flex; gap:10px; justify-content:flex-end; }
 
-        .form-group { margin-bottom: 18px; }
-        .form-label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--primary); font-size: 14px; }
-        .form-input, .form-select { width: 100%; padding: 11px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; }
-        .form-input:focus, .form-select:focus { outline: none; border-color: var(--accent); }
-        .form-hint { font-size: 12px; color: #777; margin-top: 4px; }
+        .mfield { margin-bottom:16px; }
+        .mfield label { display:block; font-weight:600; font-size:13px; color:var(--primary); margin-bottom:5px; }
+        .mfield input, .mfield select { width:100%; padding:10px 12px; border:2px solid #e0e0e0; border-radius:8px; font-size:14px; font-family:'DM Sans',sans-serif; }
+        .mfield input:focus, .mfield select:focus { outline:none; border-color:var(--accent); }
+        .mhint { font-size:11px; color:#888; margin-top:3px; }
+        .mgrid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .alert-box { padding:12px 14px; border-radius:8px; font-size:13px; margin-bottom:14px; line-height:1.5; }
+        .alert-warning { background:#fff8e1; border-left:4px solid #f59e0b; color:#78350f; }
+        .alert-danger  { background:#fef2f2; border-left:4px solid #dc2626; color:#7f1d1d; }
+        .alert-info    { background:#e0f2fe; border-left:4px solid #0284c7; color:#075985; }
 
-        /* ALERTAS EN MODAL */
-        .alert-box { padding: 14px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
-        .alert-warning { background: #fff8e1; border-left: 4px solid #f59e0b; color: #78350f; }
-        .alert-danger  { background: #fef2f2; border-left: 4px solid #dc2626; color: #7f1d1d; }
-        .alert-pasivo  { background: #fff3cd; border-left: 4px solid #e65100; color: #7c2d12; }
+        .confirm-icon  { font-size:44px; text-align:center; margin-bottom:10px; }
+        .confirm-title { font-size:17px; font-weight:700; color:var(--primary); text-align:center; margin-bottom:8px; }
+        .confirm-text  { font-size:13px; color:#555; text-align:center; line-height:1.6; }
 
-        .import-info { background: #e0f2fe; padding: 14px; border-radius: 8px; margin-top: 10px; }
-        .import-info ul { margin-top: 8px; padding-left: 18px; font-size: 13px; color: #075985; }
+        .spinner { display:none; position:fixed; inset:0; background:rgba(255,255,255,0.7); z-index:9999; align-items:center; justify-content:center; }
+        .spinner.active { display:flex; }
+        .spin-c { width:40px; height:40px; border:4px solid #e0e0e0; border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
 
-        /* LEYENDA ACCIONES */
-        .legend { background: white; border-radius: 12px; padding: 16px 24px; margin-top: 20px; display: flex; gap: 24px; flex-wrap: wrap; align-items: center; font-size: 13px; color: #555; }
-        .legend-item { display: flex; align-items: center; gap: 6px; }
-        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        #toasts { position:fixed; bottom:24px; right:24px; z-index:9998; display:flex; flex-direction:column; gap:8px; }
+        .toast { padding:12px 20px; border-radius:8px; font-size:14px; font-weight:600; color:white; background:#333; box-shadow:0 4px 16px rgba(0,0,0,0.2); animation:si 0.3s ease; }
+        .toast.ok  { background:var(--success); }
+        .toast.err { background:var(--danger); }
+        @keyframes si { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
 
-        /* MODAL CONFIRMAR */
-        .confirm-icon { font-size: 48px; text-align: center; margin-bottom: 12px; }
-        .confirm-title { font-size: 18px; font-weight: 700; color: var(--primary); text-align: center; margin-bottom: 10px; }
-        .confirm-text { font-size: 14px; color: #555; text-align: center; line-height: 1.6; }
-        .confirm-user { font-weight: 700; color: var(--primary); }
-
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-orange { background: #ea580c; color: white; }
-        .btn-purple { background: #7c3aed; color: white; }
-        .btn-gray   { background: #e0e0e0; color: #555; }
-
-        /* TOOLTIP */
-        [title] { position: relative; }
+        /* Campos condicionales */
+        #grupo-coordinador, #grupo-estudiante { display:none; }
     </style>
 </head>
 <body>
 
-    <!-- HEADER -->
-    <div class="header">
-        <div class="header-left">
-            <div class="breadcrumb"><a href="administrador_2_dashboard.html" onclick="navegar('administrador_2_dashboard.html'); return false;">← Volver al Dashboard</a></div>
-            <h1>👥 Gestión de Usuarios</h1>
-            <div class="header-subtitle">Administrar usuarios, roles y permisos del sistema SiGPo</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;">
-            <!-- Campana -->
-            <div class="notif-wrapper" style="position:relative;">
-                <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
-                </button>
-                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
-                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
-                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
-                    </div>
-                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
-                </div>
-            </div>
-            <button class="btn-logout" onclick="cerrarSesion()">
-                <span>🚪</span> Cerrar sesión
+<div class="header">
+    <div>
+        <div class="breadcrumb"><a href="administrador_2_dashboard.html">← Volver al Dashboard</a></div>
+        <h1>👥 Gestión de Usuarios</h1>
+        <div class="header-subtitle">Administrar usuarios, roles y permisos del sistema SiGPo</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+        <div class="notif-wrapper">
+            <button onclick="toggleNotif()" style="background:none;border:none;cursor:pointer;padding:8px;border-radius:8px;position:relative;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;border:2px solid #1e3a5f;">0</span>
             </button>
+            <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:360px;max-height:440px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                <div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="font-size:14px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                    <button onclick="marcarTodasNotificacionesLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;">Marcar leídas</button>
+                </div>
+                <div id="notif-list"><div style="padding:32px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div></div>
+            </div>
         </div>
+        <button class="btn-logout" onclick="cerrarSesion(event)">🚪 Cerrar Sesión</button>
     </div>
+</div>
 
-    <div class="container">
-
-        <!-- BARRA DE HERRAMIENTAS -->
-        <div class="toolbar">
+<div class="container">
+    <div class="toolbar">
+        <div style="display:flex;gap:12px;align-items:center;flex:1;flex-wrap:wrap;">
             <div class="search-box">
-                <input type="text" id="campoBusqueda" placeholder="🔍 Buscar por nombre, apellido, DNI o email..." oninput="buscarUsuario(this.value)">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="buscar" placeholder="Buscar por nombre, DNI o email..." oninput="filtrar()">
             </div>
-            <div class="toolbar-actions">
-                <button class="btn btn-warning-import" onclick="abrirModalImportar()">📥 Importar Usuarios</button>
-                <button class="btn btn-primary" onclick="nuevoUsuario()">➕ Nuevo Usuario</button>
+            <div class="filters" id="filtros-rol">
+                <button class="filter-btn active" data-rol="TODOS" onclick="setFiltroRol(this)">Todos</button>
+                <button class="filter-btn" data-rol="ADMINISTRADOR" onclick="setFiltroRol(this)">Admin</button>
+                <button class="filter-btn" data-rol="SECRETARIA" onclick="setFiltroRol(this)">Secretaría</button>
+                <button class="filter-btn" data-rol="COOPERADORA" onclick="setFiltroRol(this)">Cooperadora</button>
+                <button class="filter-btn" data-rol="COORDINADOR" onclick="setFiltroRol(this)">Coordinador</button>
+                <button class="filter-btn" data-rol="ESTUDIANTE" onclick="setFiltroRol(this)">Estudiante</button>
             </div>
         </div>
-
-        <!-- TABLA -->
-        <div class="table-container">
-            <table id="tablaUsuarios">
-                <thead>
-                    <tr>
-                        <th>Apellido</th>
-                        <th>Nombre</th>
-                        <th>DNI</th>
-                        <th>Email</th>
-                        <th>Rol</th>
-                        <th>Programa/Curso</th>
-                        <th>Cohorte/Edición</th>
-                        <th>Cuotas</th>
-                        <th>Monto</th>
-                        <th>Estado</th>
-                        <th>Última Conexión</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tbodyUsuarios">
-                    <!-- Fila: Administrador (solo Editar + Eliminar) -->
-                    <tr data-rol="administrador" data-estado="activo" data-nombre="sistema administrador" data-dni="12345678" data-email="admin@fce.uncu.edu.ar">
-                        <td class="user-name">Sistema</td>
-                        <td>Administrador</td>
-                        <td>12345678</td>
-                        <td class="email-cell">admin@fce.uncu.edu.ar</td>
-                        <td><span class="role-badge administrador">Administrador</span></td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td><span class="status-badge activo">Activo</span></td>
-                        <td>Hace 2 horas</td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-action edit" onclick="editarUsuario(1)" title="Editar datos del usuario">✏️ Editar</button>
-                                <button class="btn-action baja" onclick="confirmarBaja(1,'Sistema Administrador','administrador')" title="Impide que el usuario realice acciones en el sistema">⛔ Baja</button>
-                                <button class="btn-action delete" onclick="confirmarEliminar(1,'Sistema Administrador')" title="Elimina al usuario del sistema, conserva su historial">🗑️ Eliminar</button>
-                                <button class="btn-action erase" onclick="confirmarEliminarRegistro(1,'Sistema Administrador')" title="Elimina TODO el registro del usuario, sin posibilidad de recuperación">💣 Eliminar registro</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <!-- Fila: Cooperadora -->
-                    <tr data-rol="cooperadora" data-estado="activo" data-nombre="lópez maría" data-dni="23456789" data-email="cooperadora@fce.uncu.edu.ar">
-                        <td class="user-name">López</td>
-                        <td>María</td>
-                        <td>23456789</td>
-                        <td class="email-cell">cooperadora@fce.uncu.edu.ar</td>
-                        <td><span class="role-badge cooperadora">Cooperadora</span></td>
-                        <td>Todos los programas</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td><span class="status-badge activo">Activo</span></td>
-                        <td>Hace 1 día</td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-action edit" onclick="editarUsuario(2)" title="Editar datos del usuario">✏️ Editar</button>
-                                <button class="btn-action baja" onclick="confirmarBaja(2,'López María','cooperadora')" title="Impide que el usuario realice acciones en el sistema">⛔ Baja</button>
-                                <button class="btn-action delete" onclick="confirmarEliminar(2,'López María')" title="Elimina al usuario, conserva su historial">🗑️ Eliminar</button>
-                                <button class="btn-action erase" onclick="confirmarEliminarRegistro(2,'López María')" title="Elimina TODO el registro del usuario">💣 Eliminar registro</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <!-- Fila: Coordinador -->
-                    <tr data-rol="coordinador" data-estado="activo" data-nombre="méndez carlos" data-dni="34567890" data-email="cmendez@fce.uncu.edu.ar">
-                        <td class="user-name">Méndez</td>
-                        <td>Carlos</td>
-                        <td>34567890</td>
-                        <td class="email-cell">cmendez@fce.uncu.edu.ar</td>
-                        <td><span class="role-badge coordinador">Coordinador</span></td>
-                        <td>Esp. en Costos</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td><span class="status-badge activo">Activo</span></td>
-                        <td>Hace 3 horas</td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-action edit" onclick="editarUsuario(3)" title="Editar datos del usuario">✏️ Editar</button>
-                                <button class="btn-action baja" onclick="confirmarBaja(3,'Méndez Carlos','coordinador')" title="Impide que el usuario realice acciones en el sistema">⛔ Baja</button>
-                                <button class="btn-action delete" onclick="confirmarEliminar(3,'Méndez Carlos')" title="Elimina al usuario, conserva su historial">🗑️ Eliminar</button>
-                                <button class="btn-action erase" onclick="confirmarEliminarRegistro(3,'Méndez Carlos')" title="Elimina TODO el registro del usuario">💣 Eliminar registro</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <!-- Fila: Estudiante ACTIVO -->
-                    <tr data-rol="estudiante" data-estado="activo" data-nombre="gonzález maría" data-dni="23456789" data-email="mgonzalez@estudiante.uncu.edu.ar">
-                        <td class="user-name">González</td>
-                        <td>María</td>
-                        <td>23456789</td>
-                        <td class="email-cell">mgonzalez@estudiante.uncu.edu.ar</td>
-                        <td><span class="role-badge estudiante">Estudiante</span></td>
-                        <td>Esp. en Costos</td>
-                        <td>2024-2025</td>
-                        <td>12</td>
-                        <td>$85.000</td>
-                        <td><span class="status-badge activo">Activo</span></td>
-                        <td>Hace 2 días</td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-action edit" onclick="editarUsuario(4)" title="Editar datos del usuario">✏️ Editar</button>
-                                <button class="btn-action baja" onclick="confirmarBaja(4,'González María','estudiante')" title="Pasa al estudiante a estado PASIVO (abandono de cursado)">⛔ Baja</button>
-                                <button class="btn-action delete" onclick="confirmarEliminar(4,'González María')" title="Elimina al usuario, conserva su historial">🗑️ Eliminar</button>
-                                <button class="btn-action erase" onclick="confirmarEliminarRegistro(4,'González María')" title="Elimina TODO el registro del usuario">💣 Eliminar registro</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <!-- Fila: Estudiante PASIVO -->
-                    <tr data-rol="estudiante" data-estado="pasivo" data-nombre="pérez juan" data-dni="34567890" data-email="jperez@gmail.com">
-                        <td class="user-name">Pérez</td>
-                        <td>Juan</td>
-                        <td>34567890</td>
-                        <td class="email-cell">jperez@gmail.com</td>
-                        <td><span class="role-badge estudiante">Estudiante</span></td>
-                        <td>Esp. en Costos</td>
-                        <td>2024-2025</td>
-                        <td>12</td>
-                        <td>$85.000</td>
-                        <td><span class="status-badge pasivo">Pasivo</span></td>
-                        <td>Hace 30 días</td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-action edit" onclick="editarUsuario(5)" title="Editar datos del usuario">✏️ Editar</button>
-                                <button class="btn-action alta" onclick="confirmarAlta(5,'Pérez Juan','estudiante')" title="Reactivar al usuario">✅ Alta</button>
-                                <button class="btn-action delete" onclick="confirmarEliminar(5,'Pérez Juan')" title="Elimina al usuario, conserva su historial">🗑️ Eliminar</button>
-                                <button class="btn-action erase" onclick="confirmarEliminarRegistro(5,'Pérez Juan')" title="Elimina TODO el registro del usuario">💣 Eliminar registro</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <!-- Fila: Secretario -->
-                    <tr data-rol="secretario" data-estado="activo" data-nombre="fernández ana" data-dni="45678901" data-email="afernandez@fce.uncu.edu.ar">
-                        <td class="user-name">Fernández</td>
-                        <td>Ana</td>
-                        <td>45678901</td>
-                        <td class="email-cell">afernandez@fce.uncu.edu.ar</td>
-                        <td><span class="role-badge secretario">Secretario/a Posgrado</span></td>
-                        <td>Todos los programas</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td><span class="status-badge activo">Activo</span></td>
-                        <td>Hace 5 horas</td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-action edit" onclick="editarUsuario(6)" title="Editar datos del usuario">✏️ Editar</button>
-                                <button class="btn-action baja" onclick="confirmarBaja(6,'Fernández Ana','secretario')" title="Impide que el usuario realice acciones en el sistema">⛔ Baja</button>
-                                <button class="btn-action delete" onclick="confirmarEliminar(6,'Fernández Ana')" title="Elimina al usuario, conserva su historial">🗑️ Eliminar</button>
-                                <button class="btn-action erase" onclick="confirmarEliminarRegistro(6,'Fernández Ana')" title="Elimina TODO el registro del usuario">💣 Eliminar registro</button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="toolbar-actions">
+            <button class="btn btn-primary" onclick="abrirModalUsuario()">➕ Nuevo Usuario</button>
         </div>
-
-        <!-- LEYENDA -->
-        <div class="legend">
-            <strong style="color:#1e3a5f;">Acciones:</strong>
-            <div class="legend-item"><div class="legend-dot" style="background:#1565c0;"></div> <strong>Editar:</strong> Modifica los datos del usuario</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#e65100;"></div> <strong>Baja:</strong> Estudiante → Pasivo en todas las cohortes (global). Otros → Sin acceso al sistema. Reversible con Alta.</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#1e7e44;"></div> <strong>Alta:</strong> Reactiva al usuario y restaura su acceso</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#c62828;"></div> <strong>Eliminar:</strong> Elimina al usuario del acceso, conserva su historial de pagos</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#6a1b9a;"></div> <strong>Eliminar registro:</strong> Borra todo el registro del usuario sin posibilidad de recuperación</div>
-        </div>
-
     </div>
 
-    <!-- ===================== MODAL: NUEVO/EDITAR USUARIO ===================== -->
-    <div class="modal" id="modalUsuario">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitulo">Nuevo Usuario</h3>
-                <button class="modal-close" onclick="cerrarModal('modalUsuario')">×</button>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Apellido</th>
+                    <th>Nombre</th>
+                    <th>DNI</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Programa(s)</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tbody">
+                <tr><td colspan="8" class="empty"><div class="empty-icon">👥</div><div>Cargando usuarios...</div></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="legend">
+        <strong>Acciones:</strong>
+        <span>✏️ <strong>Editar</strong> — modifica datos</span>
+        <span>⛔ <strong>Baja</strong> — bloquea acceso al sistema (reversible)</span>
+        <span>✅ <strong>Alta</strong> — reactiva acceso</span>
+        <span>🗑️ <strong>Eliminar</strong> — quita acceso, conserva historial</span>
+        <span>💣 <strong>Eliminar registro</strong> — borra todo, irreversible</span>
+    </div>
+</div>
+
+<!-- MODAL: NUEVO/EDITAR USUARIO -->
+<div class="modal-overlay" id="modal-usuario">
+    <div class="modal-box">
+        <div class="modal-hdr">
+            <div><h2 id="tit-usuario">➕ Nuevo Usuario</h2><p>Completá los datos del usuario</p></div>
+            <button class="modal-close" onclick="cerrarModal('modal-usuario')">×</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="u-id">
+            <div class="mgrid2">
+                <div class="mfield"><label>Apellido *</label><input type="text" id="u-apellido" placeholder="González"></div>
+                <div class="mfield"><label>Nombre *</label><input type="text" id="u-nombre" placeholder="María"></div>
             </div>
-            <div class="modal-body">
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Apellido *</label>
-                        <input type="text" class="form-input" id="apellido" placeholder="ej: González">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Nombre *</label>
-                        <input type="text" class="form-input" id="nombre" placeholder="ej: María">
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">DNI *</label>
-                        <input type="text" class="form-input" id="dni" placeholder="ej: 12345678">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-input" id="email" placeholder="usuario@email.com">
-                        <div class="form-hint">El email se mostrará visible en el sistema</div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Rol *</label>
-                    <select class="form-select" id="rol" onchange="mostrarCamposRol()">
-                        <option value="">Seleccionar rol...</option>
-                        <option value="Administrador">Administrador</option>
-                        <option value="Estudiante">Estudiante</option>
-                        <option value="Cooperadora">Cooperadora</option>
-                        <option value="Secretario">Secretario/a de Posgrado</option>
-                        <option value="Coordinador">Coordinador</option>
+            <div class="mgrid2">
+                <div class="mfield"><label>DNI *</label><input type="text" id="u-dni" placeholder="30123456"></div>
+                <div class="mfield"><label>Email *</label><input type="email" id="u-email" placeholder="usuario@email.com"></div>
+            </div>
+            <div class="mfield">
+                <label>Contraseña <span id="pass-hint" style="font-weight:400;color:#888;font-size:11px;">(obligatoria para usuarios nuevos)</span></label>
+                <input type="password" id="u-password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+                <div class="mhint" id="pass-edit-hint" style="display:none;">Dejá vacío para no cambiar la contraseña actual</div>
+            </div>
+            <div class="mfield">
+                <label>Rol *</label>
+                <select id="u-rol" onchange="onRolChange()">
+                    <option value="">— Seleccioná un rol —</option>
+                    <option value="ADMINISTRADOR">Administrador</option>
+                    <option value="SECRETARIA">Secretaría de Posgrado</option>
+                    <option value="COOPERADORA">Cooperadora</option>
+                    <option value="COORDINADOR">Coordinador/a</option>
+                    <option value="ESTUDIANTE">Estudiante</option>
+                </select>
+            </div>
+            <!-- Solo para COORDINADOR -->
+            <div id="grupo-coordinador">
+                <div class="mfield">
+                    <label>Programa(s) asignado(s)</label>
+                    <select id="u-programas" multiple style="min-height:90px;">
+                        <option disabled>Cargando...</option>
                     </select>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Programa/Curso *</label>
-                        <select class="form-select" id="programa">
-                            <option value="">Seleccionar programa...</option>
-                            <option value="Todos">Todos los programas</option>
-                            <!-- Dinámico: se carga desde Google Sheets -->
-                            <option value="Esp. en Costos">Esp. en Costos y Gestión</option>
-                            <option value="Tributación">Esp. en Tributación</option>
-                            <option value="Sindicatura">Esp. en Sindicatura Concursal</option>
-                            <option value="GTec">Esp. en GTec</option>
-                            <option value="MASS">Maestría MASS</option>
-                            <option value="MRS">Maestría MRS</option>
-                            <option value="MAGNAGRO">Maestría MAGNAGRO</option>
-                            <option value="MBA">MBA</option>
-                            <option value="MGIRH">Maestría MGIRH</option>
-                            <option value="MGFSP">Maestría MGFSP</option>
-                            <option value="Ciencias de Datos">Micro Maestría Ciencias de Datos</option>
-                            <option value="Doctorado">Doctorado en Ciencias Económicas</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Cohorte/Edición</label>
-                        <input type="text" class="form-input" id="cohorte" placeholder="ej: 2024-2025">
-                        <div class="form-hint">Obligatorio para estudiantes</div>
-                    </div>
-                </div>
-                <!-- Campos dinámicos solo para estudiantes -->
-                <div id="grupoEstudiante" style="display: none;">
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Cantidad de Cuotas *</label>
-                            <input type="number" class="form-input" id="cuotas" placeholder="ej: 12" min="1">
-                            <div class="form-hint">Dinámico según programa</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Monto por Cuota *</label>
-                            <input type="number" class="form-input" id="monto" placeholder="ej: 85000" min="0">
-                            <div class="form-hint">Monto en pesos argentinos</div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Fecha de Inicio</label>
-                        <input type="date" class="form-input" id="fechaInicio">
-                    </div>
+                    <div class="mhint">Ctrl/Cmd para seleccionar varios</div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-gray" onclick="cerrarModal('modalUsuario')">Cancelar</button>
-                <button class="btn btn-success" onclick="guardarUsuario()">💾 Guardar</button>
+            <!-- Solo para ESTUDIANTE -->
+            <div id="grupo-estudiante">
+                <div class="alert-box alert-info">
+                    ℹ️ Los estudiantes se agregan a cohortes desde la vista <strong>Gestión de Programas y Cohortes</strong> o importando desde Excel. Acá solo se crea su usuario de acceso al portal.
+                </div>
             </div>
         </div>
-    </div>
-
-    <!-- ===================== MODAL: IMPORTAR USUARIOS ===================== -->
-    <div class="modal" id="modalImportar">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">📥 Importar Usuarios desde Excel</h3>
-                <button class="modal-close" onclick="cerrarModal('modalImportar')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Archivo Excel (.xlsx, .xls)</label>
-                    <input type="file" accept=".xlsx,.xls" onchange="procesarExcel(this.files[0])" class="form-input">
-                </div>
-                <div class="import-info">
-                    <strong>📋 Estructura requerida del Excel:</strong>
-                    <ul>
-                        <li><strong>Columna A:</strong> Apellido</li>
-                        <li><strong>Columna B:</strong> Nombre</li>
-                        <li><strong>Columna C:</strong> DNI</li>
-                        <li><strong>Columna D:</strong> Email</li>
-                        <li><strong>Columna E:</strong> Rol (Administrador, Estudiante, Cooperadora, Secretario/a de Posgrado, Coordinador)</li>
-                        <li><strong>Columna F:</strong> Programa/Curso</li>
-                        <li><strong>Columna G:</strong> Cohorte/Edición (solo estudiantes)</li>
-                        <li><strong>Columna H:</strong> Cantidad de cuotas (solo estudiantes)</li>
-                        <li><strong>Columna I:</strong> Monto por cuota (solo estudiantes)</li>
-                        <li><strong>Columna J:</strong> Fecha de inicio (solo estudiantes)</li>
-                    </ul>
-                    <div style="margin-top: 12px; padding: 10px; background: #fff3cd; border-radius: 6px; font-size: 13px; color: #856404;">
-                        ⚠️ <strong>Importante:</strong> Los roles deben escribirse exactamente como se indica. Para estudiantes, la Cohorte/Edición, cuotas y monto son obligatorios.
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-gray" onclick="cerrarModal('modalImportar')">Cancelar</button>
-            </div>
+        <div class="modal-footer">
+            <button class="btn btn-gray" onclick="cerrarModal('modal-usuario')">Cancelar</button>
+            <button class="btn btn-success" onclick="guardarUsuario()">💾 Guardar</button>
         </div>
     </div>
+</div>
 
-    <!-- ===================== MODAL: CONFIRMAR BAJA ===================== -->
-    <div class="modal" id="modalBaja">
-        <div class="modal-content sm">
-            <div class="modal-header">
-                <h3 class="modal-title">⛔ Dar de Baja</h3>
-                <button class="modal-close" onclick="cerrarModal('modalBaja')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="confirm-icon">⛔</div>
-                <div class="confirm-title">¿Confirmar baja?</div>
-                <p class="confirm-text" id="textoBaja"></p>
-                <div class="alert-box alert-pasivo" id="alertaBaja" style="margin-top:16px;"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-gray" onclick="cerrarModal('modalBaja')">Cancelar</button>
-                <button class="btn btn-orange" onclick="ejecutarBaja()">⛔ Confirmar Baja</button>
+<!-- MODAL: CONFIRMAR BAJA -->
+<div class="modal-overlay" id="modal-baja">
+    <div class="modal-box sm">
+        <div class="modal-hdr" style="background:linear-gradient(135deg,#ea580c,#f59e0b);">
+            <div><h2>⛔ Dar de Baja</h2></div>
+            <button class="modal-close" onclick="cerrarModal('modal-baja')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="confirm-icon">⛔</div>
+            <div class="confirm-title" id="baja-titulo">—</div>
+            <div class="confirm-text" id="baja-texto">—</div>
+            <div class="alert-box alert-warning" style="margin-top:14px;">
+                🔒 El usuario <strong>no podrá iniciar sesión</strong> hasta que se le dé el Alta. Esta acción es reversible.
             </div>
         </div>
-    </div>
-
-    <!-- ===================== MODAL: CONFIRMAR ELIMINAR ===================== -->
-    <div class="modal" id="modalEliminar">
-        <div class="modal-content sm">
-            <div class="modal-header">
-                <h3 class="modal-title">🗑️ Eliminar Usuario</h3>
-                <button class="modal-close" onclick="cerrarModal('modalEliminar')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="confirm-icon">🗑️</div>
-                <div class="confirm-title">¿Eliminar usuario?</div>
-                <p class="confirm-text">
-                    Va a eliminar a <span class="confirm-user" id="nombreEliminar"></span> del sistema.<br><br>
-                    El usuario <strong>no podrá acceder</strong> a la web de pagos, pero su historial de pagos y datos quedan registrados en el sistema.
-                </p>
-                <div class="alert-box alert-warning" style="margin-top:16px;">
-                    ⚠️ Esta acción no puede deshacerse desde la interfaz. El registro se conserva.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-gray" onclick="cerrarModal('modalEliminar')">Cancelar</button>
-                <button class="btn btn-danger" onclick="ejecutarEliminar()">🗑️ Eliminar</button>
-            </div>
+        <div class="modal-footer">
+            <button class="btn btn-gray" onclick="cerrarModal('modal-baja')">Cancelar</button>
+            <button class="btn btn-orange" onclick="ejecutarBaja()">⛔ Confirmar Baja</button>
         </div>
     </div>
+</div>
 
-    <!-- ===================== MODAL: CONFIRMAR ELIMINAR REGISTRO ===================== -->
-    <div class="modal" id="modalEliminarRegistro">
-        <div class="modal-content sm">
-            <div class="modal-header">
-                <h3 class="modal-title">💣 Eliminar Registro Completo</h3>
-                <button class="modal-close" onclick="cerrarModal('modalEliminarRegistro')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="confirm-icon">💣</div>
-                <div class="confirm-title">¿Eliminar TODO el registro?</div>
-                <p class="confirm-text">
-                    Va a eliminar <strong>permanentemente</strong> todo el registro de <span class="confirm-user" id="nombreEliminarRegistro"></span>.<br><br>
-                    Esto incluye sus datos personales, historial de pagos, accesos y toda información vinculada.
-                </p>
-                <div class="alert-box alert-danger" style="margin-top:16px;">
-                    🚨 <strong>Advertencia:</strong> Esta acción es <strong>IRREVERSIBLE</strong>. No hay forma de recuperar la información una vez eliminada.
-                </div>
-                <div class="form-group" style="margin-top:16px;">
-                    <label class="form-label">Escribí <strong>ELIMINAR</strong> para confirmar:</label>
-                    <input type="text" class="form-input" id="confirmTexto" placeholder="Escribí ELIMINAR" oninput="validarConfirmacion()">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-gray" onclick="cerrarModal('modalEliminarRegistro')">Cancelar</button>
-                <button class="btn btn-purple" id="btnConfirmarErase" disabled onclick="ejecutarEliminarRegistro()">💣 Eliminar Todo</button>
+<!-- MODAL: CONFIRMAR ALTA -->
+<div class="modal-overlay" id="modal-alta">
+    <div class="modal-box sm">
+        <div class="modal-hdr" style="background:linear-gradient(135deg,#2d7a4f,#4caf50);">
+            <div><h2>✅ Dar de Alta</h2></div>
+            <button class="modal-close" onclick="cerrarModal('modal-alta')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="confirm-icon">✅</div>
+            <div class="confirm-title" id="alta-titulo">—</div>
+            <div class="confirm-text" id="alta-texto">—</div>
+            <div class="alert-box alert-info" style="margin-top:14px;">
+                🔓 El usuario recuperará acceso al sistema y podrá operar normalmente.
             </div>
         </div>
-    </div>
-
-    <!-- ===================== MODAL: CONFIRMAR ALTA ===================== -->
-    <div class="modal" id="modalAlta">
-        <div class="modal-content sm">
-            <div class="modal-header">
-                <h3 class="modal-title">✅ Dar de Alta</h3>
-                <button class="modal-close" onclick="cerrarModal('modalAlta')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="confirm-icon">✅</div>
-                <div class="confirm-title">¿Confirmar alta?</div>
-                <p class="confirm-text" id="textoAlta"></p>
-                <div class="alert-box" id="alertaAlta" style="margin-top:16px; background:#d4edda; border-left:4px solid #2d7a4f; color:#155724;"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-gray" onclick="cerrarModal('modalAlta')">Cancelar</button>
-                <button class="btn btn-success" onclick="ejecutarAlta()">✅ Confirmar Alta</button>
-            </div>
+        <div class="modal-footer">
+            <button class="btn btn-gray" onclick="cerrarModal('modal-alta')">Cancelar</button>
+            <button class="btn btn-success" onclick="ejecutarAlta()">✅ Confirmar Alta</button>
         </div>
     </div>
+</div>
 
-    <!-- ===================== MODAL: CERRAR SESIÓN ===================== -->
-    <div class="modal" id="modalLogout">
-        <div class="modal-content sm">
-            <div class="modal-header">
-                <h3 class="modal-title">🚪 Cerrar Sesión</h3>
-                <button class="modal-close" onclick="cerrarModal('modalLogout')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="confirm-icon">🚪</div>
-                <div class="confirm-title">¿Cerrar sesión?</div>
-                <p class="confirm-text">Va a salir del sistema SiGPo. Cualquier cambio no guardado se perderá.</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-gray" onclick="cerrarModal('modalLogout')">Cancelar</button>
-                <button class="btn btn-primary" onclick="ejecutarLogout()">🚪 Cerrar Sesión</button>
+<!-- MODAL: CONFIRMAR ELIMINAR -->
+<div class="modal-overlay" id="modal-eliminar">
+    <div class="modal-box sm">
+        <div class="modal-hdr" style="background:linear-gradient(135deg,#c62828,#dc2626);">
+            <div><h2>🗑️ Eliminar Usuario</h2></div>
+            <button class="modal-close" onclick="cerrarModal('modal-eliminar')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="confirm-icon">🗑️</div>
+            <div class="confirm-title" id="del-titulo">—</div>
+            <div class="confirm-text">Se eliminará el acceso al sistema. El historial de pagos y actividad quedará registrado.</div>
+            <div class="alert-box alert-warning" style="margin-top:14px;">
+                ⚠️ Esta acción elimina el usuario pero <strong>conserva todos sus registros</strong> históricos.
             </div>
         </div>
+        <div class="modal-footer">
+            <button class="btn btn-gray" onclick="cerrarModal('modal-eliminar')">Cancelar</button>
+            <button class="btn btn-danger" onclick="ejecutarEliminar()">🗑️ Confirmar Eliminar</button>
+        </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- MODAL: ELIMINAR REGISTRO COMPLETO -->
+<div class="modal-overlay" id="modal-erase">
+    <div class="modal-box sm">
+        <div class="modal-hdr" style="background:linear-gradient(135deg,#6a1b9a,#7c3aed);">
+            <div><h2>💣 Eliminar Registro Completo</h2></div>
+            <button class="modal-close" onclick="cerrarModal('modal-erase')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="confirm-icon">💣</div>
+            <div class="confirm-title" id="erase-titulo">—</div>
+            <div class="alert-box alert-danger">
+                🚨 <strong>ACCIÓN IRREVERSIBLE.</strong> Se borrarán todos los datos del usuario incluyendo historial de pagos, inscripciones y cobros. No hay forma de recuperar esta información.
+            </div>
+            <div class="mfield">
+                <label>Escribí <strong>ELIMINAR</strong> para confirmar</label>
+                <input type="text" id="confirm-texto" placeholder="ELIMINAR" oninput="validarConfirmacion()">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-gray" onclick="cerrarModal('modal-erase')">Cancelar</button>
+            <button class="btn btn-purple" id="btn-erase" disabled onclick="ejecutarErase()">💣 Eliminar Todo</button>
+        </div>
+    </div>
+</div>
+
+<div class="spinner" id="spinner"><div class="spin-c"></div></div>
+<div id="toasts"></div>
+
 <script src="supabase.js"></script>
 <script>
-        // ─── Estado temporal de la acción en curso ───────────────────────────
-        let accionActualId = null;
-        let accionActualNombre = '';
-        let accionActualRol = '';
+// ── ESTADO GLOBAL ─────────────────────────────────
+var _usuarios = [];
+var _filtroRol = 'TODOS';
+var _accionId = null;
+var _accionNombre = '';
+var _programas = [];
 
-        // ─── CERRAR SESIÓN ───────────────────────────────────────────────────
-        function ejecutarLogout() { cerrarSesion(); }
+// ── INIT ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async function() {
+    var ses = await requireAuth();
+    if (!ses) return;
+    if (ses.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
+    await cargar();
+    obtenerNotificaciones(ses.rol).then(renderNotificaciones);
+});
 
-        // ─── NAVEGACIÓN ──────────────────────────────────────────────────────
-                    else { window.location.href = pagina; }
+// ── HELPERS ───────────────────────────────────────
+function spin(on) { document.getElementById('spinner').classList.toggle('active', on); }
+function toast(msg, t) {
+    var d = document.createElement('div');
+    d.className = 'toast '+(t||'');
+    d.textContent = msg;
+    document.getElementById('toasts').appendChild(d);
+    setTimeout(function(){ d.remove(); }, 3500);
+}
+function abrirModal(id) { document.getElementById(id).classList.add('active'); }
+function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(function(m) {
+    m.addEventListener('click', function(e){ if(e.target===m) cerrarModal(m.id); });
+});
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── CARGAR ────────────────────────────────────────
+async function cargar() {
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var [usrRes, progRes, coordRes] = await Promise.all([
+            sb.from('usuarios').select('*').order('nombre_completo'),
+            sb.from('programas').select('programa_id,nombre').order('nombre'),
+            sb.from('coordinadores_programas').select('coordinador_id,programas(nombre)')
+        ]);
+        if (usrRes.error) throw usrRes.error;
+        _programas = progRes.data || [];
+
+        // Mapa coordinador_id → nombres de programas
+        var coordMap = {};
+        (coordRes.data || []).forEach(function(c) {
+            if (!coordMap[c.coordinador_id]) coordMap[c.coordinador_id] = [];
+            if (c.programas) coordMap[c.coordinador_id].push(c.programas.nombre);
+        });
+
+        _usuarios = (usrRes.data || []).map(function(u) {
+            return Object.assign({}, u, { programas_nombres: coordMap[u.usuario_id] || [] });
+        });
+        renderTabla();
+    } catch(e) {
+        console.error(e);
+        toast('Error al cargar usuarios: '+e.message, 'err');
+    } finally { spin(false); }
+}
+
+// ── RENDER TABLA ──────────────────────────────────
+function renderTabla() {
+    var q = document.getElementById('buscar').value.toLowerCase();
+    var lista = _usuarios.filter(function(u) {
+        var match = !q || (u.nombre_completo||'').toLowerCase().indexOf(q)>=0
+            || (u.dni||'').indexOf(q)>=0 || (u.email||'').toLowerCase().indexOf(q)>=0;
+        var rolMatch = _filtroRol === 'TODOS' || u.rol === _filtroRol;
+        return match && rolMatch;
+    });
+
+    var tbody = document.getElementById('tbody');
+    if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty"><div class="empty-icon">🔍</div><div>No se encontraron usuarios</div></td></tr>';
+        return;
+    }
+
+    var rolLabel = {
+        ADMINISTRADOR:'Administrador', SECRETARIA:'Secretaría', COOPERADORA:'Cooperadora',
+        COORDINADOR:'Coordinador/a', ESTUDIANTE:'Estudiante'
+    };
+    var estadoLabel = { ACTIVO:'Activo', PASIVO:'Pasivo', BLOQUEADO:'Bloqueado' };
+
+    tbody.innerHTML = lista.map(function(u) {
+        var partes = (u.nombre_completo||'').trim().split(' ');
+        var apellido = partes.slice(-1)[0]||'';
+        var nombre   = partes.slice(0,-1).join(' ')||u.nombre_completo;
+        var estado   = u.estado_usuario || (u.activo ? 'ACTIVO' : 'BLOQUEADO');
+        var progStr  = u.programas_nombres.length ? esc(u.programas_nombres.join(', ')) : '—';
+
+        var acciones = '<button class="btn-act btn-edit" onclick="abrirModalUsuario('+u.usuario_id+')">✏️ Editar</button>';
+        if (estado === 'ACTIVO') {
+            acciones += '<button class="btn-act btn-baja" onclick="confirmarBaja('+u.usuario_id+',\''+esc(u.nombre_completo).replace(/'/g,"\\'")+'\')">⛔ Baja</button>';
+        } else {
+            acciones += '<button class="btn-act btn-alta" onclick="confirmarAlta('+u.usuario_id+',\''+esc(u.nombre_completo).replace(/'/g,"\\'")+'\')">✅ Alta</button>';
         }
+        acciones += '<button class="btn-act btn-del" onclick="confirmarEliminar('+u.usuario_id+',\''+esc(u.nombre_completo).replace(/'/g,"\\'")+'\')">🗑️ Eliminar</button>';
+        acciones += '<button class="btn-act btn-erase" onclick="confirmarErase('+u.usuario_id+',\''+esc(u.nombre_completo).replace(/'/g,"\\'")+'\')">💣 Registro</button>';
 
-        // ─── CAMPANA ─────────────────────────────────────────────────────────
-        var _notifs = [];
-        function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
-        document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
-        function renderNotificaciones(datos) {
-            _notifs = datos || [];
-            var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-            var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-            var lista = document.getElementById('notif-list');
-            if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-            var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
-            var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
-            lista.innerHTML = _notifs.map(function(n) {
-                return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-                    + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-                    + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
-            }).join('');
-        }
-        function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
-        function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
-        // Notificaciones cargadas por supabase.js automáticamente
+        return '<tr>'
+            +'<td class="user-name">'+esc(apellido)+'</td>'
+            +'<td>'+esc(nombre)+'</td>'
+            +'<td>'+esc(u.dni||'—')+'</td>'
+            +'<td class="email-cell">'+esc(u.email||'—')+'</td>'
+            +'<td><span class="role-badge role-'+u.rol+'">'+(rolLabel[u.rol]||u.rol)+'</span></td>'
+            +'<td style="font-size:12px;max-width:200px;">'+progStr+'</td>'
+            +'<td><span class="status-badge status-'+estado+'">'+(estadoLabel[estado]||estado)+'</span></td>'
+            +'<td><div class="action-btns">'+acciones+'</div></td>'
+            +'</tr>';
+    }).join('');
+}
 
-        // ─── NUEVO / EDITAR USUARIO ──────────────────────────────────────────
-        function nuevoUsuario() {
-            document.getElementById('modalTitulo').textContent = '➕ Nuevo Usuario';
-            limpiarFormulario();
-            document.getElementById('modalUsuario').classList.add('active');
-        }
-        function editarUsuario(id) {
-            document.getElementById('modalTitulo').textContent = '✏️ Editar Usuario';
-            limpiarFormulario();
-            // En producción: cargar datos desde Google Sheets vía google.script.run.getUsuario(id)
-            document.getElementById('modalUsuario').classList.add('active');
-        }
+function filtrar() { renderTabla(); }
+function setFiltroRol(btn) {
+    document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    _filtroRol = btn.dataset.rol;
+    renderTabla();
+}
 
-        // ─── MOSTRAR CAMPOS POR ROL ──────────────────────────────────────────
-        function mostrarCamposRol() {
-            const rol = document.getElementById('rol').value;
-            const grupoEstudiante = document.getElementById('grupoEstudiante');
-            if (rol === 'Estudiante') {
-                grupoEstudiante.style.display = 'block';
-                grupoEstudiante.style.display = 'none';
-                document.getElementById('cohorte').value = '';
-                document.getElementById('cuotas').value = '';
-                document.getElementById('monto').value = '';
-                document.getElementById('fechaInicio').value = '';
+// ── MODAL USUARIO ─────────────────────────────────
+async function abrirModalUsuario(id) {
+    document.getElementById('tit-usuario').textContent = id ? '✏️ Editar Usuario' : '➕ Nuevo Usuario';
+    document.getElementById('u-id').value = id || '';
+    document.getElementById('u-apellido').value = '';
+    document.getElementById('u-nombre').value = '';
+    document.getElementById('u-dni').value = '';
+    document.getElementById('u-email').value = '';
+    document.getElementById('u-password').value = '';
+    document.getElementById('u-rol').value = '';
+    document.getElementById('pass-hint').style.display = id ? 'none' : '';
+    document.getElementById('pass-edit-hint').style.display = id ? 'block' : 'none';
+    document.getElementById('grupo-coordinador').style.display = 'none';
+    document.getElementById('grupo-estudiante').style.display = 'none';
+    await cargarSelectProgramas([]);
+
+    if (id) {
+        var u = _usuarios.find(function(x){ return x.usuario_id === id; });
+        if (u) {
+            var partes = (u.nombre_completo||'').trim().split(' ');
+            document.getElementById('u-apellido').value = partes.slice(-1)[0]||'';
+            document.getElementById('u-nombre').value   = partes.slice(0,-1).join(' ')||'';
+            document.getElementById('u-dni').value      = u.dni||'';
+            document.getElementById('u-email').value    = u.email||'';
+            document.getElementById('u-rol').value      = u.rol||'';
+            onRolChange();
+            // Cargar programas asignados al coordinador
+            if (u.rol === 'COORDINADOR') {
+                var sb = await getSupabase();
+                var {data:asign} = await sb.from('coordinadores_programas').select('programa_id').eq('coordinador_id',id);
+                var selIds = (asign||[]).map(function(a){ return a.programa_id; });
+                await cargarSelectProgramas(selIds);
             }
         }
+    }
+    abrirModal('modal-usuario');
+}
 
-        // ─── GUARDAR USUARIO ─────────────────────────────────────────────────
-        function guardarUsuario() {
-            const apellido = document.getElementById('apellido').value.trim();
-            const nombre   = document.getElementById('nombre').value.trim();
-            const dni      = document.getElementById('dni').value.trim();
-            const rol      = document.getElementById('rol').value;
-            const programa = document.getElementById('programa').value;
+function onRolChange() {
+    var rol = document.getElementById('u-rol').value;
+    document.getElementById('grupo-coordinador').style.display = rol === 'COORDINADOR' ? 'block' : 'none';
+    document.getElementById('grupo-estudiante').style.display  = rol === 'ESTUDIANTE'  ? 'block' : 'none';
+}
 
-            if (!apellido || !nombre || !dni || !rol || !programa) {
-                alert('Por favor completá todos los campos obligatorios (*)');
-                return;
+async function cargarSelectProgramas(selIds) {
+    var sel = document.getElementById('u-programas');
+    if (!_programas.length) {
+        sel.innerHTML = '<option disabled>No hay programas cargados</option>';
+        return;
+    }
+    sel.innerHTML = _programas.map(function(p) {
+        return '<option value="'+p.programa_id+'"'+(selIds.indexOf(p.programa_id)>=0?' selected':'')+'>'+esc(p.nombre)+'</option>';
+    }).join('');
+}
+
+async function guardarUsuario() {
+    var id       = document.getElementById('u-id').value;
+    var apellido = document.getElementById('u-apellido').value.trim();
+    var nombre   = document.getElementById('u-nombre').value.trim();
+    var dni      = document.getElementById('u-dni').value.trim();
+    var email    = document.getElementById('u-email').value.trim();
+    var password = document.getElementById('u-password').value;
+    var rol      = document.getElementById('u-rol').value;
+
+    if (!apellido||!nombre||!dni||!email||!rol) { toast('Completá todos los campos obligatorios','err'); return; }
+    if (!id && !password) { toast('La contraseña es obligatoria para usuarios nuevos','err'); return; }
+    if (password && password.length < 8) { toast('La contraseña debe tener al menos 8 caracteres','err'); return; }
+
+    var nombreCompleto = apellido + ' ' + nombre;
+    var coordIds = rol === 'COORDINADOR'
+        ? Array.from(document.getElementById('u-programas').selectedOptions).map(function(o){ return parseInt(o.value); }).filter(Boolean)
+        : [];
+
+    spin(true);
+    try {
+        var sb = await getSupabase();
+
+        if (id) {
+            // ── EDITAR ──
+            var upd = { nombre_completo: nombreCompleto, email: email, rol: rol };
+            var {error:eUpd} = await sb.from('usuarios').update(upd).eq('usuario_id', parseInt(id));
+            if (eUpd) throw eUpd;
+
+            // Actualizar programas si es coordinador
+            await sb.from('coordinadores_programas').delete().eq('coordinador_id', parseInt(id));
+            if (coordIds.length) {
+                await sb.from('coordinadores_programas').insert(coordIds.map(function(pid){
+                    return { coordinador_id: parseInt(id), programa_id: pid };
+                }));
             }
-            if (rol === 'Estudiante') {
-                const cohorte = document.getElementById('cohorte').value.trim();
-                const cuotas  = document.getElementById('cuotas').value;
-                const monto   = document.getElementById('monto').value;
-                if (!cohorte || !cuotas || !monto) {
-                    alert('Para estudiantes, Cohorte/Edición, Cuotas y Monto son obligatorios');
-                    return;
-                }
+            toast('Usuario actualizado ✓','ok');
+        } else {
+            // ── CREAR ──
+            // 1. Crear en Supabase Auth usando Admin API no disponible desde el frontend.
+            // Alternativa: crear con signUp y luego auto-confirmar via SQL
+            var {data:authData, error:eAuth} = await sb.auth.signUp({
+                email: email,
+                password: password,
+                options: { emailRedirectTo: null }
+            });
+            if (eAuth) throw eAuth;
+
+            var authUserId = authData.user ? authData.user.id : null;
+            if (!authUserId) throw new Error('No se pudo crear el usuario en Auth');
+
+            // 2. Confirmar email automáticamente (evitar que quede pendiente)
+            // (Se hace vía trigger en Supabase o manualmente desde el dashboard)
+
+            // 3. Insertar en tabla usuarios
+            var {data:nuevoUser, error:eIns} = await sb.from('usuarios').insert({
+                auth_user_id:   authUserId,
+                nombre_completo: nombreCompleto,
+                dni:            dni,
+                email:          email,
+                rol:            rol,
+                activo:         true,
+                estado_usuario: 'ACTIVO'
+            }).select().single();
+            if (eIns) throw eIns;
+
+            // 4. Asignar programas si es coordinador
+            if (coordIds.length) {
+                await sb.from('coordinadores_programas').insert(coordIds.map(function(pid){
+                    return { coordinador_id: nuevoUser.usuario_id, programa_id: pid };
+                }));
             }
-            // En producción: google.script.run.guardarUsuario({...datos})
-            alert('✅ Usuario guardado exitosamente');
-            cerrarModal('modalUsuario');
-            limpiarFormulario();
+            toast('Usuario creado ✓','ok');
         }
 
-        // ─── BAJA ─────────────────────────────────────────────────────────────
-        function confirmarBaja(id, nombre, rol) {
-            accionActualId     = id;
-            accionActualNombre = nombre;
-            accionActualRol    = rol;
+        cerrarModal('modal-usuario');
+        await cargar();
+    } catch(e) {
+        console.error(e);
+        toast('Error: '+e.message,'err');
+    } finally { spin(false); }
+}
 
-            document.getElementById('textoBaja').innerHTML =
-                'Va a dar de baja a <strong>' + nombre + '</strong>.';
+// ── BAJA ──────────────────────────────────────────
+function confirmarBaja(id, nombre) {
+    _accionId = id; _accionNombre = nombre;
+    document.getElementById('baja-titulo').textContent = nombre;
+    document.getElementById('baja-texto').textContent = 'Se bloqueará el acceso al sistema de este usuario.';
+    abrirModal('modal-baja');
+}
+async function ejecutarBaja() {
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var {error} = await sb.from('usuarios').update({ activo: false, estado_usuario: 'BLOQUEADO' }).eq('usuario_id', _accionId);
+        if (error) throw error;
+        toast(_accionNombre+' → Baja ✓','ok');
+        cerrarModal('modal-baja');
+        await cargar();
+    } catch(e) { toast('Error: '+e.message,'err'); }
+    finally { spin(false); }
+}
 
-            const alerta = document.getElementById('alertaBaja');
-            if (rol === 'estudiante') {
-                alerta.innerHTML = '📋 <strong>Baja global:</strong> el estudiante pasará a estado <strong>PASIVO en todas sus cohortes/ediciones</strong>. No se generarán nuevas cuotas. Podés reactivarlo con el botón <strong>Alta</strong>. Para baja solo en una cohorte, usá la vista de Cohorte.';
-                alerta.innerHTML = '🔒 El usuario pasará a estado <strong>Pasivo</strong> y no podrá realizar ninguna acción dentro del sistema SiGPo (login bloqueado). Podés reactivarlo con el botón <strong>Alta</strong>.';
-            }
-            document.getElementById('modalBaja').classList.add('active');
-        }
-        function ejecutarBaja() {
-            // En producción: google.script.run.darDeBaja(accionActualId, accionActualRol)
-            alert('✅ Usuario "' + accionActualNombre + '" dado de baja correctamente.');
-            cerrarModal('modalBaja');
-        }
+// ── ALTA ──────────────────────────────────────────
+function confirmarAlta(id, nombre) {
+    _accionId = id; _accionNombre = nombre;
+    document.getElementById('alta-titulo').textContent = nombre;
+    document.getElementById('alta-texto').textContent = 'Se restaurará el acceso al sistema de este usuario.';
+    abrirModal('modal-alta');
+}
+async function ejecutarAlta() {
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var {error} = await sb.from('usuarios').update({ activo: true, estado_usuario: 'ACTIVO' }).eq('usuario_id', _accionId);
+        if (error) throw error;
+        toast(_accionNombre+' → Alta ✓','ok');
+        cerrarModal('modal-alta');
+        await cargar();
+    } catch(e) { toast('Error: '+e.message,'err'); }
+    finally { spin(false); }
+}
 
-        // ─── ALTA ─────────────────────────────────────────────────────────────
-        function confirmarAlta(id, nombre, rol) {
-            accionActualId     = id;
-            accionActualNombre = nombre;
-            accionActualRol    = rol;
-            document.getElementById('textoAlta').innerHTML =
-                'Va a reactivar a <strong>' + nombre + '</strong>.';
-            const alerta = document.getElementById('alertaAlta');
-            if (rol === 'estudiante') {
-                alerta.innerHTML = '🎓 El estudiante volverá a estado <strong>ACTIVO en todas sus cohortes/ediciones</strong> y podrá retomar el cursado.';
-                alerta.innerHTML = '🔓 El usuario recuperará su acceso al sistema y podrá operar normalmente.';
-            }
-            document.getElementById('modalAlta').classList.add('active');
-        }
-        function ejecutarAlta() {
-            // En producción: google.script.run.darDeAlta(accionActualId, accionActualRol)
-            alert('✅ Usuario "' + accionActualNombre + '" dado de alta correctamente.');
-            cerrarModal('modalAlta');
-        }
+// ── ELIMINAR (conserva historial) ─────────────────
+function confirmarEliminar(id, nombre) {
+    _accionId = id; _accionNombre = nombre;
+    document.getElementById('del-titulo').textContent = nombre;
+    abrirModal('modal-eliminar');
+}
+async function ejecutarEliminar() {
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        // Marcar como inactivo y borrar auth_user_id (revoca acceso sin borrar registros)
+        var {error} = await sb.from('usuarios').update({
+            activo: false, estado_usuario: 'BLOQUEADO', auth_user_id: null
+        }).eq('usuario_id', _accionId);
+        if (error) throw error;
+        toast(_accionNombre+' eliminado (historial conservado) ✓','ok');
+        cerrarModal('modal-eliminar');
+        await cargar();
+    } catch(e) { toast('Error: '+e.message,'err'); }
+    finally { spin(false); }
+}
 
-        // ─── ELIMINAR (conserva registro) ────────────────────────────────────
-        function confirmarEliminar(id, nombre) {
-            accionActualId     = id;
-            accionActualNombre = nombre;
-            document.getElementById('nombreEliminar').textContent = nombre;
-            document.getElementById('modalEliminar').classList.add('active');
-        }
-        function ejecutarEliminar() {
-            // En producción: google.script.run.eliminarUsuario(accionActualId)
-            alert('✅ Usuario "' + accionActualNombre + '" eliminado. El historial queda registrado.');
-            cerrarModal('modalEliminar');
-        }
-
-        // ─── ELIMINAR REGISTRO COMPLETO ──────────────────────────────────────
-        function confirmarEliminarRegistro(id, nombre) {
-            accionActualId     = id;
-            accionActualNombre = nombre;
-            document.getElementById('nombreEliminarRegistro').textContent = nombre;
-            document.getElementById('confirmTexto').value = '';
-            document.getElementById('btnConfirmarErase').disabled = true;
-            document.getElementById('modalEliminarRegistro').classList.add('active');
-        }
-        function validarConfirmacion() {
-            const val = document.getElementById('confirmTexto').value.trim().toUpperCase();
-            document.getElementById('btnConfirmarErase').disabled = (val !== 'ELIMINAR');
-        }
-        function ejecutarEliminarRegistro() {
-            // En producción: google.script.run.eliminarRegistroCompleto(accionActualId)
-            alert('💣 Registro completo de "' + accionActualNombre + '" eliminado permanentemente.');
-            cerrarModal('modalEliminarRegistro');
-        }
-
-        // ─── IMPORTAR ────────────────────────────────────────────────────────
-        function abrirModalImportar() {
-            document.getElementById('modalImportar').classList.add('active');
-        }
-        function procesarExcel(file) {
-            if (!file) return;
-            alert('Procesando archivo Excel: ' + file.name + '\n\nLos usuarios se crearán con estado ACTIVO por defecto.');
-            cerrarModal('modalImportar');
-        }
-
-        // ─── BÚSQUEDA ────────────────────────────────────────────────────────
-        function buscarUsuario(texto) {
-            const termino = texto.toLowerCase().trim();
-            const filas   = document.querySelectorAll('#tbodyUsuarios tr');
-            filas.forEach(fila => {
-                const datos = (
-                    fila.dataset.nombre + ' ' +
-                    fila.dataset.dni    + ' ' +
-                    fila.dataset.email
-                ).toLowerCase();
-                fila.style.display = datos.includes(termino) ? '' : 'none
+// ── ELIMINAR REGISTRO COMPLETO ────────────────────
+function confirmarErase(id, nombre) {
+    _accionId = id; _accionNombre = nombre;
+    document.getElementById('erase-titulo').textContent = nombre;
+    document.getElementById('confirm-texto').value = '';
+    document.getElementById('btn-erase').disabled = true;
+    abrirModal('modal-erase');
+}
+function validarConfirmacion() {
+    var v = document.getElementById('confirm-texto').value.trim().toUpperCase();
+    document.getElementById('btn-erase').disabled = (v !== 'ELIMINAR');
+}
+async function ejecutarErase() {
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        // Borrar en cascada: coordinadores_programas, luego usuarios
+        await sb.from('coordinadores_programas').delete().eq('coordinador_id', _accionId);
+        var {error} = await sb.from('usuarios').delete().eq('usuario_id', _accionId);
+        if (error) throw error;
+        toast('Registro de '+_accionNombre+' eliminado permanentemente ✓','ok');
+        cerrarModal('modal-erase');
+        await cargar();
+    } catch(e) { toast('Error: '+e.message,'err'); }
+    finally { spin(false); }
+}
+</script>
 </body>
 </html>
