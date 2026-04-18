@@ -44,7 +44,7 @@ async function login(dni, password) {
     // Primero buscar el email real del usuario por DNI
     const { data: usuarioPre, error: errPre } = await sb
         .from('usuarios')
-        .select('rol, nombre_completo, email, programa_id, dni, activo')
+        .select('rol, apellido, nombre, nombre_completo, email, programa_id, dni, activo')
         .eq('dni', String(dni))
         .single();
 
@@ -69,6 +69,8 @@ async function login(dni, password) {
 
     localStorage.setItem('sigpo_rol', usuario.rol);
     localStorage.setItem('sigpo_nombre', usuario.nombre_completo);
+    localStorage.setItem('sigpo_apellido', usuario.apellido || '');
+    localStorage.setItem('sigpo_nombre2', usuario.nombre || '');
     localStorage.setItem('sigpo_dni', usuario.dni);
     localStorage.setItem('sigpo_email', usuario.email);
     localStorage.setItem('sigpo_programa_id', usuario.programa_id || '');
@@ -86,6 +88,8 @@ async function logout() {
     await sb.auth.signOut();
     localStorage.removeItem('sigpo_rol');
     localStorage.removeItem('sigpo_nombre');
+    localStorage.removeItem('sigpo_apellido');
+    localStorage.removeItem('sigpo_nombre2');
     localStorage.removeItem('sigpo_dni');
     localStorage.removeItem('sigpo_email');
     localStorage.removeItem('sigpo_programa_id');
@@ -850,9 +854,9 @@ async function obtenerPerfilUsuario() {
     var sesion = getSesion();
     if (!sesion) return null;
     const sb = await getSupabase();
-    var r = await sb.from('usuarios').select('*').eq('dni', sesion.dni).single();
+    // Traer apellido y nombre directamente de la BD
+    var r = await sb.from('usuarios').select('apellido, nombre, nombre_completo, dni, email, rol').eq('dni', sesion.dni).single();
     if (!r.data) return null;
-    // Usar columnas apellido y nombre directamente (disponibles desde la migración)
     return {
         apellido: r.data.apellido || r.data.nombre_completo || '',
         nombre:   r.data.nombre  || '',
