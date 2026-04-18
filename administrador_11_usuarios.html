@@ -174,10 +174,7 @@
         </div>
         <div class="mbody">
             <input type="hidden" id="u-id">
-            <div class="g2">
-                <div class="mf"><label>Apellido *</label><input type="text" id="u-ap" placeholder="González" autocomplete="off"></div>
-                <div class="mf"><label>Nombre *</label><input type="text" id="u-no" placeholder="María" autocomplete="off"></div>
-            </div>
+            <div class="mf"><label>Nombre completo * <span style="font-weight:400;color:#888;font-size:11px;">(apellido/s y nombre/s)</span></label><input type="text" id="u-nc" placeholder="ej: González María Laura" autocomplete="off"></div>
             <div class="g2">
                 <div class="mf"><label>DNI *</label><input type="text" id="u-dn" placeholder="30123456" autocomplete="off"></div>
                 <div class="mf"><label>Email *</label><input type="email" id="u-em" placeholder="usuario@email.com" autocomplete="off"></div>
@@ -470,8 +467,7 @@ function setRol(btn){
 async function abrirU(id){
     document.getElementById('m-u-tit').textContent = id ? '✏️ Editar Usuario' : '➕ Nuevo Usuario';
     document.getElementById('u-id').value = id||'';
-    document.getElementById('u-ap').value = '';
-    document.getElementById('u-no').value = '';
+    document.getElementById('u-nc').value = '';
     document.getElementById('u-dn').value = '';
     document.getElementById('u-em').value = '';
     document.getElementById('u-pw').value = '';
@@ -489,9 +485,7 @@ async function abrirU(id){
     if (id){
         var u = _us.find(function(x){ return x.usuario_id===id; });
         if (u){
-            var nm = (u.nombre_completo||'').trim().split(' ');
-            document.getElementById('u-ap').value = nm[0]||'';
-            document.getElementById('u-no').value = nm.slice(1).join(' ')||'';
+            document.getElementById('u-nc').value = u.nombre_completo||'';
             document.getElementById('u-dn').value = u.dni||'';
             document.getElementById('u-em').value = u.email||'';
             document.getElementById('u-rol').value = u.rol||'';
@@ -516,18 +510,17 @@ function onRol(){
 
 async function guardarU(){
     var id  = document.getElementById('u-id').value;
-    var ap  = document.getElementById('u-ap').value.trim();
-    var no  = document.getElementById('u-no').value.trim();
+    var nc  = document.getElementById('u-nc').value.trim();
     var dn  = document.getElementById('u-dn').value.trim();
     var em  = document.getElementById('u-em').value.trim();
     var pw  = document.getElementById('u-pw').value;
     var rol = document.getElementById('u-rol').value;
 
-    if (!ap||!no||!dn||!em||!rol){ toast('Completá todos los campos obligatorios (*)','err'); return; }
+    if (!nc||!dn||!em||!rol){ toast('Completá todos los campos obligatorios (*)','err'); return; }
     if (!id && !pw){ toast('La contraseña es obligatoria para usuarios nuevos','err'); return; }
     if (pw && pw.length<8){ toast('La contraseña debe tener al menos 8 caracteres','err'); return; }
 
-    var nc = ap+' '+no;
+
     var cids = rol==='COORDINADOR'
         ? Array.from(document.getElementById('u-progs').selectedOptions).map(function(o){ return parseInt(o.value); }).filter(Boolean)
         : [];
