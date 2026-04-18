@@ -572,7 +572,7 @@ async function cargarCohortes() {
                     +'<span class="badge '+(badgeMap[c.estado]||'')+'">'+(labelMap[c.estado]||c.estado)+'</span>'
                     +'</div>'
                     +'<div class="coh-info">'
-                    +'<div><strong>Período:</strong> '+(c.fecha_inicio||'—')+' → '+(c.fecha_fin||'—')+'</div>'
+                    +'<div><strong>Período:</strong> '+fFecha(c.fecha_inicio)+' → '+fFecha(c.fecha_fin)+'</div>'
                     +'<div><strong>Estudiantes:</strong> '+act+' activo'+(act!==1?'s':'')+(baja?' · '+baja+' baja':'')+'</div>'
                     +'<div><strong>Recaudado:</strong> '+fMonto(rec)+' de '+fMonto(tot)+'</div>'
                     +'</div>'
