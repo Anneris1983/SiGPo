@@ -479,7 +479,8 @@
         </div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="cerrar('modal-correo')">Cancelar</button>
-            <button class="btn-save" onclick="guardarPlantilla()">💾 Guardar plantilla</button>
+            <button class="btn-save" style="background:#e67e22;" onclick="guardarPlantilla()">💾 Guardar plantilla</button>
+            <button id="btn-enviar-notif" class="btn-save" style="display:none;" onclick="enviarNotificaciones()">🔔 Enviar notificación</button>
         </div>
     </div>
 </div>
@@ -1139,7 +1140,7 @@ function renderTabla() {
                 + '</div></td>';
         }).join('');
 
-        var esPasivo = est.estado_academico === 'PASIVO';
+        var esPasivo = est.estado_academico === 'BAJA';
         var nombreEsc = String(est.apellido + ', ' + est.nombre).replace(/'/g, "\'");
         var descuentoInfo = JSON.stringify({dni:est.dni, apellido:est.apellido, nombre:est.nombre, pct:est.descuento_porcentaje}).replace(/'/g, '&apos;');
         var filaHtml = `
@@ -1161,7 +1162,7 @@ function renderTabla() {
             <td style="text-align:center;border-right:1px solid #ebebeb;">
                 ${esPasivo
                     ? `<button class="btn-alta-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','ACTIVO')">✅ Alta (ACTIVO)</button>`
-                    : `<button class="btn-baja-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','PASIVO')">⛔ Baja (PASIVO)</button>`}
+                    : `<button class="btn-baja-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','BAJA')">⛔ Baja (PASIVO)</button>`}
             </td>
             ${celdas}
             <td class="cell-tot-pagar">${fMonto(totP)}</td>
@@ -1527,15 +1528,15 @@ async function guardarCuotas() {
 ══════════════════════════════════════════════════ */
 function confirmarCambioEstado(dni, nombre, nuevoEstado) {
     _bcDni = dni; _bcNombre = nombre; _bcNuevoEstado = nuevoEstado;
-    var esBaja = nuevoEstado === 'PASIVO';
+    var esBaja = nuevoEstado === 'BAJA';
     var hdr = document.getElementById('mbc-hdr');
     hdr.style.background = esBaja
         ? 'linear-gradient(135deg,#e65100 0%,#f59e0b 100%)'
         : 'linear-gradient(135deg,#2d7a4f 0%,#4caf50 100%)';
-    document.getElementById('mbc-titulo').textContent = esBaja ? '⛔ Dar de baja (PASIVO)' : '✅ Alta en esta cohorte';
+    document.getElementById('mbc-titulo').textContent = esBaja ? '⛔ Dar de baja' : '✅ Alta en esta cohorte';
     document.getElementById('mbc-sub').textContent    = V.data ? V.data.programa.nombre + ' · ' + V.data.cohorte.nombre : '';
     var btn = document.getElementById('mbc-btn');
-    btn.textContent       = esBaja ? '⛔ Confirmar Baja (PASIVO)' : '✅ Confirmar Alta';
+    btn.textContent       = esBaja ? '⛔ Confirmar Baja' : '✅ Confirmar Alta';
     btn.style.background  = esBaja ? '#ea580c' : '#2d7a4f';
     document.getElementById('mbc-cuerpo').innerHTML = esBaja
         ? '<p style="font-size:13px;color:#555;">Va a dar de baja a <strong>' + nombre + '</strong> solo en esta cohorte/edición.</p>'
@@ -1551,32 +1552,21 @@ async function ejecutarCambioEstado() {
     spin(true);
     try {
         var sb = await getSupabase();
-        /*
-         * NOTA SUPABASE — enum estado_academico:
-         * Valores correctos: ACTIVO, PASIVO
-         * Si obtenés error "invalid input value for enum", ejecutar en SQL Editor:
-         *   ALTER TYPE estado_academico ADD VALUE IF NOT EXISTS 'PASIVO';
-         * EGRESADO no se usa en esta vista.
-         */
-        // Si el enum de Supabase no incluye BAJA, agregarlo en:
-        // Supabase → Database → Types → estado_academico → Add value: BAJA
-        var { error } = await sb.from('estudiantes')
+
+        // Fuente de verdad: tabla inscripciones (no estudiantes)
+        // Enum estado_academico: ACTIVO, BAJA
+        var est = V.data.estudiantes.find(function(e) { return String(e.dni) === String(_bcDni); });
+        if (!est) throw new Error('Estudiante no encontrado en memoria');
+
+        var { error } = await sb.from('inscripciones')
             .update({ estado_academico: _bcNuevoEstado })
-            .eq('dni', String(_bcDni))
+            .eq('estudiante_id', est.id)
             .eq('cohorte_id', COHORTE_ID);
-        if (error) {
-            // Error común: el enum no acepta BAJA
-            if (error.code === '22P02' || (error.message && error.message.includes('invalid input value'))) {
-                toast('⚠️ Falta agregar BAJA al enum estado_academico en Supabase. Ver consola.', 'err');
-                console.error('Solución: En Supabase → Database → Types → estado_academico → agregar valor BAJA');
-            } else {
-                throw error;
-            }
-            return;
-        }
-        toast(_bcNuevoEstado === 'PASIVO'
-            ? _bcNombre + ' → PASIVO en esta cohorte ✓'
-            : _bcNombre + ' → ACTIVO en esta cohorte ✓', 'ok');
+        if (error) throw error;
+
+        toast(_bcNuevoEstado === 'BAJA'
+            ? _bcNombre + ' → Baja en esta cohorte ✓'
+            : _bcNombre + ' → Activo en esta cohorte ✓', 'ok');
         cerrar('modal-baja-cohorte');
         await cargar();
     } catch(e) {
@@ -1590,7 +1580,11 @@ async function ejecutarCambioEstado() {
 /* ══════════════════════════════════════════════════
    CORREO / RECLAMO
 ══════════════════════════════════════════════════ */
-function abrirCorreo() { cargarPlantilla(); abrir('modal-correo'); }
+function abrirCorreo() {
+    cargarPlantilla();
+    document.getElementById('btn-enviar-notif').style.display = 'none';
+    abrir('modal-correo');
+}
 function cargarPlantilla() {
     var t = document.getElementById('c-tipo').value;
     var tpl = PLANTILLAS[t] || DEFAULT_PLANTILLAS[t];
@@ -1611,9 +1605,119 @@ function guardarPlantilla() {
 async function reclamarSel() {
     var sel = getSel();
     if (!sel.length) { toast('Seleccioná al menos un estudiante', 'err'); return; }
-    // TODO: implementar envío real de emails vía Supabase Edge Functions o servicio externo
-    toast('Reclamo enviado a ' + sel.length + ' estudiante' + (sel.length > 1 ? 's' : '') + ' ✓', 'ok');
-    deselAll();
+
+    // Abrir modal de correo para elegir tipo y confirmar envío
+    var total = V.data ? V.data.estudiantes.length : 0;
+    document.getElementById('plan-n-todos').textContent = total;
+    if (V.data) {
+        document.getElementById('cuota-sub').textContent =
+            V.data.programa.nombre + ' · ' + V.data.cohorte.nombre;
+    }
+    // Pre-seleccionar tipo reclamo si hay cuotas vencidas
+    document.getElementById('c-tipo').value = 'reclamo';
+    cargarPlantilla();
+    // Cambiar footer para enviar en vez de solo guardar plantilla
+    document.getElementById('btn-enviar-notif').style.display = 'inline-flex';
+    abrir('modal-correo');
+}
+
+async function enviarNotificaciones() {
+    var sel = getSel();
+    if (!sel.length) { toast('Seleccioná al menos un estudiante', 'err'); return; }
+
+    var tipo   = document.getElementById('c-tipo').value;
+    var asunto = document.getElementById('c-asunto').value.trim();
+    var cuerpo = document.getElementById('c-cuerpo').value.trim();
+    if (!asunto || !cuerpo) { toast('Completá el asunto y el cuerpo', 'err'); return; }
+
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var cfg = await obtenerConfiguracion();
+        var notifs = [];
+        var cobrosActualizar = [];
+
+        sel.forEach(function(dni) {
+            var est = V.data.estudiantes.find(function(e) { return String(e.dni) === String(dni); });
+            if (!est) return;
+
+            // Cobros vencidos del estudiante
+            var cobrosVencidos = est.cobros.filter(function(c) {
+                return ['EN_MORA','NO_ABONADA','PAGO_PARCIAL'].includes(resolverEstadoCobro(c))
+                    && tieneMontoDefinido(c);
+            });
+
+            // Generar una notificación por cada cobro vencido (o una general si no hay)
+            if (cobrosVencidos.length === 0) {
+                // Notificación general
+                var msg = interpolarPlantilla(cuerpo, {
+                    nombre: est.nombre, apellido: est.apellido, dni: est.dni,
+                    cuota: '—', periodo: '—', monto: '0',
+                    vencimiento: '—', programa: V.data.programa.nombre,
+                    cbu: cfg.cbu || '—', alias: cfg.alias || '—'
+                });
+                notifs.push({
+                    usuario_dni:  String(est.dni),
+                    rol_destino:  null,
+                    tipo:         tipo === 'recordatorio' ? 'cuota' : 'mora',
+                    mensaje:      asunto + ': ' + msg.substring(0, 200)
+                });
+            } else {
+                cobrosVencidos.forEach(function(c) {
+                    var msg = interpolarPlantilla(cuerpo, {
+                        nombre: est.nombre, apellido: est.apellido, dni: est.dni,
+                        cuota: c.concepto, periodo: c.periodo || '—',
+                        monto: Math.round(Number(c.saldo_pendiente) || 0).toLocaleString('es-AR'),
+                        vencimiento: fFecha(c.fecha_vencimiento),
+                        programa: V.data.programa.nombre,
+                        cbu: cfg.cbu || '—', alias: cfg.alias || '—'
+                    });
+                    notifs.push({
+                        usuario_dni:  String(est.dni),
+                        rol_destino:  null,
+                        tipo:         tipo === 'recordatorio' ? 'cuota' : 'mora',
+                        mensaje:      msg.substring(0, 500)
+                    });
+                    // Marcar cobro como reclamado
+                    if (tipo === 'reclamo') cobrosActualizar.push(c.cobro_id);
+                    if (tipo === 'recordatorio') cobrosActualizar.push(c.cobro_id);
+                });
+            }
+        });
+
+        // Insertar notificaciones
+        if (notifs.length) {
+            var r = await sb.from('notificaciones').insert(notifs);
+            if (r.error) throw r.error;
+        }
+
+        // Marcar cobros como reclamados/recordados
+        if (cobrosActualizar.length) {
+            var campo = tipo === 'reclamo' ? 'reclamo_enviado' : 'recordatorio_enviado';
+            var upd = {};
+            upd[campo] = true;
+            var campoFecha = tipo === 'reclamo' ? 'fecha_reclamo' : 'fecha_recordatorio';
+            upd[campoFecha] = new Date().toISOString();
+            await sb.from('cobros').update(upd).in('cobro_id', cobrosActualizar);
+        }
+
+        var totalNotifs = notifs.length;
+        toast('✓ ' + totalNotifs + ' notificación' + (totalNotifs !== 1 ? 'es' : '') + ' enviada' + (totalNotifs !== 1 ? 's' : '') + ' a ' + sel.length + ' estudiante' + (sel.length !== 1 ? 's' : ''), 'ok');
+        cerrar('modal-correo');
+        deselAll();
+        await cargar();
+    } catch(e) {
+        console.error(e);
+        toast('Error al enviar notificaciones: ' + e.message, 'err');
+    } finally {
+        spin(false);
+    }
+}
+
+function interpolarPlantilla(texto, vars) {
+    return texto.replace(/\{(\w+)\}/g, function(match, key) {
+        return vars[key] !== undefined ? vars[key] : match;
+    });
 }
 
 /* ══════════════════════════════════════════════════
