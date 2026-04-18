@@ -852,11 +852,10 @@ async function obtenerPerfilUsuario() {
     const sb = await getSupabase();
     var r = await sb.from('usuarios').select('*').eq('dni', sesion.dni).single();
     if (!r.data) return null;
-    // Separar apellido / nombre desde nombre_completo (formato "Apellido Nombre")
-    var partes = (r.data.nombre_completo || '').trim().split(' ');
+    // Usar columnas apellido y nombre directamente (disponibles desde la migración)
     return {
-        apellido: partes.slice(-1)[0] || '',
-        nombre:   partes.slice(0, -1).join(' ') || r.data.nombre_completo,
+        apellido: r.data.apellido || r.data.nombre_completo || '',
+        nombre:   r.data.nombre  || '',
         dni:      r.data.dni,
         email:    r.data.email,
         rol:      r.data.rol
