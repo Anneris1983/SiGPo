@@ -318,13 +318,37 @@ async function cargar(){
         var rc=await sb.from('cohortes').select('cohorte_id,programa_id,nombre').order('nombre');
         _cohProg={};
         (rc.data||[]).forEach(function(c){if(!_cohProg[c.programa_id])_cohProg[c.programa_id]=[];_cohProg[c.programa_id].push(c);});
+        // Coordinadores: asignaciones desde coordinadores_programas
         var rcp=await sb.from('coordinadores_programas').select('coordinador_id,programas(nombre),cohortes(nombre)');
         var cm={};
         (rcp.data||[]).forEach(function(c){
             if(!cm[c.coordinador_id])cm[c.coordinador_id]=[];
             if(c.programas){var lbl=c.programas.nombre;if(c.cohortes)lbl+=' · '+c.cohortes.nombre;cm[c.coordinador_id].push(lbl);}
         });
-        _us=(r.data||[]).map(function(u){return Object.assign({},u,{_asigs:cm[u.usuario_id]||[]});});
+
+        // Estudiantes: inscripciones desde inscripciones → cohortes → programas
+        var rie=await sb.from('inscripciones').select('estudiante_id,cohortes(nombre,programas(nombre)),estado_academico');
+        // Mapa estudiante_id → dni (para cruzar con usuarios)
+        var reEst=await sb.from('estudiantes').select('id,dni');
+        var estDniMap={};
+        (reEst.data||[]).forEach(function(e){estDniMap[e.id]=e.dni;});
+        // Mapa dni → labels de inscripciones
+        var estInscMap={};
+        (rie.data||[]).forEach(function(i){
+            var dni=estDniMap[i.estudiante_id];
+            if(!dni)return;
+            if(!estInscMap[dni])estInscMap[dni]=[];
+            if(i.cohortes){
+                var lbl=(i.cohortes.programas?i.cohortes.programas.nombre:'')+(i.cohortes.nombre?' · '+i.cohortes.nombre:'');
+                if(i.estado_academico==='BAJA')lbl+=' (Baja)';
+                estInscMap[dni].push(lbl);
+            }
+        });
+
+        _us=(r.data||[]).map(function(u){
+            var asigs=u.rol==='ESTUDIANTE'?(estInscMap[u.dni]||[]):(cm[u.usuario_id]||[]);
+            return Object.assign({},u,{_asigs:asigs});
+        });
         renderTabla();
     }catch(e){console.error(e);toast('Error al cargar: '+e.message,'err');}
     finally{spin(false);}
