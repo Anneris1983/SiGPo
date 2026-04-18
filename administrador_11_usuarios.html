@@ -513,7 +513,7 @@ async function abrirU(id){
             if (u.rol==='ESTUDIANTE'){
                 var sb2 = await getSupabase();
                 // Buscar estudiante por DNI para obtener su id
-                var estRes = await sb2.from('estudiantes').select('id').eq('dni', u.dni).single();
+                var estRes = await sb2.from('estudiantes').select('id').eq('dni', u.dni).maybeSingle();
                 if (estRes.data){
                     var ri = await sb2.from('inscripciones')
                         .select('cohorte_id,descuento_porcentaje,cohortes(nombre,programa_id)')
@@ -696,7 +696,7 @@ async function guardarU(){
             }
             // Si es estudiante: actualizar inscripciones
             if (rol==='ESTUDIANTE' && inscripciones.length){
-                var estRes = await sb.from('estudiantes').select('id').eq('dni',dn).single();
+                var estRes = await sb.from('estudiantes').select('id').eq('dni',dn).maybeSingle();
                 if (estRes.data){
                     var estId = estRes.data.id;
                     // Upsert cada inscripción
