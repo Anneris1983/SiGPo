@@ -168,6 +168,7 @@
             </div>
         </div>
         <div class="toolbar-actions">
+            <button class="btn btn-warning" onclick="abrirModalImportar()" style="background:#7c3aed;">📥 Importar Usuarios</button>
             <button class="btn btn-primary" onclick="abrirModalUsuario()">➕ Nuevo Usuario</button>
         </div>
     </div>
@@ -346,6 +347,42 @@
         <div class="modal-footer">
             <button class="btn btn-gray" onclick="cerrarModal('modal-erase')">Cancelar</button>
             <button class="btn btn-purple" id="btn-erase" disabled onclick="ejecutarErase()">💣 Eliminar Todo</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: IMPORTAR USUARIOS -->
+<div class="modal-overlay" id="modal-importar">
+    <div class="modal-box">
+        <div class="modal-hdr" style="background:linear-gradient(135deg,#6a1b9a,#7c3aed);">
+            <div><h2>📥 Importar Usuarios</h2><p>Cargá usuarios desde un archivo Excel</p></div>
+            <button class="modal-close" onclick="cerrarModal('modal-importar')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="alert-box alert-info" style="margin-bottom:16px;">
+                <strong>📋 Columnas requeridas en el Excel:</strong>
+                <div style="margin-top:8px;font-family:monospace;font-size:12px;background:#fff;padding:10px;border-radius:6px;">
+                    apellido · nombre · dni · email · password · rol
+                </div>
+                <div style="margin-top:8px;font-size:12px;">
+                    <strong>Valores válidos para rol:</strong> ADMINISTRADOR · SECRETARIA · COOPERADORA · COORDINADOR · ESTUDIANTE
+                </div>
+            </div>
+            <div class="alert-box alert-warning">
+                ⚠️ La primera fila debe ser la cabecera. Los estudiantes se inscriben a cohortes desde la vista de cohortes, no desde aquí.
+            </div>
+            <div class="mfield" style="margin-top:16px;">
+                <label>Seleccionar archivo .xlsx</label>
+                <input type="file" id="imp-file" accept=".xlsx,.xls" style="width:100%;padding:10px;border:2px dashed #7c3aed;border-radius:8px;cursor:pointer;" onchange="mostrarArchivoImp(this)">
+            </div>
+            <div id="imp-preview" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-top:10px;font-size:13px;">
+                <strong id="imp-fn">—</strong> <span id="imp-fs" style="color:#666;"></span>
+                <div id="imp-resumen" style="margin-top:6px;color:#15803d;"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-gray" onclick="cerrarModal('modal-importar')">Cancelar</button>
+            <button class="btn btn-purple" id="btn-imp" disabled onclick="procesarImportUsuarios()">📥 Importar</button>
         </div>
     </div>
 </div>
@@ -700,6 +737,107 @@ async function ejecutarErase() {
         await cargar();
     } catch(e) { toast('Error: '+e.message,'err'); }
     finally { spin(false); }
+}
+
+// ── IMPORTAR USUARIOS ────────────────────────────
+var _impFile = null;
+
+function abrirModalImportar() {
+    _impFile = null;
+    document.getElementById('imp-file').value = '';
+    document.getElementById('imp-preview').style.display = 'none';
+    document.getElementById('btn-imp').disabled = true;
+    abrirModal('modal-importar');
+}
+
+function mostrarArchivoImp(input) {
+    var f = input.files[0];
+    if (!f) return;
+    var ext = f.name.split('.').pop().toLowerCase();
+    if (!['xlsx','xls'].includes(ext)) { toast('Solo .xlsx o .xls','err'); return; }
+    _impFile = f;
+    document.getElementById('imp-fn').textContent = f.name;
+    document.getElementById('imp-fs').textContent = '(' + (f.size/1024).toFixed(1) + ' KB)';
+    document.getElementById('imp-resumen').textContent = 'Archivo listo para importar';
+    document.getElementById('imp-preview').style.display = 'block';
+    document.getElementById('btn-imp').disabled = false;
+}
+
+async function procesarImportUsuarios() {
+    if (!_impFile) return;
+    // Cargar SheetJS si no está
+    if (!window.XLSX) {
+        spin(true);
+        await new Promise(function(res, rej) {
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+        });
+        spin(false);
+    }
+    spin(true);
+    try {
+        var data  = await _impFile.arrayBuffer();
+        var wb    = XLSX.read(data, { type: 'array' });
+        var ws    = wb.Sheets[wb.SheetNames[0]];
+        var rows  = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        if (!rows.length) { toast('El archivo está vacío','err'); return; }
+
+        var rolesValidos = ['ADMINISTRADOR','SECRETARIA','COOPERADORA','COORDINADOR','ESTUDIANTE'];
+        var sb = await getSupabase();
+        var creados = 0, errores = [];
+
+        for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            var apellido = String(r.apellido||r.Apellido||'').trim();
+            var nombre   = String(r.nombre||r.Nombre||'').trim();
+            var dni      = String(r.dni||r.DNI||r.Dni||'').trim();
+            var email    = String(r.email||r.Email||'').trim();
+            var password = String(r.password||r.Password||r.contraseña||'').trim();
+            var rol      = String(r.rol||r.Rol||'').trim().toUpperCase();
+
+            if (!apellido||!nombre||!dni||!email||!password) {
+                errores.push('Fila '+(i+2)+': faltan datos obligatorios');
+                continue;
+            }
+            if (!rolesValidos.includes(rol)) {
+                errores.push('Fila '+(i+2)+': rol "'+rol+'" inválido');
+                continue;
+            }
+
+            // Crear en Auth
+            var {data:authData, error:eAuth} = await sb.auth.signUp({ email: email, password: password });
+            if (eAuth) { errores.push('Fila '+(i+2)+' ('+dni+'): '+eAuth.message); continue; }
+            var authId = authData.user ? authData.user.id : null;
+            if (!authId) { errores.push('Fila '+(i+2)+': no se pudo crear en Auth'); continue; }
+
+            // Insertar en usuarios
+            var {error:eIns} = await sb.from('usuarios').insert({
+                auth_user_id:    authId,
+                nombre_completo: apellido+' '+nombre,
+                dni:             dni,
+                email:           email,
+                rol:             rol,
+                activo:          true,
+                estado_usuario:  'ACTIVO'
+            });
+            if (eIns) { errores.push('Fila '+(i+2)+' ('+dni+'): '+eIns.message); continue; }
+            creados++;
+        }
+
+        if (errores.length) {
+            console.error('Errores importación usuarios:', errores);
+            toast(creados+' creados · '+errores.length+' error'+(errores.length!==1?'es':'')+'. Ver consola.', 'err');
+        } else {
+            toast(creados+' usuario'+(creados!==1?'s':'')+' importado'+(creados!==1?'s':'')+' ✓','ok');
+        }
+        cerrarModal('modal-importar');
+        await cargar();
+    } catch(e) {
+        console.error(e);
+        toast('Error al importar: '+e.message,'err');
+    } finally { spin(false); }
 }
 </script>
 </body>
