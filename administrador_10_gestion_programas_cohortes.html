@@ -254,10 +254,7 @@
                     <option value="FINALIZADO">Finalizado</option>
                 </select>
             </div>
-            <div class="mfield">
-                <label>Observaciones</label>
-                <textarea id="coh-obs" placeholder="Info adicional..."></textarea>
-            </div>
+            <!-- Campo observaciones no disponible en esta versión -->
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="cerrarModal('modal-coh')">Cancelar</button>
@@ -603,7 +600,6 @@ function abrirModalCohorte() {
     document.getElementById('coh-inicio').value = '';
     document.getElementById('coh-fin').value = '';
     document.getElementById('coh-estado').value = 'ACTIVO';
-    document.getElementById('coh-obs').value = '';
     abrirModal('modal-coh');
 }
 
@@ -619,7 +615,7 @@ async function editarCohorte(id) {
         document.getElementById('coh-inicio').value = c.fecha_inicio||'';
         document.getElementById('coh-fin').value = c.fecha_fin||'';
         document.getElementById('coh-estado').value = c.estado||'ACTIVO';
-        document.getElementById('coh-obs').value = c.observaciones||'';
+
         abrirModal('modal-coh');
     } finally { spin(false); }
 }
@@ -630,14 +626,13 @@ async function guardarCohorte() {
     var inicio = document.getElementById('coh-inicio').value;
     var fin    = document.getElementById('coh-fin').value;
     var estado = document.getElementById('coh-estado').value;
-    var obs    = document.getElementById('coh-obs').value.trim();
     if (!nombre) { toast('El nombre es obligatorio','err'); return; }
     if (!inicio||!fin) { toast('Las fechas son obligatorias','err'); return; }
     if (fin < inicio) { toast('La fecha de fin debe ser posterior al inicio','err'); return; }
     spin(true);
     try {
         var sb = await getSupabase();
-        var datos = {nombre:nombre,fecha_inicio:inicio,fecha_fin:fin,estado:estado,observaciones:obs||null};
+        var datos = {nombre:nombre,fecha_inicio:inicio,fecha_fin:fin,estado:estado};
         if (id) {
             var {error} = await sb.from('cohortes').update(datos).eq('cohorte_id',parseInt(id));
             if (error) throw error;
