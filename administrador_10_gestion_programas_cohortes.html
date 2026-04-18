@@ -220,10 +220,7 @@
                 </select>
                 <div class="mhint">Mantené Ctrl/Cmd para seleccionar varios</div>
             </div>
-            <div class="mfield">
-                <label>Descripción</label>
-                <textarea id="prog-desc" placeholder="Observaciones adicionales..."></textarea>
-            </div>
+            <!-- Campo descripcion no disponible en esta versión -->
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="cerrarModal('modal-prog')">Cancelar</button>
@@ -436,7 +433,7 @@ async function abrirModalPrograma(id) {
         if (p) {
             document.getElementById('prog-tipo').value = p.tipo||'MAESTRIA';
             document.getElementById('prog-nombre').value = p.nombre||'';
-            document.getElementById('prog-desc').value = p.descripcion||'';
+            // descripcion no existe en la tabla
             // Coordinadores asignados
             var sb = await getSupabase();
             var {data:asign} = await sb.from('coordinadores_programas').select('coordinador_id').eq('programa_id',id);
@@ -473,7 +470,7 @@ async function guardarPrograma() {
     spin(true);
     try {
         var sb = await getSupabase();
-        var datos = {tipo:tipo, nombre:nombre, descripcion:desc||null};
+        var datos = {tipo:tipo, nombre:nombre};
         var progId;
         if (id) {
             progId = parseInt(id);
