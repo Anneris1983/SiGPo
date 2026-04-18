@@ -9,7 +9,7 @@
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#1e3a5f;--accent:#d4af37;--success:#2d7a4f;--danger:#dc2626;--warning:#f59e0b}
         body{font-family:'DM Sans',sans-serif;background:#f8f6f1}
-        .header{background:linear-gradient(135deg,#1e3a5f 0%,#2d5a87 100%);color:white;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+        .header{background:linear-gradient(135deg,#1e3a5f,#2d5a87);color:white;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
         .breadcrumb{font-size:13px;margin-bottom:6px}.breadcrumb a{color:white;text-decoration:none;opacity:.9}
         .header h1{font-family:'Crimson Pro',serif;font-size:22px}
         .header-sub{font-size:12px;opacity:.8;margin-top:2px}
@@ -28,7 +28,6 @@
         .tactions{display:flex;gap:8px}
         .btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:5px;transition:all .2s;white-space:nowrap}
         .btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
-        .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
         .bp{background:var(--primary);color:white}.bs{background:var(--success);color:white}
         .bd{background:var(--danger);color:white}.bg{background:#e0e0e0;color:#555}
         .bw{background:#7c3aed;color:white}.bo{background:#ea580c;color:white}
@@ -40,33 +39,24 @@
         tr:hover td{background:#f8f6f1}
         .uname{font-weight:700;color:var(--primary)}
         .rb{padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;text-transform:uppercase;white-space:nowrap}
-        .rADMINISTRADOR{background:#e3f2fd;color:#1565c0}
-        .rCOOPERADORA{background:#f3e5f5;color:#7b1fa2}
-        .rCOORDINADOR{background:#fff3e0;color:#e65100}
-        .rESTUDIANTE{background:#e8f5e9;color:#2e7d32}
+        .rADMINISTRADOR{background:#e3f2fd;color:#1565c0}.rCOOPERADORA{background:#f3e5f5;color:#7b1fa2}
+        .rCOORDINADOR{background:#fff3e0;color:#e65100}.rESTUDIANTE{background:#e8f5e9;color:#2e7d32}
         .rSECRETARIA{background:#fce4ec;color:#c2185b}
-        .sb{padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700}
-        .sACTIVO{background:#d1fae5;color:#065f46}
-        .sBLOQUEADO{background:#fee2e2;color:#991b1b}
-        .sPASIVO{background:#fef3c7;color:#92400e}
+        .sb2{padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700}
+        .sACTIVO{background:#d1fae5;color:#065f46}.sBLOQUEADO{background:#fee2e2;color:#991b1b}.sPASIVO{background:#fef3c7;color:#92400e}
         .abts{display:flex;gap:4px;flex-wrap:wrap}
         .ba{padding:5px 9px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:3px;transition:all .2s;white-space:nowrap}
         .ba:hover{transform:scale(1.05);box-shadow:0 2px 8px rgba(0,0,0,.12)}
-        .ba:disabled{opacity:.35;cursor:not-allowed;transform:none}
         .be{background:#e3f2fd;color:#1565c0}.bb{background:#fff8e1;color:#e65100}
-        .blt{background:#d4edda;color:#1e7e44}.bd2{background:#fce4ec;color:#c62828}
-        .berase{background:#f3e5f5;color:#6a1b9a}
-        .empty{text-align:center;padding:48px;color:#aaa}
-        .ei{font-size:48px;margin-bottom:12px}
+        .blt{background:#d4edda;color:#1e7e44}.bd2{background:#fce4ec;color:#c62828}.berase{background:#f3e5f5;color:#6a1b9a}
+        .empty{text-align:center;padding:48px;color:#aaa}.ei{font-size:48px;margin-bottom:12px}
         .legend{background:white;border-radius:12px;padding:12px 22px;margin-top:14px;display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#555}
-        /* MODALES */
         .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
         .mo.on{display:flex}
-        .mb{background:white;border-radius:14px;width:90%;max-width:560px;max-height:92vh;overflow-y:auto}
+        .mb{background:white;border-radius:14px;width:90%;max-width:580px;max-height:92vh;overflow-y:auto}
         .mb.sm{max-width:440px}
-        .mh{padding:18px 22px;border-bottom:2px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1e3a5f,#2d5a87);color:white;border-radius:14px 14px 0 0}
+        .mh{padding:18px 22px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1e3a5f,#2d5a87);color:white;border-radius:14px 14px 0 0}
         .mh h2{font-family:'Crimson Pro',serif;font-size:19px}
-        .mh p{font-size:12px;opacity:.85;margin-top:2px}
         .mc{background:none;border:none;font-size:22px;cursor:pointer;color:rgba(255,255,255,.8)}
         .mbody{padding:20px 22px}
         .mfoot{padding:14px 22px;border-top:2px solid #e8e8e8;display:flex;gap:10px;justify-content:flex-end}
@@ -79,11 +69,9 @@
         .abox{padding:11px 13px;border-radius:8px;font-size:13px;margin-bottom:12px;line-height:1.5}
         .aw{background:#fff8e1;border-left:4px solid #f59e0b;color:#78350f}
         .ad{background:#fef2f2;border-left:4px solid #dc2626;color:#7f1d1d}
-        .ai{background:#e0f2fe;border-left:4px solid #0284c7;color:#075985}
         .ci{font-size:42px;text-align:center;margin-bottom:8px}
         .ct{font-size:16px;font-weight:700;color:var(--primary);text-align:center;margin-bottom:6px}
         .cx{font-size:13px;color:#555;text-align:center;line-height:1.6}
-        /* SPINNER / TOAST */
         .spinner{display:none;position:fixed;inset:0;background:rgba(255,255,255,.7);z-index:9999;align-items:center;justify-content:center}
         .spinner.on{display:flex}
         .sc{width:38px;height:38px;border:4px solid #e0e0e0;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
@@ -93,6 +81,15 @@
         .toast.ok{background:var(--success)}.toast.err{background:var(--danger)}
         @keyframes si{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
         #g-coord,#g-est{display:none}
+        .asig-row{display:grid;gap:6px;align-items:center;border-radius:8px;padding:8px 10px;margin-bottom:6px}
+        .asig-coord{grid-template-columns:1fr 1fr auto;background:#f8f6f1}
+        .asig-est{grid-template-columns:1fr 1fr 80px auto;background:#f0fdf4;border:1px solid #86efac}
+        .asig-sel{padding:7px;border:2px solid #e0e0e0;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;width:100%}
+        .asig-num{padding:7px;border:2px solid #e0e0e0;border-radius:6px;font-size:12px;width:100%}
+        .asig-del{padding:5px 9px;border:none;background:#fce4ec;color:#c62828;border-radius:6px;cursor:pointer;font-size:15px;font-weight:700;line-height:1}
+        .btn-add{margin-top:6px;padding:6px 12px;border:2px dashed;background:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;width:100%;font-family:'DM Sans',sans-serif}
+        .btn-add.c{border-color:#7c3aed;color:#7c3aed}
+        .btn-add.e{border-color:#2d7a4f;color:#2d7a4f}
     </style>
 </head>
 <body>
@@ -109,15 +106,15 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;border:2px solid #1e3a5f;">0</span>
             </button>
-            <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100%+8px);right:0;width:340px;max-height:420px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.18);z-index:999;border:1px solid #e5e7eb;">
+            <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:340px;max-height:420px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.18);z-index:999;border:1px solid #e5e7eb;">
                 <div style="padding:12px 16px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                    <h3 style="font-size:13px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                    <h3 style="font-size:13px;font-weight:700;color:#1e3a5f;">Notificaciones</h3>
                     <button onclick="marcarTodasNotificacionesLeidas()" style="font-size:11px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;">Marcar leídas</button>
                 </div>
                 <div id="notif-list" style="padding:28px;text-align:center;color:#9ca3af;font-size:13px;">No hay notificaciones</div>
             </div>
         </div>
-        <button class="btn-logout" onclick="cerrarSesion(event)">🚪 Cerrar Sesión</button>
+        <button class="btn-logout" onclick="cerrarSesion(event)">Cerrar Sesión</button>
     </div>
 </div>
 
@@ -139,53 +136,45 @@
         </div>
         <div class="tactions">
             <button class="btn bw" onclick="abrirImp()">📥 Importar</button>
-            <button class="btn bp" onclick="abrirU()">➕ Nuevo Usuario</button>
+            <button class="btn bp" onclick="abrirU(0)">➕ Nuevo Usuario</button>
         </div>
     </div>
-
     <div class="table-wrap">
         <table>
             <thead><tr>
                 <th>Apellido</th><th>Nombre</th><th>DNI</th><th>Email</th>
-                <th>Rol</th><th>Programa(s)</th><th>Estado</th><th>Acciones</th>
+                <th>Rol</th><th>Programa(s) / Cohorte(s)</th><th>Estado</th><th>Acciones</th>
             </tr></thead>
-            <tbody id="tbody">
-                <tr><td colspan="8" class="empty"><div class="ei">⏳</div><div>Cargando...</div></td></tr>
-            </tbody>
+            <tbody id="tbody"><tr><td colspan="8" class="empty"><div class="ei">⏳</div><div>Cargando...</div></td></tr></tbody>
         </table>
     </div>
-
     <div class="legend">
         <strong>Acciones:</strong>
-        <span>✏️ <b>Editar</b> — modifica datos</span>
-        <span>⛔ <b>Baja</b> — bloquea acceso (reversible)</span>
-        <span>✅ <b>Alta</b> — reactiva acceso</span>
-        <span>🗑️ <b>Eliminar</b> — quita acceso, conserva historial</span>
-        <span>💣 <b>Registro</b> — borra todo, irreversible</span>
+        <span>✏️ <b>Editar</b></span>
+        <span>⛔ <b>Baja</b> — bloquea acceso</span>
+        <span>✅ <b>Alta</b> — reactiva</span>
+        <span>🗑️ <b>Eliminar</b> — conserva historial</span>
+        <span>💣 <b>Registro</b> — borra todo</span>
     </div>
 </div>
 
-<!-- MODAL: NUEVO/EDITAR USUARIO -->
+<!-- MODAL NUEVO/EDITAR -->
 <div class="mo" id="m-u">
     <div class="mb">
-        <div class="mh">
-            <div><h2 id="m-u-tit">➕ Nuevo Usuario</h2><p>Completá los datos</p></div>
-            <button class="mc" onclick="cerM('m-u')">×</button>
-        </div>
+        <div class="mh"><div><h2 id="m-u-tit">➕ Nuevo Usuario</h2></div><button class="mc" onclick="cerM('m-u')">×</button></div>
         <div class="mbody">
             <input type="hidden" id="u-id">
             <div class="g2">
-                <div class="mf"><label>Apellido(s) *</label><input type="text" id="u-ap" placeholder="ej: González Pérez" autocomplete="off"></div>
-                <div class="mf"><label>Nombre(s) *</label><input type="text" id="u-no" placeholder="ej: María Laura" autocomplete="off"></div>
+                <div class="mf"><label>Apellido(s) *</label><input type="text" id="u-ap" placeholder="González Pérez" autocomplete="off"></div>
+                <div class="mf"><label>Nombre(s) *</label><input type="text" id="u-no" placeholder="María Laura" autocomplete="off"></div>
             </div>
             <div class="g2">
-                <div class="mf"><label>DNI *</label><input type="text" id="u-dn" placeholder="30123456" autocomplete="off"></div>
-                <div class="mf"><label>Email *</label><input type="email" id="u-em" placeholder="usuario@email.com" autocomplete="off"></div>
+                <div class="mf"><label>DNI *</label><input type="text" id="u-dn" autocomplete="off"></div>
+                <div class="mf"><label>Email *</label><input type="email" id="u-em" autocomplete="off"></div>
             </div>
             <div class="mf">
-                <label>Contraseña <span id="ph" style="font-weight:400;color:#888;font-size:11px;">(obligatoria)</span></label>
+                <label>Contraseña <span id="pw-hint" style="font-weight:400;color:#888;font-size:11px;"></span></label>
                 <input type="password" id="u-pw" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
-                <div class="mhint" id="ph2" style="display:none;">Dejá vacío para no cambiar la contraseña actual</div>
             </div>
             <div class="mf">
                 <label>Rol *</label>
@@ -201,17 +190,17 @@
             <div id="g-coord">
                 <div class="mf">
                     <label>Asignaciones <span style="font-weight:400;color:#888;font-size:11px;">(programa + cohorte opcional)</span></label>
-                    <div id="coord-asignaciones" style="display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;padding:4px 0;"></div>
-                    <button type="button" onclick="coordAgregar()" style="margin-top:8px;padding:6px 12px;border:2px dashed #7c3aed;background:none;border-radius:8px;color:#7c3aed;font-size:12px;font-weight:600;cursor:pointer;width:100%;">+ Agregar asignación</button>
-                    <div class="mhint">Dejá Cohorte en "Todo el programa" para coordinar todas las cohortes.</div>
+                    <div id="coord-rows"></div>
+                    <button type="button" class="btn-add c" onclick="coordAgregar()">+ Agregar asignación</button>
+                    <div class="mhint">Sin cohorte = coordina todo el programa.</div>
                 </div>
             </div>
             <div id="g-est">
                 <div class="mf">
-                    <label>Inscripciones <span style="font-weight:400;color:#888;font-size:11px;">(programa + cohorte + descuento opcional)</span></label>
-                    <div id="est-inscripciones" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;padding:4px 0;"></div>
-                    <button type="button" onclick="estAgregar()" style="margin-top:8px;padding:6px 12px;border:2px dashed #2d7a4f;background:none;border-radius:8px;color:#2d7a4f;font-size:12px;font-weight:600;cursor:pointer;width:100%;">+ Agregar inscripción</button>
-                    <div class="mhint">Podés agregar múltiples inscripciones. El descuento es opcional (0 = sin descuento).</div>
+                    <label>Inscripciones <span style="font-weight:400;color:#888;font-size:11px;">(programa + cohorte + descuento%)</span></label>
+                    <div id="est-rows"></div>
+                    <button type="button" class="btn-add e" onclick="estAgregar()">+ Agregar inscripción</button>
+                    <div class="mhint">Podés agregar múltiples. Descuento 0 = sin descuento.</div>
                 </div>
             </div>
         </div>
@@ -222,105 +211,65 @@
     </div>
 </div>
 
-<!-- MODAL: BAJA -->
+<!-- MODAL BAJA -->
 <div class="mo" id="m-baja">
     <div class="mb sm">
-        <div class="mh" style="background:linear-gradient(135deg,#ea580c,#f59e0b);">
-            <div><h2>⛔ Dar de Baja</h2></div>
-            <button class="mc" onclick="cerM('m-baja')">×</button>
-        </div>
+        <div class="mh" style="background:linear-gradient(135deg,#ea580c,#f59e0b);"><div><h2>⛔ Dar de Baja</h2></div><button class="mc" onclick="cerM('m-baja')">×</button></div>
         <div class="mbody">
-            <div class="ci">⛔</div>
-            <div class="ct" id="baja-t">—</div>
-            <div class="cx" id="baja-x">Se bloqueará el acceso al sistema.</div>
-            <div class="abox aw" style="margin-top:12px;">🔒 El usuario no podrá iniciar sesión. Podés reactivarlo con <strong>Alta</strong>.</div>
+            <div class="ci">⛔</div><div class="ct" id="baja-t">—</div>
+            <div class="abox aw" style="margin-top:12px;">El usuario no podrá iniciar sesión. Reversible con Alta.</div>
         </div>
-        <div class="mfoot">
-            <button class="btn bg" onclick="cerM('m-baja')">Cancelar</button>
-            <button class="btn bo" onclick="ejBaja()">⛔ Confirmar Baja</button>
-        </div>
+        <div class="mfoot"><button class="btn bg" onclick="cerM('m-baja')">Cancelar</button><button class="btn bo" onclick="ejBaja()">⛔ Confirmar</button></div>
     </div>
 </div>
 
-<!-- MODAL: ALTA -->
+<!-- MODAL ALTA -->
 <div class="mo" id="m-alta">
     <div class="mb sm">
-        <div class="mh" style="background:linear-gradient(135deg,#2d7a4f,#4caf50);">
-            <div><h2>✅ Dar de Alta</h2></div>
-            <button class="mc" onclick="cerM('m-alta')">×</button>
-        </div>
+        <div class="mh" style="background:linear-gradient(135deg,#2d7a4f,#4caf50);"><div><h2>✅ Dar de Alta</h2></div><button class="mc" onclick="cerM('m-alta')">×</button></div>
         <div class="mbody">
-            <div class="ci">✅</div>
-            <div class="ct" id="alta-t">—</div>
-            <div class="cx" id="alta-x">Se restaurará el acceso al sistema.</div>
-            <div class="abox ai" style="margin-top:12px;">🔓 El usuario podrá iniciar sesión y operar normalmente.</div>
+            <div class="ci">✅</div><div class="ct" id="alta-t">—</div>
+            <div class="abox" style="background:#d1fae5;border-left:4px solid #2d7a4f;color:#065f46;margin-top:12px;">El usuario recuperará acceso al sistema.</div>
         </div>
-        <div class="mfoot">
-            <button class="btn bg" onclick="cerM('m-alta')">Cancelar</button>
-            <button class="btn bs" onclick="ejAlta()">✅ Confirmar Alta</button>
-        </div>
+        <div class="mfoot"><button class="btn bg" onclick="cerM('m-alta')">Cancelar</button><button class="btn bs" onclick="ejAlta()">✅ Confirmar</button></div>
     </div>
 </div>
 
-<!-- MODAL: ELIMINAR -->
+<!-- MODAL ELIMINAR -->
 <div class="mo" id="m-del">
     <div class="mb sm">
-        <div class="mh" style="background:linear-gradient(135deg,#c62828,#dc2626);">
-            <div><h2>🗑️ Eliminar Usuario</h2></div>
-            <button class="mc" onclick="cerM('m-del')">×</button>
-        </div>
+        <div class="mh" style="background:linear-gradient(135deg,#c62828,#dc2626);"><div><h2>🗑️ Eliminar Usuario</h2></div><button class="mc" onclick="cerM('m-del')">×</button></div>
         <div class="mbody">
-            <div class="ci">🗑️</div>
-            <div class="ct" id="del-t">—</div>
-            <div class="cx">Se revocará el acceso. El historial queda registrado.</div>
-            <div class="abox aw" style="margin-top:12px;">⚠️ Esta acción elimina el acceso pero <strong>conserva el historial</strong>.</div>
+            <div class="ci">🗑️</div><div class="ct" id="del-t">—</div>
+            <div class="abox aw" style="margin-top:12px;">Se revoca el acceso pero el historial queda registrado.</div>
         </div>
-        <div class="mfoot">
-            <button class="btn bg" onclick="cerM('m-del')">Cancelar</button>
-            <button class="btn bd" onclick="ejDel()">🗑️ Confirmar</button>
-        </div>
+        <div class="mfoot"><button class="btn bg" onclick="cerM('m-del')">Cancelar</button><button class="btn bd" onclick="ejDel()">🗑️ Confirmar</button></div>
     </div>
 </div>
 
-<!-- MODAL: ELIMINAR REGISTRO COMPLETO -->
+<!-- MODAL ERASE -->
 <div class="mo" id="m-erase">
     <div class="mb sm">
-        <div class="mh" style="background:linear-gradient(135deg,#6a1b9a,#7c3aed);">
-            <div><h2>💣 Eliminar Registro</h2></div>
-            <button class="mc" onclick="cerM('m-erase')">×</button>
-        </div>
+        <div class="mh" style="background:linear-gradient(135deg,#6a1b9a,#7c3aed);"><div><h2>💣 Eliminar Registro</h2></div><button class="mc" onclick="cerM('m-erase')">×</button></div>
         <div class="mbody">
-            <div class="ci">💣</div>
-            <div class="ct" id="er-t">—</div>
-            <div class="abox ad">🚨 <strong>IRREVERSIBLE.</strong> Se borrarán todos los datos del usuario incluyendo historial.</div>
-            <div class="mf">
-                <label>Escribí <strong>ELIMINAR</strong> para confirmar</label>
-                <input type="text" id="er-conf" placeholder="ELIMINAR" oninput="chkErase()" autocomplete="off">
-            </div>
+            <div class="ci">💣</div><div class="ct" id="er-t">—</div>
+            <div class="abox ad">🚨 IRREVERSIBLE. Se borran todos los datos del usuario.</div>
+            <div class="mf"><label>Escribí <strong>ELIMINAR</strong> para confirmar</label><input type="text" id="er-conf" placeholder="ELIMINAR" oninput="chkErase()" autocomplete="off"></div>
         </div>
-        <div class="mfoot">
-            <button class="btn bg" onclick="cerM('m-erase')">Cancelar</button>
-            <button class="btn bw" id="btn-erase" disabled onclick="ejErase()">💣 Eliminar Todo</button>
-        </div>
+        <div class="mfoot"><button class="btn bg" onclick="cerM('m-erase')">Cancelar</button><button class="btn bw" id="btn-erase" disabled onclick="ejErase()">💣 Eliminar Todo</button></div>
     </div>
 </div>
 
-<!-- MODAL: IMPORTAR -->
+<!-- MODAL IMPORTAR -->
 <div class="mo" id="m-imp">
     <div class="mb">
-        <div class="mh" style="background:linear-gradient(135deg,#6a1b9a,#7c3aed);">
-            <div><h2>📥 Importar Usuarios</h2><p>Cargá múltiples usuarios desde Excel</p></div>
-            <button class="mc" onclick="cerM('m-imp')">×</button>
-        </div>
+        <div class="mh" style="background:linear-gradient(135deg,#6a1b9a,#7c3aed);"><div><h2>📥 Importar Usuarios</h2><p style="font-size:12px;opacity:.85;">Desde archivo Excel</p></div><button class="mc" onclick="cerM('m-imp')">×</button></div>
         <div class="mbody">
-            <div class="abox ai">
-                <strong>📋 Columnas requeridas (cabecera en fila 1):</strong>
-                <div style="margin-top:6px;font-family:monospace;font-size:12px;background:#fff;padding:8px;border-radius:6px;line-height:1.8;">
-                    apellido · nombre · dni · email · password · rol
-                </div>
-                <div style="margin-top:6px;font-size:12px;"><strong>Roles válidos:</strong> ADMINISTRADOR · SECRETARIA · COOPERADORA · COORDINADOR · ESTUDIANTE</div>
+            <div class="abox" style="background:#e0f2fe;border-left:4px solid #0284c7;color:#075985;">
+                <strong>Columnas requeridas (fila 1 = cabecera):</strong>
+                <div style="margin-top:6px;font-family:monospace;font-size:12px;background:#fff;padding:8px;border-radius:6px;">apellido · nombre · dni · email · password · rol</div>
+                <div style="margin-top:6px;font-size:12px;"><strong>Roles:</strong> ADMINISTRADOR · SECRETARIA · COOPERADORA · COORDINADOR · ESTUDIANTE</div>
             </div>
-            <div class="abox aw" style="margin-top:10px;">⚠️ La contraseña es obligatoria para que el usuario pueda iniciar sesión.</div>
             <div class="mf" style="margin-top:14px;">
                 <label>Archivo .xlsx</label>
                 <input type="file" id="imp-f" accept=".xlsx,.xls" style="width:100%;padding:9px;border:2px dashed #7c3aed;border-radius:8px;cursor:pointer;" onchange="onImpFile(this)">
@@ -329,10 +278,7 @@
                 <strong id="imp-fn">—</strong> <span id="imp-fs" style="color:#666;"></span>
             </div>
         </div>
-        <div class="mfoot">
-            <button class="btn bg" onclick="cerM('m-imp')">Cancelar</button>
-            <button class="btn bw" id="btn-imp" disabled onclick="doImp()">📥 Importar</button>
-        </div>
+        <div class="mfoot"><button class="btn bg" onclick="cerM('m-imp')">Cancelar</button><button class="btn bw" id="btn-imp" disabled onclick="doImp()">📥 Importar</button></div>
     </div>
 </div>
 
@@ -341,193 +287,120 @@
 
 <script src="supabase.js"></script>
 <script>
-// ═══════════════════════════════════════════
-// ESTADO
-// ═══════════════════════════════════════════
-var _us = [];      // usuarios cargados
-var _pr = [];      // programas
-var _frol = 'TODOS';
-var _aid = null;   // id para acciones
-var _anm = '';     // nombre para acciones
-var _impF = null;  // archivo importar
+var EDGE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co/functions/v1/crear-usuario';
+var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZXZ5cGRvd2RocWF4dmZpeXd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzM3NTIsImV4cCI6MjA2MDUwOTc1Mn0.VXZFGGfj96H0AMbq9qRHLlYRqJr0CJCXPKkuLYkVKiM';
+var _us=[],_pr=[],_cohProg={},_frol='TODOS',_aid=null,_anm='',_impF=null,_coordAsigs=[],_estInsc=[];
 
-// ═══════════════════════════════════════════
-// INIT — esperar sesión activa antes de cargar
-// ═══════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', async function() {
-    var ses = await requireAuth();
-    if (!ses) return;
-    if (ses.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
+document.addEventListener('DOMContentLoaded',async function(){
+    var ses=await requireAuth();
+    if(!ses)return;
+    if(ses.rol!=='ADMINISTRADOR'){window.location.href='portal_login.html';return;}
     await cargar();
     obtenerNotificaciones(ses.rol).then(renderNotificaciones);
 });
 
-// ═══════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════
-function spin(on){ document.getElementById('spinner').classList.toggle('on', on); }
-function toast(msg, t){
-    var d=document.createElement('div'); d.className='toast '+(t||''); d.textContent=msg;
-    document.getElementById('toasts').appendChild(d);
-    setTimeout(function(){ d.remove(); }, 3500);
-}
-function abrM(id){ document.getElementById(id).classList.add('on'); }
-function cerM(id){ document.getElementById(id).classList.remove('on'); }
-document.querySelectorAll('.mo').forEach(function(m){
-    m.addEventListener('click', function(e){ if(e.target===m) cerM(m.id); });
-});
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function spin(on){document.getElementById('spinner').classList.toggle('on',on);}
+function toast(msg,t){var d=document.createElement('div');d.className='toast '+(t||'');d.textContent=msg;document.getElementById('toasts').appendChild(d);setTimeout(function(){d.remove();},3500);}
+function abrM(id){document.getElementById(id).classList.add('on');}
+function cerM(id){document.getElementById(id).classList.remove('on');}
+document.querySelectorAll('.mo').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)cerM(m.id);});});
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function ns(s){return esc(s).replace(/'/g,"\\'");}
 
-// ═══════════════════════════════════════════
-// CARGAR USUARIOS
-// ═══════════════════════════════════════════
 async function cargar(){
     spin(true);
-    try {
-        var sb = await getSupabase();
-
-        // 1. Usuarios — la policy permite verlos si sos admin o tu propio perfil
-        var r = await sb.from('usuarios').select('*').order('nombre_completo');
-        if (r.error) throw r.error;
-        _us = r.data || [];
-
-        // 2. Programas para el selector del modal
-        var rp = await sb.from('programas').select('programa_id,nombre').order('nombre');
-        _pr = rp.data || [];
-
-        // 3. Programas de coordinadores (opcional)
-        var cm = {};
-        var rc = await sb.from('coordinadores_programas').select('coordinador_id,programas(nombre),cohortes(nombre)');
-        if (!rc.error) {
-            (rc.data||[]).forEach(function(c){
-                if (!cm[c.coordinador_id]) cm[c.coordinador_id]=[];
-                if (c.programas) {
-                    var lbl = c.programas.nombre;
-                    if (c.cohortes) lbl += ' · '+c.cohortes.nombre;
-                    cm[c.coordinador_id].push(lbl);
-                }
-            });
-        }
-        _us = _us.map(function(u){
-            return Object.assign({}, u, { _progs: cm[u.usuario_id]||[] });
+    try{
+        var sb=await getSupabase();
+        var r=await sb.from('usuarios').select('*').order('apellido');
+        if(r.error)throw r.error;
+        var rp=await sb.from('programas').select('programa_id,nombre').order('nombre');
+        _pr=rp.data||[];
+        var rc=await sb.from('cohortes').select('cohorte_id,programa_id,nombre').order('nombre');
+        _cohProg={};
+        (rc.data||[]).forEach(function(c){if(!_cohProg[c.programa_id])_cohProg[c.programa_id]=[];_cohProg[c.programa_id].push(c);});
+        var rcp=await sb.from('coordinadores_programas').select('coordinador_id,programas(nombre),cohortes(nombre)');
+        var cm={};
+        (rcp.data||[]).forEach(function(c){
+            if(!cm[c.coordinador_id])cm[c.coordinador_id]=[];
+            if(c.programas){var lbl=c.programas.nombre;if(c.cohortes)lbl+=' · '+c.cohortes.nombre;cm[c.coordinador_id].push(lbl);}
         });
+        _us=(r.data||[]).map(function(u){return Object.assign({},u,{_asigs:cm[u.usuario_id]||[]});});
         renderTabla();
-    } catch(e){
-        console.error('Error cargar:', e);
-        toast('Error al cargar: '+e.message, 'err');
-    } finally { spin(false); }
+    }catch(e){console.error(e);toast('Error al cargar: '+e.message,'err');}
+    finally{spin(false);}
 }
 
-// ═══════════════════════════════════════════
-// RENDER TABLA
-// ═══════════════════════════════════════════
-var _RL = {ADMINISTRADOR:'Administrador',SECRETARIA:'Secretaría',COOPERADORA:'Cooperadora',COORDINADOR:'Coordinador/a',ESTUDIANTE:'Estudiante'};
-var _SL = {ACTIVO:'Activo',BLOQUEADO:'Bloqueado',PASIVO:'Pasivo'};
+var _RL={ADMINISTRADOR:'Administrador',SECRETARIA:'Secretaría',COOPERADORA:'Cooperadora',COORDINADOR:'Coordinador/a',ESTUDIANTE:'Estudiante'};
+var _SL={ACTIVO:'Activo',BLOQUEADO:'Bloqueado',PASIVO:'Pasivo'};
 
 function renderTabla(){
-    var q = document.getElementById('buscar').value.toLowerCase();
-    var lista = _us.filter(function(u){
-        var txt = ((u.nombre_completo||'')+' '+(u.dni||'')+' '+(u.email||'')).toLowerCase();
-        return (!q || txt.indexOf(q)>=0) && (_frol==='TODOS' || u.rol===_frol);
+    var q=document.getElementById('buscar').value.toLowerCase();
+    var lista=_us.filter(function(u){
+        var txt=((u.apellido||'')+' '+(u.nombre||'')+' '+(u.dni||'')+' '+(u.email||'')).toLowerCase();
+        return(!q||txt.indexOf(q)>=0)&&(_frol==='TODOS'||u.rol===_frol);
     });
-    var tb = document.getElementById('tbody');
-    if (!lista.length){
-        tb.innerHTML = '<tr><td colspan="8" class="empty"><div class="ei">'+(q||_frol!=='TODOS'?'🔍':'👥')+'</div><div>'+(q||_frol!=='TODOS'?'No se encontraron usuarios':'No hay usuarios cargados')+'</div></td></tr>';
-        return;
-    }
-    tb.innerHTML = lista.map(function(u){
-        var est = u.estado_usuario || (u.activo?'ACTIVO':'BLOQUEADO');
-        var ap = u.apellido||u.nombre_completo||'';
-        var no = u.nombre||'';
-        var ns = esc(u.nombre_completo).replace(/'/g,"\\'");
-        var pstr = u._progs.length ? esc(u._progs.join(', ')) : '—';
-        var acts = '<button class="ba be" onclick="abrirU('+u.usuario_id+')">✏️ Editar</button>';
-        if (est==='ACTIVO'){
-            acts += '<button class="ba bb" onclick="confBaja('+u.usuario_id+',\''+ns+'\')">⛔ Baja</button>';
-        } else {
-            acts += '<button class="ba blt" onclick="confAlta('+u.usuario_id+',\''+ns+'\')">✅ Alta</button>';
-        }
-        acts += '<button class="ba bd2" onclick="confDel('+u.usuario_id+',\''+ns+'\')">🗑️ Eliminar</button>';
-        acts += '<button class="ba berase" onclick="confErase('+u.usuario_id+',\''+ns+'\')">💣 Registro</button>';
-        return '<tr>'
-            +'<td class="uname">'+esc(ap)+'</td>'
-            +'<td>'+esc(no)+'</td>'
-            +'<td>'+esc(u.dni||'—')+'</td>'
+    var tb=document.getElementById('tbody');
+    if(!lista.length){tb.innerHTML='<tr><td colspan="8" class="empty"><div class="ei">🔍</div><div>No se encontraron usuarios</div></td></tr>';return;}
+    tb.innerHTML=lista.map(function(u){
+        var est=u.estado_usuario||(u.activo?'ACTIVO':'BLOQUEADO');
+        var pstr=u._asigs.length?esc(u._asigs.join(', ')):'—';
+        var accs='<button class="ba be" onclick="abrirU('+u.usuario_id+')">✏️ Editar</button>';
+        if(est==='ACTIVO'){accs+='<button class="ba bb" onclick="confBaja('+u.usuario_id+',\''+ns((u.apellido||'')+' '+(u.nombre||''))+'\')">⛔ Baja</button>';}
+        else{accs+='<button class="ba blt" onclick="confAlta('+u.usuario_id+',\''+ns((u.apellido||'')+' '+(u.nombre||''))+'\')">✅ Alta</button>';}
+        accs+='<button class="ba bd2" onclick="confDel('+u.usuario_id+',\''+ns((u.apellido||'')+' '+(u.nombre||''))+'\')">🗑️ Eliminar</button>';
+        accs+='<button class="ba berase" onclick="confErase('+u.usuario_id+',\''+ns((u.apellido||'')+' '+(u.nombre||''))+'\')">💣 Registro</button>';
+        return '<tr><td class="uname">'+esc(u.apellido||'')+'</td><td>'+esc(u.nombre||'')+'</td><td>'+esc(u.dni||'—')+'</td>'
             +'<td style="font-size:12px;">'+esc(u.email||'—')+'</td>'
             +'<td><span class="rb r'+u.rol+'">'+(_RL[u.rol]||u.rol)+'</span></td>'
-            +'<td style="font-size:12px;max-width:180px;">'+pstr+'</td>'
-            +'<td><span class="sb s'+est+'">'+(_SL[est]||est)+'</span></td>'
-            +'<td><div class="abts">'+acts+'</div></td>'
-            +'</tr>';
+            +'<td style="font-size:12px;max-width:200px;">'+pstr+'</td>'
+            +'<td><span class="sb2 s'+est+'">'+(_SL[est]||est)+'</span></td>'
+            +'<td><div class="abts">'+accs+'</div></td></tr>';
     }).join('');
 }
+function setRol(btn){document.querySelectorAll('.fb').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');_frol=btn.dataset.r;renderTabla();}
 
-function setRol(btn){
-    document.querySelectorAll('.fb').forEach(function(b){ b.classList.remove('on'); });
-    btn.classList.add('on');
-    _frol = btn.dataset.r;
-    renderTabla();
-}
-
-// ═══════════════════════════════════════════
-// MODAL USUARIO — NUEVO / EDITAR
-// ═══════════════════════════════════════════
 async function abrirU(id){
-    document.getElementById('m-u-tit').textContent = id ? '✏️ Editar Usuario' : '➕ Nuevo Usuario';
-    document.getElementById('u-id').value = id||'';
-    document.getElementById('u-ap').value = '';
-    document.getElementById('u-no').value = '';
-    document.getElementById('u-dn').value = '';
-    document.getElementById('u-em').value = '';
-    document.getElementById('u-pw').value = '';
-    document.getElementById('u-rol').value = '';
-    document.getElementById('ph').style.display = id ? 'none' : '';
-    document.getElementById('ph2').style.display = id ? 'block' : 'none';
-    document.getElementById('g-coord').style.display = 'none';
-    document.getElementById('g-est').style.display = 'none';
-    _coordAsigs = [];
-    coordRenderAsig([]);
-    _estInscripciones = [];
-    estRenderInsc([]);
-
-    if (id){
-        var u = _us.find(function(x){ return x.usuario_id===id; });
-        if (u){
-            document.getElementById('u-ap').value = u.apellido||'';
-            document.getElementById('u-no').value = u.nombre||'';
-            document.getElementById('u-dn').value = u.dni||'';
-            document.getElementById('u-em').value = u.email||'';
-            document.getElementById('u-rol').value = u.rol||'';
+    document.getElementById('m-u-tit').textContent=id?'✏️ Editar Usuario':'➕ Nuevo Usuario';
+    document.getElementById('u-id').value=id||'';
+    document.getElementById('u-ap').value='';
+    document.getElementById('u-no').value='';
+    document.getElementById('u-dn').value='';
+    document.getElementById('u-em').value='';
+    document.getElementById('u-pw').value='';
+    document.getElementById('pw-hint').textContent=id?'(dejá vacío para no cambiar)':'(obligatoria)';
+    document.getElementById('u-rol').value='';
+    document.getElementById('g-coord').style.display='none';
+    document.getElementById('g-est').style.display='none';
+    _coordAsigs=[];_estInsc=[];
+    renderCoordRows();renderEstRows();
+    if(id){
+        var u=_us.find(function(x){return x.usuario_id===id;});
+        if(u){
+            document.getElementById('u-ap').value=u.apellido||'';
+            document.getElementById('u-no').value=u.nombre||'';
+            document.getElementById('u-dn').value=u.dni||'';
+            document.getElementById('u-em').value=u.email||'';
+            document.getElementById('u-rol').value=u.rol||'';
             onRol();
-            if (u.rol==='COORDINADOR'){
-                var sb = await getSupabase();
-                var ra = await sb.from('coordinadores_programas')
-                    .select('programa_id,cohorte_id').eq('coordinador_id',id);
-                _coordAsigs = (ra.data||[]).map(function(a){
-                    return {programa_id:a.programa_id, cohorte_id:a.cohorte_id||null};
-                });
-                if (!_coordAsigs.length) _coordAsigs = [{programa_id:null,cohorte_id:null}];
-                await cargarCohortesXProg();
-                coordRenderAsig(_coordAsigs);
+            var sb=await getSupabase();
+            if(u.rol==='COORDINADOR'){
+                var ra=await sb.from('coordinadores_programas').select('programa_id,cohorte_id').eq('coordinador_id',id);
+                _coordAsigs=(ra.data||[]).map(function(a){return{programa_id:a.programa_id,cohorte_id:a.cohorte_id||null};});
+                if(!_coordAsigs.length)_coordAsigs=[{programa_id:null,cohorte_id:null}];
+                renderCoordRows();
             }
-            if (u.rol==='ESTUDIANTE'){
-                var sb2 = await getSupabase();
-                // Buscar estudiante por DNI para obtener su id
-                var estRes = await sb2.from('estudiantes').select('id').eq('dni', u.dni).maybeSingle();
-                if (estRes.data){
-                    var ri = await sb2.from('inscripciones')
+            if(u.rol==='ESTUDIANTE'){
+                // IMPORTANTE: usar .limit(1) NUNCA .single() para evitar error 406 cuando no existe
+                var re=await sb.from('estudiantes').select('id').eq('dni',u.dni).limit(1);
+                if(!re.error&&re.data&&re.data.length>0){
+                    var ri=await sb.from('inscripciones')
                         .select('cohorte_id,descuento_porcentaje,cohortes(nombre,programa_id)')
-                        .eq('estudiante_id', estRes.data.id);
-                    _estInscripciones = (ri.data||[]).map(function(r){
-                        return {
-                            programa_id: r.cohortes ? r.cohortes.programa_id : null,
-                            cohorte_id:  r.cohorte_id,
-                            descuento_porcentaje: parseFloat(r.descuento_porcentaje)||0
-                        };
+                        .eq('estudiante_id',re.data[0].id);
+                    _estInsc=(ri.data||[]).map(function(r){
+                        return{programa_id:r.cohortes?r.cohortes.programa_id:null,cohorte_id:r.cohorte_id,descuento_porcentaje:parseFloat(r.descuento_porcentaje)||0};
                     });
                 }
-                await cargarCohortesXProg();
-                estRenderInsc(_estInscripciones);
+                renderEstRows();
             }
         }
     }
@@ -535,281 +408,139 @@ async function abrirU(id){
 }
 
 function onRol(){
-    var r = document.getElementById('u-rol').value;
-    document.getElementById('g-coord').style.display = r==='COORDINADOR' ? 'block' : 'none';
-    document.getElementById('g-est').style.display  = r==='ESTUDIANTE'  ? 'block' : 'none';
-    if (r==='COORDINADOR' && !_coordAsigs.length){
-        cargarCohortesXProg().then(function(){
-            _coordAsigs = [{programa_id:null,cohorte_id:null}];
-            coordRenderAsig(_coordAsigs);
-        });
-    }
-    if (r==='ESTUDIANTE'){
-        cargarCohortesXProg().then(function(){
-            estRenderInsc(_estInscripciones);
-        });
-    }
+    var r=document.getElementById('u-rol').value;
+    document.getElementById('g-coord').style.display=r==='COORDINADOR'?'block':'none';
+    document.getElementById('g-est').style.display=r==='ESTUDIANTE'?'block':'none';
+    if(r==='COORDINADOR'&&!_coordAsigs.length){_coordAsigs=[{programa_id:null,cohorte_id:null}];renderCoordRows();}
 }
 
-// ═══════════════════════════════════════════
-// COORDINADORES — ASIGNACIONES PROGRAMA+COHORTE
-// ═══════════════════════════════════════════
-var _coordAsigs = [];
-var _cohProg = {};
+function mkProgOpts(sel){return '<option value="">— Programa —</option>'+_pr.map(function(p){return'<option value="'+p.programa_id+'"'+(sel===p.programa_id?' selected':'')+'>'+esc(p.nombre)+'</option>';}).join('');}
+function mkCohOpts(pid,sel){var cohs=pid?(_cohProg[pid]||[]):[];return'<option value="">— Cohorte —</option>'+cohs.map(function(c){return'<option value="'+c.cohorte_id+'"'+(sel===c.cohorte_id?' selected':'')+'>'+esc(c.nombre)+'</option>';}).join('');}
 
-async function cargarCohortesXProg(){
-    var sb = await getSupabase();
-    var r = await sb.from('cohortes').select('cohorte_id,programa_id,nombre').order('nombre');
-    _cohProg = {};
-    (r.data||[]).forEach(function(c){
-        if(!_cohProg[c.programa_id]) _cohProg[c.programa_id]=[];
-        _cohProg[c.programa_id].push(c);
-    });
-}
-
-function coordRenderAsig(asigs){
-    var cont = document.getElementById('coord-asignaciones');
-    if(!cont) return;
-    if(!asigs.length){
-        cont.innerHTML = '<div style="font-size:12px;color:#aaa;padding:8px 0;">Sin asignaciones. Usá el botón para agregar.</div>';
-        return;
-    }
-    cont.innerHTML = asigs.map(function(a,i){
-        var progOpts = '<option value="">— Programa —</option>' + _pr.map(function(p){
-            return '<option value="'+p.programa_id+'"'+(a.programa_id===p.programa_id?' selected':'')+'>'+esc(p.nombre)+'</option>';
-        }).join('');
-        var cohs = a.programa_id ? (_cohProg[a.programa_id]||[]) : [];
-        var cohOpts = '<option value="">Todo el programa</option>' + cohs.map(function(c){
-            return '<option value="'+c.cohorte_id+'"'+(a.cohorte_id===c.cohorte_id?' selected':'')+'>'+esc(c.nombre)+'</option>';
-        }).join('');
-        return '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;background:#f8f6f1;border-radius:8px;padding:8px 10px;">'
-            +'<select onchange="coordCambiarProg('+i+',this.value)" style="padding:7px;border:2px solid #e0e0e0;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;">'+progOpts+'</select>'
-            +'<select id="coh-sel-'+i+'" onchange="coordCambiarCoh('+i+',this.value)" style="padding:7px;border:2px solid #e0e0e0;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;">'+cohOpts+'</select>'
-            +'<button type="button" onclick="coordEliminar('+i+')" style="padding:5px 9px;border:none;background:#fce4ec;color:#c62828;border-radius:6px;cursor:pointer;font-size:15px;font-weight:700;line-height:1;">×</button>'
+function renderCoordRows(){
+    var cont=document.getElementById('coord-rows');
+    if(!_coordAsigs.length){cont.innerHTML='<div style="font-size:12px;color:#aaa;padding:6px 0;">Sin asignaciones.</div>';return;}
+    cont.innerHTML=_coordAsigs.map(function(a,i){
+        return'<div class="asig-row asig-coord">'
+            +'<select class="asig-sel" onchange="coordProg('+i+',this.value)">'+mkProgOpts(a.programa_id)+'</select>'
+            +'<select class="asig-sel" onchange="coordCoh('+i+',this.value)">'+mkCohOpts(a.programa_id,a.cohorte_id)+'<option value="">Todo el programa</option></select>'
+            +'<button type="button" class="asig-del" onclick="coordDel('+i+')">×</button>'
             +'</div>';
     }).join('');
 }
+function coordAgregar(){_coordAsigs.push({programa_id:null,cohorte_id:null});renderCoordRows();}
+function coordDel(i){_coordAsigs.splice(i,1);renderCoordRows();}
+function coordProg(i,v){_coordAsigs[i].programa_id=v?parseInt(v):null;_coordAsigs[i].cohorte_id=null;renderCoordRows();}
+function coordCoh(i,v){_coordAsigs[i].cohorte_id=v?parseInt(v):null;}
 
-
-// ═══════════════════════════════════════════
-// ESTUDIANTES — INSCRIPCIONES
-// ═══════════════════════════════════════════
-var _estInscripciones = [];
-
-function estRenderInsc(insc){
-    var cont = document.getElementById('est-inscripciones');
-    if(!cont) return;
-    if(!insc.length){
-        cont.innerHTML = '<div style="font-size:12px;color:#aaa;padding:8px 0;">Sin inscripciones. Usá el botón para agregar.</div>';
-        return;
-    }
-    cont.innerHTML = insc.map(function(a,i){
-        var progOpts = '<option value="">— Programa —</option>' + _pr.map(function(p){
-            return '<option value="'+p.programa_id+'"'+(a.programa_id===p.programa_id?' selected':'')+'>'+esc(p.nombre)+'</option>';
-        }).join('');
-        var cohs = a.programa_id ? (_cohProg[a.programa_id]||[]) : [];
-        var cohOpts = '<option value="">— Cohorte —</option>' + cohs.map(function(c){
-            return '<option value="'+c.cohorte_id+'"'+(a.cohorte_id===c.cohorte_id?' selected':'')+'>'+esc(c.nombre)+'</option>';
-        }).join('');
-        return '<div style="display:grid;grid-template-columns:1fr 1fr 80px auto;gap:6px;align-items:center;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 10px;">'
-            +'<select onchange="estCambiarProg('+i+',this.value)" style="padding:7px;border:2px solid #e0e0e0;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;">'+progOpts+'</select>'
-            +'<select id="est-coh-'+i+'" onchange="estCambiarCoh('+i+',this.value)" style="padding:7px;border:2px solid #e0e0e0;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;">'+cohOpts+'</select>'
-            +'<div style="position:relative;">'
-            +'<input type="number" min="0" max="100" step="0.5" value="'+(a.descuento_porcentaje||0)+'" onchange="estCambiarDesc('+i+',this.value)" style="width:100%;padding:7px 20px 7px 7px;border:2px solid #e0e0e0;border-radius:6px;font-size:12px;" title="Descuento %">'
-            +'<span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;color:#888;pointer-events:none;">%</span>'
-            +'</div>'
-            +'<button type="button" onclick="estEliminar('+i+')" style="padding:5px 9px;border:none;background:#fce4ec;color:#c62828;border-radius:6px;cursor:pointer;font-size:15px;font-weight:700;line-height:1;">×</button>'
+function renderEstRows(){
+    var cont=document.getElementById('est-rows');
+    if(!_estInsc.length){cont.innerHTML='<div style="font-size:12px;color:#aaa;padding:6px 0;">Sin inscripciones.</div>';return;}
+    cont.innerHTML=_estInsc.map(function(a,i){
+        return'<div class="asig-row asig-est">'
+            +'<select class="asig-sel" onchange="estProg('+i+',this.value)">'+mkProgOpts(a.programa_id)+'</select>'
+            +'<select class="asig-sel" onchange="estCoh('+i+',this.value)">'+mkCohOpts(a.programa_id,a.cohorte_id)+'</select>'
+            +'<div style="position:relative;"><input type="number" class="asig-num" min="0" max="100" step="0.5" value="'+(a.descuento_porcentaje||0)+'" onchange="estDesc('+i+',this.value)" title="Descuento %"><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;color:#888;pointer-events:none;">%</span></div>'
+            +'<button type="button" class="asig-del" onclick="estDel('+i+')">×</button>'
             +'</div>';
     }).join('');
 }
-
-function estAgregar(){
-    cargarCohortesXProg().then(function(){
-        _estInscripciones.push({programa_id:null,cohorte_id:null,descuento_porcentaje:0});
-        estRenderInsc(_estInscripciones);
-    });
-}
-function estEliminar(i){ _estInscripciones.splice(i,1); estRenderInsc(_estInscripciones); }
-function estCambiarProg(i,pid){
-    _estInscripciones[i].programa_id = pid ? parseInt(pid) : null;
-    _estInscripciones[i].cohorte_id  = null;
-    estRenderInsc(_estInscripciones);
-}
-function estCambiarCoh(i,cid){ _estInscripciones[i].cohorte_id = cid ? parseInt(cid) : null; }
-function estCambiarDesc(i,val){ _estInscripciones[i].descuento_porcentaje = parseFloat(val)||0; }
-
-function coordAgregar(){
-    _coordAsigs.push({programa_id:null,cohorte_id:null});
-    coordRenderAsig(_coordAsigs);
-}
-function coordEliminar(i){
-    _coordAsigs.splice(i,1);
-    coordRenderAsig(_coordAsigs);
-}
-function coordCambiarProg(i,pid){
-    _coordAsigs[i].programa_id = pid ? parseInt(pid) : null;
-    _coordAsigs[i].cohorte_id  = null;
-    coordRenderAsig(_coordAsigs);
-}
-function coordCambiarCoh(i,cid){
-    _coordAsigs[i].cohorte_id = cid ? parseInt(cid) : null;
-}
+function estAgregar(){_estInsc.push({programa_id:null,cohorte_id:null,descuento_porcentaje:0});renderEstRows();}
+function estDel(i){_estInsc.splice(i,1);renderEstRows();}
+function estProg(i,v){_estInsc[i].programa_id=v?parseInt(v):null;_estInsc[i].cohorte_id=null;renderEstRows();}
+function estCoh(i,v){_estInsc[i].cohorte_id=v?parseInt(v):null;}
+function estDesc(i,v){_estInsc[i].descuento_porcentaje=parseFloat(v)||0;}
 
 async function guardarU(){
-    var id  = document.getElementById('u-id').value;
-    var ap  = document.getElementById('u-ap').value.trim();
-    var no  = document.getElementById('u-no').value.trim();
-    var dn  = document.getElementById('u-dn').value.trim();
-    var em  = document.getElementById('u-em').value.trim();
-    var pw  = document.getElementById('u-pw').value;
-    var rol = document.getElementById('u-rol').value;
-
-    if (!ap||!no||!dn||!em||!rol){ toast('Completá todos los campos obligatorios (*)','err'); return; }
-    if (!id && !pw){ toast('La contraseña es obligatoria para usuarios nuevos','err'); return; }
-    if (pw && pw.length<8){ toast('La contraseña debe tener al menos 8 caracteres','err'); return; }
-
-    var nc = ap+' '+no;
-    // Asignaciones coordinador: programa_id requerido, cohorte_id opcional
-    var asigs = rol==='COORDINADOR'
-        ? _coordAsigs.filter(function(a){ return a.programa_id; })
-        : [];
-    // Inscripciones estudiante: programa_id Y cohorte_id requeridos
-    var inscripciones = rol==='ESTUDIANTE'
-        ? _estInscripciones.filter(function(a){ return a.programa_id && a.cohorte_id; })
-        : [];
-
+    var id=document.getElementById('u-id').value;
+    var ap=document.getElementById('u-ap').value.trim();
+    var no=document.getElementById('u-no').value.trim();
+    var dn=document.getElementById('u-dn').value.trim();
+    var em=document.getElementById('u-em').value.trim();
+    var pw=document.getElementById('u-pw').value;
+    var rol=document.getElementById('u-rol').value;
+    if(!ap||!no||!dn||!em||!rol){toast('Completá todos los campos obligatorios','err');return;}
+    if(!id&&!pw){toast('La contraseña es obligatoria para usuarios nuevos','err');return;}
+    if(pw&&pw.length<8){toast('La contraseña debe tener al menos 8 caracteres','err');return;}
+    var nc=ap+' '+no;
+    var asigs=rol==='COORDINADOR'?_coordAsigs.filter(function(a){return a.programa_id;}):[];
+    var insc=rol==='ESTUDIANTE'?_estInsc.filter(function(a){return a.programa_id&&a.cohorte_id;}):[];
     spin(true);
-    try {
-        var sb = await getSupabase();
-
-        if (id){
-            // ── EDITAR ──
-            var {error:e1} = await sb.from('usuarios').update({ apellido:ap, nombre:no, nombre_completo:nc, email:em, rol:rol }).eq('usuario_id',parseInt(id));
-            if (e1) throw e1;
-            // Reemplazar asignaciones coordinador
-            await sb.from('coordinadores_programas').delete().eq('coordinador_id',parseInt(id));
-            if (asigs.length){
-                var {error:e2} = await sb.from('coordinadores_programas').insert(
-                    asigs.map(function(a){ return {coordinador_id:parseInt(id), programa_id:a.programa_id, cohorte_id:a.cohorte_id||null}; })
-                );
-                if (e2) throw e2;
+    try{
+        var sb=await getSupabase();
+        if(id){
+            var uid=parseInt(id);
+            var e1=await sb.from('usuarios').update({apellido:ap,nombre:no,nombre_completo:nc,email:em,rol:rol}).eq('usuario_id',uid);
+            if(e1.error)throw e1.error;
+            if(rol==='COORDINADOR'){
+                await sb.from('coordinadores_programas').delete().eq('coordinador_id',uid);
+                if(asigs.length){
+                    var e2=await sb.from('coordinadores_programas').insert(asigs.map(function(a){return{coordinador_id:uid,programa_id:a.programa_id,cohorte_id:a.cohorte_id||null};}));
+                    if(e2.error)throw e2.error;
+                }
             }
-            // Si es estudiante: actualizar inscripciones
-            if (rol==='ESTUDIANTE' && inscripciones.length){
-                var estRes = await sb.from('estudiantes').select('id').eq('dni',dn).maybeSingle();
-                if (estRes.data){
-                    var estId = estRes.data.id;
-                    // Upsert cada inscripción
-                    for (var ii=0; ii<inscripciones.length; ii++){
-                        var insc = inscripciones[ii];
+            if(rol==='ESTUDIANTE'&&insc.length){
+                // .limit(1) para evitar error 406 cuando no existe el estudiante
+                var re=await sb.from('estudiantes').select('id').eq('dni',dn).limit(1);
+                if(!re.error&&re.data&&re.data.length>0){
+                    var estId=re.data[0].id;
+                    for(var ii=0;ii<insc.length;ii++){
                         await sb.from('inscripciones').upsert({
-                            estudiante_id: estId,
-                            cohorte_id: insc.cohorte_id,
-                            descuento_porcentaje: insc.descuento_porcentaje||0,
-                            estado_academico: 'ACTIVO'
-                        }, {onConflict:'estudiante_id,cohorte_id'});
+                            estudiante_id:estId,cohorte_id:insc[ii].cohorte_id,
+                            descuento_porcentaje:insc[ii].descuento_porcentaje||0,estado_academico:'ACTIVO'
+                        },{onConflict:'estudiante_id,cohorte_id'});
                     }
                 }
             }
             toast('Usuario actualizado ✓','ok');
-        } else {
-            // ── CREAR ── via Edge Function (usa service_role internamente)
-            var sess = await sb.auth.getSession();
-            var token = sess.data.session ? sess.data.session.access_token : '';
-            var resp = await fetch('https://fdevypdowdhqaxvfiywt.supabase.co/functions/v1/crear-usuario', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token,
-                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZXZ5cGRvd2RocWF4dmZpeXd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzM3NTIsImV4cCI6MjA2MDUwOTc1Mn0.VXZFGGfj96H0AMbq9qRHLlYRqJr0CJCXPKkuLYkVKiM'
-                },
-                body: JSON.stringify({ email:em, password:pw, apellido:ap, nombre:no, nombre_completo:nc, dni:dn, rol:rol, asignaciones:asigs, inscripciones:inscripciones })
+        }else{
+            var sess=await sb.auth.getSession();
+            var token=sess.data.session?sess.data.session.access_token:'';
+            var resp=await fetch(EDGE_URL,{
+                method:'POST',
+                headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':ANON_KEY},
+                body:JSON.stringify({email:em,password:pw,apellido:ap,nombre:no,nombre_completo:nc,dni:dn,rol:rol,asignaciones:asigs,inscripciones:insc})
             });
-            var result = await resp.json();
-            if (!resp.ok || result.error) throw new Error(result.error || 'Error al crear usuario');
-            toast('Usuario creado ✓ — puede iniciar sesión de inmediato','ok');
+            var result=await resp.json();
+            if(!resp.ok||result.error)throw new Error(result.error||'Error al crear usuario');
+            toast('Usuario creado ✓','ok');
         }
-        cerM('m-u');
-        await cargar();
-    } catch(e){
-        console.error(e);
-        toast('Error: '+e.message,'err');
-    } finally { spin(false); }
+        cerM('m-u');await cargar();
+    }catch(e){console.error(e);toast('Error: '+e.message,'err');}
+    finally{spin(false);}
 }
 
-// ═══════════════════════════════════════════
-// BAJA
-// ═══════════════════════════════════════════
-function confBaja(id,nm){ _aid=id; _anm=nm; document.getElementById('baja-t').textContent=nm; abrM('m-baja'); }
+function confBaja(id,nm){_aid=id;_anm=nm;document.getElementById('baja-t').textContent=nm;abrM('m-baja');}
 async function ejBaja(){
     spin(true);
-    try {
-        var sb=await getSupabase();
-        var {error}=await sb.from('usuarios').update({activo:false,estado_usuario:'BLOQUEADO'}).eq('usuario_id',_aid);
-        if(error) throw error;
-        toast(_anm+' → Baja ✓','ok'); cerM('m-baja'); await cargar();
-    } catch(e){ toast('Error: '+e.message,'err'); } finally{ spin(false); }
+    try{var sb=await getSupabase();var r=await sb.from('usuarios').update({activo:false,estado_usuario:'BLOQUEADO'}).eq('usuario_id',_aid);if(r.error)throw r.error;toast(_anm+' → Baja ✓','ok');cerM('m-baja');await cargar();}
+    catch(e){toast('Error: '+e.message,'err');}finally{spin(false);}
 }
-
-// ═══════════════════════════════════════════
-// ALTA
-// ═══════════════════════════════════════════
-function confAlta(id,nm){ _aid=id; _anm=nm; document.getElementById('alta-t').textContent=nm; abrM('m-alta'); }
+function confAlta(id,nm){_aid=id;_anm=nm;document.getElementById('alta-t').textContent=nm;abrM('m-alta');}
 async function ejAlta(){
     spin(true);
-    try {
-        var sb=await getSupabase();
-        var {error}=await sb.from('usuarios').update({activo:true,estado_usuario:'ACTIVO'}).eq('usuario_id',_aid);
-        if(error) throw error;
-        toast(_anm+' → Alta ✓','ok'); cerM('m-alta'); await cargar();
-    } catch(e){ toast('Error: '+e.message,'err'); } finally{ spin(false); }
+    try{var sb=await getSupabase();var r=await sb.from('usuarios').update({activo:true,estado_usuario:'ACTIVO'}).eq('usuario_id',_aid);if(r.error)throw r.error;toast(_anm+' → Alta ✓','ok');cerM('m-alta');await cargar();}
+    catch(e){toast('Error: '+e.message,'err');}finally{spin(false);}
 }
-
-// ═══════════════════════════════════════════
-// ELIMINAR (conserva historial)
-// ═══════════════════════════════════════════
-function confDel(id,nm){ _aid=id; _anm=nm; document.getElementById('del-t').textContent=nm; abrM('m-del'); }
+function confDel(id,nm){_aid=id;_anm=nm;document.getElementById('del-t').textContent=nm;abrM('m-del');}
 async function ejDel(){
     spin(true);
-    try {
-        var sb=await getSupabase();
-        // Revocar acceso: null en auth_user_id + bloqueado
-        var {error}=await sb.from('usuarios').update({activo:false,estado_usuario:'BLOQUEADO',auth_user_id:null}).eq('usuario_id',_aid);
-        if(error) throw error;
-        toast(_anm+' eliminado (historial conservado) ✓','ok'); cerM('m-del'); await cargar();
-    } catch(e){ toast('Error: '+e.message,'err'); } finally{ spin(false); }
+    try{var sb=await getSupabase();var r=await sb.from('usuarios').update({activo:false,estado_usuario:'BLOQUEADO',auth_user_id:null}).eq('usuario_id',_aid);if(r.error)throw r.error;toast(_anm+' eliminado ✓','ok');cerM('m-del');await cargar();}
+    catch(e){toast('Error: '+e.message,'err');}finally{spin(false);}
 }
-
-// ═══════════════════════════════════════════
-// ELIMINAR REGISTRO COMPLETO
-// ═══════════════════════════════════════════
-function confErase(id,nm){ _aid=id; _anm=nm; document.getElementById('er-t').textContent=nm; document.getElementById('er-conf').value=''; document.getElementById('btn-erase').disabled=true; abrM('m-erase'); }
-function chkErase(){ document.getElementById('btn-erase').disabled = document.getElementById('er-conf').value.trim().toUpperCase()!=='ELIMINAR'; }
+function confErase(id,nm){_aid=id;_anm=nm;document.getElementById('er-t').textContent=nm;document.getElementById('er-conf').value='';document.getElementById('btn-erase').disabled=true;abrM('m-erase');}
+function chkErase(){document.getElementById('btn-erase').disabled=document.getElementById('er-conf').value.trim().toUpperCase()!=='ELIMINAR';}
 async function ejErase(){
     spin(true);
-    try {
-        var sb=await getSupabase();
-        await sb.from('coordinadores_programas').delete().eq('coordinador_id',_aid);
-        var {error}=await sb.from('usuarios').delete().eq('usuario_id',_aid);
-        if(error) throw error;
-        toast('Registro de '+_anm+' eliminado ✓','ok'); cerM('m-erase'); await cargar();
-    } catch(e){ toast('Error: '+e.message,'err'); } finally{ spin(false); }
+    try{var sb=await getSupabase();await sb.from('coordinadores_programas').delete().eq('coordinador_id',_aid);var r=await sb.from('usuarios').delete().eq('usuario_id',_aid);if(r.error)throw r.error;toast('Registro eliminado ✓','ok');cerM('m-erase');await cargar();}
+    catch(e){toast('Error: '+e.message,'err');}finally{spin(false);}
 }
 
-// ═══════════════════════════════════════════
-// IMPORTAR USUARIOS
-// ═══════════════════════════════════════════
-function abrirImp(){
-    _impF=null;
-    document.getElementById('imp-f').value='';
-    document.getElementById('imp-prev').style.display='none';
-    document.getElementById('btn-imp').disabled=true;
-    abrM('m-imp');
-}
+function abrirImp(){_impF=null;document.getElementById('imp-f').value='';document.getElementById('imp-prev').style.display='none';document.getElementById('btn-imp').disabled=true;abrM('m-imp');}
 function onImpFile(inp){
-    var f=inp.files[0]; if(!f) return;
+    var f=inp.files[0];if(!f)return;
     var ext=f.name.split('.').pop().toLowerCase();
-    if(!['xlsx','xls'].includes(ext)){ toast('Solo .xlsx o .xls','err'); return; }
+    if(!['xlsx','xls'].includes(ext)){toast('Solo .xlsx o .xls','err');return;}
     _impF=f;
     document.getElementById('imp-fn').textContent=f.name;
     document.getElementById('imp-fs').textContent='('+(f.size/1024).toFixed(1)+' KB)';
@@ -817,57 +548,38 @@ function onImpFile(inp){
     document.getElementById('btn-imp').disabled=false;
 }
 async function doImp(){
-    if(!_impF) return;
-    if(!window.XLSX){
-        spin(true);
-        await new Promise(function(res,rej){
-            var s=document.createElement('script');
-            s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-            s.onload=res; s.onerror=rej; document.head.appendChild(s);
-        });
-        spin(false);
-    }
+    if(!_impF)return;
+    if(!window.XLSX){spin(true);await new Promise(function(res,rej){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});spin(false);}
     spin(true);
-    try {
+    try{
         var data=await _impF.arrayBuffer();
         var wb=XLSX.read(data,{type:'array'});
-        var ws=wb.Sheets[wb.SheetNames[0]];
-        var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-        if(!rows.length){ toast('Archivo vacío','err'); return; }
-
+        var rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+        if(!rows.length){toast('Archivo vacío','err');return;}
         var rolesOK=['ADMINISTRADOR','SECRETARIA','COOPERADORA','COORDINADOR','ESTUDIANTE'];
-        var sb=await getSupabase();
-        var ok=0, errs=[];
-
+        var sb=await getSupabase();var ok=0,errs=[];
         for(var i=0;i<rows.length;i++){
             var r=rows[i];
-            var ap=String(r.apellido||r.Apellido||'').trim();
-            var no=String(r.nombre||r.Nombre||'').trim();
-            var dn=String(r.dni||r.DNI||'').trim();
-            var em=String(r.email||r.Email||'').trim();
-            var pw=String(r.password||r.Password||r.contraseña||'').trim();
-            var rl=String(r.rol||r.Rol||'').trim().toUpperCase();
-
-            if(!ap||!no||!dn||!em||!pw){ errs.push('Fila '+(i+2)+': faltan campos'); continue; }
-            if(!rolesOK.includes(rl)){ errs.push('Fila '+(i+2)+': rol "'+rl+'" inválido'); continue; }
-
+            var ap2=String(r.apellido||r.Apellido||'').trim();
+            var no2=String(r.nombre||r.Nombre||'').trim();
+            var dn2=String(r.dni||r.DNI||'').trim();
+            var em2=String(r.email||r.Email||'').trim();
+            var pw2=String(r.password||r.Password||'').trim();
+            var rl2=String(r.rol||r.Rol||'').trim().toUpperCase();
+            if(!ap2||!no2||!dn2||!em2||!pw2){errs.push('Fila '+(i+2)+': faltan campos');continue;}
+            if(!rolesOK.includes(rl2)){errs.push('Fila '+(i+2)+': rol inválido "'+rl2+'"');continue;}
             var sess2=await sb.auth.getSession();
             var tok2=sess2.data.session?sess2.data.session.access_token:'';
-            var r2=await fetch('https://fdevypdowdhqaxvfiywt.supabase.co/functions/v1/crear-usuario',{
-                method:'POST',
-                headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok2,'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZXZ5cGRvd2RocWF4dmZpeXd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzM3NTIsImV4cCI6MjA2MDUwOTc1Mn0.VXZFGGfj96H0AMbq9qRHLlYRqJr0CJCXPKkuLYkVKiM'},
-                body:JSON.stringify({email:em,password:pw,nombre_completo:ap+' '+no,dni:dn,rol:rl,programa_ids:[]})
-            });
-            var j2=await r2.json();
-            if(!r2.ok||j2.error){ errs.push('Fila '+(i+2)+' ('+dn+'): '+(j2.error||'Error')); continue; }
+            var resp2=await fetch(EDGE_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok2,'apikey':ANON_KEY},body:JSON.stringify({email:em2,password:pw2,apellido:ap2,nombre:no2,nombre_completo:ap2+' '+no2,dni:dn2,rol:rl2,asignaciones:[],inscripciones:[]})});
+            var j2=await resp2.json();
+            if(!resp2.ok||j2.error){errs.push('Fila '+(i+2)+' ('+dn2+'): '+(j2.error||'Error'));continue;}
             ok++;
         }
-
-        if(errs.length){ console.error('Errores importación:', errs); toast(ok+' creados · '+errs.length+' error(es). Ver consola.','err'); }
-        else { toast(ok+' usuario'+(ok!==1?'s':'')+' importado'+(ok!==1?'s':'')+' ✓','ok'); }
-        cerM('m-imp'); await cargar();
-    } catch(e){ console.error(e); toast('Error: '+e.message,'err'); }
-    finally{ spin(false); }
+        if(errs.length){console.error(errs);toast(ok+' creados · '+errs.length+' error(es). Ver consola.','err');}
+        else{toast(ok+' usuario'+(ok!==1?'s':'')+' importado'+(ok!==1?'s':'')+' ✓','ok');}
+        cerM('m-imp');await cargar();
+    }catch(e){console.error(e);toast('Error: '+e.message,'err');}
+    finally{spin(false);}
 }
 </script>
 </body>
