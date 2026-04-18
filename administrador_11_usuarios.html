@@ -480,16 +480,29 @@ async function guardarU(){
                 }
             }
             if(rol==='ESTUDIANTE'&&insc.length){
-                // .limit(1) para evitar error 406 cuando no existe el estudiante
+                // Buscar o crear estudiante en tabla estudiantes
                 var re=await sb.from('estudiantes').select('id').eq('dni',dn).limit(1);
+                var estId=null;
                 if(!re.error&&re.data&&re.data.length>0){
-                    var estId=re.data[0].id;
+                    estId=re.data[0].id;
+                }else{
+                    // No existe en estudiantes — crear con upsert
+                    var upsEst=await sb.from('estudiantes').upsert(
+                        {dni:dn,apellido:ap,nombre:no,email:em},
+                        {onConflict:'dni'}
+                    ).select('id').limit(1);
+                    if(!upsEst.error&&upsEst.data&&upsEst.data.length>0){
+                        estId=upsEst.data[0].id;
+                    }
+                }
+                if(estId){
                     for(var ii=0;ii<insc.length;ii++){
                         await sb.from('inscripciones').upsert({
                             estudiante_id:estId,cohorte_id:insc[ii].cohorte_id,
                             descuento_porcentaje:insc[ii].descuento_porcentaje||0,estado_academico:'ACTIVO'
                         },{onConflict:'estudiante_id,cohorte_id'});
                     }
+                    toast('Inscripciones guardadas ✓','ok');
                 }
             }
             toast('Usuario actualizado ✓','ok');
