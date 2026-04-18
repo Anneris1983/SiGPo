@@ -245,6 +245,17 @@ async function marcarTodasNotificacionesLeidas() {
         .eq('leida', false);
 }
 
+/**
+ * Formatea una fecha ISO (YYYY-MM-DD) a DD/MM/YYYY
+ * Usada en todos los HTML del sistema
+ */
+function fFecha(fecha) {
+    if (!fecha) return '—';
+    var partes = String(fecha).split('T')[0].split('-');
+    if (partes.length !== 3) return fecha;
+    return partes[2] + '/' + partes[1] + '/' + partes[0];
+}
+
 function tiempoRelativo(fecha) {
     var ahora = new Date();
     var diff = ahora - new Date(fecha);
