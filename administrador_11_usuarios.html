@@ -429,22 +429,28 @@ async function cargar() {
     spin(true);
     try {
         var sb = await getSupabase();
-        var [usrRes, progRes, coordRes] = await Promise.all([
-            sb.from('usuarios').select('*').order('nombre_completo'),
-            sb.from('programas').select('programa_id,nombre').order('nombre'),
-            sb.from('coordinadores_programas').select('coordinador_id,programas(nombre)')
-        ]);
+
+        // Usuarios
+        var usrRes = await sb.from('usuarios').select('*').order('nombre_completo');
+        console.log('usuarios query result:', usrRes);
         if (usrRes.error) throw usrRes.error;
+
+        // Programas (para el selector del modal)
+        var progRes = await sb.from('programas').select('programa_id,nombre').order('nombre');
         _programas = progRes.data || [];
 
-        // Mapa coordinador_id → nombres de programas
+        // Coordinadores → programas (opcional, no rompe si falla)
         var coordMap = {};
-        (coordRes.data || []).forEach(function(c) {
-            if (!coordMap[c.coordinador_id]) coordMap[c.coordinador_id] = [];
-            if (c.programas) coordMap[c.coordinador_id].push(c.programas.nombre);
-        });
+        try {
+            var coordRes = await sb.from('coordinadores_programas')
+                .select('coordinador_id,programas(nombre)');
+            (coordRes.data || []).forEach(function(c) {
+                if (!coordMap[c.coordinador_id]) coordMap[c.coordinador_id] = [];
+                if (c.programas) coordMap[c.coordinador_id].push(c.programas.nombre);
+            });
+        } catch(e2) { console.warn('No se pudo cargar coordinadores_programas:', e2); }
 
-        _usuarios = (usrRes.data || []).map(function(u) {
+        _usuarios = usrRes.data.map(function(u) {
             return Object.assign({}, u, { programas_nombres: coordMap[u.usuario_id] || [] });
         });
         renderTabla();
