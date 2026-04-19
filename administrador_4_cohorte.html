@@ -974,26 +974,16 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
         });
     }
 
-    // Construir columnas dinámicas: conceptos únicos ordenados por fecha_vencimiento
+    // Construir columnas dinámicas en el mismo orden que devuelve Supabase
+    // (la query ya tiene ORDER BY fecha_vencimiento — no re-ordenar client-side)
     var conceptosVistos = [];
     var colMap = {};
-    var colVenc = {};  // vencimiento mínimo por key (para ordenar)
     cobros.forEach(function(c) {
         var key = c.concepto + '||' + (c.periodo || '');
         if (!colMap[key]) {
             colMap[key] = { concepto_base: c.concepto, periodo: c.periodo || '' };
             conceptosVistos.push(key);
         }
-        // Guardar el menor vencimiento encontrado para este key
-        var v = c.fecha_vencimiento ? c.fecha_vencimiento.split('T')[0] : '9999-99';
-        if (!colVenc[key] || v < colVenc[key]) colVenc[key] = v;
-    });
-    // Orden estable: por vencimiento; empate → por concepto+periodo alfabético
-    conceptosVistos.sort(function(a, b) {
-        var va = colVenc[a] || '9999-99';
-        var vb = colVenc[b] || '9999-99';
-        if (va !== vb) return va < vb ? -1 : 1;
-        return a < b ? -1 : a > b ? 1 : 0;
     });
     var columnas = conceptosVistos.map(function(k) { return colMap[k]; });
 
@@ -1259,7 +1249,7 @@ function renderTabla() {
                     concepto:             c.concepto,
                     periodo:              c.periodo || '',
                     monto:                c.monto_original,
-                    descuento_porcentaje: c.descuento_porcentaje || 0,
+                    descuento_porcentaje: est.descuento_porcentaje || c.descuento_porcentaje || 0,
                     fecha_vencimiento:    c.fecha_vencimiento || null,
                     estado_actual:        estado,
                     no_aplica:            estado === 'NO_APLICA'
@@ -2925,11 +2915,12 @@ async function guardarCeldaPopup() {
             var saldoPend   = montoFinal;
             var nuevoEstado = normalizarEstadoCuota(montoFinal, saldoPend, cpopInfo.fecha_vencimiento || null, cpopInfo.estado_actual || 'NO_ABONADA');
             res = await sb.from('cobros').update({
-                monto_original:  montoOriginal,
-                monto_final:     montoFinal,
-                saldo_pendiente: saldoPend,
-                estado:          nuevoEstado,
-                no_aplica:       false
+                monto_original:       montoOriginal,
+                monto_final:          montoFinal,
+                saldo_pendiente:      saldoPend,
+                descuento_porcentaje: pct,
+                estado:               nuevoEstado,
+                no_aplica:            false
             }).eq('cobro_id', cobroId);
         }
 
