@@ -378,7 +378,7 @@
             <button class="btn btn-outline" onclick="abrirCorreo()">✉️ Editar correos de reclamo</button>
             <button class="btn btn-primary" id="btn-reclamar" disabled onclick="reclamarSel()">📧 Reclamar seleccionados</button>
             <button class="btn btn-crear" onclick="abrirCrearCuota()">➕ Crear cuotas</button>
-            <button class="btn btn-editar-cuotas" id="btn-editar-cuotas" disabled onclick="abrirEditarCuotas()">✏️ Editar cuotas</button>
+            <button class="btn btn-editar-cuotas" id="btn-editar-cuotas" onclick="abrirEditarCuotas()">✏️ Editar cuotas</button>
             <button class="btn btn-eliminar-global" onclick="abrirEliminarCuotasGlobal()">🗑 Eliminar cuota</button>
             <button class="btn btn-import" onclick="abrir('modal-importar')">📥 Importar cobranzas</button>
             <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar a Excel</button>
@@ -606,7 +606,7 @@
         </div>
         <div class="modal-body" style="padding:0;">
             <div style="padding:16px 22px;background:#f0f9ff;border-bottom:1px solid #e0f2fe;font-size:12px;color:#0369a1;">
-                ℹ️ <span style="color:#1d4ed8;font-weight:700;">GLOBAL</span>: Concepto y Período aplican a todos los estudiantes de la cohorte. &nbsp;|&nbsp; <span style="color:#166534;font-weight:700;">INDIVIDUAL</span>: Monto y Vencimiento aplican solo a este estudiante.
+                ℹ️ Cambios globales: Concepto, Período y Vencimiento se actualizan para <strong>todos los estudiantes</strong> de la cohorte. Para cambiar montos por estudiante usá el lápiz en cada celda.
             </div>
             <div id="ec-lista" style="padding:16px 22px;max-height:460px;overflow-y:auto;"></div>
         </div>
@@ -1376,8 +1376,9 @@ function onChk() {
     document.getElementById('sel-bar').classList.toggle('show', sel.length > 0);
     document.getElementById('sel-txt').textContent = sel.length + ' estudiante' + (sel.length !== 1 ? 's' : '') + ' seleccionado' + (sel.length !== 1 ? 's' : '');
     document.getElementById('btn-reclamar').disabled = sel.length === 0;
+    // Editar cuotas es global — siempre habilitado si hay cuotas en la cohorte
     var btnEditar = document.getElementById('btn-editar-cuotas');
-    if (btnEditar) btnEditar.disabled = sel.length !== 1;
+    if (btnEditar) btnEditar.disabled = !V.data || !V.data.columnas || !V.data.columnas.length;
     var visibles = document.querySelectorAll('.chk-e').length;
     var all = document.getElementById('chk-all');
     all.indeterminate = sel.length > 0 && sel.length < visibles;
@@ -2520,32 +2521,32 @@ function fMillones(n) {
    EDITAR CUOTAS DE UN ESTUDIANTE
 ══════════════════════════════════════════════════ */
 function abrirEditarCuotas() {
-    var sel = getSel();
-    if (sel.length !== 1) { toast('Seleccioná exactamente un estudiante', 'err'); return; }
-    var dni = sel[0];
-    var est = V.data.estudiantes.find(function(e) { return String(e.dni) === String(dni); });
-    if (!est) { toast('Estudiante no encontrado', 'err'); return; }
+    if (!V.data || !V.data.columnas.length) {
+        toast('No hay cuotas cargadas en esta cohorte', 'err'); return;
+    }
 
-    _ecDni = String(dni);
-    _ecCuotasEditadas = est.cobros.map(function(c) {
+    // Poblar desde las columnas únicas de la cohorte (no por estudiante)
+    _ecCuotasEditadas = V.data.columnas.map(function(col) {
+        // Tomar vencimiento de cualquier cobro con ese concepto+periodo
+        var sampleCobro = null;
+        V.data.estudiantes.some(function(est) {
+            var found = (est.cobros || []).find(function(c) {
+                return c.concepto === col.concepto_base && c.periodo === col.periodo;
+            });
+            if (found) { sampleCobro = found; return true; }
+        });
         return {
-            cobro_id:          c.cobro_id,
-            concepto:          c.concepto,
-            periodo:           c.periodo || '',
-            _concepto_orig:    c.concepto,       // para detectar cambio de etiqueta global
-            _periodo_orig:     c.periodo || '',
-            monto_original:    c.monto_original,
-            monto_final:       c.monto_final,
-            monto_abonado:     calcMontoAbonado(c),
-            saldo_pendiente:   c.saldo_pendiente,
-            fecha_vencimiento: c.fecha_vencimiento || '',
-            estado:            resolverEstadoCobro(c),
-            comprobante_url:   c.comprobante_url || '',
-            recibo_url:        c.recibo_url || ''
+            concepto:          col.concepto_base,
+            periodo:           col.periodo,
+            _concepto_orig:    col.concepto_base,
+            _periodo_orig:     col.periodo,
+            fecha_vencimiento: sampleCobro ? (sampleCobro.fecha_vencimiento || '') : ''
         };
     });
 
-    document.getElementById('ec-sub').textContent = est.apellido + ', ' + est.nombre + ' — DNI ' + dni;
+    document.getElementById('ec-sub').textContent =
+        V.data.programa.nombre + ' · ' + V.data.cohorte.nombre
+        + ' — ' + _ecCuotasEditadas.length + ' cuota' + (_ecCuotasEditadas.length !== 1 ? 's' : '');
     renderEditarCuotas();
     actualizarResumenEC();
     abrir('modal-editar-cuotas');
@@ -2558,49 +2559,21 @@ function renderEditarCuotas() {
         return;
     }
 
-    var colorEstado = { ABONADA:'#d4edda', EN_MORA:'#f8d7da', PAGO_PARCIAL:'#fff3cd', PENDIENTE:'#fef3c7', NO_ABONADA:'#eef2ff', A_DEFINIR:'#ede9fe' };
-    var textEstado  = { ABONADA:'✅ Abonada', EN_MORA:'🔴 En mora', PAGO_PARCIAL:'🟡 Parcial', PENDIENTE:'🕓 Pendiente', NO_ABONADA:'🔵 No abonada', A_DEFINIR:'🟣 A definir' };
-
     cont.innerHTML = _ecCuotasEditadas.map(function(c, i) {
-        var estado = c.estado;
-        var bloqueada = ['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado);
-        var bg = colorEstado[estado] || '#f8f6f1';
-        // Mostrar siempre el precio BASE (monto_original) para que el usuario edite ese valor
-        var montoBase = c.monto_original != null ? c.monto_original : c.monto_final;
-        var montoBaseValor = montoBase == null ? '' : montoBase;
-        var descPct = Number(c.descuento_porcentaje) || 0;
-        // Calcular monto con descuento para mostrar como referencia
-        var montoConDesc = (montoBase != null && descPct > 0)
-            ? Math.round(montoBase * (1 - descPct / 100) * 100) / 100
-            : montoBase;
-        var descInfo = (descPct > 0 && montoBase != null && estado !== 'EN_MORA')
-            ? '<div style="font-size:9px;color:#2d7a4f;margin-top:2px;">Con ' + descPct + '% desc: ' + fMonto(montoConDesc) + '</div>'
-            : (estado === 'EN_MORA' ? '<div style="font-size:9px;color:#dc2626;margin-top:2px;">En mora: sin descuento</div>' : '');
         return `
-        <div style="background:${bg};border-radius:10px;padding:12px 14px;margin-bottom:10px;border:2px solid #e0e0e0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;">
+        <div style="background:#f8fafc;border-radius:10px;padding:12px 14px;margin-bottom:10px;border:2px solid #e0e0e0;">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;">
                 <div>
-                    <span style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;">${textEstado[estado] || estado}</span>
-                    <div style="font-size:11px;color:#666;margin-top:2px;">Abonado: ${fMonto(c.monto_abonado)} · Saldo: ${fMonto(c.saldo_pendiente)}</div>
-                </div>
-            </div>
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;">
-                <div>
-                    <label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">CONCEPTO <span style="background:#dbeafe;color:#1d4ed8;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">GLOBAL</span></label>
-                    <input type="text" value="${escapeHtml(c.concepto || '')}" onchange="_ecCuotasEditadas[${i}].concepto=this.value;actualizarResumenEC();" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
+                    <label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">CONCEPTO</label>
+                    <input type="text" value="${escapeHtml(c.concepto || '')}" onchange="_ecCuotasEditadas[${i}].concepto=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
                 </div>
                 <div>
-                    <label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">PERÍODO <span style="background:#dbeafe;color:#1d4ed8;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">GLOBAL</span></label>
+                    <label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">PERÍODO</label>
                     <input type="text" value="${escapeHtml(c.periodo || '')}" onchange="_ecCuotasEditadas[${i}].periodo=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
                 </div>
                 <div>
-                    <label style="font-size:10px;font-weight:600;color:#777;display:block;margin-bottom:3px;">MONTO BASE ($) <span style="background:#f0fdf4;color:#166534;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">INDIVIDUAL</span></label>
-                    <input type="number" value="${montoBaseValor}" ${bloqueada ? 'disabled' : ''} onchange="var raw=this.value;if(raw===''){_ecCuotasEditadas[${i}].monto_original=null;_ecCuotasEditadas[${i}].monto_final=null;_ecCuotasEditadas[${i}].saldo_pendiente=null;}else{var base=parseFloat(raw)||0;var pct=Number(_ecCuotasEditadas[${i}].descuento_porcentaje)||0;var final=Math.round(base*(1-pct/100)*100)/100;_ecCuotasEditadas[${i}].monto_original=base;_ecCuotasEditadas[${i}].monto_final=final;_ecCuotasEditadas[${i}].saldo_pendiente=Math.max(0,final-(_ecCuotasEditadas[${i}].monto_abonado||0));}actualizarResumenEC();" style="width:100%;padding:6px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
-                    ${descInfo}
-                </div>
-                <div>
-                    <label style="font-size:10px;font-weight:600;color:#777;display:block;margin-bottom:3px;">VENCIMIENTO <span style="background:#f0fdf4;color:#166534;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">INDIVIDUAL</span></label>
-                    <input type="date" value="${c.fecha_vencimiento || ''}" onchange="_ecCuotasEditadas[${i}].fecha_vencimiento=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
+                    <label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">VENCIMIENTO</label>
+                    <input type="date" value="${c.fecha_vencimiento || ''}" onchange="_ecCuotasEditadas[${i}].fecha_vencimiento=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
                 </div>
             </div>
         </div>`;
@@ -2622,44 +2595,24 @@ async function guardarEdicionCuotas() {
 
         for (var j = 0; j < _ecCuotasEditadas.length; j++) {
             var c = _ecCuotasEditadas[j];
-
-            // 1. Si cambió la etiqueta (concepto o período), actualizarla en TODOS los
-            //    cobros de la cohorte con esa misma etiqueta original (cambio global).
-            var labelCambio = c.concepto !== c._concepto_orig || c.periodo !== c._periodo_orig;
-            if (labelCambio) {
-                var labelRes = await sb.from('cobros')
-                    .update({ concepto: c.concepto, periodo: c.periodo })
-                    .eq('cohorte_id', COHORTE_ID)
-                    .eq('concepto', c._concepto_orig)
-                    .eq('periodo',  c._periodo_orig);
-                if (labelRes.error)
-                    errores.push('Error al renombrar etiqueta ' + c._concepto_orig + ': ' + labelRes.error.message);
-                else {
-                    // Actualizar orig para no volver a disparar si se guarda de nuevo
-                    c._concepto_orig = c.concepto;
-                    c._periodo_orig  = c.periodo;
-                }
-            }
-
-            // 2. Actualizar monto y vencimiento solo para este estudiante (cambio individual).
-            var montoOriginal = c.monto_original === null || c.monto_original === '' ? null : redondear2(c.monto_original);
-            var descPct = Number(c.descuento_porcentaje) || 0;
-            var montoFinal = montoOriginal === null ? null
-                : (descPct > 0 ? redondear2(montoOriginal * (1 - descPct / 100)) : montoOriginal);
-            var saldoPendiente = montoFinal === null ? null : redondear2(Math.max(0, montoFinal - (Number(c.monto_abonado) || 0)));
-            var estadoNuevo = montoFinal === null ? 'A_DEFINIR' : normalizarEstadoCuota(montoFinal, saldoPendiente, c.fecha_vencimiento, c.estado);
+            // Actualizar concepto, periodo y vencimiento para TODOS los cobros
+            // de esta cohorte que tengan la etiqueta original → cambio global
             var upd = {
-                concepto:             c.concepto,
-                periodo:              c.periodo,
-                monto_original:       montoOriginal,
-                descuento_porcentaje: descPct,
-                monto_final:          montoFinal,
-                saldo_pendiente:      saldoPendiente,
-                fecha_vencimiento:    c.fecha_vencimiento || null,
-                estado:               estadoNuevo
+                concepto:          c.concepto,
+                periodo:           c.periodo,
+                fecha_vencimiento: c.fecha_vencimiento || null
             };
-            var upRes = await sb.from('cobros').update(upd).eq('cobro_id', c.cobro_id);
-            if (upRes.error) errores.push('Error al actualizar ' + c.concepto + ': ' + upRes.error.message);
+            var res = await sb.from('cobros')
+                .update(upd)
+                .eq('cohorte_id', COHORTE_ID)
+                .eq('concepto',   c._concepto_orig)
+                .eq('periodo',    c._periodo_orig);
+            if (res.error)
+                errores.push('Error en ' + c._concepto_orig + ': ' + res.error.message);
+            else {
+                c._concepto_orig = c.concepto;
+                c._periodo_orig  = c.periodo;
+            }
         }
 
         if (errores.length) {
@@ -2921,23 +2874,20 @@ function cerrarCeldaPopup() {
 
 async function guardarCeldaPopup() {
     if (!_cpopCobroId) return;
-    var cobroId  = _cpopCobroId;          // guardar antes de que cerrarCeldaPopup lo resetee
+    var cobroId  = _cpopCobroId;
     var cpopInfo = window._cpopInfo || {};
     var noAplica = document.getElementById('cpop-noapl').checked;
-    var montoStr = document.getElementById('cpop-monto').value;
-
-    if (!noAplica && (montoStr === '' || isNaN(parseFloat(montoStr)))) {
-        toast('Ingresá un monto válido o marcá "No aplica"', 'err'); return;
-    }
+    var montoStr = document.getElementById('cpop-monto').value.trim();
+    var tieneMonto = montoStr !== '' && !isNaN(parseFloat(montoStr));
 
     spin(true);
     cerrarCeldaPopup();
     try {
         var sb = await getSupabase();
+        var res;
 
         if (noAplica) {
-            // Marcar como NO_APLICA: monto null, estado especial
-            var res = await sb.from('cobros').update({
+            res = await sb.from('cobros').update({
                 monto_original:       null,
                 monto_final:          null,
                 saldo_pendiente:      null,
@@ -2945,24 +2895,31 @@ async function guardarCeldaPopup() {
                 estado:               'NO_APLICA',
                 no_aplica:            true
             }).eq('cobro_id', cobroId);
-            if (res.error) throw res.error;
+        } else if (!tieneMonto) {
+            // Sin monto → A_DEFINIR
+            res = await sb.from('cobros').update({
+                monto_original:  null,
+                monto_final:     null,
+                saldo_pendiente: null,
+                estado:          'A_DEFINIR',
+                no_aplica:       false
+            }).eq('cobro_id', cobroId);
         } else {
             var montoOriginal = redondear2(parseFloat(montoStr));
-            var pct  = Number(cpopInfo.descuento_porcentaje) || 0;
+            var pct         = Number(cpopInfo.descuento_porcentaje) || 0;
             var montoFinal  = pct > 0 ? redondear2(montoOriginal * (1 - pct / 100)) : montoOriginal;
             var saldoPend   = montoFinal;
             var nuevoEstado = normalizarEstadoCuota(montoFinal, saldoPend, cpopInfo.fecha_vencimiento || null, cpopInfo.estado_actual || 'NO_ABONADA');
-
-            var res = await sb.from('cobros').update({
+            res = await sb.from('cobros').update({
                 monto_original:  montoOriginal,
                 monto_final:     montoFinal,
                 saldo_pendiente: saldoPend,
                 estado:          nuevoEstado,
                 no_aplica:       false
             }).eq('cobro_id', cobroId);
-            if (res.error) throw res.error;
         }
 
+        if (res.error) throw res.error;
         toast('Cuota actualizada ✓', 'ok');
         await cargar();
     } catch(e) {
