@@ -1121,9 +1121,8 @@ function renderTabla() {
             else                                txt = fMonto(c.monto_final);
 
             /*
-             * Botones por estado — Administrador: SOLO CONSULTA
-             * Aprobar/Rechazar es exclusivo de Cooperadora
-             * PENDIENTE    → Ver comprobante (solo lectura)
+             * Botones por estado — Administrador: control total
+             * PENDIENTE    → Ver comprobante + Aprobar + Rechazar
              * ABONADA      → Ver comprobante + Ver recibo
              * PAGO_PARCIAL → Ver comprobante + Ver recibo parcial
              * resto        → sin botones
@@ -1132,6 +1131,8 @@ function renderTabla() {
             if (estado === 'PENDIENTE') {
                 if (c.comprobante_url)
                     btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
+                btns += '<button class="cbtn cbtn-aprobar" onclick="abrirAprobacion(' + idCobro + ')">✔ Aprobar</button>';
+                btns += '<button class="cbtn cbtn-rechazar" onclick="rechazarCuotaDirecto(' + idCobro + ')">✕ Rechazar</button>';
             } else if (estado === 'ABONADA') {
                 if (c.comprobante_url)
                     btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
@@ -2213,8 +2214,11 @@ async function aprobarCuota() {
         if (isNaN(montoAprobado) || montoAprobado <= 0) {
             toast('Ingresá el monto aprobado parcialmente', 'err'); return;
         }
-        if (montoAprobado >= Number(_aprCobro.monto_final || 0)) {
-            toast('El monto parcial debe ser menor al total de la cuota', 'err'); return;
+        var saldoRef = (Number(_aprCobro.saldo_pendiente) > 0 && Number(_aprCobro.saldo_pendiente) < Number(_aprCobro.monto_final))
+            ? Number(_aprCobro.saldo_pendiente)
+            : Number(_aprCobro.monto_final || 0);
+        if (montoAprobado >= saldoRef) {
+            toast('El monto parcial debe ser menor al saldo pendiente de la cuota. Para aprobar el total, seleccioná "Aprobación total".', 'err'); return;
         }
     }
     spin(true);
