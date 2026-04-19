@@ -672,6 +672,14 @@ const COHORTE_ID  = parseInt(QS.get('cohorte_id'))  || null;
 const PROGRAMA_ID = parseInt(QS.get('programa_id')) || null;
 
 /* ══════════════════════════════════════════════════
+   CONFIGURACIÓN DE EMAILS (Google Apps Script)
+   GAS_FALLBACK_URL: script desplegado desde anneris.amarfil
+   GAS_SECRET: debe coincidir con SECRET en sigpo_gas_email.gs
+══════════════════════════════════════════════════ */
+const GAS_FALLBACK_URL = ''; // completar con la URL del script de anneris.amarfil
+const GAS_SECRET       = 'SIGPO_KEY_FCE_2025';
+
+/* ══════════════════════════════════════════════════
    PLANTILLAS DE CORREO
 ══════════════════════════════════════════════════ */
 let PLANTILLAS = {
@@ -802,6 +810,7 @@ function normalizarEstadoCuota(montoFinal, saldoPendiente, fechaVencimiento, est
 ══════════════════════════════════════════════════ */
 const V = {
     data:       null,   // { programa, cohorte, estudiantes, columnas }
+    config:     {},     // { cbu, alias } — cargado desde tabla configuracion
     filtro:     'todos',
     descTarget: null,
 };
@@ -818,9 +827,9 @@ var _ecCuotasEditadas = [];
 async function obtenerCohorteDetalle(cohorteId, programaId) {
     const sb = await getSupabase();
 
-    const [progRes, cohRes, cobRes] = await Promise.all([
+    const [progRes, cohRes, cobRes, cfgRes] = await Promise.all([
         sb.from('programas')
-          .select('programa_id, nombre, tipo')
+          .select('programa_id, nombre, tipo, email_remitente, gas_url')
           .eq('programa_id', programaId)
           .single(),
         sb.from('cohortes')
@@ -831,7 +840,8 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
           .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, estado, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id')
           .eq('cohorte_id', cohorteId)
           .eq('programa_id', programaId)
-          .order('fecha_vencimiento')
+          .order('fecha_vencimiento'),
+        sb.from('configuracion').select('clave, valor').in('clave', ['cbu_banco', 'alias_banco'])
     ]);
 
     if (progRes.error || cohRes.error) return null;
@@ -839,6 +849,14 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
     var programa = progRes.data;
     var cohorte  = cohRes.data;
     var cobros   = cobRes.data || [];
+
+    // Config bancaria para variables de email
+    var cfgRows = cfgRes.data || [];
+    V.config = {};
+    cfgRows.forEach(function(r) {
+        if (r.clave === 'cbu_banco')   V.config.cbu   = r.valor;
+        if (r.clave === 'alias_banco') V.config.alias = r.valor;
+    });
 
     // Obtener estudiantes via inscripciones (fuente de verdad para descuento y estado)
     var inscRes = await sb.from('inscripciones')
@@ -1635,6 +1653,7 @@ async function enviarNotificaciones() {
         var sb = await getSupabase();
         var cfg = await obtenerConfiguracion();
         var notifs = [];
+        var emails = [];   // { to, subject, body } para envío GAS
         var cobrosActualizar = [];
 
         sel.forEach(function(dni) {
@@ -1650,42 +1669,48 @@ async function enviarNotificaciones() {
             // Generar una notificación por cada cobro vencido (o una general si no hay)
             if (cobrosVencidos.length === 0) {
                 // Notificación general
-                var msg = interpolarPlantilla(cuerpo, {
+                var vars0 = {
                     nombre: est.nombre, apellido: est.apellido, dni: est.dni,
                     cuota: '—', periodo: '—', monto: '0',
                     vencimiento: '—', programa: V.data.programa.nombre,
-                    cbu: cfg.cbu || '—', alias: cfg.alias || '—'
-                });
+                    cbu: cfg.cbu_banco || V.config.cbu || '—',
+                    alias: cfg.alias_banco || V.config.alias || '—'
+                };
+                var msg0 = interpolarPlantilla(cuerpo, vars0);
                 notifs.push({
                     usuario_dni:  String(est.dni),
                     rol_destino:  null,
                     tipo:         tipo === 'recordatorio' ? 'cuota' : 'mora',
-                    mensaje:      asunto + ': ' + msg.substring(0, 200)
+                    mensaje:      asunto + ': ' + msg0.substring(0, 200)
                 });
+                if (est.email) emails.push({ to: est.email, subject: interpolarPlantilla(asunto, vars0), body: msg0 });
             } else {
                 cobrosVencidos.forEach(function(c) {
-                    var msg = interpolarPlantilla(cuerpo, {
+                    var vars1 = {
                         nombre: est.nombre, apellido: est.apellido, dni: est.dni,
                         cuota: c.concepto, periodo: c.periodo || '—',
                         monto: Math.round(Number(c.saldo_pendiente) || 0).toLocaleString('es-AR'),
                         vencimiento: fFecha(c.fecha_vencimiento),
                         programa: V.data.programa.nombre,
-                        cbu: cfg.cbu || '—', alias: cfg.alias || '—'
-                    });
+                        cbu: cfg.cbu_banco || V.config.cbu || '—',
+                        alias: cfg.alias_banco || V.config.alias || '—'
+                    };
+                    var msg1 = interpolarPlantilla(cuerpo, vars1);
                     notifs.push({
                         usuario_dni:  String(est.dni),
                         rol_destino:  null,
                         tipo:         tipo === 'recordatorio' ? 'cuota' : 'mora',
-                        mensaje:      msg.substring(0, 500)
+                        mensaje:      msg1.substring(0, 500)
                     });
-                    // Marcar cobro como reclamado
+                    if (est.email) emails.push({ to: est.email, subject: interpolarPlantilla(asunto, vars1), body: msg1 });
+                    // Marcar cobro como reclamado/recordado
                     if (tipo === 'reclamo') cobrosActualizar.push(c.cobro_id);
                     if (tipo === 'recordatorio') cobrosActualizar.push(c.cobro_id);
                 });
             }
         });
 
-        // Insertar notificaciones
+        // Insertar notificaciones internas en Supabase
         if (notifs.length) {
             var r = await sb.from('notificaciones').insert(notifs);
             if (r.error) throw r.error;
@@ -1701,8 +1726,24 @@ async function enviarNotificaciones() {
             await sb.from('cobros').update(upd).in('cobro_id', cobrosActualizar);
         }
 
+        // Envío real de emails via Google Apps Script
+        var gasUrl   = (V.data.programa.gas_url) || GAS_FALLBACK_URL;
+        var replyTo  = V.data.programa.email_remitente || '';
+        var emailsOk = 0, emailsErr = 0;
+        if (gasUrl) {
+            for (var ei = 0; ei < emails.length; ei++) {
+                var em = emails[ei];
+                var ok = await enviarEmailGas(gasUrl, em.to, em.subject, em.body, replyTo);
+                if (ok) emailsOk++; else emailsErr++;
+            }
+        }
+
         var totalNotifs = notifs.length;
-        toast('✓ ' + totalNotifs + ' notificación' + (totalNotifs !== 1 ? 'es' : '') + ' enviada' + (totalNotifs !== 1 ? 's' : '') + ' a ' + sel.length + ' estudiante' + (sel.length !== 1 ? 's' : ''), 'ok');
+        var msgToast = '✓ ' + totalNotifs + ' notificación' + (totalNotifs !== 1 ? 'es' : '') + ' a ' + sel.length + ' estudiante' + (sel.length !== 1 ? 's' : '');
+        if (gasUrl)  msgToast += ' · ' + emailsOk + ' email' + (emailsOk !== 1 ? 's' : '') + ' enviado' + (emailsOk !== 1 ? 's' : '');
+        if (!gasUrl) msgToast += ' (sin URL GAS: solo notificación interna)';
+        if (emailsErr > 0) msgToast += ' ⚠️ ' + emailsErr + ' error(es)';
+        toast(msgToast, emailsErr > 0 ? 'err' : 'ok');
         cerrar('modal-correo');
         deselAll();
         await cargar();
@@ -1718,6 +1759,23 @@ function interpolarPlantilla(texto, vars) {
     return texto.replace(/\{(\w+)\}/g, function(match, key) {
         return vars[key] !== undefined ? vars[key] : match;
     });
+}
+
+async function enviarEmailGas(gasUrl, to, subject, body, replyTo) {
+    try {
+        var res = await fetch(gasUrl, {
+            method:  'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body:    JSON.stringify({ secret: GAS_SECRET, to: to, subject: subject, body: body, replyTo: replyTo || '' }),
+            mode:    'cors'
+        });
+        var json = await res.json();
+        if (!json.ok) console.error('GAS error para', to, ':', json.error);
+        return json.ok === true;
+    } catch (err) {
+        console.error('Error enviando email a', to, err);
+        return false;
+    }
 }
 
 /* ══════════════════════════════════════════════════
