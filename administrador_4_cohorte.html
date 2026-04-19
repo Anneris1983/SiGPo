@@ -760,12 +760,11 @@ function resolverEstadoCobro(c) {
     // PAGO_PARCIAL: recibo parcial, saldo > 0 (Regla 3)
     if (tieneRecibo && saldo !== null && saldo > 0 && montoAbonado > 0) return 'PAGO_PARCIAL';
 
-    // EN_MORA: solo si la BD ya la marcó EN_MORA (lo hace aplicarMoraCohorteJS cuando hay ≥1 mes)
-    // O si vencioCuota Y el estado guardado en BD es EN_MORA
+    // EN_MORA: apenas vence sin pago aprobado y sin comprobante válido en revisión (Regla 5)
+    // La BD puede tener EN_MORA (ya procesado) o puede ser nueva (recién venció)
     if (estadoDb === 'EN_MORA') return 'EN_MORA';
-
-    // Cuota vencida pero aún sin mora formal (menos de 1 mes) → NO_ABONADA
-    // La mora la aplica el servidor en cada carga (aplicarMoraCohorteJS)
+    if (vencioCuota(c) && montoAbonado <= 0 && !tieneComp) return 'EN_MORA';
+    if (vencioCuota(c) && montoAbonado <= 0 && estadoDb !== 'PENDIENTE') return 'EN_MORA';
 
     return 'NO_ABONADA';
 }
@@ -981,59 +980,52 @@ async function cargar(aplicarMora) {
 async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
     var sb = await getSupabase();
     var hoyStr = new Date().toISOString().split('T')[0];
+    var fHoy   = new Date(hoyStr + 'T00:00:00');
+    var moraPct = (V.config.moraPct || 5) / 100;   // desde configuracion
 
     for (var ie = 0; ie < estudiantes.length; ie++) {
         var est = estudiantes[ie];
+        var tieneDescuentoInsc = Number(est.descuento_porcentaje) > 0;
 
         for (var ic = 0; ic < est.cobros.length; ic++) {
             var c = est.cobros[ic];
 
-            // Solo cobros con monto definido, vencidos, sin pago aprobado
+            // Solo cobros con monto definido, vencidos, sin recibo de pago aprobado
             if (!tieneMontoDefinido(c)) continue;
             if (!c.fecha_vencimiento) continue;
             if (c.fecha_vencimiento >= hoyStr) continue;
             if (c.recibo_url && String(c.recibo_url).trim() !== '') continue;
-            if (String(c.estado) === 'ABONADA') continue;
-            // Si ya tiene meses_mora calculado y está EN_MORA, no recalcular
-            // (evita pisar ediciones manuales en cada carga)
-            if (String(c.estado) === 'EN_MORA' && Number(c.meses_mora) > 0) continue;
+            if (['ABONADA', 'PAGO_PARCIAL'].includes(String(c.estado))) continue;
 
-            var fVenc = new Date(c.fecha_vencimiento + 'T00:00:00');
-            var fHoy  = new Date(hoyStr + 'T00:00:00');
+            var fVenc    = new Date(c.fecha_vencimiento + 'T00:00:00');
+            var diasMora = Math.floor((fHoy - fVenc) / 86400000);
+            var mesesMora = diasMora / 30;  // fraccionario según regla
 
-            // Meses completos en mora — solo se cuenta cuando el día del mes actual
-            // ya superó el día de vencimiento original
-            var mesesMora = (fHoy.getFullYear() - fVenc.getFullYear()) * 12
-                          + (fHoy.getMonth() - fVenc.getMonth());
-            // Si en el mes actual todavía no se llegó al día de vencimiento, no cuenta ese mes
-            if (fHoy.getDate() < fVenc.getDate()) mesesMora = Math.max(0, mesesMora - 1);
-            // Regla adicional: antes del día de corte del mes, no se activa el recargo
-            var diaCorte = V.config.diaCorte || 16;
-            if (fHoy.getDate() < diaCorte) mesesMora = Math.max(0, mesesMora - 1);
-            if (mesesMora <= 0) continue;
+            // Precio base sin descuento (monto_original es siempre el precio real)
+            var precioBase = Number(c.monto_original) || Number(c.monto_final) || 0;
 
-            // Precio base SIN descuento = monto_original / (1 - descuento/100)
-            // Si el cobro se creó con descuento, monto_original ya tiene el precio base real
-            // pero descuento_porcentaje indica si hay que revertirlo
-            var precioBase;
+            var nuevoMonto, nuevoSaldo, nuevoDescPct;
             var descPct = Number(c.descuento_porcentaje) || 0;
-            if (descPct > 0 && Number(c.monto_original) > 0) {
-                // monto_original fue guardado ANTES de aplicar descuento → es el precio real
-                precioBase = Number(c.monto_original);
-            } else {
-                precioBase = Number(c.monto_original) || Number(c.monto_final) || 0;
-            }
-            var nuevoMonto, nuevoSaldo;
 
-            if (mesesMora === 1) {
-                // Mes 1: pierde descuento → vuelve al precio base sin descuento
-                nuevoMonto = precioBase;
-                nuevoSaldo = precioBase;
+            if (tieneDescuentoInsc || descPct > 0) {
+                // ── Estudiante CON descuento ──
+                if (mesesMora <= 1) {
+                    // PRIMER MES: solo pierde el descuento, sin intereses
+                    nuevoMonto  = precioBase;       // vuelve al precio sin descuento
+                    nuevoSaldo  = precioBase;
+                    nuevoDescPct = 0;
+                } else {
+                    // DESDE EL SEGUNDO MES: interés compuesto sobre precio base
+                    var mesesConInteres = mesesMora - 1;
+                    nuevoSaldo  = Math.round(precioBase * Math.pow(1 + moraPct, mesesConInteres) * 100) / 100;
+                    nuevoMonto  = nuevoSaldo;
+                    nuevoDescPct = 0;
+                }
             } else {
-                // Mes 2+: 5% compuesto sobre precio base (sin descuento)
-                var moraPct = (V.config.moraPct || 5) / 100;
-                nuevoSaldo = Math.round(precioBase * Math.pow(1 + moraPct, mesesMora - 1) * 100) / 100;
-                nuevoMonto = nuevoSaldo;
+                // ── Estudiante SIN descuento: interés desde el día 1 ──
+                nuevoSaldo  = Math.round(precioBase * Math.pow(1 + moraPct, mesesMora) * 100) / 100;
+                nuevoMonto  = nuevoSaldo;
+                nuevoDescPct = 0;
             }
 
             // Solo actualizar si hay cambio real
@@ -1044,14 +1036,13 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
                        || String(c.estado) !== 'EN_MORA';
 
             if (hayDiff) {
-                var dMora = new Date(fVenc.getTime() + 86400000);
-                var fechaMora = c.fecha_mora || dMora.toISOString().split('T')[0];
+                var fechaMora = c.fecha_mora || new Date(fVenc.getTime() + 86400000).toISOString().split('T')[0];
                 var res = await sb.from('cobros').update({
                     estado:               'EN_MORA',
                     monto_final:          nuevoMonto,
                     saldo_pendiente:      nuevoSaldo,
-                    descuento_porcentaje: 0,
-                    meses_mora:           mesesMora,
+                    descuento_porcentaje: nuevoDescPct,
+                    meses_mora:           Math.floor(mesesMora),
                     fecha_mora:           fechaMora
                 }).eq('cobro_id', c.cobro_id);
                 if (res.error) console.error('mora update error cobro', c.cobro_id, res.error);
