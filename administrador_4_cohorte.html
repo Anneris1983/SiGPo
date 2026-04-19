@@ -974,15 +974,26 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
         });
     }
 
-    // Construir columnas dinámicas: conceptos únicos en orden de vencimiento
+    // Construir columnas dinámicas: conceptos únicos ordenados por fecha_vencimiento
     var conceptosVistos = [];
     var colMap = {};
+    var colVenc = {};  // vencimiento mínimo por key (para ordenar)
     cobros.forEach(function(c) {
         var key = c.concepto + '||' + (c.periodo || '');
         if (!colMap[key]) {
             colMap[key] = { concepto_base: c.concepto, periodo: c.periodo || '' };
             conceptosVistos.push(key);
         }
+        // Guardar el menor vencimiento encontrado para este key
+        var v = c.fecha_vencimiento ? c.fecha_vencimiento.split('T')[0] : '9999-99';
+        if (!colVenc[key] || v < colVenc[key]) colVenc[key] = v;
+    });
+    // Orden estable: por vencimiento; empate → por concepto+periodo alfabético
+    conceptosVistos.sort(function(a, b) {
+        var va = colVenc[a] || '9999-99';
+        var vb = colVenc[b] || '9999-99';
+        if (va !== vb) return va < vb ? -1 : 1;
+        return a < b ? -1 : a > b ? 1 : 0;
     });
     var columnas = conceptosVistos.map(function(k) { return colMap[k]; });
 
@@ -1251,7 +1262,7 @@ function renderTabla() {
                     descuento_porcentaje: c.descuento_porcentaje || 0,
                     fecha_vencimiento:    c.fecha_vencimiento || null,
                     estado_actual:        estado,
-                    no_aplica:            estado === 'NO_APLICA' || c.no_aplica === true
+                    no_aplica:            estado === 'NO_APLICA'
                   })) + ')" style="cursor:pointer;"'
                 : '';
 
@@ -2828,12 +2839,15 @@ function abrirCeldaPopup(event, infoJson) {
     document.getElementById('cpop-title').textContent =
         (info.concepto || 'Cuota') + (info.periodo ? ' · ' + info.periodo : '');
 
-    var montoActual = info.monto ? Number(info.monto) : '';
-    document.getElementById('cpop-monto').value = montoActual || '';
+    // Resetear siempre para no mostrar valores de la celda anterior
+    var montoActual = (info.monto !== null && info.monto !== undefined && info.monto !== '') ? Number(info.monto) : '';
+    var inputMonto = document.getElementById('cpop-monto');
+    inputMonto.value = montoActual === '' ? '' : montoActual;
+    inputMonto.disabled = false;   // siempre habilitar primero
 
-    var noAplica = info.no_aplica === true || info.no_aplica === 'true';
+    var noAplica = info.no_aplica === true;
     document.getElementById('cpop-noapl').checked = noAplica;
-    document.getElementById('cpop-monto').disabled = noAplica;
+    inputMonto.disabled = noAplica;
     document.getElementById('cpop-noapl-label').classList.toggle('active', noAplica);
 
     // Posicionar el popup cerca de la celda clickeada
