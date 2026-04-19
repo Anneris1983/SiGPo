@@ -1426,7 +1426,10 @@ function abrirCrearCuota() {
         { nombre: 'Inscripción', periodo: planPeriodoSiguiente(0), monto: '', vencimiento: planFechaDefault(0) },
         { nombre: 'Cuota 1',     periodo: planPeriodoSiguiente(1), monto: '', vencimiento: planFechaDefault(1) },
     ];
-    document.querySelector('input[name="plan-dest"][value="cohorte"]').checked = true;
+    // Si hay estudiantes seleccionados en la tabla, pre-seleccionar "especificos"
+    var selPrev = getSel();
+    var destVal = selPrev.length > 0 ? 'especificos' : 'cohorte';
+    document.querySelector('input[name="plan-dest"][value="' + destVal + '"]').checked = true;
     planDestChange();
     planRenderFilas();
     planActualizarResumen();
