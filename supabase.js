@@ -44,7 +44,7 @@ async function login(dni, password) {
     // Primero buscar el email real del usuario por DNI
     const { data: usuarioPre, error: errPre } = await sb
         .from('usuarios')
-        .select('rol, apellido, nombre, nombre_completo, email, programa_id, dni, activo')
+        .select('rol, nombre_completo, email, programa_id, dni, activo')
         .eq('dni', String(dni))
         .single();
 
@@ -69,8 +69,6 @@ async function login(dni, password) {
 
     localStorage.setItem('sigpo_rol', usuario.rol);
     localStorage.setItem('sigpo_nombre', usuario.nombre_completo);
-    localStorage.setItem('sigpo_apellido', usuario.apellido || '');
-    localStorage.setItem('sigpo_nombre2', usuario.nombre || '');
     localStorage.setItem('sigpo_dni', usuario.dni);
     localStorage.setItem('sigpo_email', usuario.email);
     localStorage.setItem('sigpo_programa_id', usuario.programa_id || '');
@@ -88,8 +86,6 @@ async function logout() {
     await sb.auth.signOut();
     localStorage.removeItem('sigpo_rol');
     localStorage.removeItem('sigpo_nombre');
-    localStorage.removeItem('sigpo_apellido');
-    localStorage.removeItem('sigpo_nombre2');
     localStorage.removeItem('sigpo_dni');
     localStorage.removeItem('sigpo_email');
     localStorage.removeItem('sigpo_programa_id');
@@ -247,17 +243,6 @@ async function marcarTodasNotificacionesLeidas() {
         .update({ leida: true })
         .eq('usuario_dni', sesion.dni)
         .eq('leida', false);
-}
-
-/**
- * Formatea una fecha ISO (YYYY-MM-DD) a DD/MM/YYYY
- * Usada en todos los HTML del sistema
- */
-function fFecha(fecha) {
-    if (!fecha) return '—';
-    var partes = String(fecha).split('T')[0].split('-');
-    if (partes.length !== 3) return fecha;
-    return partes[2] + '/' + partes[1] + '/' + partes[0];
 }
 
 function tiempoRelativo(fecha) {
@@ -854,12 +839,13 @@ async function obtenerPerfilUsuario() {
     var sesion = getSesion();
     if (!sesion) return null;
     const sb = await getSupabase();
-    // Traer apellido y nombre directamente de la BD
-    var r = await sb.from('usuarios').select('apellido, nombre, nombre_completo, dni, email, rol').eq('dni', sesion.dni).single();
+    var r = await sb.from('usuarios').select('*').eq('dni', sesion.dni).single();
     if (!r.data) return null;
+    // Separar apellido / nombre desde nombre_completo (formato "Apellido Nombre")
+    var partes = (r.data.nombre_completo || '').trim().split(' ');
     return {
-        apellido: r.data.apellido || r.data.nombre_completo || '',
-        nombre:   r.data.nombre  || '',
+        apellido: partes.slice(-1)[0] || '',
+        nombre:   partes.slice(0, -1).join(' ') || r.data.nombre_completo,
         dni:      r.data.dni,
         email:    r.data.email,
         rol:      r.data.rol
