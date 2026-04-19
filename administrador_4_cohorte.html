@@ -2921,6 +2921,8 @@ function cerrarCeldaPopup() {
 
 async function guardarCeldaPopup() {
     if (!_cpopCobroId) return;
+    var cobroId  = _cpopCobroId;          // guardar antes de que cerrarCeldaPopup lo resetee
+    var cpopInfo = window._cpopInfo || {};
     var noAplica = document.getElementById('cpop-noapl').checked;
     var montoStr = document.getElementById('cpop-monto').value;
 
@@ -2942,16 +2944,14 @@ async function guardarCeldaPopup() {
                 descuento_porcentaje: 0,
                 estado:               'NO_APLICA',
                 no_aplica:            true
-            }).eq('cobro_id', _cpopCobroId);
+            }).eq('cobro_id', cobroId);
             if (res.error) throw res.error;
         } else {
             var montoOriginal = redondear2(parseFloat(montoStr));
-            // Usar datos ya cargados en memoria — sin GET extra
-            var info = window._cpopInfo || {};
-            var pct  = Number(info.descuento_porcentaje) || 0;
+            var pct  = Number(cpopInfo.descuento_porcentaje) || 0;
             var montoFinal  = pct > 0 ? redondear2(montoOriginal * (1 - pct / 100)) : montoOriginal;
             var saldoPend   = montoFinal;
-            var nuevoEstado = normalizarEstadoCuota(montoFinal, saldoPend, info.fecha_vencimiento || null, info.estado_actual || 'NO_ABONADA');
+            var nuevoEstado = normalizarEstadoCuota(montoFinal, saldoPend, cpopInfo.fecha_vencimiento || null, cpopInfo.estado_actual || 'NO_ABONADA');
 
             var res = await sb.from('cobros').update({
                 monto_original:  montoOriginal,
@@ -2959,7 +2959,7 @@ async function guardarCeldaPopup() {
                 saldo_pendiente: saldoPend,
                 estado:          nuevoEstado,
                 no_aplica:       false
-            }).eq('cobro_id', _cpopCobroId);
+            }).eq('cobro_id', cobroId);
             if (res.error) throw res.error;
         }
 
