@@ -875,7 +875,7 @@ function etiquetaEstado(estado) {
     }[estado] || estado || '—';
 }
 function pesoEstado(estado) {
-    return { EN_MORA: 6, PENDIENTE: 5, PAGO_PARCIAL: 4, NO_ABONADA: 3, A_DEFINIR: 2, ABONADA: 1 }[estado] || 0;
+    return { EN_MORA: 6, PENDIENTE: 5, PAGO_PARCIAL: 4, NO_ABONADA: 3, A_DEFINIR: 2, ABONADA: 1, NO_APLICA: 0 }[estado] || 0;
 }
 function normalizarEstadoCuota(montoFinal, saldoPendiente, fechaVencimiento, estadoActual) {
     var mock = {
@@ -1081,7 +1081,8 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
             if (!c.fecha_vencimiento) continue;
             if (c.fecha_vencimiento >= hoyStr) continue;
             if (c.recibo_url && String(c.recibo_url).trim() !== '') continue;
-            if (['ABONADA', 'PAGO_PARCIAL'].includes(String(c.estado))) continue;
+            if (['ABONADA', 'PAGO_PARCIAL', 'NO_APLICA'].includes(String(c.estado))) continue;
+            if (c.no_aplica === true) continue;
 
             var fVenc    = new Date(c.fecha_vencimiento + 'T00:00:00');
             var diasMora = Math.floor((fHoy - fVenc) / 86400000);
@@ -1179,6 +1180,7 @@ function renderTabla() {
         var estadoGen = calcEstadoGeneral(est.cobros);
         var totP = 0, totA = 0, totS = 0;
         est.cobros.forEach(function(c) {
+            if (c.no_aplica === true || resolverEstadoCobro(c) === 'NO_APLICA') return; // no suma al total
             var mf = tieneMontoDefinido(c) ? Number(c.monto_final) || 0 : 0;
             totP += mf;
             totA += calcMontoAbonado(c);
@@ -1241,12 +1243,15 @@ function renderTabla() {
             // Solo celdas sin pago aprobado son editables inline
             var esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado);
             var editAttr = esEditable
-                ? ' onclick="abrirCeldaPopup(event,' + idCobro + ',' + encodeAttr(JSON.stringify({
-                    cobro_id: idCobro,
-                    concepto: c.concepto,
-                    periodo:  c.periodo || '',
-                    monto:    c.monto_original,
-                    no_aplica: estado === 'NO_APLICA' || c.no_aplica === true
+                ? ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
+                    cobro_id:             c.cobro_id,
+                    concepto:             c.concepto,
+                    periodo:              c.periodo || '',
+                    monto:                c.monto_original,
+                    descuento_porcentaje: c.descuento_porcentaje || 0,
+                    fecha_vencimiento:    c.fecha_vencimiento || null,
+                    estado_actual:        estado,
+                    no_aplica:            estado === 'NO_APLICA' || c.no_aplica === true
                   })) + ')" style="cursor:pointer;"'
                 : '';
 
@@ -1824,8 +1829,10 @@ async function enviarNotificaciones() {
 
             // Cobros pendientes/vencidos del estudiante
             var cobrosVencidos = est.cobros.filter(function(c) {
-                return ['EN_MORA','NO_ABONADA','PAGO_PARCIAL'].includes(resolverEstadoCobro(c))
-                    && tieneMontoDefinido(c);
+                var est2 = resolverEstadoCobro(c);
+                return ['EN_MORA','NO_ABONADA','PAGO_PARCIAL'].includes(est2)
+                    && tieneMontoDefinido(c)
+                    && c.no_aplica !== true;
             });
 
             // ── Variables para interpolar el asunto y la intro de la plantilla ──
@@ -2811,10 +2818,12 @@ function escapeHtml(str) {
 ══════════════════════════════════════════════════ */
 var _cpopCobroId = null;
 
-function abrirCeldaPopup(event, cobroId, infoJson) {
+function abrirCeldaPopup(event, infoJson) {
     event.stopPropagation();
     var info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
-    _cpopCobroId = cobroId;
+    _cpopCobroId = info.cobro_id;
+    // Guardar info completa para no necesitar GET extra al guardar
+    window._cpopInfo = info;
 
     document.getElementById('cpop-title').textContent =
         (info.concepto || 'Cuota') + (info.periodo ? ' · ' + info.periodo : '');
@@ -2890,16 +2899,12 @@ async function guardarCeldaPopup() {
             if (res.error) throw res.error;
         } else {
             var montoOriginal = redondear2(parseFloat(montoStr));
-            // Obtener descuento del cobro para recalcular monto_final
-            var cobRes = await sb.from('cobros')
-                .select('descuento_porcentaje, fecha_vencimiento, estado, recibo_url, comprobante_url')
-                .eq('cobro_id', _cpopCobroId).single();
-            if (cobRes.error) throw cobRes.error;
-            var c = cobRes.data;
-            var pct = Number(c.descuento_porcentaje) || 0;
-            var montoFinal   = pct > 0 ? redondear2(montoOriginal * (1 - pct / 100)) : montoOriginal;
-            var saldoPend    = montoFinal;
-            var nuevoEstado  = normalizarEstadoCuota(montoFinal, saldoPend, c.fecha_vencimiento, c.estado || 'NO_ABONADA');
+            // Usar datos ya cargados en memoria — sin GET extra
+            var info = window._cpopInfo || {};
+            var pct  = Number(info.descuento_porcentaje) || 0;
+            var montoFinal  = pct > 0 ? redondear2(montoOriginal * (1 - pct / 100)) : montoOriginal;
+            var saldoPend   = montoFinal;
+            var nuevoEstado = normalizarEstadoCuota(montoFinal, saldoPend, info.fecha_vencimiento || null, info.estado_actual || 'NO_ABONADA');
 
             var res = await sb.from('cobros').update({
                 monto_original:  montoOriginal,
