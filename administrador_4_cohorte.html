@@ -1526,12 +1526,45 @@ function abrirCrearCuota() {
         document.getElementById('cuota-sub').textContent =
             V.data.programa.nombre + ' · ' + V.data.cohorte.nombre;
     }
-    planFilas = [
-        { nombre: 'Inscripción', periodo: planPeriodoSiguiente(0), monto: '', vencimiento: planFechaDefault(0) },
-        { nombre: 'Cuota 1',     periodo: planPeriodoSiguiente(1), monto: '', vencimiento: planFechaDefault(1) },
-    ];
-    // Pre-seleccionar "específicos" si hay estudiantes tildados en la tabla
+
+    // Detectar última cuota existente para continuar la secuencia
     var selPrev = getSel();
+    var estParaCalc = (V.data && selPrev.length > 0)
+        ? V.data.estudiantes.filter(function(e) { return selPrev.includes(String(e.dni)); })
+        : (V.data ? V.data.estudiantes : []);
+
+    var maxVenc = null;
+    var maxNum  = 0;
+    var yaHayInscripcion = false;
+    estParaCalc.forEach(function(est) {
+        (est.cobros || []).forEach(function(c) {
+            if (c.fecha_vencimiento) {
+                var d = c.fecha_vencimiento.split('T')[0];
+                if (!maxVenc || d > maxVenc) maxVenc = d;
+            }
+            var m = (c.concepto || '').match(/cuota[\s_]?(\d+)/i);
+            if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+            if (/inscripci[oó]n/i.test(c.concepto || '')) yaHayInscripcion = true;
+        });
+    });
+
+    if (!maxVenc) {
+        // Sin cuotas previas: proponer Inscripción + Cuota 1
+        planFilas = [
+            { nombre: 'Inscripción', periodo: planPeriodoSiguiente(0), monto: '', vencimiento: planFechaDefault(0) },
+            { nombre: 'Cuota 1',     periodo: planPeriodoSiguiente(1), monto: '', vencimiento: planFechaDefault(1) },
+        ];
+    } else {
+        // Continuar desde el mes siguiente a la última cuota existente
+        var sig = planAvanzarMes(maxVenc);
+        var nextNum = maxNum + 1;
+        var label = !yaHayInscripcion ? 'Inscripción' : 'Cuota ' + nextNum;
+        planFilas = [
+            { nombre: label, periodo: planPeriodoDeDate(sig), monto: '', vencimiento: sig.toISOString().split('T')[0] }
+        ];
+    }
+
+    // Pre-seleccionar radio según selección en tabla
     var destVal = selPrev.length > 0 ? 'especificos' : 'cohorte';
     document.querySelector('input[name="plan-dest"][value="' + destVal + '"]').checked = true;
     planDestChange();
@@ -1554,6 +1587,17 @@ function planFechaDefault(offset) {
     d.setMonth(d.getMonth() + offset);
     return d.toISOString().split('T')[0];
 }
+function planAvanzarMes(dateStr) {
+    var d = new Date((dateStr || planFechaDefault(0)) + 'T12:00:00');
+    d.setDate(1);
+    d.setMonth(d.getMonth() + 1);
+    d.setDate(15);
+    return d;
+}
+function planPeriodoDeDate(d) {
+    return d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+             .replace(/^\w/, function(c) { return c.toUpperCase(); });
+}
 
 function planRenderFilas() {
     var cont = document.getElementById('plan-filas');
@@ -1573,8 +1617,11 @@ function planRenderFilas() {
 }
 
 function planAgregar() {
-    var offset = planFilas.length;
-    planFilas.push({ nombre: 'Cuota ' + offset, periodo: planPeriodoSiguiente(offset), monto: '', vencimiento: planFechaDefault(offset) });
+    var last  = planFilas[planFilas.length - 1];
+    var sig   = planAvanzarMes(last ? last.vencimiento : planFechaDefault(0));
+    var m     = last && (last.nombre || '').match(/cuota[\s_]?(\d+)/i);
+    var nextNum = m ? parseInt(m[1], 10) + 1 : planFilas.length + 1;
+    planFilas.push({ nombre: 'Cuota ' + nextNum, periodo: planPeriodoDeDate(sig), monto: '', vencimiento: sig.toISOString().split('T')[0] });
     planRenderFilas(); planActualizarResumen(); planCheckAlerta();
 }
 function planEliminar(i) {
