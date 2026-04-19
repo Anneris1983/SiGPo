@@ -391,11 +391,6 @@
                 <label>Motivo</label>
                 <select id="desc-motivo">
                     <option value="">— Sin especificar —</option>
-                    <option value="DOCENTE_FCE">Docente FCE</option>
-                    <option value="EGRESADO_FCE">Egresado FCE</option>
-                    <option value="BECA">Beca</option>
-                    <option value="CONVENIO">Convenio institucional</option>
-                    <option value="OTRO">Otro</option>
                 </select>
             </div>
         </div>
@@ -844,7 +839,7 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
           .eq('cohorte_id', cohorteId)
           .eq('programa_id', programaId)
           .order('fecha_vencimiento'),
-        sb.from('configuracion').select('clave, valor').in('clave', ['cbu_banco', 'alias_banco'])
+        sb.from('configuracion').select('clave, valor')
     ]);
 
     if (progRes.error || cohRes.error) return null;
@@ -853,13 +848,19 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
     var cohorte  = cohRes.data;
     var cobros   = cobRes.data || [];
 
-    // Config bancaria para variables de email
+    // Cargar TODA la configuración en V.config
     var cfgRows = cfgRes.data || [];
     V.config = {};
-    cfgRows.forEach(function(r) {
-        if (r.clave === 'cbu_banco')   V.config.cbu   = r.valor;
-        if (r.clave === 'alias_banco') V.config.alias = r.valor;
-    });
+    cfgRows.forEach(function(r) { V.config[r.clave] = r.valor; });
+    // Aliases cómodos para compatibilidad con el resto del código
+    V.config.cbu          = V.config.cbu_banco    || '—';
+    V.config.alias        = V.config.alias_banco  || '—';
+    V.config.diaCorte     = parseInt(V.config.dia_corte_mora)    || 16;
+    V.config.moraPct      = parseFloat(V.config.mora_porcentaje) || 5;
+    // Etiquetas de motivo de descuento dinámicas desde configuracion.etiquetas
+    V.config.motivosDescuento = V.config.etiquetas
+        ? V.config.etiquetas.split(',').map(function(e) { return e.trim(); }).filter(Boolean)
+        : [];
 
     // Obtener estudiantes via inscripciones (fuente de verdad para descuento y estado)
     var inscRes = await sb.from('inscripciones')
@@ -1006,8 +1007,9 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
                           + (fHoy.getMonth() - fVenc.getMonth());
             // Si en el mes actual todavía no se llegó al día de vencimiento, no cuenta ese mes
             if (fHoy.getDate() < fVenc.getDate()) mesesMora = Math.max(0, mesesMora - 1);
-            // Regla adicional: antes del día 16 del mes, no se activa el recargo del mes
-            if (fHoy.getDate() < 16) mesesMora = Math.max(0, mesesMora - 1);
+            // Regla adicional: antes del día de corte del mes, no se activa el recargo
+            var diaCorte = V.config.diaCorte || 16;
+            if (fHoy.getDate() < diaCorte) mesesMora = Math.max(0, mesesMora - 1);
             if (mesesMora <= 0) continue;
 
             // Precio base SIN descuento = monto_original / (1 - descuento/100)
@@ -1029,7 +1031,8 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
                 nuevoSaldo = precioBase;
             } else {
                 // Mes 2+: 5% compuesto sobre precio base (sin descuento)
-                nuevoSaldo = Math.round(precioBase * Math.pow(1.05, mesesMora - 1) * 100) / 100;
+                var moraPct = (V.config.moraPct || 5) / 100;
+                nuevoSaldo = Math.round(precioBase * Math.pow(1 + moraPct, mesesMora - 1) * 100) / 100;
                 nuevoMonto = nuevoSaldo;
             }
 
@@ -1302,7 +1305,26 @@ function abrirDescuento(info, btn) {
     document.getElementById('desc-pct').value         = info.pct;
     document.getElementById('desc-desde').value       = hoy();
     document.getElementById('desc-hasta').value       = '';
-    document.getElementById('desc-motivo').value      = '';
+
+    // Poblar motivos dinámicamente desde configuracion.etiquetas
+    var sel = document.getElementById('desc-motivo');
+    sel.innerHTML = '<option value="">— Sin especificar —</option>';
+    var motivos = (V.config && V.config.motivosDescuento) ? V.config.motivosDescuento : [];
+    motivos.forEach(function(m) {
+        var opt = document.createElement('option');
+        opt.value = m.toUpperCase().replace(/\s+/g, '_');
+        opt.textContent = m;
+        sel.appendChild(opt);
+    });
+    // Siempre agregar "Otro" al final si no está ya
+    if (!motivos.some(function(m) { return m.toUpperCase() === 'OTRO'; })) {
+        var optOtro = document.createElement('option');
+        optOtro.value = 'OTRO';
+        optOtro.textContent = 'Otro';
+        sel.appendChild(optOtro);
+    }
+    sel.value = '';
+
     abrir('modal-descuento');
     setTimeout(function() { document.getElementById('desc-pct').focus(); }, 80);
 }
