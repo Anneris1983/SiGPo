@@ -1176,8 +1176,8 @@ function renderTabla() {
             <td class="cell-desc" style="color:${est.descuento_porcentaje > 0 ? 'var(--success)' : '#aaa'};">
                 <div style="font-weight:700;font-size:13px;">${est.descuento_porcentaje}%</div>
                 ${(function(){
-                    var ml={DOCENTE_FCE:'Docente FCE',EGRESADO_FCE:'Egresado FCE',BECA:'Beca',CONVENIO:'Convenio',OTRO:'Otro'};
-                    var motStr=est.descuento_motivo?(ml[est.descuento_motivo]||est.descuento_motivo):'';
+                    // Etiqueta del motivo: buscar en motivos dinámicos o usar el valor directo
+                    var motStr = est.descuento_motivo ? (est.descuento_motivo.replace(/_/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();})) : '';
                     var ff=function(f){return f?f.split('-').reverse().join('/'):'';};
                     var vig=est.descuento_desde?(ff(est.descuento_desde)+(est.descuento_hasta?' → '+ff(est.descuento_hasta):'')):'';
                     return (motStr?'<div style="font-size:9px;color:#555;font-weight:600;text-transform:uppercase;line-height:1.2;">'+motStr+'</div>':'')
@@ -1543,12 +1543,31 @@ async function guardarCuotas() {
         var registros = [];
         dnis.forEach(function(dni) {
             var pct = descuentoMap[String(dni)] || 0;
+            // Obtener rango de fechas del descuento del estudiante
+            var estObj = V.data.estudiantes.find(function(e) { return String(e.dni) === String(dni); });
+            var descDesde = estObj && estObj.descuento_desde ? String(estObj.descuento_desde).split('T')[0] : null;
+            var descHasta = estObj && estObj.descuento_hasta ? String(estObj.descuento_hasta).split('T')[0] : null;
+
             planFilas.forEach(function(f) {
                 var tieneMonto = f.monto !== '' && f.monto !== null && f.monto !== undefined && !isNaN(parseFloat(f.monto));
                 var montoOriginal = tieneMonto ? redondear2(parseFloat(f.monto)) : null;
-                // Aplicar descuento del estudiante sobre el monto_original
-                var montoFinal = (tieneMonto && pct > 0)
-                    ? redondear2(montoOriginal * (1 - pct / 100))
+
+                // Verificar si esta cuota cae dentro del rango del descuento
+                var pctAplicar = 0;
+                if (pct > 0) {
+                    if (f.vencimiento && descDesde) {
+                        var dentroDesde = f.vencimiento >= descDesde;
+                        var dentroHasta = !descHasta || f.vencimiento <= descHasta;
+                        if (dentroDesde && dentroHasta) pctAplicar = pct;
+                    } else {
+                        // Sin rango definido: aplica a todas
+                        pctAplicar = pct;
+                    }
+                }
+
+                // Aplicar descuento solo si corresponde al rango
+                var montoFinal = (tieneMonto && pctAplicar > 0)
+                    ? redondear2(montoOriginal * (1 - pctAplicar / 100))
                     : montoOriginal;
                 var estado = !tieneMonto
                     ? 'A_DEFINIR'
@@ -1561,7 +1580,7 @@ async function guardarCuotas() {
                     periodo:              (f.periodo || '').trim(),
                     fecha_vencimiento:    f.vencimiento || null,
                     monto_original:       montoOriginal,
-                    descuento_porcentaje: pct,
+                    descuento_porcentaje: pctAplicar,
                     monto_final:          montoFinal,
                     saldo_pendiente:      montoFinal,
                     estado:               estado
