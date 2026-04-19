@@ -472,23 +472,10 @@
             </div>
             <div style="border-top:1px solid #eee;margin:14px 0 0;"></div>
             <div style="padding:14px 22px 20px;">
-                <div class="plan-paso-titulo">Paso 2: Aplicar a</div>
+                <div class="plan-paso-titulo">Aplicar a</div>
                 <div class="plan-destino-box">
-                    <label class="plan-radio-opcion">
-                        <input type="radio" name="plan-dest" value="especificos" checked onchange="planDestChange()">
-                        <div>
-                            <div style="font-weight:700;font-size:13px;color:var(--primary);">Estudiantes seleccionados</div>
-                            <div style="font-size:11px;color:#666;margin-top:2px;">Solo se crean las cuotas para los estudiantes que tenés tildados en la tabla.</div>
-                            <div id="plan-sel-nombres" style="display:none;margin-top:8px;font-size:11px;color:#2d5a87;font-weight:600;line-height:1.6;"></div>
-                        </div>
-                    </label>
-                    <label class="plan-radio-opcion" style="margin-top:8px;">
-                        <input type="radio" name="plan-dest" value="cohorte" onchange="planDestChange()">
-                        <div>
-                            <div style="font-weight:700;font-size:13px;color:var(--primary);">Toda la cohorte</div>
-                            <div style="font-size:11px;color:#666;margin-top:2px;">Se crea el plan para los <strong id="plan-n-todos">—</strong> estudiantes activos.</div>
-                        </div>
-                    </label>
+                    <div style="font-weight:700;font-size:13px;color:var(--primary);">Toda la cohorte</div>
+                    <div style="font-size:11px;color:#666;margin-top:2px;">Se crea el plan para los <strong id="plan-n-todos">—</strong> estudiantes activos de esta cohorte.</div>
                 </div>
             </div>
         </div>
@@ -1246,6 +1233,7 @@ function renderTabla() {
             var editAttr = esEditable
                 ? ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
                     cobro_id:             c.cobro_id,
+                    dni:                  String(est.dni),
                     concepto:             c.concepto,
                     periodo:              c.periodo || '',
                     monto:                c.monto_original,
@@ -1530,10 +1518,7 @@ function abrirCrearCuota() {
     }
 
     // Detectar última cuota existente para continuar la secuencia
-    var selPrev = getSel();
-    var estParaCalc = (V.data && selPrev.length > 0)
-        ? V.data.estudiantes.filter(function(e) { return selPrev.includes(String(e.dni)); })
-        : (V.data ? V.data.estudiantes : []);
+    var estParaCalc = V.data ? V.data.estudiantes : [];
 
     var maxVenc = null;
     var maxNum  = 0;
@@ -1566,10 +1551,6 @@ function abrirCrearCuota() {
         ];
     }
 
-    // Pre-seleccionar radio según selección en tabla
-    var destVal = selPrev.length > 0 ? 'especificos' : 'cohorte';
-    document.querySelector('input[name="plan-dest"][value="' + destVal + '"]').checked = true;
-    planDestChange();
     planRenderFilas();
     planActualizarResumen();
     planCheckAlerta();
@@ -1635,34 +1616,8 @@ function planCheckAlerta() {
     var hayVacio = planFilas.some(function(f) { return !f.monto || parseFloat(f.monto) === 0; });
     document.getElementById('plan-alerta').style.display = hayVacio ? 'block' : 'none';
 }
-function planDestChange() {
-    var val = document.querySelector('input[name="plan-dest"]:checked').value;
-    var selNombres = document.getElementById('plan-sel-nombres');
-    if (val === 'especificos') {
-        var sel = getSel();
-        if (!sel.length) {
-            selNombres.style.display = 'block';
-            selNombres.style.color = '#c0392b';
-            selNombres.textContent = '⚠ Sin estudiantes seleccionados. Cerrá el modal, seleccioná y volvé a abrir.';
-        } else {
-            var nombres = sel.map(function(dni) {
-                var e = V.data.estudiantes.find(function(x) { return String(x.dni) === String(dni); });
-                return e ? e.apellido + ', ' + e.nombre : 'DNI ' + dni;
-            });
-            selNombres.style.display = 'block';
-            selNombres.style.color = '#2d5a87';
-            selNombres.innerHTML = nombres.map(function(n) { return '• ' + n; }).join('<br>');
-        }
-    } else {
-        selNombres.style.display = 'none';
-    }
-    planActualizarResumen();
-}
 function planCantEstudiantes() {
-    var val = document.querySelector('input[name="plan-dest"]:checked').value;
-    return val === 'cohorte'
-        ? (V.data ? V.data.estudiantes.length : 0)
-        : getSel().length;
+    return V.data ? V.data.estudiantes.length : 0;
 }
 function planActualizarResumen() {
     var n = planCantEstudiantes(), q = planFilas.length;
@@ -1674,11 +1629,8 @@ function planActualizarResumen() {
 
 async function guardarCuotas() {
     if (!planFilas.length) { toast('Agregá al menos una cuota', 'err'); return; }
-    var val = document.querySelector('input[name="plan-dest"]:checked').value;
-    var dnis = val === 'cohorte'
-        ? V.data.estudiantes.map(function(e) { return e.dni; })
-        : getSel();
-    if (!dnis.length) { toast('Seleccioná al menos un estudiante en la tabla', 'err'); return; }
+    var dnis = V.data.estudiantes.map(function(e) { return e.dni; });
+    if (!dnis.length) { toast('No hay estudiantes en esta cohorte', 'err'); return; }
 
     spin(true);
     try {
@@ -2880,6 +2832,9 @@ async function guardarCeldaPopup() {
     if (!_cpopCobroId) return;
     var cobroId  = _cpopCobroId;
     var cpopInfo = window._cpopInfo || {};
+    var dniEst   = String(cpopInfo.dni || '');
+    if (!dniEst) { toast('Error: DNI no identificado', 'err'); spin(false); return; }
+
     var noAplica = document.getElementById('cpop-noapl').checked;
     var montoStr = document.getElementById('cpop-monto').value.trim();
     var tieneMonto = montoStr !== '' && !isNaN(parseFloat(montoStr));
@@ -2898,16 +2853,15 @@ async function guardarCeldaPopup() {
                 descuento_porcentaje: 0,
                 estado:               'NO_APLICA',
                 no_aplica:            true
-            }).eq('cobro_id', cobroId);
+            }).eq('cobro_id', cobroId).eq('dni', dniEst);
         } else if (!tieneMonto) {
-            // Sin monto → A_DEFINIR
             res = await sb.from('cobros').update({
                 monto_original:  null,
                 monto_final:     null,
                 saldo_pendiente: null,
                 estado:          'A_DEFINIR',
                 no_aplica:       false
-            }).eq('cobro_id', cobroId);
+            }).eq('cobro_id', cobroId).eq('dni', dniEst);
         } else {
             var montoOriginal = redondear2(parseFloat(montoStr));
             var pct         = Number(cpopInfo.descuento_porcentaje) || 0;
@@ -2921,7 +2875,7 @@ async function guardarCeldaPopup() {
                 descuento_porcentaje: pct,
                 estado:               nuevoEstado,
                 no_aplica:            false
-            }).eq('cobro_id', cobroId);
+            }).eq('cobro_id', cobroId).eq('dni', dniEst);
         }
 
         if (res.error) throw res.error;
