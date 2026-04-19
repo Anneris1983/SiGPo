@@ -676,7 +676,7 @@ const PROGRAMA_ID = parseInt(QS.get('programa_id')) || null;
    GAS_FALLBACK_URL: script desplegado desde anneris.amarfil
    GAS_SECRET: debe coincidir con SECRET en sigpo_gas_email.gs
 ══════════════════════════════════════════════════ */
-const GAS_FALLBACK_URL = ''; // completar con la URL del script de anneris.amarfil
+const GAS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxtDIAY6yhpTJF5OK3k0-VK9GHK4UxputJrW-I_1ihT-ABYEEzpVPGcKwLF9k6nQW6iHw/exec'; // anneris.amarfil@fce.uncu.edu.ar
 const GAS_SECRET       = 'SIGPO_KEY_FCE_2025';
 
 /* ══════════════════════════════════════════════════
@@ -765,9 +765,12 @@ function resolverEstadoCobro(c) {
     // PAGO_PARCIAL: recibo parcial, saldo > 0 (Regla 3)
     if (tieneRecibo && saldo !== null && saldo > 0 && montoAbonado > 0) return 'PAGO_PARCIAL';
 
-    // EN_MORA: venció + sin pago aprobado + sin comprobante válido en revisión (Regla 5)
-    if (vencioCuota(c) && montoAbonado <= 0 && !tieneComp) return 'EN_MORA';
-    if (vencioCuota(c) && montoAbonado <= 0 && estadoDb !== 'PENDIENTE') return 'EN_MORA';
+    // EN_MORA: solo si la BD ya la marcó EN_MORA (lo hace aplicarMoraCohorteJS cuando hay ≥1 mes)
+    // O si vencioCuota Y el estado guardado en BD es EN_MORA
+    if (estadoDb === 'EN_MORA') return 'EN_MORA';
+
+    // Cuota vencida pero aún sin mora formal (menos de 1 mes) → NO_ABONADA
+    // La mora la aplica el servidor en cada carga (aplicarMoraCohorteJS)
 
     return 'NO_ABONADA';
 }
@@ -997,10 +1000,13 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
             var fVenc = new Date(c.fecha_vencimiento + 'T00:00:00');
             var fHoy  = new Date(hoyStr + 'T00:00:00');
 
-            // Meses completos en mora
+            // Meses completos en mora — solo se cuenta cuando el día del mes actual
+            // ya superó el día de vencimiento original
             var mesesMora = (fHoy.getFullYear() - fVenc.getFullYear()) * 12
                           + (fHoy.getMonth() - fVenc.getMonth());
-            // Si no pasó el día 16 del mes corriente, no cuenta el mes actual
+            // Si en el mes actual todavía no se llegó al día de vencimiento, no cuenta ese mes
+            if (fHoy.getDate() < fVenc.getDate()) mesesMora = Math.max(0, mesesMora - 1);
+            // Regla adicional: antes del día 16 del mes, no se activa el recargo del mes
             if (fHoy.getDate() < 16) mesesMora = Math.max(0, mesesMora - 1);
             if (mesesMora <= 0) continue;
 
@@ -1328,40 +1334,55 @@ async function guardarDescuento() {
             .eq('cohorte_id', COHORTE_ID);
         if (resInsc.error) throw resInsc.error;
 
-        // Recalcular todos los cobros no pagados con el nuevo descuento
+        // Recalcular cobros según rango de fechas del descuento
+        // El descuento aplica a una cuota si su fecha_vencimiento cae dentro del rango [desde, hasta]
+        // Si no tiene hasta, aplica desde 'desde' en adelante
+        // Si la cuota no tiene fecha_vencimiento, se aplica si no hay rango definido
         for (var i = 0; i < est.cobros.length; i++) {
             var c = est.cobros[i];
             var estado = resolverEstadoCobro(c);
 
             // Nunca tocar cobros pagados, parciales, pendientes o EN MORA
-            // (en mora ya perdió el descuento — lo maneja aplicarMoraCohorteJS)
             if (['ABONADA','PAGO_PARCIAL','PENDIENTE','EN_MORA'].includes(estado)) continue;
 
+            // ── Verificar si esta cuota cae dentro del rango del descuento ──
+            var pctAplicar = 0; // descuento que corresponde a esta cuota
+            if (c.fecha_vencimiento && desde) {
+                var fCuota = String(c.fecha_vencimiento).split('T')[0];
+                var dentroDesde = fCuota >= desde;
+                var dentroHasta = !hasta || fCuota <= hasta;
+                if (dentroDesde && dentroHasta) {
+                    pctAplicar = pct;
+                }
+                // Si la cuota está fuera del rango, se deja sin descuento (0%)
+            } else {
+                // Sin fecha de vencimiento en la cuota o sin fecha inicio: aplicar a todas
+                pctAplicar = pct;
+            }
+
             if (!tieneMontoDefinido(c)) {
-                // Cuotas A_DEFINIR: solo registrar el descuento, sin cambiar montos
+                // Cuotas A_DEFINIR: solo registrar el descuento correspondiente
                 var updDef = await sb.from('cobros').update({
-                    descuento_porcentaje: pct
+                    descuento_porcentaje: pctAplicar
                 }).eq('cobro_id', c.cobro_id);
                 if (updDef.error) throw updDef.error;
                 continue;
             }
 
-            // Recalcular SIEMPRE desde monto_original (precio base sin descuento)
-            // monto_original nunca debe cambiar — es el precio base de referencia
+            // Recalcular desde monto_original (precio base sin descuento — inmutable)
             var baseOriginal = (c.monto_original !== null && c.monto_original !== undefined && c.monto_original !== '')
                 ? Number(c.monto_original)
                 : Number(c.monto_final || 0);
             var montoAbonado = calcMontoAbonado(c);
-            var nuevoMontoFinal = redondear2(baseOriginal * (1 - pct / 100));
+            var nuevoMontoFinal = redondear2(baseOriginal * (1 - pctAplicar / 100));
             var nuevoSaldo = redondear2(Math.max(0, nuevoMontoFinal - montoAbonado));
             var nuevoEstado = normalizarEstadoCuota(nuevoMontoFinal, nuevoSaldo, c.fecha_vencimiento, c.estado);
 
             var resCobro = await sb.from('cobros').update({
-                descuento_porcentaje: pct,
+                descuento_porcentaje: pctAplicar,
                 monto_final:          nuevoMontoFinal,
                 saldo_pendiente:      nuevoSaldo,
                 estado:               nuevoEstado
-                // monto_original NO se toca — es inmutable después de creado
             }).eq('cobro_id', c.cobro_id);
             if (resCobro.error) throw resCobro.error;
         }
@@ -1660,53 +1681,82 @@ async function enviarNotificaciones() {
             var est = V.data.estudiantes.find(function(e) { return String(e.dni) === String(dni); });
             if (!est) return;
 
-            // Cobros vencidos del estudiante
+            var cbuVal   = cfg.cbu_banco   || V.config.cbu   || '—';
+            var aliasVal = cfg.alias_banco  || V.config.alias || '—';
+
+            // Cobros pendientes/vencidos del estudiante
             var cobrosVencidos = est.cobros.filter(function(c) {
                 return ['EN_MORA','NO_ABONADA','PAGO_PARCIAL'].includes(resolverEstadoCobro(c))
                     && tieneMontoDefinido(c);
             });
 
-            // Generar una notificación por cada cobro vencido (o una general si no hay)
+            // ── Variables para interpolar el asunto y la intro de la plantilla ──
+            // Usamos los datos del primer cobro (o genéricos si no hay ninguno)
+            var primerCobro = cobrosVencidos[0] || null;
+            var varsBase = {
+                nombre:     est.nombre,
+                apellido:   est.apellido,
+                dni:        est.dni,
+                cuota:      primerCobro ? primerCobro.concepto          : '—',
+                periodo:    primerCobro ? (primerCobro.periodo || '—')  : '—',
+                monto:      primerCobro ? Math.round(Number(primerCobro.saldo_pendiente) || 0).toLocaleString('es-AR') : '0',
+                vencimiento:primerCobro ? fFecha(primerCobro.fecha_vencimiento)                                        : '—',
+                programa:   V.data.programa.nombre,
+                cbu:        cbuVal,
+                alias:      aliasVal
+            };
+
+            var asuntoFinal = interpolarPlantilla(asunto, varsBase);
+
+            // ── Construir el cuerpo: intro de la plantilla + tabla de detalle ──
+            var introTexto = interpolarPlantilla(cuerpo, varsBase);
+
+            var cuerpoFinal;
             if (cobrosVencidos.length === 0) {
-                // Notificación general
-                var vars0 = {
-                    nombre: est.nombre, apellido: est.apellido, dni: est.dni,
-                    cuota: '—', periodo: '—', monto: '0',
-                    vencimiento: '—', programa: V.data.programa.nombre,
-                    cbu: cfg.cbu_banco || V.config.cbu || '—',
-                    alias: cfg.alias_banco || V.config.alias || '—'
-                };
-                var msg0 = interpolarPlantilla(cuerpo, vars0);
-                notifs.push({
-                    usuario_dni:  String(est.dni),
-                    rol_destino:  null,
-                    tipo:         tipo === 'recordatorio' ? 'cuota' : 'mora',
-                    mensaje:      asunto + ': ' + msg0.substring(0, 200)
-                });
-                if (est.email) emails.push({ to: est.email, subject: interpolarPlantilla(asunto, vars0), body: msg0 });
+                // Sin cuotas pendientes: solo el mensaje de la plantilla
+                cuerpoFinal = introTexto;
             } else {
+                // Tabla de detalle con todas las cuotas pendientes
+                var totalSaldo = cobrosVencidos.reduce(function(s, c) {
+                    return s + (Number(c.saldo_pendiente) || 0);
+                }, 0);
+
+                var filasCuotas = cobrosVencidos.map(function(c) {
+                    var estadoLabel = etiquetaEstado(resolverEstadoCobro(c));
+                    return '  • ' + c.concepto + (c.periodo ? ' (' + c.periodo + ')' : '')
+                        + ' — Saldo: $' + Math.round(Number(c.saldo_pendiente) || 0).toLocaleString('es-AR')
+                        + ' — Vence: ' + fFecha(c.fecha_vencimiento)
+                        + ' — Estado: ' + estadoLabel;
+                }).join('\n');
+
+                cuerpoFinal = introTexto
+                    + '\n\n──────────────────────────────'
+                    + '\nDETALLE DE CUOTAS PENDIENTES:'
+                    + '\n──────────────────────────────'
+                    + '\n' + filasCuotas
+                    + '\n──────────────────────────────'
+                    + '\nTOTAL ADEUDADO: $' + Math.round(totalSaldo).toLocaleString('es-AR')
+                    + '\n\nPara regularizar su situación, realice la transferencia a:'
+                    + '\nCBU: ' + cbuVal + '  |  Alias: ' + aliasVal;
+
+                // Marcar todos los cobros de este estudiante como reclamados/recordados
                 cobrosVencidos.forEach(function(c) {
-                    var vars1 = {
-                        nombre: est.nombre, apellido: est.apellido, dni: est.dni,
-                        cuota: c.concepto, periodo: c.periodo || '—',
-                        monto: Math.round(Number(c.saldo_pendiente) || 0).toLocaleString('es-AR'),
-                        vencimiento: fFecha(c.fecha_vencimiento),
-                        programa: V.data.programa.nombre,
-                        cbu: cfg.cbu_banco || V.config.cbu || '—',
-                        alias: cfg.alias_banco || V.config.alias || '—'
-                    };
-                    var msg1 = interpolarPlantilla(cuerpo, vars1);
-                    notifs.push({
-                        usuario_dni:  String(est.dni),
-                        rol_destino:  null,
-                        tipo:         tipo === 'recordatorio' ? 'cuota' : 'mora',
-                        mensaje:      msg1.substring(0, 500)
-                    });
-                    if (est.email) emails.push({ to: est.email, subject: interpolarPlantilla(asunto, vars1), body: msg1 });
-                    // Marcar cobro como reclamado/recordado
-                    if (tipo === 'reclamo') cobrosActualizar.push(c.cobro_id);
+                    if (tipo === 'reclamo')      cobrosActualizar.push(c.cobro_id);
                     if (tipo === 'recordatorio') cobrosActualizar.push(c.cobro_id);
                 });
+            }
+
+            // ── UNA sola notificación interna por estudiante ──
+            notifs.push({
+                usuario_dni: String(est.dni),
+                rol_destino: null,
+                tipo:        tipo === 'recordatorio' ? 'cuota' : 'mora',
+                mensaje:     (asuntoFinal + ': ' + cuerpoFinal).substring(0, 500)
+            });
+
+            // ── UN solo email por estudiante ──
+            if (est.email) {
+                emails.push({ to: est.email, subject: asuntoFinal, body: cuerpoFinal });
             }
         });
 
@@ -1739,8 +1789,8 @@ async function enviarNotificaciones() {
         }
 
         var totalNotifs = notifs.length;
-        var msgToast = '✓ ' + totalNotifs + ' notificación' + (totalNotifs !== 1 ? 'es' : '') + ' a ' + sel.length + ' estudiante' + (sel.length !== 1 ? 's' : '');
-        if (gasUrl)  msgToast += ' · ' + emailsOk + ' email' + (emailsOk !== 1 ? 's' : '') + ' enviado' + (emailsOk !== 1 ? 's' : '');
+        var msgToast = '✓ ' + sel.length + ' estudiante' + (sel.length !== 1 ? 's' : '') + ' notificado' + (sel.length !== 1 ? 's' : '');
+        if (gasUrl)  msgToast += ' · ' + emailsOk + ' email' + (emailsOk !== 1 ? 's' : '') + ' enviado' + (emailsOk !== 1 ? 's' : '') + ' (1 por estudiante con detalle completo)';
         if (!gasUrl) msgToast += ' (sin URL GAS: solo notificación interna)';
         if (emailsErr > 0) msgToast += ' ⚠️ ' + emailsErr + ' error(es)';
         toast(msgToast, emailsErr > 0 ? 'err' : 'ok');
