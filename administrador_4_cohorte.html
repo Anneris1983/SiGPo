@@ -576,12 +576,25 @@
         </div>
         <div class="modal-body" style="padding:0;">
             <div style="padding:16px 22px;background:#fef2f2;border-bottom:1px solid #fee2e2;font-size:12px;color:#991b1b;">
-                ⚠️ Solo se podrán eliminar cuotas que no tengan pagos asociados. Si una cuota tiene estados <strong>ABONADA</strong> o <strong>PAGO_PARCIAL</strong>, quedará bloqueada.
+                ⚠️ Solo quedan bloqueadas las cuotas con pagos aprobados (<strong>ABONADA</strong> o <strong>PAGO_PARCIAL</strong>). El resto puede eliminarse sin restricciones.
             </div>
-            <div id="eg-lista" style="padding:16px 22px;max-height:420px;overflow-y:auto;"></div>
+            <div style="padding:10px 22px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f0ede6;background:#fafafa;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#374151;">
+                    <input type="checkbox" id="eg-chk-all" onchange="egToggleAll(this)" style="width:15px;height:15px;cursor:pointer;">
+                    Seleccionar todas las eliminables
+                </label>
+            </div>
+            <div id="eg-lista" style="padding:8px 22px;max-height:380px;overflow-y:auto;"></div>
         </div>
-        <div class="modal-footer">
-            <button class="btn-cancel" onclick="cerrar('modal-eliminar-global')">Cerrar</button>
+        <div class="modal-footer" style="justify-content:space-between;align-items:center;">
+            <span id="eg-sel-count" style="font-size:12px;color:#888;"></span>
+            <div style="display:flex;gap:10px;">
+                <button class="btn-cancel" onclick="cerrar('modal-eliminar-global')">Cerrar</button>
+                <button id="btn-elim-sel" onclick="eliminarSeleccionadas()" disabled
+                    style="background:#dc2626;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;padding:9px 18px;cursor:not-allowed;font-family:'DM Sans',sans-serif;opacity:0.4;transition:all 0.2s;">
+                    🗑 Eliminar seleccionadas
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -1121,9 +1134,8 @@ function renderTabla() {
             else                                txt = fMonto(c.monto_final);
 
             /*
-             * Botones por estado — Administrador: SOLO CONSULTA
-             * Aprobar/Rechazar es exclusivo de Cooperadora
-             * PENDIENTE    → Ver comprobante (solo lectura)
+             * Botones por estado — Administrador: control total
+             * PENDIENTE    → Ver comprobante + Aprobar + Rechazar
              * ABONADA      → Ver comprobante + Ver recibo
              * PAGO_PARCIAL → Ver comprobante + Ver recibo parcial
              * resto        → sin botones
@@ -1132,6 +1144,8 @@ function renderTabla() {
             if (estado === 'PENDIENTE') {
                 if (c.comprobante_url)
                     btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
+                btns += '<button class="cbtn cbtn-aprobar" onclick="abrirAprobacion(' + idCobro + ')">✔ Aprobar</button>';
+                btns += '<button class="cbtn cbtn-rechazar" onclick="rechazarCuotaDirecto(' + idCobro + ')">✕ Rechazar</button>';
             } else if (estado === 'ABONADA') {
                 if (c.comprobante_url)
                     btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
@@ -1425,7 +1439,10 @@ function abrirCrearCuota() {
         { nombre: 'Inscripción', periodo: planPeriodoSiguiente(0), monto: '', vencimiento: planFechaDefault(0) },
         { nombre: 'Cuota 1',     periodo: planPeriodoSiguiente(1), monto: '', vencimiento: planFechaDefault(1) },
     ];
-    document.querySelector('input[name="plan-dest"][value="cohorte"]').checked = true;
+    // Si hay estudiantes seleccionados en la tabla, pre-seleccionar "especificos"
+    var selPrev = getSel();
+    var destVal = selPrev.length > 0 ? 'especificos' : 'cohorte';
+    document.querySelector('input[name="plan-dest"][value="' + destVal + '"]').checked = true;
     planDestChange();
     planRenderFilas();
     planActualizarResumen();
@@ -2213,8 +2230,11 @@ async function aprobarCuota() {
         if (isNaN(montoAprobado) || montoAprobado <= 0) {
             toast('Ingresá el monto aprobado parcialmente', 'err'); return;
         }
-        if (montoAprobado >= Number(_aprCobro.monto_final || 0)) {
-            toast('El monto parcial debe ser menor al total de la cuota', 'err'); return;
+        var saldoRef = (Number(_aprCobro.saldo_pendiente) > 0 && Number(_aprCobro.saldo_pendiente) < Number(_aprCobro.monto_final))
+            ? Number(_aprCobro.saldo_pendiente)
+            : Number(_aprCobro.monto_final || 0);
+        if (montoAprobado >= saldoRef) {
+            toast('El monto parcial debe ser menor al saldo pendiente de la cuota. Para aprobar el total, seleccioná "Aprobación total".', 'err'); return;
         }
     }
     spin(true);
@@ -2570,16 +2590,24 @@ function renderEliminarGlobal() {
                 if (keyCuota(c.concepto, c.periodo) === keyCuota(col.concepto_base, col.periodo)) cobrosCol.push(c);
             });
         });
-        var abonadas = cobrosCol.filter(function(c) { return resolverEstadoCobro(c) === 'ABONADA'; }).length;
+        var abonadas  = cobrosCol.filter(function(c) { return resolverEstadoCobro(c) === 'ABONADA'; }).length;
         var parciales = cobrosCol.filter(function(c) { return resolverEstadoCobro(c) === 'PAGO_PARCIAL'; }).length;
         var pendientes = cobrosCol.filter(function(c) { return resolverEstadoCobro(c) === 'PENDIENTE'; }).length;
-        var abiertas = cobrosCol.filter(function(c) { return ['NO_ABONADA','EN_MORA','A_DEFINIR'].includes(resolverEstadoCobro(c)); }).length;
-        var puedeEliminar = abonadas === 0 && parciales === 0 && pendientes === 0;
+        var abiertas  = cobrosCol.filter(function(c) { return ['NO_ABONADA','EN_MORA','A_DEFINIR','PENDIENTE'].includes(resolverEstadoCobro(c)); }).length;
+        // Solo bloquear si hay pagos aprobados (ABONADA o PAGO_PARCIAL) — PENDIENTE no bloquea
+        var puedeEliminar = abonadas === 0 && parciales === 0;
         var conceptoJs = String(col.concepto_base || '').replace(/'/g, "\'");
         var periodoJs = String(col.periodo || '').replace(/'/g, "\'");
+        var conceptoAttr = escapeHtml(col.concepto_base);
+        var periodoAttr  = escapeHtml(col.periodo || '');
         return `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0;gap:12px;">
-            <div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0;opacity:${puedeEliminar ? '1' : '0.55'};">
+            <div style="flex-shrink:0;width:20px;text-align:center;">
+                ${puedeEliminar
+                    ? `<input type="checkbox" class="eg-chk" data-concepto="${conceptoAttr}" data-periodo="${periodoAttr}" onchange="egUpdateSelCount()" style="width:15px;height:15px;cursor:pointer;">`
+                    : `<input type="checkbox" disabled title="No eliminable: tiene pagos o revisión pendiente" style="width:15px;height:15px;opacity:0.35;">`}
+            </div>
+            <div style="flex:1;">
                 <div style="font-weight:700;font-size:13px;color:#1e3a5f;">${escapeHtml(col.concepto_base)}</div>
                 <div style="font-size:11px;color:#888;margin-top:2px;">
                     ${escapeHtml(col.periodo || '')} · ${cobrosCol.length} estudiante${cobrosCol.length !== 1 ? 's' : ''}
@@ -2589,11 +2617,80 @@ function renderEliminarGlobal() {
                     ${abiertas ? ` · <span style="color:#666;">${abiertas} sin pago aprobado</span>` : ''}
                 </div>
             </div>
-            ${puedeEliminar
-                ? `<button onclick="confirmarEliminarGlobal('${conceptoJs}','${periodoJs}')" style="background:#dc2626;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer;font-family:&quot;DM Sans&quot;,sans-serif;">🗑 Eliminar de todos</button>`
-                : `<span style="font-size:11px;color:#aaa;font-style:italic;">No eliminable (hay pagos o revisión)</span>`}
+            ${!puedeEliminar ? `<span style="font-size:11px;color:#aaa;font-style:italic;white-space:nowrap;">🔒 bloqueada</span>` : ''}
         </div>`;
     }).join('');
+    egUpdateSelCount();
+}
+
+function egUpdateSelCount() {
+    var sel   = document.querySelectorAll('.eg-chk:checked').length;
+    var total = document.querySelectorAll('.eg-chk').length;
+    var btn   = document.getElementById('btn-elim-sel');
+    var span  = document.getElementById('eg-sel-count');
+    if (span) span.textContent = sel > 0
+        ? sel + ' cuota' + (sel > 1 ? 's' : '') + ' seleccionada' + (sel > 1 ? 's' : '')
+        : '';
+    if (btn) {
+        btn.disabled       = sel === 0;
+        btn.style.opacity  = sel > 0 ? '1'            : '0.4';
+        btn.style.cursor   = sel > 0 ? 'pointer'      : 'not-allowed';
+    }
+    var all = document.getElementById('eg-chk-all');
+    if (all) {
+        all.indeterminate = sel > 0 && sel < total;
+        all.checked       = total > 0 && sel === total;
+    }
+}
+
+function egToggleAll(cb) {
+    document.querySelectorAll('.eg-chk').forEach(function(c) { c.checked = cb.checked; });
+    egUpdateSelCount();
+}
+
+async function eliminarSeleccionadas() {
+    var checks = Array.from(document.querySelectorAll('.eg-chk:checked'));
+    if (!checks.length) return;
+    var cuotas = checks.map(function(c) {
+        return { concepto: c.dataset.concepto, periodo: c.dataset.periodo };
+    });
+    var nombres = cuotas.map(function(q) {
+        return '"' + q.concepto + '"' + (q.periodo ? ' (' + q.periodo + ')' : '');
+    }).join('\n• ');
+    if (!confirm('¿Eliminar ' + cuotas.length + ' cuota' + (cuotas.length > 1 ? 's' : '') + ' de todos los estudiantes?\n\n• ' + nombres + '\n\nEsta acción no se puede deshacer.')) return;
+
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var eliminadas = 0, bloqueadas = [];
+        for (var i = 0; i < cuotas.length; i++) {
+            var q = cuotas[i];
+            var cand = await sb.from('cobros').select('cobro_id')
+                .eq('cohorte_id', COHORTE_ID).eq('programa_id', PROGRAMA_ID)
+                .eq('concepto', q.concepto).eq('periodo', q.periodo || '');
+            if (cand.error) { bloqueadas.push(q.concepto); continue; }
+            var ids = (cand.data || []).map(function(x) { return x.cobro_id; });
+            if (!ids.length) continue;
+            var pagos = await sb.from('pagos').select('cobro_id').in('cobro_id', ids);
+            if ((pagos.data || []).length > 0) { bloqueadas.push(q.concepto + ' (pagos)'); continue; }
+            var del = await sb.from('cobros').delete()
+                .eq('cohorte_id', COHORTE_ID).eq('programa_id', PROGRAMA_ID)
+                .eq('concepto', q.concepto).eq('periodo', q.periodo || '');
+            if (del.error) { bloqueadas.push(q.concepto); continue; }
+            eliminadas++;
+        }
+        if (eliminadas > 0)
+            toast(eliminadas + ' cuota' + (eliminadas > 1 ? 's' : '') + ' eliminada' + (eliminadas > 1 ? 's' : '') + ' ✓', 'ok');
+        if (bloqueadas.length)
+            toast('No se eliminaron: ' + bloqueadas.join(', '), 'err');
+        cerrar('modal-eliminar-global');
+        await cargar();
+    } catch(e) {
+        console.error(e);
+        toast('Error al eliminar: ' + e.message, 'err');
+    } finally {
+        spin(false);
+    }
 }
 
 function confirmarEliminarGlobal(concepto, periodo) {
