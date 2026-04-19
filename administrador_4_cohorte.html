@@ -419,23 +419,13 @@
             </div>
             <div style="border-top:1px solid #eee;margin:14px 0 0;"></div>
             <div style="padding:14px 22px 20px;">
-                <div class="plan-paso-titulo">Paso 2: Aplicar a Estudiantes</div>
-                <div class="plan-destino-box">
-                    <label class="plan-radio-opcion">
-                        <input type="radio" name="plan-dest" value="cohorte" checked onchange="planDestChange()">
-                        <div>
-                            <div style="font-weight:700;font-size:13px;color:var(--primary);">Toda la cohorte</div>
-                            <div style="font-size:11px;color:#666;margin-top:2px;">Se creará el plan para los <strong id="plan-n-todos">—</strong> estudiantes.</div>
-                        </div>
-                    </label>
-                    <label class="plan-radio-opcion" style="margin-top:8px;">
-                        <input type="radio" name="plan-dest" value="especificos" onchange="planDestChange()">
-                        <div>
-                            <div style="font-weight:700;font-size:13px;color:var(--primary);">Estudiantes específicos</div>
-                            <div style="font-size:11px;color:#666;margin-top:2px;">Seleccioná manualmente a quiénes aplicar este plan.</div>
-                            <div id="plan-sel-nombres" style="display:none;margin-top:8px;font-size:11px;color:#2d5a87;font-weight:600;line-height:1.6;"></div>
-                        </div>
-                    </label>
+                <div class="plan-paso-titulo">Paso 2: Destino</div>
+                <div class="plan-destino-box" style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:18px;">👥</span>
+                    <div>
+                        <div style="font-weight:700;font-size:13px;color:var(--primary);">Toda la cohorte</div>
+                        <div style="font-size:11px;color:#666;margin-top:2px;">Se creará el plan para los <strong id="plan-n-todos">—</strong> estudiantes activos. Para ajustar montos individuales usá <strong>Editar cuotas</strong>.</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -553,7 +543,7 @@
         </div>
         <div class="modal-body" style="padding:0;">
             <div style="padding:16px 22px;background:#f0f9ff;border-bottom:1px solid #e0f2fe;font-size:12px;color:#0369a1;">
-                ℹ️ Editá el nombre, período, monto o vencimiento de cada cuota. Solo se permite eliminar cuotas sin pagos registrados.
+                ℹ️ Editá el nombre, período, monto o vencimiento de cada cuota. Para eliminar cuotas usá el botón <strong>Eliminar cuota</strong>.
             </div>
             <div id="ec-lista" style="padding:16px 22px;max-height:460px;overflow-y:auto;"></div>
         </div>
@@ -1439,11 +1429,6 @@ function abrirCrearCuota() {
         { nombre: 'Inscripción', periodo: planPeriodoSiguiente(0), monto: '', vencimiento: planFechaDefault(0) },
         { nombre: 'Cuota 1',     periodo: planPeriodoSiguiente(1), monto: '', vencimiento: planFechaDefault(1) },
     ];
-    // Si hay estudiantes seleccionados en la tabla, pre-seleccionar "especificos"
-    var selPrev = getSel();
-    var destVal = selPrev.length > 0 ? 'especificos' : 'cohorte';
-    document.querySelector('input[name="plan-dest"][value="' + destVal + '"]').checked = true;
-    planDestChange();
     planRenderFilas();
     planActualizarResumen();
     planCheckAlerta();
@@ -1495,33 +1480,8 @@ function planCheckAlerta() {
     var hayVacio = planFilas.some(function(f) { return !f.monto || parseFloat(f.monto) === 0; });
     document.getElementById('plan-alerta').style.display = hayVacio ? 'block' : 'none';
 }
-function planDestChange() {
-    var val = document.querySelector('input[name="plan-dest"]:checked').value;
-    var selNombres = document.getElementById('plan-sel-nombres');
-    if (val === 'especificos') {
-        var sel = getSel();
-        if (!sel.length) {
-            selNombres.style.display = 'block';
-            selNombres.style.color = '#c0392b';
-            selNombres.textContent = 'Sin estudiantes seleccionados. Cerrá el modal, seleccioná y volvé a abrir.';
-        } else {
-            var nombres = sel.map(function(dni) {
-                var e = V.data.estudiantes.find(function(x) { return x.dni === dni; });
-                return e ? e.apellido + ', ' + e.nombre : 'DNI ' + dni;
-            });
-            selNombres.style.display = 'block';
-            selNombres.style.color = '#2d5a87';
-            selNombres.innerHTML = nombres.map(function(n) { return '• ' + n; }).join('<br>');
-        }
-    } else {
-        selNombres.style.display = 'none';
-    }
-    planActualizarResumen();
-}
 function planCantEstudiantes() {
-    return document.querySelector('input[name="plan-dest"]:checked').value === 'cohorte'
-        ? (V.data ? V.data.estudiantes.length : 0)
-        : getSel().length;
+    return V.data ? V.data.estudiantes.length : 0;
 }
 function planActualizarResumen() {
     var n = planCantEstudiantes(), q = planFilas.length;
@@ -1533,9 +1493,8 @@ function planActualizarResumen() {
 
 async function guardarCuotas() {
     if (!planFilas.length) { toast('Agregá al menos una cuota', 'err'); return; }
-    var val = document.querySelector('input[name="plan-dest"]:checked').value;
-    var dnis = val === 'cohorte' ? V.data.estudiantes.map(function(e) { return e.dni; }) : getSel();
-    if (!dnis.length) { toast('Seleccioná al menos un estudiante', 'err'); return; }
+    var dnis = V.data.estudiantes.map(function(e) { return e.dni; });
+    if (!dnis.length) { toast('No hay estudiantes en esta cohorte', 'err'); return; }
 
     spin(true);
     try {
@@ -2396,8 +2355,7 @@ function abrirEditarCuotas() {
             fecha_vencimiento: c.fecha_vencimiento || '',
             estado:            resolverEstadoCobro(c),
             comprobante_url:   c.comprobante_url || '',
-            recibo_url:        c.recibo_url || '',
-            _eliminar:         false
+            recibo_url:        c.recibo_url || ''
         };
     });
 
@@ -2420,8 +2378,7 @@ function renderEditarCuotas() {
     cont.innerHTML = _ecCuotasEditadas.map(function(c, i) {
         var estado = c.estado;
         var bloqueada = ['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado);
-        var bg = c._eliminar ? '#fdecea' : (colorEstado[estado] || '#f8f6f1');
-        var opac = c._eliminar ? '0.55' : '1';
+        var bg = colorEstado[estado] || '#f8f6f1';
         // Mostrar siempre el precio BASE (monto_original) para que el usuario edite ese valor
         var montoBase = c.monto_original != null ? c.monto_original : c.monto_final;
         var montoBaseValor = montoBase == null ? '' : montoBase;
@@ -2434,15 +2391,12 @@ function renderEditarCuotas() {
             ? '<div style="font-size:9px;color:#2d7a4f;margin-top:2px;">Con ' + descPct + '% desc: ' + fMonto(montoConDesc) + '</div>'
             : (estado === 'EN_MORA' ? '<div style="font-size:9px;color:#dc2626;margin-top:2px;">En mora: sin descuento</div>' : '');
         return `
-        <div style="background:${bg};border-radius:10px;padding:12px 14px;margin-bottom:10px;border:2px solid ${c._eliminar ? '#f1a8b0' : '#e0e0e0'};opacity:${opac};transition:all 0.2s;">
+        <div style="background:${bg};border-radius:10px;padding:12px 14px;margin-bottom:10px;border:2px solid #e0e0e0;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;">
                 <div>
                     <span style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;">${textEstado[estado] || estado}</span>
                     <div style="font-size:11px;color:#666;margin-top:2px;">Abonado: ${fMonto(c.monto_abonado)} · Saldo: ${fMonto(c.saldo_pendiente)}</div>
                 </div>
-                ${c._eliminar
-                    ? `<button onclick="ecCancelarEliminar(${i})" style="background:#2d7a4f;color:white;border:none;border-radius:5px;font-size:11px;font-weight:700;padding:3px 10px;cursor:pointer;">↩ Restaurar</button>`
-                    : `<button onclick="ecMarcarEliminar(${i})" style="background:none;border:1.5px solid #dc2626;color:#dc2626;border-radius:5px;font-size:11px;font-weight:700;padding:3px 10px;cursor:pointer;${bloqueada ? 'opacity:0.45;cursor:not-allowed;' : ''}" ${bloqueada ? 'disabled title="No se puede eliminar una cuota abonada, parcial o pendiente"' : ''}>🗑 Eliminar</button>`}
             </div>
             <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;">
                 <div>
@@ -2467,61 +2421,21 @@ function renderEditarCuotas() {
     }).join('');
 }
 
-function ecMarcarEliminar(i) {
-    var c = _ecCuotasEditadas[i];
-    // Bloquear solo si tiene recibo REAL (no string vacío) o está abonada/parcial/pendiente
-    var tieneReciboReal = c.recibo_url && String(c.recibo_url).trim() !== '';
-    if (['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(c.estado) || tieneReciboReal) {
-        toast('No se puede eliminar una cuota abonada, parcial o pendiente', 'err');
-        return;
-    }
-    c._eliminar = true;
-    renderEditarCuotas();
-    actualizarResumenEC();
-}
-
-function ecCancelarEliminar(i) {
-    _ecCuotasEditadas[i]._eliminar = false;
-    renderEditarCuotas();
-    actualizarResumenEC();
-}
 
 function actualizarResumenEC() {
     var total = _ecCuotasEditadas.length;
-    var aEliminar = _ecCuotasEditadas.filter(function(c) { return c._eliminar; }).length;
-    var aGuardar = total - aEliminar;
     document.getElementById('ec-resumen').innerHTML =
-        '<strong>' + total + '</strong> cuotas · '
-        + '<span style="color:#0891b2;">' + aGuardar + ' a guardar</span>'
-        + (aEliminar > 0 ? ' · <span style="color:#dc2626;">' + aEliminar + ' a eliminar</span>' : '');
+        '<strong>' + total + '</strong> cuota' + (total !== 1 ? 's' : '') + ' a guardar';
 }
 
 async function guardarEdicionCuotas() {
-    var aEliminar = _ecCuotasEditadas.filter(function(c) { return c._eliminar; });
-    var aEditar   = _ecCuotasEditadas.filter(function(c) { return !c._eliminar; });
-
     spin(true);
     try {
         var sb = await getSupabase();
         var errores = [];
 
-        for (var i = 0; i < aEliminar.length; i++) {
-            var cDel = aEliminar[i];
-            var pagosRes = await sb.from('pagos').select('pago_id', { count: 'exact', head: true }).eq('cobro_id', cDel.cobro_id);
-            if (pagosRes.error) {
-                errores.push('Error al verificar pagos de ' + cDel.concepto + ': ' + pagosRes.error.message);
-                continue;
-            }
-            if ((pagosRes.count || 0) > 0) {
-                errores.push('No se puede eliminar ' + cDel.concepto + ' porque tiene pagos asociados');
-                continue;
-            }
-            var delRes = await sb.from('cobros').delete().eq('cobro_id', cDel.cobro_id);
-            if (delRes.error) errores.push('Error al eliminar ' + cDel.concepto + ': ' + delRes.error.message);
-        }
-
-        for (var j = 0; j < aEditar.length; j++) {
-            var c = aEditar[j];
+        for (var j = 0; j < _ecCuotasEditadas.length; j++) {
+            var c = _ecCuotasEditadas[j];
             // El usuario edita MONTO BASE (monto_original)
             // monto_final = monto_original * (1 - descuento/100)
             var montoOriginal = c.monto_original === null || c.monto_original === '' ? null : redondear2(c.monto_original);
@@ -2548,10 +2462,8 @@ async function guardarEdicionCuotas() {
             toast('Guardado con observaciones. Revisá consola.', 'err');
             console.error(errores);
         } else {
-            var msgs = [];
-            if (aEditar.length > 0) msgs.push(aEditar.length + ' cuota' + (aEditar.length > 1 ? 's' : '') + ' actualizada' + (aEditar.length > 1 ? 's' : ''));
-            if (aEliminar.length > 0) msgs.push(aEliminar.length + ' eliminada' + (aEliminar.length > 1 ? 's' : ''));
-            toast(msgs.join(' · ') + ' ✓', 'ok');
+            var n = _ecCuotasEditadas.length;
+            toast(n + ' cuota' + (n !== 1 ? 's' : '') + ' actualizada' + (n !== 1 ? 's' : '') + ' ✓', 'ok');
         }
 
         cerrar('modal-editar-cuotas');
