@@ -1175,9 +1175,9 @@ function renderTabla() {
         columnas.forEach(function(col) {
             var c = cobrosMap[keyCuota(col.concepto_base, col.periodo)];
             if (!c || c.no_aplica === true || c._estado_resuelto === 'NO_APLICA') return;
-            totP += tieneMontoDefinido(c) ? Math.round(Number(c.monto_final) || 0) : 0;
-            totA += Math.round(calcMontoAbonado(c));
-            totS += Math.round(c.saldo_pendiente === null || c.saldo_pendiente === undefined ? 0 : Number(c.saldo_pendiente) || 0);
+            totP += tieneMontoDefinido(c) ? Number(c.monto_final) || 0 : 0;
+            totA += calcMontoAbonado(c);
+            totS += c.saldo_pendiente === null || c.saldo_pendiente === undefined ? 0 : Number(c.saldo_pendiente) || 0;
         });
 
         var celdas = columnas.map(function(col) {
@@ -1877,7 +1877,7 @@ async function enviarNotificaciones() {
                 dni:         est.dni,
                 cuota:       nVencidas > 1 ? (nVencidas + ' cuotas') : (primerCobro ? primerCobro.concepto : '—'),
                 periodo:     nVencidas > 1 ? 'distintos períodos'    : (primerCobro ? (primerCobro.periodo || '—') : '—'),
-                monto:       primerCobro ? Math.round(Number(primerCobro.saldo_pendiente) || 0).toLocaleString('es-AR') : '0',
+                monto:       primerCobro ? Number(primerCobro.saldo_pendiente || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '0',
                 vencimiento: primerCobro ? fFecha(primerCobro.fecha_vencimiento) : '—',
                 programa:    V.data.programa.nombre,
                 cbu:         cbuVal,
@@ -1906,7 +1906,7 @@ async function enviarNotificaciones() {
                 var filasCuotas = cobrosDetalle.map(function(c) {
                     var estadoLabel = etiquetaEstado(resolverEstadoCobro(c));
                     return '  • ' + c.concepto + (c.periodo ? ' (' + c.periodo + ')' : '')
-                        + ' — Saldo: $' + Math.round(Number(c.saldo_pendiente) || 0).toLocaleString('es-AR')
+                        + ' — Saldo: $' + Number(c.saldo_pendiente || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2})
                         + ' — Vence: ' + fFecha(c.fecha_vencimiento)
                         + ' — Estado: ' + estadoLabel;
                 }).join('\n');
@@ -1917,7 +1917,7 @@ async function enviarNotificaciones() {
                     + '\n──────────────────────────────'
                     + '\n' + filasCuotas
                     + '\n──────────────────────────────'
-                    + '\nTOTAL VENCIDO: $' + Math.round(totalSaldo).toLocaleString('es-AR')
+                    + '\nTOTAL VENCIDO: $' + Number(totalSaldo).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2})
                     + '\n\nPara regularizar su situación, realice la transferencia a:'
                     + '\nCBU: ' + cbuVal + '  |  Alias: ' + aliasVal;
 
@@ -2501,7 +2501,7 @@ function toast(msg, tipo) {
 
 function fMonto(n) {
     if (n === null || n === undefined) return '–';
-    return '$' + Math.round(Number(n)).toLocaleString('es-AR');
+    return '$' + Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function fMillones(n) {
     if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
