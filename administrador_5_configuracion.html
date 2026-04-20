@@ -10,37 +10,28 @@
         :root { --primary: #1e3a5f; --accent: #d4af37; --success: #2d7a4f; --danger: #c0392b; }
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
 
-        /* HEADER */
         .header { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 20px 40px; display: flex; align-items: flex-start; justify-content: space-between; }
         .header-left { flex: 1; }
         .breadcrumb { font-size: 14px; margin-bottom: 12px; }
         .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
         .header h1 { font-family: 'Crimson Pro', serif; font-size: 24px; }
         .header p { font-size: 14px; opacity: 0.85; margin-top: 4px; }
-        .btn-logout { display: flex; align-items: center; gap: 8px; padding: 9px 18px; background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.35); color: white; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: 'DM Sans', sans-serif; transition: background 0.2s, border-color 0.2s; white-space: nowrap; margin-top: 4px; flex-shrink: 0; }
+        .btn-logout { display: flex; align-items: center; gap: 8px; padding: 9px 18px; background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.35); color: white; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: 'DM Sans', sans-serif; transition: background 0.2s; white-space: nowrap; margin-top: 4px; flex-shrink: 0; }
         .btn-logout:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.6); }
 
-        /* LAYOUT */
         .container { max-width: 1000px; margin: 40px auto; padding: 0 40px; }
-
-        /* SECCIONES */
         .config-section { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
         .section-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
-        .config-grid { display: grid; gap: 16px; }
+        .config-grid { display: grid; gap: 14px; }
         .config-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; background: #f8f6f1; border-radius: 8px; gap: 24px; }
         .config-label { flex: 1; }
         .config-label h3 { font-size: 15px; color: var(--primary); margin-bottom: 4px; font-weight: 600; }
         .config-label p { font-size: 13px; color: #666; line-height: 1.4; }
-        .config-input { flex-shrink: 0; width: 220px; }
-        .config-input input, .config-input select {
-            width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px;
-            font-size: 14px; font-family: 'DM Sans', sans-serif; background: white;
-            transition: border-color 0.2s;
-        }
+        .config-input { flex-shrink: 0; }
+        .config-input input, .config-input select { padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: 'DM Sans', sans-serif; background: white; transition: border-color 0.2s; width: 100%; }
         .config-input input:focus, .config-input select:focus { outline: none; border-color: var(--primary); }
-        .config-input .unit { margin-left: 8px; font-size: 14px; color: #666; font-weight: 600; }
 
-        /* TOGGLE SWITCH */
+        /* TOGGLE */
         .toggle-wrap { display: flex; align-items: center; gap: 10px; }
         .toggle { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
         .toggle input { opacity: 0; width: 0; height: 0; }
@@ -48,23 +39,25 @@
         .toggle-slider:before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
         input:checked + .toggle-slider { background: var(--success); }
         input:checked + .toggle-slider:before { transform: translateX(22px); }
-        .toggle-label { font-size: 13px; font-weight: 600; color: #555; min-width: 24px; }
+        .toggle-lbl { font-size: 13px; font-weight: 600; color: #555; min-width: 20px; }
 
-        /* BOTONES */
+        /* INPUT + COPY */
+        .input-copy { display: flex; gap: 6px; align-items: stretch; }
+        .input-copy input { flex: 1; }
+        .btn-copy { padding: 10px 14px; background: #f0f0f0; border: 2px solid #e0e0e0; border-radius: 6px; cursor: pointer; font-size: 13px; white-space: nowrap; font-family: 'DM Sans', sans-serif; transition: background 0.15s; flex-shrink: 0; }
+        .btn-copy:hover { background: #e0e0e0; }
+
+        /* GUARDAR */
         .btn-save { padding: 13px 28px; background: var(--success); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 20px; width: 100%; font-family: 'DM Sans', sans-serif; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-save:hover { background: #246441; }
-        .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-save:hover:not(:disabled) { background: #246441; }
+        .btn-save:disabled { opacity: 0.65; cursor: not-allowed; }
 
-        /* CAJAS INFO */
+        /* MENSAJES */
         .alert-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; color: #856404; }
-        .info-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; color: #0d47a1; }
-        .note-box { background: #f0f4ff; border-left: 4px solid #5c7cfa; padding: 14px 16px; border-radius: 8px; margin-top: 14px; font-size: 13px; color: #2c3e7a; }
-        .success-box { background: #d1fae5; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #065f46; display: none; margin-top: 12px; }
-        .error-box   { background: #fee2e2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #991b1b; display: none; margin-top: 12px; }
-
-        /* SKELETON LOADER */
-        .skeleton { background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 6px; height: 40px; }
-        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        .info-box  { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; color: #0d47a1; }
+        .note-box  { background: #f0f4ff; border-left: 4px solid #5c7cfa; padding: 14px 16px; border-radius: 8px; font-size: 13px; color: #2c3e7a; margin-bottom: 16px; }
+        .msg-ok  { background: #d1fae5; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #065f46; display: none; margin-top: 14px; font-weight: 600; }
+        .msg-err { background: #fee2e2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #991b1b; display: none; margin-top: 14px; font-weight: 600; }
 
         /* ETIQUETAS */
         .etiqueta-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif; animation: fadeInChip 0.2s ease; }
@@ -72,18 +65,11 @@
         .etiqueta-chip button:hover { opacity: 1; }
         @keyframes fadeInChip { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
 
-        /* CBU COPY */
-        .input-copy-wrap { display: flex; gap: 6px; align-items: center; }
-        .input-copy-wrap input { flex: 1; }
-        .btn-copy { padding: 10px 12px; background: #f0f0f0; border: 2px solid #e0e0e0; border-radius: 6px; cursor: pointer; font-size: 13px; white-space: nowrap; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
-        .btn-copy:hover { background: #e0e0e0; }
+        /* SPINNER */
+        .spin { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: sp 0.7s linear infinite; vertical-align: middle; }
+        @keyframes sp { to { transform: rotate(360deg); } }
 
-        /* NOTIF */
         .notif-wrapper { position: relative; }
-
-        /* SPINNER inline */
-        .spin-inline { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -126,51 +112,48 @@
         <strong>⚠️ Atención:</strong> Los cambios en esta configuración afectan a todos los programas y estudiantes del sistema.
     </div>
 
-    <!-- ══════════ MORA ══════════ -->
+    <!-- MORA -->
     <div class="config-section">
         <h2 class="section-title">💰 Configuración de Mora</h2>
         <div class="config-grid">
-
             <div class="config-item">
                 <div class="config-label">
                     <h3>Tasa de Interés Mensual</h3>
                     <p>Porcentaje de interés aplicado mensualmente sobre saldos vencidos</p>
                 </div>
-                <div class="config-input" style="display:flex;align-items:center;gap:8px;">
-                    <input type="number" id="cfg-mora-porcentaje" step="0.1" min="0" max="100" style="width:120px;">
-                    <span class="unit">%</span>
+                <div class="config-input" style="display:flex;align-items:center;gap:8px;width:160px;">
+                    <input type="number" id="cfg-mora_porcentaje" step="0.1" min="0" max="100">
+                    <span style="font-size:14px;font-weight:600;color:#666;flex-shrink:0;">%</span>
                 </div>
             </div>
-
             <div class="config-item">
                 <div class="config-label">
                     <h3>Día de Corte de Mora</h3>
                     <p>Día del mes en que se aplica el interés sobre los saldos vencidos</p>
                 </div>
                 <div class="config-input" style="width:120px;">
-                    <input type="number" id="cfg-dia-corte-mora" min="1" max="31">
+                    <input type="number" id="cfg-dia_corte_mora" min="1" max="31">
                 </div>
             </div>
-
             <div class="config-item">
                 <div class="config-label">
                     <h3>Tipo de Cálculo</h3>
                     <p>Forma de aplicación del interés mensual</p>
                 </div>
-                <div class="config-input">
-                    <select id="cfg-mora-tipo">
+                <div class="config-input" style="width:270px;">
+                    <select id="cfg-mora_tipo">
                         <option value="COMPUESTO">Compuesto (interés sobre interés)</option>
                         <option value="SIMPLE">Simple (porcentaje fijo mensual)</option>
                     </select>
                 </div>
             </div>
-
         </div>
-        <div id="msg-mora" class="success-box"></div>
-        <button class="btn-save" onclick="guardarSeccion('mora', event)">💾 Guardar Configuración de Mora</button>
+        <div id="msg-mora" class="msg-ok"></div>
+        <div id="err-mora" class="msg-err"></div>
+        <button class="btn-save" onclick="guardar('mora', this)">💾 Guardar Configuración de Mora</button>
     </div>
 
-    <!-- ══════════ DESCUENTOS ══════════ -->
+    <!-- DESCUENTOS -->
     <div class="config-section">
         <h2 class="section-title">🎯 Configuración de Descuentos</h2>
         <div class="config-grid">
@@ -179,8 +162,8 @@
                     <h3>Pérdida de Descuento por Mora</h3>
                     <p>¿El estudiante pierde el descuento al entrar en mora?</p>
                 </div>
-                <div class="config-input">
-                    <select id="cfg-descuento-perdida-mora">
+                <div class="config-input" style="width:230px;">
+                    <select id="cfg-descuento_perdida_mora">
                         <option value="SI">Sí — Pérdida inmediata</option>
                         <option value="NO">No — Mantiene el descuento</option>
                     </select>
@@ -189,133 +172,136 @@
         </div>
 
         <!-- ETIQUETAS -->
-        <div style="margin-top:32px;padding-top:24px;border-top:2px solid #e0e0e0;">
+        <div style="margin-top:28px;padding-top:24px;border-top:2px solid #e0e0e0;">
             <h3 style="font-size:17px;font-weight:700;color:var(--primary);margin-bottom:6px;">🏷️ Etiquetas de Descuentos</h3>
-            <p style="font-size:13px;color:#666;margin-bottom:20px;">Etiquetas para clasificar y organizar los descuentos. Se guardan en la base de datos y están disponibles en todas las cohortes.</p>
+            <p style="font-size:13px;color:#666;margin-bottom:18px;">Etiquetas para clasificar los descuentos. Se guardan en la base de datos y están disponibles en todas las cohortes.</p>
             <div style="display:flex;gap:10px;margin-bottom:14px;">
                 <input type="text" id="nueva-etiqueta-input" placeholder="Nombre de la nueva etiqueta…" maxlength="40"
                     style="flex:1;padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;"
                     onfocus="this.style.borderColor='#1e3a5f'" onblur="this.style.borderColor='#e0e0e0'"
                     onkeydown="if(event.key==='Enter')agregarEtiqueta()">
-                <button onclick="agregarEtiqueta()"
-                    style="padding:10px 22px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;">
+                <button onclick="agregarEtiqueta()" style="padding:10px 22px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;">
                     + Agregar
                 </button>
             </div>
-            <div id="etiqueta-error" style="display:none;color:#c0392b;font-size:13px;margin-bottom:12px;padding:8px 12px;background:#fdecea;border-radius:6px;border-left:3px solid #c0392b;"></div>
+            <div id="etiqueta-error" style="display:none;color:#c0392b;font-size:13px;margin-bottom:10px;padding:8px 12px;background:#fdecea;border-radius:6px;border-left:3px solid #c0392b;"></div>
             <div id="etiquetas-container" style="display:flex;flex-wrap:wrap;gap:10px;min-height:20px;"></div>
-            <p id="etiquetas-empty" style="font-size:13px;color:#aaa;font-style:italic;margin-top:4px;">Aún no hay etiquetas creadas.</p>
+            <p id="etiquetas-empty" style="font-size:13px;color:#aaa;font-style:italic;margin-top:6px;">Aún no hay etiquetas creadas.</p>
         </div>
 
-        <div id="msg-descuentos" class="success-box"></div>
-        <button class="btn-save" onclick="guardarSeccion('descuentos', event)">💾 Guardar Configuración de Descuentos</button>
+        <div id="msg-descuentos" class="msg-ok"></div>
+        <div id="err-descuentos" class="msg-err"></div>
+        <button class="btn-save" onclick="guardar('descuentos', this)">💾 Guardar Configuración de Descuentos</button>
     </div>
 
-    <!-- ══════════ DATOS BANCARIOS ══════════ -->
+    <!-- BANCO -->
     <div class="config-section">
         <h2 class="section-title">🏦 Datos Bancarios de Cooperadora</h2>
-        <div class="note-box" style="margin-bottom:20px;">
+        <div class="note-box">
             📋 Estos datos aparecen en los comprobantes y en el portal del estudiante cuando se le indica dónde transferir el pago.
         </div>
         <div class="config-grid">
-
             <div class="config-item">
                 <div class="config-label">
                     <h3>Titular de la Cuenta</h3>
                     <p>Nombre del titular tal como aparece en el banco</p>
                 </div>
-                <div class="config-input" style="width:300px;">
-                    <input type="text" id="cfg-titular-banco" placeholder="Ej: Cooperadora FCE UNCUYO">
+                <div class="config-input" style="width:320px;">
+                    <input type="text" id="cfg-titular_banco" placeholder="Ej: Cooperadora FCE UNCUYO">
                 </div>
             </div>
-
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>Número de Cuenta</h3>
+                    <p>Número de cuenta bancaria</p>
+                </div>
+                <div class="config-input" style="width:320px;">
+                    <input type="text" id="cfg-numero_cuenta" placeholder="Ej: 108-123456/7">
+                </div>
+            </div>
             <div class="config-item">
                 <div class="config-label">
                     <h3>CBU</h3>
-                    <p>Clave Bancaria Uniforme — 22 dígitos</p>
+                    <p>Clave Bancaria Uniforme para transferencias</p>
                 </div>
-                <div class="config-input" style="width:360px;">
-                    <div class="input-copy-wrap">
-                        <input type="text" id="cfg-cbu-banco" placeholder="Ej: 2850590940090418135201" maxlength="22">
-                        <button class="btn-copy" onclick="copiarCampo('cfg-cbu-banco', this)">📋 Copiar</button>
+                <div class="config-input" style="width:380px;">
+                    <div class="input-copy">
+                        <input type="text" id="cfg-cbu_banco" placeholder="Ej: 2850590940090418135201">
+                        <button class="btn-copy" onclick="copiar('cfg-cbu_banco', this)">📋 Copiar</button>
                     </div>
                 </div>
             </div>
-
             <div class="config-item">
                 <div class="config-label">
                     <h3>Alias</h3>
                     <p>Alias de la cuenta bancaria para transferencias</p>
                 </div>
-                <div class="config-input" style="width:300px;">
-                    <div class="input-copy-wrap">
-                        <input type="text" id="cfg-alias-banco" placeholder="Ej: COOPERADORA.FCE.UNCUYO">
-                        <button class="btn-copy" onclick="copiarCampo('cfg-alias-banco', this)">📋 Copiar</button>
+                <div class="config-input" style="width:380px;">
+                    <div class="input-copy">
+                        <input type="text" id="cfg-alias_banco" placeholder="Ej: COOPERADORA.FCE.UNCUYO">
+                        <button class="btn-copy" onclick="copiar('cfg-alias_banco', this)">📋 Copiar</button>
                     </div>
                 </div>
             </div>
-
             <div class="config-item">
                 <div class="config-label">
                     <h3>Email de Cooperadora</h3>
-                    <p>Correo de contacto de cooperadora (aparece en comunicaciones con estudiantes)</p>
+                    <p>Correo de contacto (aparece en comunicaciones con estudiantes)</p>
                 </div>
-                <div class="config-input" style="width:300px;">
-                    <input type="email" id="cfg-email-banco" placeholder="Ej: cooperadora@fce.uncu.edu.ar">
+                <div class="config-input" style="width:320px;">
+                    <input type="email" id="cfg-email_banco" placeholder="Ej: cooperadora@fce.uncu.edu.ar">
                 </div>
             </div>
-
         </div>
-        <div id="msg-banco" class="success-box"></div>
-        <button class="btn-save" onclick="guardarSeccion('banco', event)">💾 Guardar Datos Bancarios</button>
+        <div id="msg-banco" class="msg-ok"></div>
+        <div id="err-banco" class="msg-err"></div>
+        <button class="btn-save" onclick="guardar('banco', this)">💾 Guardar Datos Bancarios</button>
     </div>
 
-    <!-- ══════════ EMAILS ══════════ -->
+    <!-- EMAILS -->
     <div class="config-section">
         <h2 class="section-title">📧 Configuración de Emails Automáticos</h2>
         <div class="info-box">
-            <strong>ℹ️ Información:</strong> Los emails se envían desde el correo del coordinador de cada programa, configurado en la gestión de cada programa. El remitente aparece como "Coordinación [Nombre del Programa]".
+            <strong>ℹ️ Información:</strong> Los emails se envían desde el correo del coordinador de cada programa. El remitente aparece como "Coordinación [Nombre del Programa]".
         </div>
-        <div class="note-box" style="margin-bottom:20px;">
-            📋 <strong>Los textos de recordatorio y reclamo</strong> se personalizan desde la <strong>gestión de cobranzas de cada cohorte/edición</strong> (asunto, cuerpo, variables disponibles).
+        <div class="note-box">
+            📋 Los textos de recordatorio y reclamo se personalizan desde la <strong>gestión de cobranzas de cada cohorte/edición</strong>.
         </div>
         <div class="config-grid">
-
             <div class="config-item">
                 <div class="config-label">
                     <h3>Envío Automático de Recordatorios</h3>
-                    <p>Recordatorio de vencimiento próximo — se envía el <strong>1.° de cada mes</strong> a estudiantes con cuotas NO_ABONADA</p>
+                    <p>Se envía el <strong>1.° de cada mes</strong> a estudiantes con cuotas NO_ABONADA</p>
                 </div>
                 <div class="config-input">
                     <div class="toggle-wrap">
                         <label class="toggle">
-                            <input type="checkbox" id="cfg-email-recordatorios">
+                            <input type="checkbox" id="cfg-email_recordatorios" onchange="actualizarLbl('cfg-email_recordatorios','lbl-recordatorios')">
                             <span class="toggle-slider"></span>
                         </label>
-                        <span class="toggle-label" id="lbl-recordatorios">Sí</span>
+                        <span class="toggle-lbl" id="lbl-recordatorios">Sí</span>
                     </div>
                 </div>
             </div>
-
             <div class="config-item">
                 <div class="config-label">
                     <h3>Envío Automático de Reclamos</h3>
-                    <p>Reclamo de cuotas EN_MORA — se envía el <strong>3 y 16 de cada mes</strong> a estudiantes morosos</p>
+                    <p>Se envía el <strong>3 y 16 de cada mes</strong> a estudiantes con cuotas EN_MORA</p>
                 </div>
                 <div class="config-input">
                     <div class="toggle-wrap">
                         <label class="toggle">
-                            <input type="checkbox" id="cfg-email-reclamos">
+                            <input type="checkbox" id="cfg-email_reclamos" onchange="actualizarLbl('cfg-email_reclamos','lbl-reclamos')">
                             <span class="toggle-slider"></span>
                         </label>
-                        <span class="toggle-label" id="lbl-reclamos">Sí</span>
+                        <span class="toggle-lbl" id="lbl-reclamos">Sí</span>
                     </div>
                 </div>
             </div>
-
         </div>
-        <div id="msg-emails" class="success-box"></div>
-        <button class="btn-save" onclick="guardarSeccion('emails', event)">💾 Guardar Configuración de Emails</button>
+        <div id="msg-emails" class="msg-ok"></div>
+        <div id="err-emails" class="msg-err"></div>
+        <button class="btn-save" onclick="guardar('emails', this)">💾 Guardar Configuración de Emails</button>
     </div>
 
 </div><!-- /container -->
@@ -325,25 +311,25 @@
 <script>
 'use strict';
 
-/* ══════════════════════════════════════════════
+/* ══════════════════════════════════
    COLORES ETIQUETAS
-══════════════════════════════════════════════ */
+══════════════════════════════════ */
 var COLORES = [
-    { bg:'#e8f0fe', border:'#4a7cdc', text:'#1a4ab0' },
-    { bg:'#fce8f3', border:'#d45fa0', text:'#9c2a6e' },
-    { bg:'#e6f4ea', border:'#4caf80', text:'#1b6b3a' },
-    { bg:'#fff3e0', border:'#f5a623', text:'#a05f00' },
-    { bg:'#f3e8fd', border:'#9b59d0', text:'#5c1a9b' },
-    { bg:'#e0f7f7', border:'#26a69a', text:'#00695c' },
-    { bg:'#fdecea', border:'#e05c4b', text:'#9b1a0d' },
-    { bg:'#e8f5e9', border:'#66bb6a', text:'#1b5e20' },
+    {bg:'#e8f0fe',border:'#4a7cdc',text:'#1a4ab0'},
+    {bg:'#fce8f3',border:'#d45fa0',text:'#9c2a6e'},
+    {bg:'#e6f4ea',border:'#4caf80',text:'#1b6b3a'},
+    {bg:'#fff3e0',border:'#f5a623',text:'#a05f00'},
+    {bg:'#f3e8fd',border:'#9b59d0',text:'#5c1a9b'},
+    {bg:'#e0f7f7',border:'#26a69a',text:'#00695c'},
+    {bg:'#fdecea',border:'#e05c4b',text:'#9b1a0d'},
+    {bg:'#e8f5e9',border:'#66bb6a',text:'#1b5e20'},
 ];
-var etiquetas   = [];
-var colorIndex  = 0;
+var etiquetas = [];
+var colorIdx  = 0;
 
-/* ══════════════════════════════════════════════
+/* ══════════════════════════════════
    NOTIFICACIONES
-══════════════════════════════════════════════ */
+══════════════════════════════════ */
 var _notifs = [];
 function toggleNotif() {
     var dd = document.getElementById('notif-dropdown');
@@ -361,231 +347,198 @@ function renderNotificaciones(datos) {
     badge.style.display = sinLeer > 0 ? 'flex' : 'none';
     var lista = document.getElementById('notif-list');
     if (!_notifs.length) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-    var iconos  = {pago:'💰',mora:'🔴',solicitud:'📋',reclamo:'⚠️',alerta:'🚨'};
-    var colores = {pago:'#dcfce7',mora:'#fee2e2',solicitud:'#dbeafe',reclamo:'#fef3c7',alerta:'#fce7f3'};
+    var ic = {pago:'💰',mora:'🔴',solicitud:'📋',reclamo:'⚠️',alerta:'🚨'};
+    var cl = {pago:'#dcfce7',mora:'#fee2e2',solicitud:'#dbeafe',reclamo:'#fef3c7',alerta:'#fce7f3'};
     lista.innerHTML = _notifs.map(function(n){
-        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:'+(n.leida?'#fff':'#fffbeb')+';" onclick="leerNotif(\''+n.id+'\')"><div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:'+(colores[n.tipo]||'#f3f4f6')+';">'+(iconos[n.tipo]||'🔔')+'</div><div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">'+n.mensaje+'</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">'+(n.tiempo||'')+'</div></div></div>';
+        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:'+(n.leida?'#fff':'#fffbeb')+';" onclick="leerNotif(\''+n.id+'\')"><div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:'+(cl[n.tipo]||'#f3f4f6')+';">'+(ic[n.tipo]||'🔔')+'</div><div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">'+n.mensaje+'</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">'+(n.tiempo||'')+'</div></div></div>';
     }).join('');
 }
 function leerNotif(id) {
     _notifs.forEach(function(n){ if(n.id===id) n.leida=true; });
     renderNotificaciones(_notifs);
-    if (typeof marcarNotificacionLeida === 'function') marcarNotificacionLeida(id);
+    if (typeof marcarNotificacionLeida==='function') marcarNotificacionLeida(id);
 }
 function marcarTodasLeidas() {
     _notifs.forEach(function(n){ n.leida=true; });
     renderNotificaciones(_notifs);
-    if (typeof marcarTodasNotificacionesLeidas === 'function') marcarTodasNotificacionesLeidas();
+    if (typeof marcarTodasNotificacionesLeidas==='function') marcarTodasNotificacionesLeidas();
 }
 
-/* ══════════════════════════════════════════════
-   INIT
-══════════════════════════════════════════════ */
+/* ══════════════════════════════════
+   INIT — usa obtenerConfiguracion de supabase.js
+══════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async function() {
-    // Toggles: actualizar label al cambiar
-    ['cfg-email-recordatorios','cfg-email-reclamos'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) el.addEventListener('change', function() { actualizarLabelToggle(id); });
-    });
-
-    await cargarConfiguracion();
-
+    try {
+        // obtenerConfiguracion() está definida en supabase.js
+        // devuelve un objeto plano { clave: valor, ... }
+        var cfg = await obtenerConfiguracion();
+        aplicarConfiguracion(cfg);
+    } catch(e) {
+        console.error('Error cargando configuración:', e);
+    }
     if (typeof obtenerNotificaciones === 'function') {
         obtenerNotificaciones('ADMINISTRADOR').then(renderNotificaciones);
     }
 });
 
-/* ══════════════════════════════════════════════
-   TOGGLE HELPERS
-══════════════════════════════════════════════ */
-var TOGGLE_LABELS = {
-    'cfg-email-recordatorios': 'lbl-recordatorios',
-    'cfg-email-reclamos':      'lbl-reclamos',
-};
-function actualizarLabelToggle(id) {
-    var lblId = TOGGLE_LABELS[id];
-    if (!lblId) return;
-    var lbl = document.getElementById(lblId);
-    if (lbl) lbl.textContent = document.getElementById(id).checked ? 'Sí' : 'No';
-}
-function setToggle(id, val) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    el.checked = (val === true || val === 'TRUE' || val === 'SI' || val === 'true');
-    actualizarLabelToggle(id);
-}
+/* ══════════════════════════════════
+   APLICAR CONFIG A LA UI
+══════════════════════════════════ */
+function aplicarConfiguracion(cfg) {
+    if (!cfg) return;
 
-/* ══════════════════════════════════════════════
-   CARGAR CONFIGURACIÓN DESDE SUPABASE
-══════════════════════════════════════════════ */
-async function cargarConfiguracion() {
-    var sb = await getSupabase();
-    var r  = await sb.from('configuracion').select('clave,valor');
+    // MORA
+    setVal('cfg-mora_porcentaje', cfg.mora_porcentaje);
+    setVal('cfg-dia_corte_mora',  cfg.dia_corte_mora);
+    setVal('cfg-mora_tipo',       cfg.mora_tipo);
 
-    if (r.error) {
-        console.error('Error cargando configuración:', r.error);
-        return;
-    }
+    // DESCUENTOS
+    setVal('cfg-descuento_perdida_mora', cfg.descuento_perdida_mora);
 
-    // Construir mapa clave→valor
-    var cfg = {};
-    (r.data || []).forEach(function(row) { cfg[row.clave] = row.valor; });
-
-    // ── MORA ──
-    if (cfg.mora_porcentaje  !== undefined) document.getElementById('cfg-mora-porcentaje').value  = cfg.mora_porcentaje;
-    if (cfg.dia_corte_mora   !== undefined) document.getElementById('cfg-dia-corte-mora').value   = cfg.dia_corte_mora;
-    if (cfg.mora_tipo        !== undefined) document.getElementById('cfg-mora-tipo').value         = cfg.mora_tipo;
-    // ── DESCUENTOS ──
-    if (cfg.descuento_perdida_mora !== undefined)
-        document.getElementById('cfg-descuento-perdida-mora').value = cfg.descuento_perdida_mora;
-
-    // Etiquetas: guardadas como CSV en BD
+    // Etiquetas (guardadas como CSV en BD)
     if (cfg.etiquetas) {
         var nombres = cfg.etiquetas.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-        etiquetas = nombres.map(function(nombre, i) {
-            return { nombre: nombre, color: COLORES[i % COLORES.length] };
-        });
-        colorIndex = etiquetas.length;
+        etiquetas = nombres.map(function(n, i){ return { nombre: n, color: COLORES[i % COLORES.length] }; });
+        colorIdx  = etiquetas.length;
     }
     renderizarEtiquetas();
 
-    // ── BANCO ──
-    if (cfg.titular_banco !== undefined) document.getElementById('cfg-titular-banco').value = cfg.titular_banco;
-    if (cfg.cbu_banco     !== undefined) document.getElementById('cfg-cbu-banco').value     = cfg.cbu_banco;
-    if (cfg.alias_banco   !== undefined) document.getElementById('cfg-alias-banco').value   = cfg.alias_banco;
-    if (cfg.email_banco   !== undefined) document.getElementById('cfg-email-banco').value   = cfg.email_banco;
+    // BANCO
+    setVal('cfg-titular_banco', cfg.titular_banco);
+    setVal('cfg-numero_cuenta', cfg.numero_cuenta);
+    setVal('cfg-cbu_banco',     cfg.cbu_banco);
+    setVal('cfg-alias_banco',   cfg.alias_banco);
+    setVal('cfg-email_banco',   cfg.email_banco);
 
-    // ── EMAILS ──
-    setToggle('cfg-email-recordatorios', cfg.email_recordatorios);
-    setToggle('cfg-email-reclamos',      cfg.email_reclamos);
+    // EMAILS
+    setToggle('cfg-email_recordatorios', cfg.email_recordatorios, 'lbl-recordatorios');
+    setToggle('cfg-email_reclamos',      cfg.email_reclamos,      'lbl-reclamos');
 }
 
-/* ══════════════════════════════════════════════
-   GUARDAR SECCIONES — función unificada
-══════════════════════════════════════════════ */
-async function guardarSeccion(seccion, event) {
-    var btn = event.currentTarget;
-    var textoOriginal = btn.textContent;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spin-inline"></span> Guardando…';
+function setVal(id, val) {
+    var el = document.getElementById(id);
+    if (el && val !== undefined && val !== null) el.value = val;
+}
 
-    var cambios = {};
+function setToggle(id, val, lblId) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.checked = (val === 'SI' || val === 'TRUE' || val === true);
+    actualizarLbl(id, lblId);
+}
+
+function actualizarLbl(id, lblId) {
+    var lbl = document.getElementById(lblId);
+    if (lbl) lbl.textContent = document.getElementById(id).checked ? 'Sí' : 'No';
+}
+
+/* ══════════════════════════════════
+   GUARDAR — usa guardarConfiguracion de supabase.js
+   Esa función ya usa el cliente con sesión Auth activa
+   → respeta el RLS que exige rol ADMINISTRADOR
+══════════════════════════════════ */
+async function guardar(seccion, btn) {
+    var textoOrig = btn.innerHTML;
+    btn.disabled  = true;
+    btn.innerHTML = '<span class="spin"></span> Guardando…';
+
+    var datos = {};
 
     if (seccion === 'mora') {
-        cambios = {
-            mora_porcentaje: document.getElementById('cfg-mora-porcentaje').value,
-            dia_corte_mora:  document.getElementById('cfg-dia-corte-mora').value,
-            mora_tipo:       document.getElementById('cfg-mora-tipo').value,
+        datos = {
+            mora_porcentaje: document.getElementById('cfg-mora_porcentaje').value,
+            dia_corte_mora:  document.getElementById('cfg-dia_corte_mora').value,
+            mora_tipo:       document.getElementById('cfg-mora_tipo').value,
         };
+
     } else if (seccion === 'descuentos') {
-        cambios = {
-            descuento_perdida_mora: document.getElementById('cfg-descuento-perdida-mora').value,
-            etiquetas:              etiquetas.map(function(e){ return e.nombre; }).join(','),
+        datos = {
+            descuento_perdida_mora: document.getElementById('cfg-descuento_perdida_mora').value,
+            etiquetas: etiquetas.map(function(e){ return e.nombre; }).join(','),
         };
+
     } else if (seccion === 'banco') {
-        var cbu = document.getElementById('cfg-cbu-banco').value.trim();
-        var alias = document.getElementById('cfg-alias-banco').value.trim();
+        var cbu   = document.getElementById('cfg-cbu_banco').value.trim();
+        var alias = document.getElementById('cfg-alias_banco').value.trim();
         if (!cbu && !alias) {
-            mostrarMensaje('msg-banco', false, 'Ingresá al menos el CBU o el Alias.');
-            btn.disabled = false; btn.textContent = textoOriginal; return;
+            mostrarMsg(seccion, false, '❌ Ingresá al menos el CBU o el Alias.');
+            btn.disabled = false; btn.innerHTML = textoOrig; return;
         }
-        cambios = {
-            titular_banco: document.getElementById('cfg-titular-banco').value.trim(),
+        datos = {
+            titular_banco: document.getElementById('cfg-titular_banco').value.trim(),
+            numero_cuenta: document.getElementById('cfg-numero_cuenta').value.trim(),
             cbu_banco:     cbu,
             alias_banco:   alias,
-            email_banco:   document.getElementById('cfg-email-banco').value.trim(),
+            email_banco:   document.getElementById('cfg-email_banco').value.trim(),
         };
+
     } else if (seccion === 'emails') {
-        cambios = {
-            email_recordatorios: document.getElementById('cfg-email-recordatorios').checked ? 'SI' : 'NO',
-            email_reclamos:      document.getElementById('cfg-email-reclamos').checked      ? 'SI' : 'NO',
+        datos = {
+            email_recordatorios: document.getElementById('cfg-email_recordatorios').checked ? 'SI' : 'NO',
+            email_reclamos:      document.getElementById('cfg-email_reclamos').checked      ? 'SI' : 'NO',
         };
     }
 
-    var ok = await upsertConfiguracion(cambios);
-    mostrarMensaje('msg-' + seccion, ok, ok ? '✅ Guardado correctamente.' : '❌ Error al guardar. Intentá de nuevo.');
-
-    btn.disabled = false;
-    btn.textContent = textoOriginal;
-}
-
-/* ══════════════════════════════════════════════
-   UPSERT GENÉRICO — guarda cada clave por separado
-══════════════════════════════════════════════ */
-async function upsertConfiguracion(cambios) {
     try {
-        var sb  = await getSupabase();
-        var rows = Object.keys(cambios).map(function(clave) {
-            return { clave: clave, valor: String(cambios[clave]) };
-        });
-        var r = await sb
-            .from('configuracion')
-            .upsert(rows, { onConflict: 'clave' });
-        if (r.error) { console.error('upsert error:', r.error); return false; }
-        return true;
+        // guardarConfiguracion está en supabase.js — hace upsert clave a clave
+        // con el cliente autenticado (getSupabase() retorna el cliente con sesión)
+        var r = await guardarConfiguracion(datos);
+        mostrarMsg(seccion, r.ok,
+            r.ok ? '✅ Guardado correctamente.' : '❌ Error al guardar. Verificá que tengas permisos de Administrador.');
     } catch(e) {
-        console.error('upsertConfiguracion:', e);
-        return false;
+        console.error('Error guardar ' + seccion + ':', e);
+        mostrarMsg(seccion, false, '❌ Error inesperado: ' + (e.message || String(e)));
     }
+
+    btn.disabled  = false;
+    btn.innerHTML = textoOrig;
 }
 
-/* ══════════════════════════════════════════════
-   FEEDBACK MENSAJES
-══════════════════════════════════════════════ */
-function mostrarMensaje(elId, ok, texto) {
-    var el = document.getElementById(elId);
-    if (!el) return;
-    el.textContent = texto;
-    el.className   = ok ? 'success-box' : 'error-box';
-    el.style.display = 'block';
-    setTimeout(function() { el.style.display = 'none'; }, 3500);
+function mostrarMsg(seccion, ok, texto) {
+    var okEl  = document.getElementById('msg-' + seccion);
+    var errEl = document.getElementById('err-' + seccion);
+    if (!okEl || !errEl) return;
+    okEl.style.display = 'none'; errEl.style.display = 'none';
+    var el = ok ? okEl : errEl;
+    el.textContent = texto; el.style.display = 'block';
+    setTimeout(function(){ el.style.display = 'none'; }, 4000);
 }
 
-/* ══════════════════════════════════════════════
+/* ══════════════════════════════════
    ETIQUETAS
-══════════════════════════════════════════════ */
+══════════════════════════════════ */
 function renderizarEtiquetas() {
-    var container = document.getElementById('etiquetas-container');
-    var empty     = document.getElementById('etiquetas-empty');
-    container.innerHTML = '';
+    var cont  = document.getElementById('etiquetas-container');
+    var empty = document.getElementById('etiquetas-empty');
+    cont.innerHTML = '';
     if (!etiquetas.length) { empty.style.display = 'block'; return; }
     empty.style.display = 'none';
-    etiquetas.forEach(function(etiqueta, idx) {
-        var c    = etiqueta.color;
+    etiquetas.forEach(function(et, idx) {
+        var c    = et.color;
         var chip = document.createElement('div');
         chip.className = 'etiqueta-chip';
         chip.style.cssText = 'background:'+c.bg+';border:1.5px solid '+c.border+';color:'+c.text+';';
-
-        var label = document.createElement('span');
-        label.textContent = etiqueta.nombre;
-
-        var btnEl = document.createElement('button');
-        btnEl.innerHTML = '×';
-        btnEl.title = 'Eliminar etiqueta';
-        btnEl.style.cssText = 'color:'+c.text+';';
-        btnEl.onclick = function() { eliminarEtiqueta(idx); };
-
-        chip.appendChild(label);
-        chip.appendChild(btnEl);
-        container.appendChild(chip);
+        var lbl = document.createElement('span');
+        lbl.textContent = et.nombre;
+        var del = document.createElement('button');
+        del.innerHTML = '×'; del.title = 'Eliminar';
+        del.style.color = c.text;
+        del.onclick = function(){ eliminarEtiqueta(idx); };
+        chip.appendChild(lbl); chip.appendChild(del);
+        cont.appendChild(chip);
     });
 }
 
 function agregarEtiqueta() {
     var input  = document.getElementById('nueva-etiqueta-input');
     var nombre = input.value.trim();
-    var errEl  = document.getElementById('etiqueta-error');
-
-    if (!nombre) {
-        mostrarEtiquetaError('Por favor ingresá un nombre para la etiqueta.'); input.focus(); return;
-    }
+    if (!nombre) { mostrarEtError('Ingresá un nombre para la etiqueta.'); input.focus(); return; }
     if (etiquetas.some(function(e){ return e.nombre.toLowerCase() === nombre.toLowerCase(); })) {
-        mostrarEtiquetaError('Ya existe una etiqueta llamada "' + nombre + '".'); input.focus(); return;
+        mostrarEtError('Ya existe la etiqueta "' + nombre + '".'); input.focus(); return;
     }
-    etiquetas.push({ nombre: nombre, color: COLORES[colorIndex % COLORES.length] });
-    colorIndex++;
-    input.value = '';
-    input.focus();
+    etiquetas.push({ nombre: nombre, color: COLORES[colorIdx % COLORES.length] });
+    colorIdx++;
+    input.value = ''; input.focus();
     renderizarEtiquetas();
 }
 
@@ -595,23 +548,23 @@ function eliminarEtiqueta(idx) {
     renderizarEtiquetas();
 }
 
-function mostrarEtiquetaError(msg) {
+function mostrarEtError(msg) {
     var el = document.getElementById('etiqueta-error');
     el.textContent = msg; el.style.display = 'block';
     setTimeout(function(){ el.style.display = 'none'; }, 3000);
 }
 
-/* ══════════════════════════════════════════════
-   COPIAR AL PORTAPAPELES
-══════════════════════════════════════════════ */
-function copiarCampo(id, btn) {
+/* ══════════════════════════════════
+   COPIAR CBU / ALIAS
+══════════════════════════════════ */
+function copiar(id, btn) {
     var val = document.getElementById(id).value;
     if (!val) return;
-    navigator.clipboard.writeText(val).then(function() {
+    navigator.clipboard.writeText(val).then(function(){
         var orig = btn.textContent;
         btn.textContent = '✓ Copiado';
         setTimeout(function(){ btn.textContent = orig; }, 1800);
-    }).catch(function() {
+    }).catch(function(){
         btn.textContent = 'Error';
         setTimeout(function(){ btn.textContent = '📋 Copiar'; }, 1800);
     });
