@@ -266,6 +266,16 @@
         .plan-fila .btn-del:hover { background:#fdecea; }
         .btn-agregar-cuota { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:#2d7a4f; color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
         .btn-agregar-cuota:hover { background:#246441; }
+        /* Descuento multi-periodo */
+        .desc-periodo-fila { display:grid; grid-template-columns:26px 90px 130px 130px 1fr auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; }
+        .desc-periodo-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
+        .desc-periodo-fila input, .desc-periodo-fila select { width:100%; padding:7px 9px; border:1.5px solid #ddd; border-radius:7px; font-size:12px; font-family:'DM Sans',sans-serif; background:white; box-sizing:border-box; }
+        .desc-periodo-fila input:focus, .desc-periodo-fila select:focus { outline:none; border-color:var(--primary); }
+        .desc-periodo-fila .pct-wrap { display:flex; align-items:center; gap:4px; }
+        .desc-periodo-fila .pct-wrap input { width:60px; }
+        .desc-periodo-fila .pct-wrap span { font-weight:700; color:#666; font-size:14px; flex-shrink:0; }
+        .btn-agregar-periodo { margin-top:4px; padding:8px 16px; background:var(--primary); color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
+        .btn-agregar-periodo:hover { background:#1a4a6b; }
         .plan-destino-box { background:#f0f8ff; border:1.5px solid #b3d4f0; border-radius:10px; padding:14px 16px; }
         .plan-radio-opcion { display:flex; gap:12px; align-items:flex-start; cursor:pointer; }
         .plan-radio-opcion input[type=radio] { margin-top:3px; accent-color:var(--primary); width:15px; height:15px; flex-shrink:0; }
@@ -422,30 +432,15 @@
 
 <!-- ═══ MODAL: DESCUENTO ═══ -->
 <div class="modal-overlay" id="modal-descuento">
-    <div class="modal-box" style="max-width:460px;">
+    <div class="modal-box" style="max-width:640px;">
         <div class="modal-hdr">
             <div><h2>✏️ Editar Descuento</h2><p id="desc-sub">—</p></div>
             <button class="modal-close" onclick="cerrar('modal-descuento')">×</button>
         </div>
         <div class="modal-body">
-            <div class="mfield">
-                <label>Porcentaje de descuento</label>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <input type="number" id="desc-pct" min="0" max="100" step="0.5" placeholder="0" style="width:110px;">
-                    <span style="font-weight:600;color:#666;font-size:15px;">%</span>
-                </div>
-                <div class="mhint">Entre 0 y 100. Aplica sobre el monto_original de cada cobro.</div>
-            </div>
-            <div class="mgrid2">
-                <div class="mfield"><label>Aplica desde</label><input type="date" id="desc-desde"></div>
-                <div class="mfield"><label>Aplica hasta <span style="font-weight:400;color:#bbb;">(opcional)</span></label><input type="date" id="desc-hasta"></div>
-            </div>
-            <div class="mfield">
-                <label>Motivo</label>
-                <select id="desc-motivo">
-                    <option value="">— Sin especificar —</option>
-                </select>
-            </div>
+            <div id="desc-periodos-cont"></div>
+            <button class="btn-agregar-periodo" onclick="descAgregarPeriodo()">+ Agregar período</button>
+            <div class="mhint" style="margin-top:10px;">Cada cuota recibe el descuento del período cuya fecha de vencimiento caiga dentro del rango. Si ningún período aplica, la cuota no tiene descuento.</div>
         </div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="cerrar('modal-descuento')">Cancelar</button>
@@ -1254,7 +1249,7 @@ function renderTabla() {
 
         var esPasivo = est.estado_academico === 'BAJA';
         var nombreEsc = String(est.apellido + ', ' + est.nombre).replace(/'/g, "\'");
-        var descuentoInfo = JSON.stringify({dni:est.dni, apellido:est.apellido, nombre:est.nombre, pct:est.descuento_porcentaje}).replace(/'/g, '&apos;');
+        var descuentoInfo = JSON.stringify({dni:est.dni, apellido:est.apellido, nombre:est.nombre, pct:est.descuento_porcentaje, desde:est.descuento_desde||'', hasta:est.descuento_hasta||'', motivo:est.descuento_motivo||''}).replace(/'/g, '&apos;');
         var filaHtml = `
             <td style="text-align:center;"><input type="checkbox" class="chk-e" data-dni="${est.dni}" onchange="onChk()"></td>
             <td class="cell-name" onclick="irEstudiante(${est.dni})">${escapeHtml(est.apellido + ', ' + est.nombre)}</td>
@@ -1383,46 +1378,73 @@ function deselAll() {
 }
 
 /* ══════════════════════════════════════════════════
-   MODAL DESCUENTO
+   MODAL DESCUENTO — MULTI-PERIODO
 ══════════════════════════════════════════════════ */
-function abrirDescuento(info, btn) {
-    V.descTarget = { dni: info.dni, apellido: info.apellido, nombre: info.nombre, pct: info.pct, tdEl: btn.closest('td') };
-    document.getElementById('desc-sub').textContent   = info.apellido + ', ' + info.nombre + ' — DNI ' + info.dni;
-    document.getElementById('desc-pct').value         = info.pct;
-    document.getElementById('desc-desde').value       = hoy();
-    document.getElementById('desc-hasta').value       = '';
+var _descPeriodos = [];
 
-    // Poblar motivos dinámicamente desde configuracion.etiquetas
-    var sel = document.getElementById('desc-motivo');
-    sel.innerHTML = '<option value="">— Sin especificar —</option>';
+function descGetMotivosOpts(selected) {
     var motivos = (V.config && V.config.motivosDescuento) ? V.config.motivosDescuento : [];
+    var html = '<option value="">— Sin especificar —</option>';
     motivos.forEach(function(m) {
-        var opt = document.createElement('option');
-        opt.value = m.toUpperCase().replace(/\s+/g, '_');
-        opt.textContent = m;
-        sel.appendChild(opt);
+        var val = m.toUpperCase().replace(/\s+/g, '_');
+        html += '<option value="' + val + '"' + (selected === val ? ' selected' : '') + '>' + escapeHtml(m) + '</option>';
     });
-    // Siempre agregar "Otro" al final si no está ya
     if (!motivos.some(function(m) { return m.toUpperCase() === 'OTRO'; })) {
-        var optOtro = document.createElement('option');
-        optOtro.value = 'OTRO';
-        optOtro.textContent = 'Otro';
-        sel.appendChild(optOtro);
+        html += '<option value="OTRO"' + (selected === 'OTRO' ? ' selected' : '') + '>Otro</option>';
     }
-    sel.value = '';
+    return html;
+}
 
+function descRenderPeriodos() {
+    var cont = document.getElementById('desc-periodos-cont');
+    cont.innerHTML = '';
+    _descPeriodos.forEach(function(p, i) {
+        var div = document.createElement('div');
+        div.className = 'desc-periodo-fila';
+        div.innerHTML =
+            '<div class="plan-fila-num">' + (i + 1) + '</div>'
+            + '<div><label>Descuento</label><div class="pct-wrap"><input type="number" min="0" max="100" step="0.5" value="' + (p.pct !== undefined ? p.pct : '') + '" placeholder="0" oninput="_descPeriodos[' + i + '].pct=parseFloat(this.value)||0;"><span>%</span></div></div>'
+            + '<div><label>Aplica desde</label><input type="date" value="' + (p.desde || '') + '" onchange="_descPeriodos[' + i + '].desde=this.value;"></div>'
+            + '<div><label>Hasta <span style="font-weight:400;color:#bbb;">(opc.)</span></label><input type="date" value="' + (p.hasta || '') + '" onchange="_descPeriodos[' + i + '].hasta=this.value;"></div>'
+            + '<div><label>Motivo</label><select onchange="_descPeriodos[' + i + '].motivo=this.value;">' + descGetMotivosOpts(p.motivo) + '</select></div>'
+            + (_descPeriodos.length > 1
+                ? '<button class="btn-del" title="Eliminar período" onclick="descQuitarPeriodo(' + i + ')">🗑</button>'
+                : '<div></div>');
+        cont.appendChild(div);
+    });
+}
+
+function descAgregarPeriodo() {
+    _descPeriodos.push({ pct: 0, desde: hoy(), hasta: '', motivo: '' });
+    descRenderPeriodos();
+}
+
+function descQuitarPeriodo(i) {
+    if (_descPeriodos.length <= 1) return;
+    _descPeriodos.splice(i, 1);
+    descRenderPeriodos();
+}
+
+function abrirDescuento(info, btn) {
+    V.descTarget = { dni: info.dni, apellido: info.apellido, nombre: info.nombre, tdEl: btn.closest('td') };
+    document.getElementById('desc-sub').textContent = info.apellido + ', ' + info.nombre + ' — DNI ' + info.dni;
+    _descPeriodos = [{
+        pct:    info.pct !== undefined ? info.pct : 0,
+        desde:  info.desde || hoy(),
+        hasta:  info.hasta || '',
+        motivo: info.motivo || ''
+    }];
+    descRenderPeriodos();
     abrir('modal-descuento');
-    setTimeout(function() { document.getElementById('desc-pct').focus(); }, 80);
 }
 
 async function guardarDescuento() {
-    var pct    = parseFloat(document.getElementById('desc-pct').value);
-    var desde  = document.getElementById('desc-desde').value;
-    var hasta  = document.getElementById('desc-hasta').value;
-    var motivo = document.getElementById('desc-motivo').value;
-    if (isNaN(pct) || pct < 0 || pct > 100) { toast('Porcentaje inválido (0–100)', 'err'); return; }
-    if (!desde) { toast('Indicá la fecha de inicio', 'err'); return; }
-    if (hasta && hasta < desde) { toast('La fecha fin debe ser posterior al inicio', 'err'); return; }
+    for (var pi = 0; pi < _descPeriodos.length; pi++) {
+        var p = _descPeriodos[pi];
+        if (isNaN(p.pct) || p.pct < 0 || p.pct > 100) { toast('Período ' + (pi + 1) + ': porcentaje inválido (0–100)', 'err'); return; }
+        if (!p.desde) { toast('Período ' + (pi + 1) + ': indicá la fecha de inicio', 'err'); return; }
+        if (p.hasta && p.hasta < p.desde) { toast('Período ' + (pi + 1) + ': la fecha fin debe ser posterior al inicio', 'err'); return; }
+    }
 
     spin(true);
     try {
@@ -1430,57 +1452,50 @@ async function guardarDescuento() {
         var est = V.data.estudiantes.find(function(e) { return String(e.dni) === String(V.descTarget.dni); });
         if (!est) throw new Error('Estudiante no encontrado');
 
-        // FUENTE DE VERDAD: actualizar descuento en inscripciones (no en estudiantes)
+        // Para inscripciones: guardar el período activo hoy (o el último si ninguno aplica)
+        var hoyStr = hoy();
+        var periodoRef = _descPeriodos.slice()
+            .sort(function(a, b) { return b.desde.localeCompare(a.desde); })
+            .find(function(p) { return p.desde <= hoyStr && (!p.hasta || p.hasta >= hoyStr); })
+            || _descPeriodos[_descPeriodos.length - 1];
+
         var resInsc = await sb.from('inscripciones')
             .update({
-                descuento_porcentaje: pct,
-                descuento_motivo:     motivo || null,
-                descuento_desde:      desde || null,
-                descuento_hasta:      hasta || null
+                descuento_porcentaje: periodoRef.pct,
+                descuento_motivo:     periodoRef.motivo || null,
+                descuento_desde:      periodoRef.desde  || null,
+                descuento_hasta:      periodoRef.hasta  || null
             })
             .eq('estudiante_id', est.id)
             .eq('cohorte_id', COHORTE_ID);
         if (resInsc.error) throw resInsc.error;
 
-        // Recalcular cobros según rango de fechas del descuento
-        // El descuento aplica a una cuota si su fecha_vencimiento cae dentro del rango [desde, hasta]
-        // Si no tiene hasta, aplica desde 'desde' en adelante
-        // Si la cuota no tiene fecha_vencimiento, se aplica si no hay rango definido
+        // Aplicar descuento a cada cobro según el período que le corresponda por fecha_vencimiento
         for (var i = 0; i < est.cobros.length; i++) {
             var c = est.cobros[i];
             var estado = resolverEstadoCobro(c);
-
-            // Nunca tocar cobros pagados, parciales, pendientes o EN MORA
             if (['ABONADA','PAGO_PARCIAL','PENDIENTE','EN_MORA'].includes(estado)) continue;
 
-            // ── Verificar si esta cuota cae dentro del rango del descuento ──
-            var pctAplicar = 0; // descuento que corresponde a esta cuota
-            if (c.fecha_vencimiento && desde) {
-                var fCuota = String(c.fecha_vencimiento).split('T')[0];
-                var dentroDesde = fCuota >= desde;
-                var dentroHasta = !hasta || fCuota <= hasta;
-                if (dentroDesde && dentroHasta) {
-                    pctAplicar = pct;
-                }
-                // Si la cuota está fuera del rango, se deja sin descuento (0%)
+            var fCuota = c.fecha_vencimiento ? String(c.fecha_vencimiento).split('T')[0] : null;
+            var pctAplicar = 0;
+            if (fCuota) {
+                _descPeriodos.forEach(function(p) {
+                    if (fCuota >= p.desde && (!p.hasta || fCuota <= p.hasta)) {
+                        pctAplicar = p.pct; // si se superponen, gana el último en el array
+                    }
+                });
             } else {
-                // Sin fecha de vencimiento en la cuota o sin fecha inicio: aplicar a todas
-                pctAplicar = pct;
+                pctAplicar = _descPeriodos[0] ? _descPeriodos[0].pct : 0;
             }
 
             if (!tieneMontoDefinido(c)) {
-                // Cuotas A_DEFINIR: solo registrar el descuento correspondiente
-                var updDef = await sb.from('cobros').update({
-                    descuento_porcentaje: pctAplicar
-                }).eq('cobro_id', c.cobro_id);
+                var updDef = await sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobro_id);
                 if (updDef.error) throw updDef.error;
                 continue;
             }
 
-            // Recalcular desde monto_original (precio base sin descuento — inmutable)
             var baseOriginal = (c.monto_original !== null && c.monto_original !== undefined && c.monto_original !== '')
-                ? Number(c.monto_original)
-                : Number(c.monto_final || 0);
+                ? Number(c.monto_original) : Number(c.monto_final || 0);
             var montoAbonado = calcMontoAbonado(c);
             var nuevoMontoFinal = redondear2(baseOriginal * (1 - pctAplicar / 100));
             var nuevoSaldo = redondear2(Math.max(0, nuevoMontoFinal - montoAbonado));
