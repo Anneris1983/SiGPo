@@ -2454,7 +2454,11 @@ function irEstudiante(dni) {
 }
 
 function volverAPrograma() {
-    window.location.href = 'administrador_3_Programas_de_posgrado.html?id=' + PROGRAMA_ID;
+    if (document.referrer) {
+        history.back();
+    } else {
+        window.location.href = 'administrador_3_Programas_de_posgrado.html?id=' + PROGRAMA_ID;
+    }
 }
 
 /* ══════════════════════════════════════════════════
