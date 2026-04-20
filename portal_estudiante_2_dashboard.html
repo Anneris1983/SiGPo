@@ -369,15 +369,15 @@
             }
 
             // ── Datos bancarios ──────────────────────────────────
-            var cbu   = cfg.banco_cbu    || '—';
-            var alias = cfg.banco_alias  || '—';
-            var banco = cfg.banco_nombre || '';
-            var cuit  = cfg.banco_cuit   || '';
+            var cbu     = cfg.cbu_banco     || '—';
+            var alias   = cfg.alias_banco   || '—';
+            var titular = cfg.titular_banco || '';
+            var email   = cfg.email_banco   || '';
             document.getElementById('datos-bancarios').innerHTML =
-                (banco ? '<div><strong>Banco:</strong> ' + banco + '</div>' : '') +
                 '<div><strong>CBU:</strong> ' + cbu + '</div>' +
                 '<div><strong>Alias:</strong> ' + alias + '</div>' +
-                (cuit  ? '<div><strong>CUIT:</strong> ' + cuit + '</div>' : '');
+                (titular ? '<div><strong>Titular:</strong> ' + titular + '</div>' : '') +
+                (email   ? '<div><strong>Email:</strong> ' + email + '</div>' : '');
 
         } catch(e) {
             console.error(e);
