@@ -1861,20 +1861,27 @@ async function enviarNotificaciones() {
                 if (!_vKeys[k]) { _vKeys[k] = true; cobrosVencidos.push(c); }
             });
 
-            // ── Variables para interpolar el asunto y la intro de la plantilla ──
-            // Usamos los datos del primer cobro (o genéricos si no hay ninguno)
-            var primerCobro = cobrosVencidos[0] || null;
+            // Para el detalle del email: solo las verdaderamente vencidas (EN_MORA + PAGO_PARCIAL)
+            var cobrosDetalle = cobrosVencidos.filter(function(c) {
+                return ['EN_MORA','PAGO_PARCIAL'].includes(resolverEstadoCobro(c));
+            });
+            // Si no hay ninguna vencida, usar todas las pendientes (recordatorio preventivo)
+            if (cobrosDetalle.length === 0) cobrosDetalle = cobrosVencidos;
+
+            // Variables para interpolar: si hay múltiples vencidas, reflejarlo en la intro
+            var primerCobro = cobrosDetalle[0] || null;
+            var nVencidas   = cobrosDetalle.length;
             var varsBase = {
-                nombre:     est.nombre,
-                apellido:   est.apellido,
-                dni:        est.dni,
-                cuota:      primerCobro ? primerCobro.concepto          : '—',
-                periodo:    primerCobro ? (primerCobro.periodo || '—')  : '—',
-                monto:      primerCobro ? Math.round(Number(primerCobro.saldo_pendiente) || 0).toLocaleString('es-AR') : '0',
-                vencimiento:primerCobro ? fFecha(primerCobro.fecha_vencimiento)                                        : '—',
-                programa:   V.data.programa.nombre,
-                cbu:        cbuVal,
-                alias:      aliasVal
+                nombre:      est.nombre,
+                apellido:    est.apellido,
+                dni:         est.dni,
+                cuota:       nVencidas > 1 ? (nVencidas + ' cuotas') : (primerCobro ? primerCobro.concepto : '—'),
+                periodo:     nVencidas > 1 ? 'distintos períodos'    : (primerCobro ? (primerCobro.periodo || '—') : '—'),
+                monto:       primerCobro ? Math.round(Number(primerCobro.saldo_pendiente) || 0).toLocaleString('es-AR') : '0',
+                vencimiento: primerCobro ? fFecha(primerCobro.fecha_vencimiento) : '—',
+                programa:    V.data.programa.nombre,
+                cbu:         cbuVal,
+                alias:       aliasVal
             };
 
             var asuntoFinal = interpolarPlantilla(asunto, varsBase);
@@ -1883,16 +1890,20 @@ async function enviarNotificaciones() {
             var introTexto = interpolarPlantilla(cuerpo, varsBase);
 
             var cuerpoFinal;
-            if (cobrosVencidos.length === 0) {
+            if (cobrosDetalle.length === 0) {
                 // Sin cuotas pendientes: solo el mensaje de la plantilla
                 cuerpoFinal = introTexto;
             } else {
-                // Tabla de detalle con todas las cuotas pendientes
-                var totalSaldo = cobrosVencidos.reduce(function(s, c) {
+                // Detalle: solo cuotas EN_MORA / PAGO_PARCIAL (las verdaderamente vencidas)
+                var totalSaldo = cobrosDetalle.reduce(function(s, c) {
                     return s + (Number(c.saldo_pendiente) || 0);
                 }, 0);
 
-                var filasCuotas = cobrosVencidos.map(function(c) {
+                var tituloDetalle = nVencidas > 1
+                    ? 'DETALLE DE ' + nVencidas + ' CUOTAS VENCIDAS:'
+                    : 'DETALLE DE CUOTA VENCIDA:';
+
+                var filasCuotas = cobrosDetalle.map(function(c) {
                     var estadoLabel = etiquetaEstado(resolverEstadoCobro(c));
                     return '  • ' + c.concepto + (c.periodo ? ' (' + c.periodo + ')' : '')
                         + ' — Saldo: $' + Math.round(Number(c.saldo_pendiente) || 0).toLocaleString('es-AR')
@@ -1902,16 +1913,16 @@ async function enviarNotificaciones() {
 
                 cuerpoFinal = introTexto
                     + '\n\n──────────────────────────────'
-                    + '\nDETALLE DE CUOTAS PENDIENTES:'
+                    + '\n' + tituloDetalle
                     + '\n──────────────────────────────'
                     + '\n' + filasCuotas
                     + '\n──────────────────────────────'
-                    + '\nTOTAL ADEUDADO: $' + Math.round(totalSaldo).toLocaleString('es-AR')
+                    + '\nTOTAL VENCIDO: $' + Math.round(totalSaldo).toLocaleString('es-AR')
                     + '\n\nPara regularizar su situación, realice la transferencia a:'
                     + '\nCBU: ' + cbuVal + '  |  Alias: ' + aliasVal;
 
-                // Marcar todos los cobros de este estudiante como reclamados/recordados
-                cobrosVencidos.forEach(function(c) {
+                // Marcar cobros vencidos como reclamados/recordados
+                cobrosDetalle.forEach(function(c) {
                     if (tipo === 'reclamo')      cobrosActualizar.push(c.cobro_id);
                     if (tipo === 'recordatorio') cobrosActualizar.push(c.cobro_id);
                 });
