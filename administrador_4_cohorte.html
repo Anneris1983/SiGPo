@@ -1848,12 +1848,17 @@ async function enviarNotificaciones() {
             var cbuVal   = cfg.cbu_banco   || V.config.cbu   || '—';
             var aliasVal = cfg.alias_banco  || V.config.alias || '—';
 
-            // Cobros pendientes/vencidos del estudiante
-            var cobrosVencidos = est.cobros.filter(function(c) {
+            // Cobros pendientes/vencidos del estudiante — deduplicados por (concepto+periodo)
+            var cobrosVencidosRaw = est.cobros.filter(function(c) {
                 var est2 = resolverEstadoCobro(c);
                 return ['EN_MORA','NO_ABONADA','PAGO_PARCIAL'].includes(est2)
                     && tieneMontoDefinido(c)
                     && c.no_aplica !== true;
+            });
+            var cobrosVencidos = [], _vKeys = {};
+            cobrosVencidosRaw.forEach(function(c) {
+                var k = keyCuota(c.concepto, c.periodo);
+                if (!_vKeys[k]) { _vKeys[k] = true; cobrosVencidos.push(c); }
             });
 
             // ── Variables para interpolar el asunto y la intro de la plantilla ──
