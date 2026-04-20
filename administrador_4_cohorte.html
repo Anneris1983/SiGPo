@@ -1175,9 +1175,9 @@ function renderTabla() {
         columnas.forEach(function(col) {
             var c = cobrosMap[keyCuota(col.concepto_base, col.periodo)];
             if (!c || c.no_aplica === true || c._estado_resuelto === 'NO_APLICA') return;
-            totP += tieneMontoDefinido(c) ? Number(c.monto_final) || 0 : 0;
-            totA += calcMontoAbonado(c);
-            totS += c.saldo_pendiente === null || c.saldo_pendiente === undefined ? 0 : Number(c.saldo_pendiente) || 0;
+            totP += tieneMontoDefinido(c) ? Math.round(Number(c.monto_final) || 0) : 0;
+            totA += Math.round(calcMontoAbonado(c));
+            totS += Math.round(c.saldo_pendiente === null || c.saldo_pendiente === undefined ? 0 : Number(c.saldo_pendiente) || 0);
         });
 
         var celdas = columnas.map(function(col) {
