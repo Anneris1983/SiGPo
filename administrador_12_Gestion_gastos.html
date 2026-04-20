@@ -179,7 +179,7 @@
             </div>
             <div class="grid-2">
                 <div class="form-group"><label class="form-label">Categoría *</label><select class="form-select" id="g-categoria"></select></div>
-                <div class="form-group"><label class="form-label">Estado *</label><select class="form-select" id="g-estado"><option value="PROYECTADO">Proyectado</option><option value="PENDIENTE">Pendiente</option><option value="PAGADO">Pagado</option><option value="PARCIAL">Pago Parcial</option><option value="CANCELADO">Cancelado</option></select></div>
+                <div class="form-group"><label class="form-label">Estado *</label><select class="form-select" id="g-estado"><option value="PENDIENTE">Pendiente</option><option value="PAGADO">Pagado</option><option value="PARCIAL">Pago Parcial</option><option value="CANCELADO">Cancelado</option></select></div>
             </div>
             <div class="form-group"><label class="form-label">Concepto / Descripción *</label><textarea class="form-textarea" id="g-concepto" placeholder="Detalle del gasto..."></textarea></div>
             <div class="grid-2">
@@ -334,7 +334,7 @@ function renderStats() {
 function getNomProg(id) { var p=G.programas.find(function(x){ return x.programa_id===id; }); return p?p.nombre:'—'; }
 function getNomCoh(id)  { var c=G.cohortes.find(function(x){ return x.cohorte_id===id; });  return c?c.nombre:'—'; }
 function badgeEstado(s) {
-    var m={PAGADO:['badge-ejecutado','Pagado'],PROYECTADO:['badge-proyectado','Proyectado'],PENDIENTE:['badge-pendiente','Pendiente'],PARCIAL:['badge-parcial','Pago Parcial'],CANCELADO:['badge-cancelado','Cancelado']};
+    var m={PAGADO:['badge-ejecutado','Pagado'],PENDIENTE:['badge-proyectado','Pendiente'],PARCIAL:['badge-parcial','Pago Parcial'],CANCELADO:['badge-cancelado','Cancelado']};
     var v=m[s]||['badge-proyectado',s||'—'];
     return '<span class="badge '+v[0]+'">'+v[1]+'</span>';
 }
@@ -405,7 +405,7 @@ function abrirModalGasto(tipo, egresoId) {
     poblarFiltros();
     limpiarModal();
     document.getElementById('g-tipo').value  = tipo==='proyectados' ? 'PROYECTADO' : 'EJECUTADO';
-    document.getElementById('g-estado').value= tipo==='proyectados' ? 'PROYECTADO' : 'PAGADO';
+    document.getElementById('g-estado').value= tipo==='proyectados' ? 'PENDIENTE' : 'PAGADO';
     document.getElementById('g-fecha-estimada').value = new Date().toISOString().split('T')[0];
 
     if (egresoId) {
@@ -449,7 +449,7 @@ async function guardarGasto() {
     var montoPag  = parseFloat(document.getElementById('g-monto-pagado').value)||null;
     var datos = {
         tipo:            document.getElementById('g-tipo').value,
-        estado:          document.getElementById('g-estado').value,
+        estado:          document.getElementById('g-estado').value || 'PENDIENTE',
         concepto:        concepto,
         categoria:       categoria,
         programa_id:     programaId||null,
@@ -581,7 +581,7 @@ async function confirmarImportacion() {
     var registros = _impDatos.map(function(r) {
         var prog = G.programas.find(function(p){ return p.nombre.toLowerCase().includes(r.programa_nombre.toLowerCase()); });
         var coh  = prog ? G.cohortes.find(function(c){ return c.programa_id===prog.programa_id && c.nombre.toLowerCase().includes(r.cohorte_nombre.toLowerCase()); }) : null;
-        return { tipo:tipo, estado:tipo==='PROYECTADO'?'PROYECTADO':'PAGADO', fecha_estimada:r.fecha_estimada, categoria:r.categoria, concepto:r.concepto, programa_id:prog?prog.programa_id:null, cohorte_id:coh?coh.cohorte_id:null, monto_original:r.monto_original, monto_pagado:tipo==='EJECUTADO'?r.monto_original:null, proveedor:r.proveedor||null, periodo:r.periodo||null };
+        return { tipo:tipo, estado:tipo==='PROYECTADO'?'PENDIENTE':'PAGADO', fecha_estimada:r.fecha_estimada, categoria:r.categoria, concepto:r.concepto, programa_id:prog?prog.programa_id:null, cohorte_id:coh?coh.cohorte_id:null, monto_original:r.monto_original, monto_pagado:tipo==='EJECUTADO'?r.monto_original:null, proveedor:r.proveedor||null, periodo:r.periodo||null };
     });
     spin(true);
     try {
