@@ -369,15 +369,15 @@
             }
 
             // ── Datos bancarios ──────────────────────────────────
-            var cbu   = cfg.cbu_transferencia   || cfg.cbu   || '—';
-            var alias = cfg.alias_transferencia || cfg.alias || '—';
-            var banco = cfg.banco || '';
-            var tit   = cfg.titular || 'Cooperadora FCE UNCUYO';
+            var cbu   = cfg.banco_cbu    || '—';
+            var alias = cfg.banco_alias  || '—';
+            var banco = cfg.banco_nombre || '';
+            var cuit  = cfg.banco_cuit   || '';
             document.getElementById('datos-bancarios').innerHTML =
                 (banco ? '<div><strong>Banco:</strong> ' + banco + '</div>' : '') +
                 '<div><strong>CBU:</strong> ' + cbu + '</div>' +
                 '<div><strong>Alias:</strong> ' + alias + '</div>' +
-                '<div><strong>Titular:</strong> ' + tit + '</div>';
+                (cuit  ? '<div><strong>CUIT:</strong> ' + cuit + '</div>' : '');
 
         } catch(e) {
             console.error(e);
