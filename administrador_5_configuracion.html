@@ -165,38 +165,6 @@
                 </div>
             </div>
 
-            <div class="config-item">
-                <div class="config-label">
-                    <h3>Intereses desde el 2.° mes</h3>
-                    <p>Los intereses compuestos aplican desde el segundo mes de mora (el primero solo se marca como mora sin recargo adicional)</p>
-                </div>
-                <div class="config-input">
-                    <div class="toggle-wrap">
-                        <label class="toggle">
-                            <input type="checkbox" id="cfg-mora-intereses-mes2">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-label" id="lbl-mora-intereses-mes2">Sí</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="config-item">
-                <div class="config-label">
-                    <h3>Pérdida de Descuento en el 1.° mes</h3>
-                    <p>El estudiante pierde su descuento desde el primer mes que entra en mora</p>
-                </div>
-                <div class="config-input">
-                    <div class="toggle-wrap">
-                        <label class="toggle">
-                            <input type="checkbox" id="cfg-mora-pierde-descuento-mes1">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-label" id="lbl-mora-pierde-desc">Sí</span>
-                    </div>
-                </div>
-            </div>
-
         </div>
         <div id="msg-mora" class="success-box"></div>
         <button class="btn-save" onclick="guardarSeccion('mora', event)">💾 Guardar Configuración de Mora</button>
@@ -415,7 +383,7 @@ function marcarTodasLeidas() {
 ══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async function() {
     // Toggles: actualizar label al cambiar
-    ['cfg-mora-intereses-mes2','cfg-mora-pierde-descuento-mes1','cfg-email-recordatorios','cfg-email-reclamos'].forEach(function(id) {
+    ['cfg-email-recordatorios','cfg-email-reclamos'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener('change', function() { actualizarLabelToggle(id); });
     });
@@ -431,10 +399,8 @@ document.addEventListener('DOMContentLoaded', async function() {
    TOGGLE HELPERS
 ══════════════════════════════════════════════ */
 var TOGGLE_LABELS = {
-    'cfg-mora-intereses-mes2':         'lbl-mora-intereses-mes2',
-    'cfg-mora-pierde-descuento-mes1':  'lbl-mora-pierde-desc',
-    'cfg-email-recordatorios':         'lbl-recordatorios',
-    'cfg-email-reclamos':              'lbl-reclamos',
+    'cfg-email-recordatorios': 'lbl-recordatorios',
+    'cfg-email-reclamos':      'lbl-reclamos',
 };
 function actualizarLabelToggle(id) {
     var lblId = TOGGLE_LABELS[id];
@@ -469,9 +435,6 @@ async function cargarConfiguracion() {
     if (cfg.mora_porcentaje  !== undefined) document.getElementById('cfg-mora-porcentaje').value  = cfg.mora_porcentaje;
     if (cfg.dia_corte_mora   !== undefined) document.getElementById('cfg-dia-corte-mora').value   = cfg.dia_corte_mora;
     if (cfg.mora_tipo        !== undefined) document.getElementById('cfg-mora-tipo').value         = cfg.mora_tipo;
-    setToggle('cfg-mora-intereses-mes2',        cfg.mora_intereses_desde_mes2);
-    setToggle('cfg-mora-pierde-descuento-mes1', cfg.mora_pierde_descuento_mes1);
-
     // ── DESCUENTOS ──
     if (cfg.descuento_perdida_mora !== undefined)
         document.getElementById('cfg-descuento-perdida-mora').value = cfg.descuento_perdida_mora;
@@ -510,11 +473,9 @@ async function guardarSeccion(seccion, event) {
 
     if (seccion === 'mora') {
         cambios = {
-            mora_porcentaje:             document.getElementById('cfg-mora-porcentaje').value,
-            dia_corte_mora:              document.getElementById('cfg-dia-corte-mora').value,
-            mora_tipo:                   document.getElementById('cfg-mora-tipo').value,
-            mora_intereses_desde_mes2:   document.getElementById('cfg-mora-intereses-mes2').checked ? 'TRUE' : 'FALSE',
-            mora_pierde_descuento_mes1:  document.getElementById('cfg-mora-pierde-descuento-mes1').checked ? 'TRUE' : 'FALSE',
+            mora_porcentaje: document.getElementById('cfg-mora-porcentaje').value,
+            dia_corte_mora:  document.getElementById('cfg-dia-corte-mora').value,
+            mora_tipo:       document.getElementById('cfg-mora-tipo').value,
         };
     } else if (seccion === 'descuentos') {
         cambios = {
