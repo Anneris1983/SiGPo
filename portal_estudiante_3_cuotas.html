@@ -18,62 +18,28 @@
         }
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
 
-        /* ── NAVBAR ── */
+        /* NAVBAR */
         .navbar { background: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .nav-brand { font-weight: 700; color: var(--primary); font-size: 15px; }
-        .nav-links  { display: flex; gap: 8px; }
+        .nav-links  { display: flex; gap: 8px; align-items: center; }
         .nav-link   { text-decoration: none; color: #666; font-weight: 500; padding: 8px 14px; border-radius: 6px; transition: all 0.2s; font-size: 14px; }
         .nav-link:hover, .nav-link.active { background: var(--accent); color: white; }
+        .notif-wrapper { position: relative; display: inline-flex; }
 
-        /* ── LAYOUT ── */
+        /* LAYOUT */
         .container { max-width: 1100px; margin: 32px auto; padding: 0 28px; }
         .header { margin-bottom: 24px; }
         .header h1 { font-family: 'Crimson Pro', serif; font-size: 30px; color: var(--primary); margin-bottom: 4px; }
         .header p  { color: #888; font-size: 14px; }
 
-        /* ── FILTROS ── */
-        .filters-bar {
-            background: white;
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            flex-wrap: wrap;
-        }
-        .filter-select {
-            padding: 9px 14px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 13px;
-            font-family: 'DM Sans', sans-serif;
-            color: #374151;
-            background: white;
-            cursor: pointer;
-            min-width: 200px;
-            transition: border-color 0.2s;
-        }
+        /* FILTROS */
+        .filters-bar { background: white; padding: 16px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 12px; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); flex-wrap: wrap; }
+        .filter-select { padding: 9px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; color: #374151; background: white; cursor: pointer; min-width: 200px; transition: border-color 0.2s; }
         .filter-select:focus { outline: none; border-color: var(--primary); }
 
-        /* ── RESUMEN ── */
-        .resumen-bar {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .resumen-pill {
-            background: white;
-            border-radius: 10px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border-left: 4px solid transparent;
-        }
+        /* RESUMEN */
+        .resumen-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+        .resumen-pill { background: white; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid transparent; }
         .resumen-pill.r-total     { border-color: var(--primary); }
         .resumen-pill.r-abonada   { border-color: var(--success); }
         .resumen-pill.r-mora      { border-color: var(--danger);  }
@@ -82,16 +48,8 @@
         .pill-num   { font-size: 22px; font-weight: 700; color: var(--primary); line-height: 1; }
         .pill-label { font-size: 12px; color: #666; line-height: 1.3; }
 
-        /* ── CARDS ── */
-        .cuota-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px 24px;
-            margin-bottom: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border-left: 5px solid #e0e0e0;
-            transition: box-shadow 0.2s;
-        }
+        /* CARDS */
+        .cuota-card { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 5px solid #e0e0e0; transition: box-shadow 0.2s; }
         .cuota-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09); }
         .cuota-card.estado-ABONADA      { border-color: var(--success); }
         .cuota-card.estado-EN_MORA      { border-color: var(--danger);  }
@@ -100,23 +58,11 @@
         .cuota-card.estado-PAGO_PARCIAL { border-color: var(--info);    }
         .cuota-card.estado-A_DEFINIR    { border-color: var(--gray);    }
 
-        .cuota-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-        }
-        .cuota-title { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .cuota-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .cuota-title  { font-size: 16px; font-weight: 700; color: var(--primary); }
         .cuota-title small { font-size: 12px; font-weight: 400; color: #888; margin-left: 8px; }
 
-        .badge {
-            padding: 5px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-        }
+        .badge { padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; }
         .badge-ABONADA      { background: #d1fae5; color: #065f46; }
         .badge-EN_MORA      { background: #fee2e2; color: #991b1b; }
         .badge-PENDIENTE    { background: #fef3c7; color: #92400e; }
@@ -124,12 +70,7 @@
         .badge-PAGO_PARCIAL { background: #dbeafe; color: #1e40af; }
         .badge-A_DEFINIR    { background: #f3f4f6; color: #6b7280; }
 
-        .cuota-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px 20px;
-            margin-bottom: 16px;
-        }
+        .cuota-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 20px; margin-bottom: 16px; }
         .detail-label { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
         .detail-value { font-size: 14px; font-weight: 600; color: #1f2937; }
         .detail-value.highlight-danger  { color: var(--danger); font-size: 16px; }
@@ -137,50 +78,24 @@
         .detail-value.highlight-info    { color: var(--info);    }
         .detail-value.highlight-gray    { color: var(--gray); font-style: italic; }
 
-        .cuota-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-top: 14px;
-            border-top: 1px solid #f0f0f0;
-            gap: 12px;
-        }
+        .cuota-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid #f0f0f0; gap: 12px; }
         .cuota-footer-left { font-size: 12px; color: #aaa; }
 
-        .btn { padding: 9px 18px; border: none; border-radius: 7px; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
-        .btn-primary:hover  { background: #2d5a87; }
-        .btn-primary  { background: var(--primary); color: white; }
-        .btn-success  { background: var(--success); color: white; }
-        .btn-success:hover  { background: #059669; }
-        .btn-outline  { background: white; color: var(--primary); border: 2px solid #d1d5db; }
-        .btn-outline:hover  { border-color: var(--primary); }
+        .btn { padding: 9px 18px; border: none; border-radius: 7px; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s; font-family: 'DM Sans', sans-serif; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #2d5a87; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-outline { background: white; color: var(--primary); border: 2px solid #d1d5db; }
+        .btn-outline:hover { border-color: var(--primary); }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-warning:hover { background: #d97706; }
         .btn-sm { padding: 7px 14px; font-size: 12px; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* avisos internos de card */
-        .mora-box {
-            background: #fff5f5;
-            border: 1px solid #fecaca;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 13px;
-            color: #991b1b;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .indefinida-box {
-            background: #f9fafb;
-            border: 1px dashed #d1d5db;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 13px;
-            color: #9ca3af;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .mora-box { background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #991b1b; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .indefinida-box { background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #9ca3af; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 
         /* barra pago parcial */
         .parcial-bar-wrap { margin-bottom: 14px; }
@@ -192,27 +107,17 @@
         .empty-state { text-align: center; padding: 60px 20px; color: #9ca3af; background: white; border-radius: 12px; }
         .empty-state div { font-size: 40px; margin-bottom: 12px; }
 
-        /* ── MODAL ── */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.45);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+        /* SPINNER */
+        .spinner-overlay { display: none; position: fixed; inset: 0; background: rgba(248,246,241,0.8); z-index: 2000; align-items: center; justify-content: center; flex-direction: column; gap: 14px; }
+        .spinner-overlay.show { display: flex; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.75s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner-txt { font-size: 14px; font-weight: 600; color: var(--primary); }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
         .modal-overlay.open { display: flex; }
-        .modal {
-            background: white;
-            border-radius: 16px;
-            padding: 32px;
-            width: 100%;
-            max-width: 500px;
-            max-height: 92vh;
-            overflow-y: auto;
-        }
+        .modal { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 500px; max-height: 92vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
         .modal-title  { font-family: 'Crimson Pro', serif; font-size: 22px; color: var(--primary); }
         .modal-sub    { font-size: 13px; color: #888; margin-bottom: 22px; }
@@ -222,93 +127,61 @@
         .form-group { margin-bottom: 18px; }
         .form-label { font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 6px; }
         .req { color: var(--danger); }
-        .form-input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: 'DM Sans', sans-serif;
-            transition: border-color 0.2s;
-            color: #1f2937;
-        }
+        .form-input { width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s; color: #1f2937; }
         .form-input:focus { outline: none; border-color: var(--primary); }
 
         /* drag & drop */
-        .drop-zone {
-            border: 2px dashed #d1d5db;
-            border-radius: 10px;
-            padding: 28px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: #fafafa;
-        }
+        .drop-zone { border: 2px dashed #d1d5db; border-radius: 10px; padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafa; }
         .drop-zone:hover, .drop-zone.dragover { border-color: var(--primary); background: #eff6ff; }
         .drop-zone-icon { font-size: 36px; margin-bottom: 8px; }
         .drop-zone-text { font-size: 13px; color: #6b7280; line-height: 1.6; }
         .drop-zone-text span { color: var(--primary); font-weight: 600; }
         #fileInput { display: none; }
 
-        .file-preview {
-            display: none;
-            align-items: center;
-            gap: 10px;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 8px;
-            padding: 10px 14px;
-            margin-top: 10px;
-        }
+        .file-preview { display: none; align-items: center; gap: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin-top: 10px; }
         .file-preview.visible { display: flex; }
         .file-preview-name { font-size: 13px; color: #065f46; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .file-remove { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 18px; }
         .file-remove:hover { color: var(--danger); }
 
-        .info-note {
-            background: #fef9ec;
-            border: 1px solid #fde68a;
-            border-radius: 8px;
-            padding: 11px 14px;
-            font-size: 12px;
-            color: #92400e;
-        }
+        .info-note { background: #fef9ec; border: 1px solid #fde68a; border-radius: 8px; padding: 11px 14px; font-size: 12px; color: #92400e; }
 
         .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
 
-        .modal-cuota-ref {
-            background: #f8f6f1;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            line-height: 1.7;
-        }
+        .modal-cuota-ref { background: #f8f6f1; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; line-height: 1.7; }
         .modal-cuota-ref strong { display: block; color: var(--primary); font-size: 15px; margin-bottom: 2px; }
 
-        /* ── TOAST ── */
-        .toast {
-            position: fixed;
-            bottom: 28px;
-            right: 28px;
-            background: #1f2937;
-            color: white;
-            padding: 14px 20px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 9999;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.3s;
-            pointer-events: none;
-            max-width: 340px;
-        }
+        /* PROGRESS UPLOAD */
+        .upload-progress { display: none; margin-top: 10px; }
+        .upload-progress.show { display: block; }
+        .progress-bar-bg { height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; margin-top: 6px; }
+        .progress-bar-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.3s; }
+        .progress-label { font-size: 12px; color: #666; margin-top: 4px; }
+
+        /* TOAST */
+        .toast { position: fixed; bottom: 28px; right: 28px; background: #1f2937; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 9999; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; max-width: 340px; }
         .toast.show    { opacity: 1; transform: translateY(0); }
         .toast.success { background: #065f46; }
+        .toast.error   { background: #991b1b; }
+
+        /* MODAL VER DOC */
+        .modal-doc-body { text-align: center; padding: 8px 0; }
+        .modal-doc-body iframe { width: 100%; height: 460px; border: none; border-radius: 8px; }
+        .modal-doc-body img    { max-width: 100%; max-height: 460px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+
+        @media (max-width: 700px) {
+            .resumen-bar { grid-template-columns: repeat(2, 1fr); }
+            .cuota-grid  { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
+
+<!-- SPINNER -->
+<div class="spinner-overlay" id="spinner">
+    <div class="spinner"></div>
+    <div class="spinner-txt">Cargando tus cuotas…</div>
+</div>
 
 <!-- NAVBAR -->
 <div class="navbar">
@@ -318,35 +191,39 @@
         <a href="portal_estudiante_3_cuotas.html"    class="nav-link active">💳 Mis Cuotas</a>
         <a href="portal_estudiante_4_facturacion.html" class="nav-link">📄 Facturación</a>
         <a href="portal_estudiante_5_historial.html"  class="nav-link">📊 Historial</a>
-        <!-- Campana -->
-            <div class="notif-wrapper" style="position:relative;display:inline-flex;">
-                <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:6px 8px;border-radius:6px;transition:background 0.2s;">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
-                </button>
-                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
-                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
-                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
-                    </div>
-                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+        <div class="notif-wrapper">
+            <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:6px 8px;border-radius:6px;transition:background 0.2s;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
+            </button>
+            <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                    <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
                 </div>
+                <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
             </div>
-            <a href="portal_login.html" class="nav-link" onclick="return cerrarSesion(event)">🚪 Salir</a>
+        </div>
+        <a href="portal_login.html" class="nav-link" onclick="return cerrarSesion(event)">🚪 Salir</a>
     </div>
 </div>
 
 <div class="container">
     <div class="header">
         <h1>💳 Mis Cuotas</h1>
-        <p>Seleccioná una carrera y cohorte para ver la composición completa de tus cuotas</p>
+        <p>Seleccioná una carrera y cohorte para ver el detalle de tus pagos</p>
     </div>
 
     <!-- FILTROS -->
     <div class="filters-bar">
         <select class="filter-select" id="selPrograma" onchange="onProgramaChange()">
+            <option value="">Todos los programas</option>
         </select>
         <select class="filter-select" id="selCohorte" onchange="render()">
+            <option value="">Todas las cohortes</option>
         </select>
         <select class="filter-select" id="selEstado" onchange="render()">
             <option value="">Todos los estados</option>
@@ -366,9 +243,7 @@
     <div id="listaCuotas"></div>
 </div>
 
-<!-- ══════════════════════════════════════════ -->
-<!-- MODAL SUBIR COMPROBANTE                    -->
-<!-- ══════════════════════════════════════════ -->
+<!-- MODAL: SUBIR COMPROBANTE -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
         <div class="modal-header">
@@ -384,12 +259,12 @@
             <div class="drop-zone" id="dropZone"
                  onclick="document.getElementById('fileInput').click()"
                  ondragover="onDragOver(event)"
-                 ondragleave="onDragLeave(event)"
+                 ondragleave="onDragLeave()"
                  ondrop="onDrop(event)">
                 <div class="drop-zone-icon">📂</div>
                 <div class="drop-zone-text">
                     Arrastrá el archivo acá, o <span>hacé clic para seleccionar</span><br>
-                    <small style="color:#bbb; margin-top:4px; display:block;">PDF, JPG o PNG · Máx. 10 MB</small>
+                    <small style="color:#bbb;margin-top:4px;display:block;">PDF, JPG o PNG · Máx. 10 MB</small>
                 </div>
             </div>
             <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="onFileSelect(event)">
@@ -397,6 +272,10 @@
                 <span style="font-size:20px;">📄</span>
                 <span class="file-preview-name" id="filePreviewName"></span>
                 <button class="file-remove" onclick="removeFile()" title="Quitar">×</button>
+            </div>
+            <div class="upload-progress" id="uploadProgress">
+                <div class="progress-label" id="uploadLabel">Subiendo archivo…</div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="uploadBar" style="width:0%"></div></div>
             </div>
         </div>
 
@@ -411,8 +290,8 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label">Observaciones <span style="color:#aaa; font-weight:400;">(opcional)</span></label>
-            <textarea class="form-input" id="inputObs" rows="2" placeholder="Ej: Pago parcial acordado con la administración..." style="resize:vertical;"></textarea>
+            <label class="form-label">Observaciones <span style="color:#aaa;font-weight:400;">(opcional)</span></label>
+            <textarea class="form-input" id="inputObs" rows="2" placeholder="Ej: Pago parcial acordado con la administración…" style="resize:vertical;"></textarea>
         </div>
 
         <div class="info-note">
@@ -421,7 +300,23 @@
 
         <div class="modal-footer">
             <button class="btn btn-outline" onclick="cerrarModal()">Cancelar</button>
-            <button class="btn btn-primary" onclick="enviarComprobante()">📤 Enviar Comprobante</button>
+            <button class="btn btn-primary" id="btnEnviar" onclick="enviarComprobante()">📤 Enviar Comprobante</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: VER DOCUMENTO (comprobante / recibo) -->
+<div class="modal-overlay" id="modalDoc">
+    <div class="modal" style="max-width:600px;">
+        <div class="modal-header">
+            <div class="modal-title" id="docModalTitle">📎 Documento</div>
+            <button class="modal-close" onclick="cerrarModalDoc()">×</button>
+        </div>
+        <div class="modal-sub" id="docModalSub"></div>
+        <div class="modal-doc-body" id="docModalBody"></div>
+        <div class="modal-footer">
+            <a id="docModalDescargar" href="#" target="_blank" class="btn btn-success btn-sm">⬇ Descargar</a>
+            <button class="btn btn-outline" onclick="cerrarModalDoc()">Cerrar</button>
         </div>
     </div>
 </div>
@@ -431,128 +326,258 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-// ════════════════════════════════════════════════════════
-// DATOS — en producción vienen de google.script.run
-// ════════════════════════════════════════════════════════
-const PROGRAMAS = [
-    { id:1, nombre:'Especialización en Costos y Gestión Empresarial' },
-    { id:2, nombre:'Maestría en Dirección de Negocios (MBM)' },
-    { id:3, nombre:'Diplomado en ODS' },
-];
+'use strict';
 
-const COHORTES = [
-    { id:1, programa_id:1, nombre:'Cohorte 2025-2026' },
-    { id:2, programa_id:2, nombre:'Cohorte 2025-2026' },
-    { id:3, programa_id:3, nombre:'6ª Edición 2024' },
-    { id:4, programa_id:3, nombre:'7ª Edición 2025' },
-];
+// ════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ════════════════════════════════════════════════════
+var SESION    = null;
+var COBROS    = [];    // cobros del estudiante (ya procesados)
+var PROGRAMAS = [];    // { id, nombre }
+var COHORTES  = [];    // { id, programa_id, nombre }
+var _cobroActual = null;   // cobro sobre el que se abre el modal
+var _fileActual  = null;   // File object del comprobante
 
-// Estados: ABONADA | EN_MORA | PENDIENTE | NO_ABONADA | PAGO_PARCIAL | A_DEFINIR
-const CUOTAS = [
-    // ── Esp. Costos · Cohorte 2025-2026 (12 cuotas) ──
-    { id:1,  prog_id:1, coh_id:1, num:'01/12', periodo:'Marzo 2025',  venc:'15/03/2025', original:90000, desc:5, monto:85500,  saldo:0,      estado:'ABONADA',      fechaPago:'10/03/2025' },
-    { id:2,  prog_id:1, coh_id:1, num:'02/12', periodo:'Abril 2025',  venc:'15/04/2025', original:90000, desc:5, monto:85500,  saldo:0,      estado:'ABONADA',      fechaPago:'14/04/2025' },
-    { id:3,  prog_id:1, coh_id:1, num:'03/12', periodo:'Mayo 2025',   venc:'15/05/2025', original:90000, desc:5, monto:85500,  saldo:0,      estado:'ABONADA',      fechaPago:'12/05/2025' },
-    { id:4,  prog_id:1, coh_id:1, num:'04/12', periodo:'Junio 2025',  venc:'15/06/2025', original:90000, desc:5, monto:85500,  saldo:0,      estado:'ABONADA',      fechaPago:'10/06/2025' },
-    { id:5,  prog_id:1, coh_id:1, num:'05/12', periodo:'Julio 2025',  venc:'15/07/2025', original:90000, desc:5, monto:85500,  saldo:42750,  estado:'PAGO_PARCIAL',  pagado:42750 },
-    { id:6,  prog_id:1, coh_id:1, num:'06/12', periodo:'Agosto 2025', venc:'15/08/2025', original:90000, desc:5, monto:85500,  saldo:85500,  estado:'EN_MORA',      diasMora:52, intereses:8977 },
-    { id:7,  prog_id:1, coh_id:1, num:'07/12', periodo:'Sept. 2025',  venc:'15/09/2025', original:90000, desc:5, monto:85500,  saldo:85500,  estado:'EN_MORA',      diasMora:21, intereses:4275 },
-    { id:8,  prog_id:1, coh_id:1, num:'08/12', periodo:'Oct. 2025',   venc:'15/10/2025', original:90000, desc:5, monto:85500,  saldo:85500,  estado:'PENDIENTE', comprobante:'transferencia_octubre.pdf', fechaComprobante:'05/10/2025' },
-    { id:9,  prog_id:1, coh_id:1, num:'09/12', periodo:'Nov. 2025',   venc:'15/11/2025', original:90000, desc:5, monto:85500,  saldo:85500,  estado:'NO_ABONADA' },
-    { id:10, prog_id:1, coh_id:1, num:'10/12', periodo:'Dic. 2025',   venc:'15/12/2025', original:90000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:11, prog_id:1, coh_id:1, num:'11/12', periodo:'Enero 2026',  venc:'15/01/2026', original:90000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:12, prog_id:1, coh_id:1, num:'12/12', periodo:'Feb. 2026',   venc:'15/02/2026', original:90000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-
-    // ── MBM · Cohorte 2025-2026 (18 cuotas) ──
-    { id:13, prog_id:2, coh_id:2, num:'01/18', periodo:'Marzo 2025',  venc:'15/03/2025', original:120000, desc:5, monto:114000, saldo:0,      estado:'ABONADA',  fechaPago:'10/03/2025' },
-    { id:14, prog_id:2, coh_id:2, num:'02/18', periodo:'Abril 2025',  venc:'15/04/2025', original:120000, desc:5, monto:114000, saldo:0,      estado:'ABONADA',  fechaPago:'12/04/2025' },
-    { id:15, prog_id:2, coh_id:2, num:'03/18', periodo:'Mayo 2025',   venc:'15/05/2025', original:120000, desc:5, monto:114000, saldo:114000, estado:'EN_MORA',  diasMora:30, intereses:5700 },
-    { id:16, prog_id:2, coh_id:2, num:'04/18', periodo:'Junio 2025',  venc:'15/06/2025', original:120000, desc:5, monto:114000, saldo:114000, estado:'PENDIENTE' },
-    { id:17, prog_id:2, coh_id:2, num:'05/18', periodo:'Julio 2025',  venc:'15/07/2025', original:120000, desc:5, monto:114000, saldo:114000, estado:'PENDIENTE' },
-    { id:18, prog_id:2, coh_id:2, num:'06/18', periodo:'Agosto 2025', venc:'15/08/2025', original:120000, desc:5, monto:114000, saldo:114000, estado:'PENDIENTE' },
-    { id:19, prog_id:2, coh_id:2, num:'07/18', periodo:'Sept. 2025',  venc:'15/09/2025', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:20, prog_id:2, coh_id:2, num:'08/18', periodo:'Oct. 2025',   venc:'15/10/2025', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:21, prog_id:2, coh_id:2, num:'09/18', periodo:'Nov. 2025',   venc:'15/11/2025', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:22, prog_id:2, coh_id:2, num:'10/18', periodo:'Dic. 2025',   venc:'15/12/2025', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:23, prog_id:2, coh_id:2, num:'11/18', periodo:'Enero 2026',  venc:'15/01/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:24, prog_id:2, coh_id:2, num:'12/18', periodo:'Feb. 2026',   venc:'15/02/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:25, prog_id:2, coh_id:2, num:'13/18', periodo:'Mar. 2026',   venc:'15/03/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:26, prog_id:2, coh_id:2, num:'14/18', periodo:'Abr. 2026',   venc:'15/04/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:27, prog_id:2, coh_id:2, num:'15/18', periodo:'May. 2026',   venc:'15/05/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:28, prog_id:2, coh_id:2, num:'16/18', periodo:'Jun. 2026',   venc:'15/06/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:29, prog_id:2, coh_id:2, num:'17/18', periodo:'Jul. 2026',   venc:'15/07/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-    { id:30, prog_id:2, coh_id:2, num:'18/18', periodo:'Ago. 2026',   venc:'15/08/2026', original:120000, desc:0, monto:null,   saldo:null,   estado:'A_DEFINIR' },
-
-    // ── Diplomado ODS · 6ª Edición 2024 (6 cuotas — todo pago) ──
-    { id:31, prog_id:3, coh_id:3, num:'01/06', periodo:'Agosto 2024', venc:'15/08/2024', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'10/08/2024' },
-    { id:32, prog_id:3, coh_id:3, num:'02/06', periodo:'Sept. 2024',  venc:'15/09/2024', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'12/09/2024' },
-    { id:33, prog_id:3, coh_id:3, num:'03/06', periodo:'Oct. 2024',   venc:'15/10/2024', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'14/10/2024' },
-    { id:34, prog_id:3, coh_id:3, num:'04/06', periodo:'Nov. 2024',   venc:'15/11/2024', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'10/11/2024' },
-    { id:35, prog_id:3, coh_id:3, num:'05/06', periodo:'Dic. 2024',   venc:'15/12/2024', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'13/12/2024' },
-    { id:36, prog_id:3, coh_id:3, num:'06/06', periodo:'Ene. 2025',   venc:'15/01/2025', original:60000, desc:0, monto:60000, saldo:0, estado:'ABONADA', fechaPago:'09/01/2025' },
-
-    // ── Diplomado ODS · 7ª Edición 2025 (4 cuotas) ──
-    { id:37, prog_id:3, coh_id:4, num:'01/04', periodo:'Marzo 2025',  venc:'15/03/2025', original:70000, desc:0, monto:70000, saldo:0,     estado:'ABONADA',  fechaPago:'10/03/2025' },
-    { id:38, prog_id:3, coh_id:4, num:'02/04', periodo:'Junio 2025',  venc:'15/06/2025', original:70000, desc:0, monto:70000, saldo:70000, estado:'PENDIENTE' },
-    { id:39, prog_id:3, coh_id:4, num:'03/04', periodo:'Sept. 2025',  venc:'15/09/2025', original:70000, desc:0, monto:null,  saldo:null,  estado:'A_DEFINIR' },
-    { id:40, prog_id:3, coh_id:4, num:'04/04', periodo:'Dic. 2025',   venc:'15/12/2025', original:70000, desc:0, monto:null,  saldo:null,  estado:'A_DEFINIR' },
-];
-
-// ════════════════════════════════════════════════════════
-// HELPERS
-// ════════════════════════════════════════════════════════
-const fmt = n => n != null ? '$' + Number(n).toLocaleString('es-AR') : '—';
-
-const ETIQUETAS = {
+// ════════════════════════════════════════════════════
+// CONSTANTES UI
+// ════════════════════════════════════════════════════
+var ETIQUETAS = {
     ABONADA:      '✅ Abonada',
     EN_MORA:      '🔴 En mora',
     PENDIENTE:    '🕐 Pendiente',
-    PAGO_PARCIAL: '🔵 Pago parcial',
+    NO_ABONADA:   '🔵 No abonada',
+    PAGO_PARCIAL: '💙 Pago parcial',
     A_DEFINIR:    '⚙️ A definir',
+    NO_APLICA:    '— No aplica'
 };
 
-const RESUMEN_META = [
-    { key:'total',       label:'Total',      cls:'r-total',     icon:'📋' },
-    { key:'ABONADA',     label:'Abonadas',   cls:'r-abonada',   icon:'✅' },
-    { key:'EN_MORA',     label:'En mora',    cls:'r-mora',      icon:'🔴' },
-    { key:'PENDIENTE',   label:'Pendientes', cls:'r-pendiente', icon:'🕐' },
-    { key:'A_DEFINIR',   label:'A definir',  cls:'r-indefinida',icon:'⚙️' },
+var RESUMEN_META = [
+    { key:'total',       label:'Total',       cls:'r-total',      icon:'📋' },
+    { key:'ABONADA',     label:'Abonadas',    cls:'r-abonada',    icon:'✅' },
+    { key:'EN_MORA',     label:'En mora',     cls:'r-mora',       icon:'🔴' },
+    { key:'PENDIENTE',   label:'Pendientes',  cls:'r-pendiente',  icon:'🕐' },
+    { key:'A_DEFINIR',   label:'A definir',   cls:'r-indefinida', icon:'⚙️' },
 ];
 
-// ════════════════════════════════════════════════════════
-// POBLAR SELECTS
-// ════════════════════════════════════════════════════════
-function poblarProgramas() {
-    const sel = document.getElementById('selPrograma');
-    PROGRAMAS.forEach(p => {
-        const o = document.createElement('option');
-        o.value = p.id; o.textContent = p.nombre;
-        sel.appendChild(o);
-    });
+// ════════════════════════════════════════════════════
+// NOTIFICACIONES
+// ════════════════════════════════════════════════════
+var _notifs = [];
+
+function toggleNotif() {
+    var dd = document.getElementById('notif-dropdown');
+    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function(e) {
+    var w = document.querySelector('.notif-wrapper');
+    if (w && !w.contains(e.target)) {
+        var dd = document.getElementById('notif-dropdown');
+        if (dd) dd.style.display = 'none';
+    }
+});
+function renderNotificaciones(datos) {
+    _notifs = datos || [];
+    var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+    var badge = document.getElementById('notif-badge');
+    if (badge) { badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none'; }
+    var lista = document.getElementById('notif-list');
+    if (!lista) return;
+    if (!_notifs.length) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+    var iconos  = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨', cuota:'📅' };
+    var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3', cuota:'#dbeafe' };
+    lista.innerHTML = _notifs.map(function(n) {
+        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+            + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo] || '#f3f4f6') + ';">' + (iconos[n.tipo] || '🔔') + '</div>'
+            + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo || '') + '</div></div></div>';
+    }).join('');
+}
+function leerNotif(id) {
+    _notifs.forEach(function(n) { if (n.id === id) n.leida = true; });
+    renderNotificaciones(_notifs);
+    if (typeof marcarNotificacionLeida === 'function') marcarNotificacionLeida(id);
+}
+function marcarTodasLeidas() {
+    _notifs.forEach(function(n) { n.leida = true; });
+    renderNotificaciones(_notifs);
+    if (typeof marcarTodasNotificacionesLeidas === 'function') marcarTodasNotificacionesLeidas();
 }
 
-function onProgramaChange() {
-    const progId = +document.getElementById('selPrograma').value;
-    const sel = document.getElementById('selCohorte');
-    sel.innerHTML = '';
+// ════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════
+function fmt(n) {
+    if (n === null || n === undefined) return '—';
+    return '$' + Number(n).toLocaleString('es-AR');
+}
+function spin(v) { document.getElementById('spinner').classList.toggle('show', v); }
+function toast(msg, tipo) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (tipo === 'ok' ? ' success' : tipo === 'err' ? ' error' : '');
+    clearTimeout(t._to);
+    t._to = setTimeout(function() { t.className = 'toast'; }, 4500);
+}
+function hoy() { return new Date().toISOString().split('T')[0]; }
+
+// ════════════════════════════════════════════════════
+// INIT — carga datos desde Supabase
+// ════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async function() {
+    // Verificar sesión
+    SESION = getSesion();
+    if (!SESION || SESION.rol !== 'ESTUDIANTE') {
+        window.location.href = 'portal_login.html';
+        return;
+    }
+
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var dni = SESION.dni;
+
+        // 1. Traer cobros del estudiante
+        var { data: cobros, error: errCobros } = await sb
+            .from('cobros')
+            .select('cobro_id, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, estado, no_aplica, comprobante_url, recibo_url, fecha_pago, cohorte_id, programa_id')
+            .eq('dni', String(dni))
+            .order('fecha_vencimiento');
+
+        if (errCobros) throw errCobros;
+        var todosLosCobros = cobros || [];
+
+        // 2. Traer programas involucrados
+        var progIds = [...new Set(todosLosCobros.map(function(c) { return c.programa_id; }).filter(Boolean))];
+        var cohIds  = [...new Set(todosLosCobros.map(function(c) { return c.cohorte_id; }).filter(Boolean))];
+
+        if (progIds.length) {
+            var { data: progs } = await sb.from('programas').select('programa_id, nombre').in('programa_id', progIds);
+            PROGRAMAS = (progs || []).map(function(p) { return { id: p.programa_id, nombre: p.nombre }; });
+        }
+        if (cohIds.length) {
+            var { data: cohs } = await sb.from('cohortes').select('cohorte_id, programa_id, nombre').in('cohorte_id', cohIds);
+            COHORTES = (cohs || []).map(function(c) { return { id: c.cohorte_id, programa_id: c.programa_id, nombre: c.nombre }; });
+        }
+
+        // 3. Normalizar cobros para la UI
+        COBROS = todosLosCobros
+            .filter(function(c) { return c.no_aplica !== true && c.estado !== 'NO_APLICA'; })
+            .map(function(c, i) {
+                var montoFinal  = c.monto_final   !== null ? Number(c.monto_final)   : null;
+                var saldoPend   = c.saldo_pendiente !== null ? Number(c.saldo_pendiente) : null;
+                var montoOrig   = c.monto_original  !== null ? Number(c.monto_original)  : null;
+                var montoAbonado = (montoFinal !== null && saldoPend !== null) ? Math.max(0, montoFinal - saldoPend) : 0;
+                var estado = c.estado || 'NO_ABONADA';
+
+                // Calcular días de mora
+                var diasMora = 0;
+                if (estado === 'EN_MORA' && c.fecha_vencimiento) {
+                    var fVenc = new Date(c.fecha_vencimiento + 'T00:00:00');
+                    var fHoy  = new Date();
+                    diasMora  = Math.max(0, Math.floor((fHoy - fVenc) / 86400000));
+                }
+
+                return {
+                    cobro_id:   c.cobro_id,
+                    prog_id:    c.programa_id,
+                    coh_id:     c.cohorte_id,
+                    num:        String(i + 1).padStart(2, '0'),
+                    concepto:   c.concepto || 'Cuota',
+                    periodo:    c.periodo  || '—',
+                    venc:       c.fecha_vencimiento ? c.fecha_vencimiento.split('T')[0] : '—',
+                    original:   montoOrig,
+                    desc:       Number(c.descuento_porcentaje || 0),
+                    monto:      montoFinal,
+                    saldo:      saldoPend,
+                    pagado:     montoAbonado,
+                    estado:     estado,
+                    diasMora:   diasMora,
+                    intereses:  0,   // el cálculo de intereses lo hace el backend; aquí solo mostramos lo que está en monto_final
+                    comprobante_url: c.comprobante_url || null,
+                    recibo_url:      c.recibo_url     || null,
+                    fechaPago:  c.fecha_pago ? c.fecha_pago.split('T')[0] : null,
+                };
+            });
+
+        // 4. Poblar selects y renderizar
+        poblarSelects();
+        autoSeleccionarUrgente();
+        render();
+
+        // 5. Notificaciones
+        if (typeof obtenerNotificaciones === 'function') {
+            obtenerNotificaciones(SESION.rol).then(renderNotificaciones);
+        }
+
+    } catch(e) {
+        console.error('Error al cargar cuotas:', e);
+        toast('Error al cargar tus cuotas: ' + e.message, 'err');
+        document.getElementById('listaCuotas').innerHTML = '<div class="empty-state"><div>⚠️</div><p>No se pudieron cargar las cuotas. Recargá la página.</p></div>';
+    } finally {
+        spin(false);
+    }
+});
+
+// ════════════════════════════════════════════════════
+// POBLAR SELECTS
+// ════════════════════════════════════════════════════
+function poblarSelects() {
+    var selProg = document.getElementById('selPrograma');
+    selProg.innerHTML = '<option value="">Todos los programas</option>';
+    PROGRAMAS.forEach(function(p) {
+        var o = document.createElement('option');
+        o.value = p.id; o.textContent = p.nombre;
+        selProg.appendChild(o);
+    });
+    poblarCohortes(null);
+}
+
+function poblarCohortes(progId) {
+    var sel = document.getElementById('selCohorte');
+    sel.innerHTML = '<option value="">Todas las cohortes</option>';
     COHORTES
-        .filter(c => !progId || c.programa_id === progId)
-        .forEach(c => {
-            const o = document.createElement('option');
+        .filter(function(c) { return !progId || c.programa_id === progId; })
+        .forEach(function(c) {
+            var o = document.createElement('option');
             o.value = c.id; o.textContent = c.nombre;
             sel.appendChild(o);
         });
+}
+
+function onProgramaChange() {
+    var progId = parseInt(document.getElementById('selPrograma').value) || null;
+    poblarCohortes(progId);
     render();
 }
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+// AUTO-SELECCIÓN DE LA COHORTE MÁS URGENTE
+// ════════════════════════════════════════════════════
+function autoSeleccionarUrgente() {
+    var PRIORIDAD = ['EN_MORA', 'PAGO_PARCIAL', 'PENDIENTE', 'NO_ABONADA'];
+    var cohSelec = null;
+    for (var i = 0; i < PRIORIDAD.length; i++) {
+        var c = COBROS.find(function(x) { return x.estado === PRIORIDAD[i]; });
+        if (c) { cohSelec = c.coh_id; break; }
+    }
+    if (!cohSelec && COBROS.length) cohSelec = COBROS[0].coh_id;
+    if (!cohSelec) return;
+
+    var cohorte = COHORTES.find(function(c) { return c.id === cohSelec; });
+    if (!cohorte) return;
+
+    document.getElementById('selPrograma').value = cohorte.programa_id;
+    poblarCohortes(cohorte.programa_id);
+    document.getElementById('selCohorte').value = cohSelec;
+}
+
+// ════════════════════════════════════════════════════
 // FILTRAR
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
 function cuotasFiltradas() {
-    const progId  = +document.getElementById('selPrograma').value || null;
-    const cohId   = +document.getElementById('selCohorte').value  || null;
-    const estado  =  document.getElementById('selEstado').value   || null;
-    return CUOTAS.filter(c => {
+    var progId = parseInt(document.getElementById('selPrograma').value) || null;
+    var cohId  = parseInt(document.getElementById('selCohorte').value)  || null;
+    var estado = document.getElementById('selEstado').value             || null;
+    return COBROS.filter(function(c) {
         if (progId && c.prog_id !== progId) return false;
         if (cohId  && c.coh_id  !== cohId)  return false;
         if (estado && c.estado  !== estado) return false;
@@ -560,298 +585,317 @@ function cuotasFiltradas() {
     });
 }
 
-// ════════════════════════════════════════════════════════
-// RENDER
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+// RENDER PRINCIPAL
+// ════════════════════════════════════════════════════
 function render() {
-    const lista = cuotasFiltradas();
+    var lista = cuotasFiltradas();
     renderResumen(lista);
     renderCuotas(lista);
 }
 
 function renderResumen(lista) {
-    const cnt = { total: lista.length };
-    ['ABONADA','EN_MORA','PENDIENTE','PAGO_PARCIAL','A_DEFINIR'].forEach(e => {
-        cnt[e] = lista.filter(c => c.estado === e).length;
+    var cnt = { total: lista.length };
+    ['ABONADA','EN_MORA','PENDIENTE','PAGO_PARCIAL','A_DEFINIR'].forEach(function(e) {
+        cnt[e] = lista.filter(function(c) { return c.estado === e; }).length;
     });
-    document.getElementById('resumenBar').innerHTML = RESUMEN_META.map(m => `
-        <div class="resumen-pill ${m.cls}">
-            <div>
-                <div class="pill-num">${cnt[m.key] ?? 0}</div>
-                <div class="pill-label">${m.icon} ${m.label}</div>
-            </div>
-        </div>
-    `).join('');
+    document.getElementById('resumenBar').innerHTML = RESUMEN_META.map(function(m) {
+        return '<div class="resumen-pill ' + m.cls + '"><div><div class="pill-num">' + (cnt[m.key] || 0) + '</div><div class="pill-label">' + m.icon + ' ' + m.label + '</div></div></div>';
+    }).join('');
 }
 
 function renderCuotas(lista) {
-    const cont = document.getElementById('listaCuotas');
+    var cont = document.getElementById('listaCuotas');
     if (!lista.length) {
-        cont.innerHTML = `<div class="empty-state"><div>🔍</div><p>No hay cuotas que coincidan con los filtros seleccionados.</p></div>`;
+        cont.innerHTML = '<div class="empty-state"><div>🔍</div><p>No hay cuotas que coincidan con los filtros seleccionados.</p></div>';
         return;
     }
-    cont.innerHTML = lista.map(c => buildCard(c)).join('');
+    cont.innerHTML = lista.map(function(c) { return buildCard(c); }).join('');
 }
 
+// ════════════════════════════════════════════════════
+// CONSTRUIR CARD
+// ════════════════════════════════════════════════════
 function buildCard(c) {
-    const prog    = PROGRAMAS.find(p => p.id === c.prog_id);
-    const cohorte = COHORTES.find(co => co.id === c.coh_id);
-    let infoExtra = '', gridHtml = '', footerBtn = '', footerLeft = '';
+    var prog    = PROGRAMAS.find(function(p) { return p.id === c.prog_id; });
+    var cohorte = COHORTES.find(function(co) { return co.id === c.coh_id; });
+    var infoExtra = '', gridHtml = '', footerBtn = '', footerLeft = '';
+    var programaStr = (prog ? prog.nombre : '') + (cohorte ? ' · ' + cohorte.nombre : '');
 
     if (c.estado === 'ABONADA') {
-        gridHtml = `
-            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
-            <div><div class="detail-label">Vencimiento</div><div class="detail-value">${c.venc}</div></div>
-            <div><div class="detail-label">Monto abonado</div><div class="detail-value highlight-success">${fmt(c.monto)}</div></div>
-            <div><div class="detail-label">Fecha de pago</div><div class="detail-value highlight-success">${c.fechaPago}</div></div>
-            ${c.desc > 0 ? `
-            <div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">${fmt(c.original)}</div></div>
-            <div><div class="detail-label">Descuento aplicado</div><div class="detail-value highlight-success">-${c.desc}%</div></div>` : ''}
-        `;
-        footerBtn  = `<button class="btn btn-success btn-sm">📥 Descargar Recibo</button>`;
-        footerLeft = `Pagada el ${c.fechaPago}`;
+        gridHtml = ''
+            + '<div><div class="detail-label">Concepto</div><div class="detail-value">' + esc(c.concepto) + '</div></div>'
+            + '<div><div class="detail-label">Período</div><div class="detail-value">' + esc(c.periodo) + '</div></div>'
+            + '<div><div class="detail-label">Vencimiento</div><div class="detail-value">' + c.venc + '</div></div>'
+            + '<div><div class="detail-label">Monto abonado</div><div class="detail-value highlight-success">' + fmt(c.monto) + '</div></div>'
+            + '<div><div class="detail-label">Fecha de pago</div><div class="detail-value highlight-success">' + (c.fechaPago || '—') + '</div></div>'
+            + (c.desc > 0 ? '<div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">' + fmt(c.original) + '</div></div><div><div class="detail-label">Descuento</div><div class="detail-value highlight-success">-' + c.desc + '%</div></div>' : '');
+        var btns = '';
+        if (c.comprobante_url) btns += '<button class="btn btn-outline btn-sm" onclick="verDocumento(\'' + esc(c.comprobante_url) + '\',\'Comprobante\',\'' + esc(c.concepto) + '\')">📎 Comprobante</button> ';
+        if (c.recibo_url)      btns += '<button class="btn btn-success btn-sm" onclick="verDocumento(\'' + esc(c.recibo_url) + '\',\'Recibo\',\'' + esc(c.concepto) + '\')">🧾 Recibo</button>';
+        footerBtn  = btns || '<span style="color:#aaa;font-size:12px;">Sin documentos adjuntos</span>';
+        footerLeft = 'Pagada el ' + (c.fechaPago || '—');
 
     } else if (c.estado === 'EN_MORA') {
-        const totalMora = (c.monto || 0) + (c.intereses || 0);
-        infoExtra = `<div class="mora-box">⚠️ <strong>${c.diasMora} días de atraso</strong> · Intereses acumulados: ${fmt(c.intereses)} (5% mensual compuesto)</div>`;
-        gridHtml = `
-            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
-            <div><div class="detail-label">Vencía el</div><div class="detail-value" style="color:var(--danger);">${c.venc}</div></div>
-            <div><div class="detail-label">Cuota original</div><div class="detail-value">${fmt(c.monto)}</div></div>
-            <div><div class="detail-label">Intereses</div><div class="detail-value highlight-danger">+${fmt(c.intereses)}</div></div>
-            <div><div class="detail-label">Total a pagar hoy</div><div class="detail-value highlight-danger">${fmt(totalMora)}</div></div>
-            ${c.desc > 0 ? `<div><div class="detail-label">Descuento</div><div class="detail-value" style="color:#bbb;font-size:12px;">-${c.desc}% perdido por mora</div></div>` : ''}
-        `;
-        footerBtn  = `<button class="btn btn-primary btn-sm" onclick='abrirModal(${JSON.stringify(c)})'>📤 Subir Comprobante</button>`;
-        footerLeft = `<span style="color:var(--danger);">⚠️ ${c.diasMora} días de atraso</span>`;
+        infoExtra = '<div class="mora-box">⚠️ <strong>' + c.diasMora + ' días de atraso</strong> · El monto actualizado ya incluye los intereses aplicados por la administración.</div>';
+        gridHtml = ''
+            + '<div><div class="detail-label">Concepto</div><div class="detail-value">' + esc(c.concepto) + '</div></div>'
+            + '<div><div class="detail-label">Período</div><div class="detail-value">' + esc(c.periodo) + '</div></div>'
+            + '<div><div class="detail-label">Venció el</div><div class="detail-value" style="color:var(--danger);">' + c.venc + '</div></div>'
+            + '<div><div class="detail-label">Total a pagar hoy</div><div class="detail-value highlight-danger">' + fmt(c.monto) + '</div></div>'
+            + (c.desc > 0 ? '<div><div class="detail-label">Descuento</div><div class="detail-value" style="color:#bbb;font-size:12px;">-' + c.desc + '% perdido por mora</div></div>' : '');
+        footerBtn  = '<button class="btn btn-primary btn-sm" onclick="abrirModal(' + c.cobro_id + ')">📤 Subir Comprobante</button>';
+        footerLeft = '<span style="color:var(--danger);">⚠️ ' + c.diasMora + ' días de atraso</span>';
 
     } else if (c.estado === 'PAGO_PARCIAL') {
-        const pct = Math.round((c.pagado / c.monto) * 100);
-        infoExtra = `
-            <div class="parcial-bar-wrap">
-                <div class="parcial-bar-label"><span>Pagado: ${fmt(c.pagado)} (${pct}%)</span><span>Saldo: ${fmt(c.saldo)}</span></div>
-                <div class="parcial-bar"><div class="parcial-bar-fill" style="width:${pct}%"></div></div>
-            </div>`;
-        gridHtml = `
-            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
-            <div><div class="detail-label">Vencimiento</div><div class="detail-value">${c.venc}</div></div>
-            <div><div class="detail-label">Cuota total</div><div class="detail-value">${fmt(c.monto)}</div></div>
-            <div><div class="detail-label">Ya pagaste</div><div class="detail-value highlight-info">${fmt(c.pagado)}</div></div>
-            <div><div class="detail-label">Saldo pendiente</div><div class="detail-value highlight-danger">${fmt(c.saldo)}</div></div>
-            ${c.desc > 0 ? `<div><div class="detail-label">Descuento aplicado</div><div class="detail-value highlight-success">-${c.desc}%</div></div>` : ''}
-        `;
-        footerBtn  = `<button class="btn btn-primary btn-sm" onclick='abrirModal(${JSON.stringify(c)})'>📤 Completar Pago</button>`;
-        footerLeft = `Pago parcial registrado · Saldo restante: ${fmt(c.saldo)}`;
+        var pct = c.monto > 0 ? Math.round((c.pagado / c.monto) * 100) : 0;
+        infoExtra = '<div class="parcial-bar-wrap"><div class="parcial-bar-label"><span>Pagado: ' + fmt(c.pagado) + ' (' + pct + '%)</span><span>Saldo: ' + fmt(c.saldo) + '</span></div><div class="parcial-bar"><div class="parcial-bar-fill" style="width:' + pct + '%"></div></div></div>';
+        gridHtml = ''
+            + '<div><div class="detail-label">Concepto</div><div class="detail-value">' + esc(c.concepto) + '</div></div>'
+            + '<div><div class="detail-label">Período</div><div class="detail-value">' + esc(c.periodo) + '</div></div>'
+            + '<div><div class="detail-label">Vencimiento</div><div class="detail-value">' + c.venc + '</div></div>'
+            + '<div><div class="detail-label">Cuota total</div><div class="detail-value">' + fmt(c.monto) + '</div></div>'
+            + '<div><div class="detail-label">Ya pagaste</div><div class="detail-value highlight-info">' + fmt(c.pagado) + '</div></div>'
+            + '<div><div class="detail-label">Saldo pendiente</div><div class="detail-value highlight-danger">' + fmt(c.saldo) + '</div></div>'
+            + (c.desc > 0 ? '<div><div class="detail-label">Descuento aplicado</div><div class="detail-value highlight-success">-' + c.desc + '%</div></div>' : '');
+        var btns2 = '<button class="btn btn-primary btn-sm" onclick="abrirModal(' + c.cobro_id + ')">📤 Completar Pago</button>';
+        if (c.recibo_url) btns2 += ' <button class="btn btn-outline btn-sm" onclick="verDocumento(\'' + esc(c.recibo_url) + '\',\'Recibo Parcial\',\'' + esc(c.concepto) + '\')">🧾 Ver recibo</button>';
+        footerBtn  = btns2;
+        footerLeft = 'Pago parcial registrado · Saldo restante: ' + fmt(c.saldo);
 
     } else if (c.estado === 'PENDIENTE') {
-        /* PENDIENTE = comprobante subido, esperando revisión de Cooperadora */
-        infoExtra = `<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;color:#92400e;">🕐 <strong>Comprobante enviado</strong> — Esperando revisión de Cooperadora${c.fechaComprobante ? ' (enviado el ' + c.fechaComprobante + ')' : ''}</div>`;
-        gridHtml = `
-            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
-            <div><div class="detail-label">Vencimiento</div><div class="detail-value">${c.venc}</div></div>
-            <div><div class="detail-label">Monto a pagar</div><div class="detail-value">${fmt(c.monto)}</div></div>
-            ${c.comprobante ? `<div><div class="detail-label">Comprobante</div><div class="detail-value" style="color:#1e3a5f;">📎 ${c.comprobante}</div></div>` : ''}
-            ${c.desc > 0 ? `
-            <div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">${fmt(c.original)}</div></div>
-            <div><div class="detail-label">Descuento</div><div class="detail-value highlight-success">-${c.desc}%</div></div>` : ''}
-        `;
-        footerBtn  = `<button class="btn btn-warning btn-sm" style="background:#f59e0b;color:#fff;" onclick="verComprobante('${c.comprobante || ''}')">👁️ Ver comprobante enviado</button>`;
-        footerLeft = `Pendiente de verificación por Cooperadora`;
+        infoExtra = '<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;color:#92400e;">🕐 <strong>Comprobante enviado</strong> — Esperando revisión de Cooperadora</div>';
+        gridHtml = ''
+            + '<div><div class="detail-label">Concepto</div><div class="detail-value">' + esc(c.concepto) + '</div></div>'
+            + '<div><div class="detail-label">Período</div><div class="detail-value">' + esc(c.periodo) + '</div></div>'
+            + '<div><div class="detail-label">Vencimiento</div><div class="detail-value">' + c.venc + '</div></div>'
+            + '<div><div class="detail-label">Monto a pagar</div><div class="detail-value">' + fmt(c.monto) + '</div></div>'
+            + (c.desc > 0 ? '<div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">' + fmt(c.original) + '</div></div><div><div class="detail-label">Descuento</div><div class="detail-value highlight-success">-' + c.desc + '%</div></div>' : '');
+        var btnPend = '';
+        if (c.comprobante_url) btnPend = '<button class="btn btn-warning btn-sm" onclick="verDocumento(\'' + esc(c.comprobante_url) + '\',\'Comprobante enviado\',\'' + esc(c.concepto) + '\')">👁️ Ver comprobante</button>';
+        footerBtn  = btnPend;
+        footerLeft = 'Pendiente de verificación por Cooperadora';
 
     } else if (c.estado === 'NO_ABONADA') {
-        /* NO_ABONADA = cuota con monto, no venció, sin comprobante */
-        gridHtml = `
-            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
-            <div><div class="detail-label">Vencimiento</div><div class="detail-value">${c.venc}</div></div>
-            <div><div class="detail-label">Monto a pagar</div><div class="detail-value">${fmt(c.monto)}</div></div>
-            ${c.desc > 0 ? `
-            <div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">${fmt(c.original)}</div></div>
-            <div><div class="detail-label">Descuento</div><div class="detail-value highlight-success">-${c.desc}%</div></div>` : ''}
-        `;
-        footerBtn  = `<button class="btn btn-primary btn-sm" onclick='abrirModal(${JSON.stringify(c)})'>📤 Subir Comprobante</button>`;
-        footerLeft = `Vence el ${c.venc}`;
+        gridHtml = ''
+            + '<div><div class="detail-label">Concepto</div><div class="detail-value">' + esc(c.concepto) + '</div></div>'
+            + '<div><div class="detail-label">Período</div><div class="detail-value">' + esc(c.periodo) + '</div></div>'
+            + '<div><div class="detail-label">Vencimiento</div><div class="detail-value">' + c.venc + '</div></div>'
+            + '<div><div class="detail-label">Monto a pagar</div><div class="detail-value">' + fmt(c.monto) + '</div></div>'
+            + (c.desc > 0 ? '<div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">' + fmt(c.original) + '</div></div><div><div class="detail-label">Descuento</div><div class="detail-value highlight-success">-' + c.desc + '%</div></div>' : '');
+        footerBtn  = '<button class="btn btn-primary btn-sm" onclick="abrirModal(' + c.cobro_id + ')">📤 Subir Comprobante</button>';
+        footerLeft = 'Vence el ' + c.venc;
 
     } else if (c.estado === 'A_DEFINIR') {
-        infoExtra = `<div class="indefinida-box">⚙️ El monto de esta cuota aún no fue definido por la administración. Te notificaremos cuando esté disponible.</div>`;
-        gridHtml = `
-            <div><div class="detail-label">Período</div><div class="detail-value">${c.periodo}</div></div>
-            <div><div class="detail-label">Vencimiento estimado</div><div class="detail-value">${c.venc}</div></div>
-            <div><div class="detail-label">Monto</div><div class="detail-value highlight-gray">Por definir</div></div>
-        `;
+        infoExtra = '<div class="indefinida-box">⚙️ El monto de esta cuota aún no fue definido por la administración. Te notificaremos cuando esté disponible.</div>';
+        gridHtml = ''
+            + '<div><div class="detail-label">Concepto</div><div class="detail-value">' + esc(c.concepto) + '</div></div>'
+            + '<div><div class="detail-label">Período</div><div class="detail-value">' + esc(c.periodo) + '</div></div>'
+            + '<div><div class="detail-label">Vencimiento estimado</div><div class="detail-value">' + c.venc + '</div></div>'
+            + '<div><div class="detail-label">Monto</div><div class="detail-value highlight-gray">Por definir</div></div>';
         footerLeft = 'Pendiente de confirmación por la administración';
-        // Sin botón — cuota no habilitada todavía
     }
 
-    return `
-        <div class="cuota-card estado-${c.estado}">
-            <div class="cuota-header">
-                <div class="cuota-title">
-                    Cuota ${c.num}
-                    <small>${prog ? prog.nombre : ''} · ${cohorte ? cohorte.nombre : ''}</small>
-                </div>
-                <span class="badge badge-${c.estado}">${ETIQUETAS[c.estado]}</span>
-            </div>
-            ${infoExtra}
-            <div class="cuota-grid">${gridHtml}</div>
-            <div class="cuota-footer">
-                <div class="cuota-footer-left">${footerLeft}</div>
-                <div>${footerBtn}</div>
-            </div>
-        </div>
-    `;
+    return '<div class="cuota-card estado-' + c.estado + '">'
+        + '<div class="cuota-header">'
+        + '<div class="cuota-title">' + esc(c.concepto) + '<small>' + esc(programaStr) + '</small></div>'
+        + '<span class="badge badge-' + c.estado + '">' + (ETIQUETAS[c.estado] || c.estado) + '</span>'
+        + '</div>'
+        + infoExtra
+        + '<div class="cuota-grid">' + gridHtml + '</div>'
+        + '<div class="cuota-footer">'
+        + '<div class="cuota-footer-left">' + footerLeft + '</div>'
+        + '<div>' + footerBtn + '</div>'
+        + '</div>'
+        + '</div>';
 }
 
-// ════════════════════════════════════════════════════════
-// MODAL
-// ════════════════════════════════════════════════════════
-function abrirModal(c) {
-    const prog    = PROGRAMAS.find(p => p.id === c.prog_id);
-    const cohorte = COHORTES.find(co => co.id === c.coh_id);
-    const saldoModal = c.saldo || c.monto;
+// ════════════════════════════════════════════════════
+// MODAL SUBIR COMPROBANTE
+// ════════════════════════════════════════════════════
+function abrirModal(cobroId) {
+    _cobroActual = COBROS.find(function(c) { return c.cobro_id === cobroId; });
+    if (!_cobroActual) { toast('No se encontró la cuota', 'err'); return; }
 
-    document.getElementById('modalCuotaRef').innerHTML = `
-        <strong>Cuota ${c.num} · ${ETIQUETAS[c.estado]}</strong>
-        ${prog ? prog.nombre : ''} · ${cohorte ? cohorte.nombre : ''}<br>
-        Período: ${c.periodo} · Saldo a pagar: <strong style="color:var(--danger);">${fmt(saldoModal)}</strong>
-    `;
+    var c = _cobroActual;
+    var prog    = PROGRAMAS.find(function(p) { return p.id === c.prog_id; });
+    var cohorte = COHORTES.find(function(co) { return co.id === c.coh_id; });
+    var saldoModal = c.saldo !== null ? c.saldo : c.monto;
+
+    document.getElementById('modalCuotaRef').innerHTML =
+        '<strong>' + esc(c.concepto) + ' · ' + (ETIQUETAS[c.estado] || c.estado) + '</strong>'
+        + (prog ? esc(prog.nombre) : '') + (cohorte ? ' · ' + esc(cohorte.nombre) : '') + '<br>'
+        + 'Período: ' + esc(c.periodo) + ' · Saldo a pagar: <strong style="color:var(--danger);">' + fmt(saldoModal) + '</strong>';
+
     document.getElementById('inputMonto').value = saldoModal || '';
-    removeFile();
     document.getElementById('inputNroOp').value = '';
     document.getElementById('inputObs').value   = '';
+    document.getElementById('uploadProgress').classList.remove('show');
+    document.getElementById('uploadBar').style.width = '0%';
+    removeFile();
+
     document.getElementById('modalOverlay').classList.add('open');
 }
 
 function cerrarModal() {
     document.getElementById('modalOverlay').classList.remove('open');
-}
-
-function verComprobante(nombre) {
-    if (!nombre) {
-        alert('No hay comprobante disponible para esta cuota.');
-        return;
-    }
-    /* En producción: google.script.run.obtenerUrlComprobante(nombre) y abrir en nueva pestaña */
-    alert('📎 Comprobante: ' + nombre + '\n\nEn producción se abrirá el archivo desde Google Drive.');
+    _cobroActual = null;
+    _fileActual  = null;
 }
 
 // Drag & Drop
-function onDragOver(e)  { e.preventDefault(); document.getElementById('dropZone').classList.add('dragover'); }
-function onDragLeave()  { document.getElementById('dropZone').classList.remove('dragover'); }
-function onDrop(e)      { e.preventDefault(); document.getElementById('dropZone').classList.remove('dragover'); const f = e.dataTransfer.files[0]; if (f) procesarArchivo(f); }
-function onFileSelect(e){ const f = e.target.files[0]; if (f) procesarArchivo(f); }
+function onDragOver(e)   { e.preventDefault(); document.getElementById('dropZone').classList.add('dragover'); }
+function onDragLeave()   { document.getElementById('dropZone').classList.remove('dragover'); }
+function onDrop(e)       { e.preventDefault(); document.getElementById('dropZone').classList.remove('dragover'); var f = e.dataTransfer.files[0]; if (f) procesarArchivo(f); }
+function onFileSelect(e) { var f = e.target.files[0]; if (f) procesarArchivo(f); }
 
 function procesarArchivo(file) {
-    const ok = ['application/pdf','image/jpeg','image/png','image/jpg'];
-    if (!ok.includes(file.type)) { mostrarToast('❌ Solo PDF, JPG o PNG', false); return; }
-    if (file.size > 10 * 1024 * 1024) { mostrarToast('❌ El archivo supera los 10 MB', false); return; }
+    var tipos = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    if (!tipos.includes(file.type)) { toast('❌ Solo PDF, JPG o PNG', 'err'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast('❌ El archivo supera los 10 MB', 'err'); return; }
+    _fileActual = file;
     document.getElementById('filePreviewName').textContent = file.name;
     document.getElementById('filePreview').classList.add('visible');
     document.getElementById('dropZone').style.display = 'none';
 }
 
 function removeFile() {
+    _fileActual = null;
     document.getElementById('filePreview').classList.remove('visible');
     document.getElementById('fileInput').value = '';
     document.getElementById('dropZone').style.display = '';
 }
 
-function enviarComprobante() {
-    const hayArchivo = document.getElementById('filePreview').classList.contains('visible');
-    const nroOp = document.getElementById('inputNroOp').value.trim();
-    const monto  = document.getElementById('inputMonto').value.trim();
-    if (!hayArchivo) { mostrarToast('⚠️ Adjuntá el comprobante de transferencia', false); return; }
-    if (!nroOp)      { mostrarToast('⚠️ Ingresá el número de operación', false); return; }
-    if (!monto || +monto <= 0) { mostrarToast('⚠️ Ingresá el monto transferido', false); return; }
-    // → google.script.run.withSuccessHandler(...).subirComprobante({nroOp, monto, obs, archivo})
-    cerrarModal();
-    mostrarToast('✅ Comprobante enviado. Cooperadora lo revisará en 24-48 hs hábiles.', true);
+async function enviarComprobante() {
+    if (!_cobroActual) return;
+
+    var nroOp = document.getElementById('inputNroOp').value.trim();
+    var monto = document.getElementById('inputMonto').value.trim();
+    var obs   = document.getElementById('inputObs').value.trim();
+
+    if (!_fileActual)          { toast('⚠️ Adjuntá el comprobante de transferencia', 'err'); return; }
+    if (!nroOp)                { toast('⚠️ Ingresá el número de operación', 'err'); return; }
+    if (!monto || +monto <= 0) { toast('⚠️ Ingresá el monto transferido', 'err'); return; }
+
+    var btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.textContent = 'Subiendo…';
+
+    try {
+        var sb = await getSupabase();
+        var cobroId = _cobroActual.cobro_id;
+        var dni     = SESION.dni;
+        var ext     = _fileActual.name.split('.').pop();
+        var path    = 'comprobantes/' + cobroId + '/' + Date.now() + '_' + dni + '.' + ext;
+
+        // Mostrar progreso visual
+        var prog = document.getElementById('uploadProgress');
+        var bar  = document.getElementById('uploadBar');
+        var lbl  = document.getElementById('uploadLabel');
+        prog.classList.add('show');
+
+        // Simular progreso mientras sube
+        var pct = 0;
+        var timer = setInterval(function() {
+            pct = Math.min(pct + 8, 85);
+            bar.style.width = pct + '%';
+        }, 150);
+
+        // Subir archivo a Supabase Storage
+        var { error: uploadError } = await sb.storage
+            .from('comprobantes')
+            .upload(path, _fileActual, { upsert: true });
+
+        clearInterval(timer);
+        if (uploadError) throw uploadError;
+
+        // Obtener URL pública
+        var { data: urlData } = sb.storage.from('comprobantes').getPublicUrl(path);
+        var comprobanteUrl = urlData.publicUrl;
+
+        bar.style.width = '95%';
+        lbl.textContent = 'Actualizando cuota…';
+
+        // Actualizar cobro: estado → PENDIENTE, guardar URL
+        var { error: updError } = await sb.from('cobros')
+            .update({
+                estado:          'PENDIENTE',
+                comprobante_url: comprobanteUrl,
+                // Guardar también nro operación y observaciones en un campo texto si existe
+            })
+            .eq('cobro_id', cobroId);
+
+        if (updError) throw updError;
+
+        // Crear notificación interna para cooperadora
+        await sb.from('notificaciones').insert({
+            rol_destino: 'COOPERADORA',
+            tipo:        'pago',
+            mensaje:     'Nuevo comprobante de ' + SESION.nombre + ' (DNI ' + dni + ') para ' + _cobroActual.concepto + ' · ' + _cobroActual.periodo + '. Monto declarado: $' + Number(monto).toLocaleString('es-AR') + (nroOp ? ' · N° op: ' + nroOp : '') + (obs ? ' · Obs: ' + obs : ''),
+        }).catch(function() {}); // silencioso si falla
+
+        bar.style.width = '100%';
+
+        // Actualizar estado local
+        _cobroActual.estado          = 'PENDIENTE';
+        _cobroActual.comprobante_url = comprobanteUrl;
+        var idx = COBROS.findIndex(function(c) { return c.cobro_id === cobroId; });
+        if (idx >= 0) COBROS[idx] = Object.assign({}, _cobroActual);
+
+        cerrarModal();
+        toast('✅ Comprobante enviado. Cooperadora lo revisará en 24-48 hs hábiles.', 'ok');
+        render();
+
+    } catch(e) {
+        console.error('Error al subir comprobante:', e);
+        toast('❌ Error al subir el comprobante: ' + e.message, 'err');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '📤 Enviar Comprobante';
+        document.getElementById('uploadProgress').classList.remove('show');
+        document.getElementById('uploadBar').style.width = '0%';
+    }
 }
 
-// ════════════════════════════════════════════════════════
-// TOAST
-// ════════════════════════════════════════════════════════
-function mostrarToast(msg, ok) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast show' + (ok ? ' success' : '');
-    clearTimeout(t._to);
-    t._to = setTimeout(() => { t.className = 'toast'; }, 4500);
+// ════════════════════════════════════════════════════
+// MODAL VER DOCUMENTO
+// ════════════════════════════════════════════════════
+function verDocumento(url, tipo, concepto) {
+    document.getElementById('docModalTitle').textContent  = '📎 ' + tipo;
+    document.getElementById('docModalSub').textContent    = concepto;
+    document.getElementById('docModalDescargar').href     = url;
+
+    var body = document.getElementById('docModalBody');
+    if (/\.pdf$/i.test(url)) {
+        body.innerHTML = '<iframe src="' + url + '"></iframe>';
+    } else {
+        body.innerHTML = '<img src="' + url + '" alt="Documento">'
+            + '<p style="margin-top:8px;"><a href="' + url + '" target="_blank" style="font-size:13px;color:#1e3a5f;">Abrir en nueva pestaña →</a></p>';
+    }
+
+    document.getElementById('modalDoc').classList.add('open');
 }
 
+function cerrarModalDoc() {
+    document.getElementById('modalDoc').classList.remove('open');
+    document.getElementById('docModalBody').innerHTML = '';
+}
+
+// Cerrar modales al hacer clic fuera
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
     if (e.target === this) cerrarModal();
 });
+document.getElementById('modalDoc').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalDoc();
+});
 
-// ════════════════════════════════════════════════════════
-// INIT — preselecciona la carrera/cohorte con deuda urgente
-// Prioridad: EN_MORA > PAGO_PARCIAL > PENDIENTE > primera disponible
-// ════════════════════════════════════════════════════════
-function init() {
-    poblarProgramas();
-
-    // Buscar la cohorte con la situación más urgente
-    const PRIORIDAD = ['EN_MORA', 'PAGO_PARCIAL', 'PENDIENTE'];
-    let cohSeleccionada = null;
-
-    for (const estado of PRIORIDAD) {
-        const cuota = CUOTAS.find(c => c.estado === estado);
-        if (cuota) { cohSeleccionada = cuota.coh_id; break; }
-    }
-
-    // Si no hay ninguna urgente, tomar la primera cohorte disponible
-    if (!cohSeleccionada && CUOTAS.length) {
-        cohSeleccionada = CUOTAS[0].coh_id;
-    }
-
-    if (cohSeleccionada) {
-        const cohorte = COHORTES.find(c => c.id === cohSeleccionada);
-        if (cohorte) {
-            // Seleccionar programa en el primer select
-            document.getElementById('selPrograma').value = cohorte.programa_id;
-            // Poblar cohortes de ese programa
-            const selCoh = document.getElementById('selCohorte');
-            selCoh.innerHTML = '';
-            COHORTES
-                .filter(c => c.programa_id === cohorte.programa_id)
-                .forEach(c => {
-                    const o = document.createElement('option');
-                    o.value = c.id; o.textContent = c.nombre;
-                    selCoh.appendChild(o);
-                });
-            // Seleccionar la cohorte específica
-            selCoh.value = cohSeleccionada;
-        }
-    }
-
-    render();
+// ════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════
+function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-init();
-
-    /* Navegación y sesión proporcionadas por supabase.js */
-    
-        /* ══ CAMPANA ══ */
-    var _notifs = [];
-    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
-    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
-    function renderNotificaciones(datos) {
-        _notifs = datos || [];
-        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-        var lista = document.getElementById('notif-list');
-        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨', cuota:'📅' };
-        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3', cuota:'#dbeafe' };
-        lista.innerHTML = _notifs.map(function(n) {
-            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
-        }).join('');
-    }
-    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
-    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
-    // Notificaciones cargadas por supabase.js automáticamente
-
 </script>
 </body>
 </html>
