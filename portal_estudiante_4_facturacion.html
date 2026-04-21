@@ -473,22 +473,29 @@ async function guardarDatos() {
 
     spin(true);
     try {
-        var sb  = await getSupabase();
+        var sb     = await getSupabase();
         var sesion = getSesion();
-        var res = await sb.from('estudiantes')
-            .update(nuevos)
-            .eq('dni', sesion.dni);
+        if (!sesion || !sesion.dni) throw new Error('Sesión inválida. Iniciá sesión nuevamente.');
+
+        // Usar id del estudiante cargado para mayor precisión
+        var filtro = _datosEstudiante && _datosEstudiante.id
+            ? sb.from('estudiantes').update(nuevos).eq('id', _datosEstudiante.id)
+            : sb.from('estudiantes').update(nuevos).eq('dni', sesion.dni);
+
+        var res = await filtro;
         if (res.error) throw res.error;
 
-        // Actualizar datos locales
+        // Actualizar datos locales y refrescar vista
         _datosEstudiante = Object.assign({}, _datosEstudiante, nuevos);
         renderVista(_datosEstudiante);
 
         document.getElementById('mainCard').className = 'card modo-ver';
         document.getElementById('alertSuccess').classList.add('show');
+        // Scroll al mensaje de éxito
+        document.getElementById('alertSuccess').scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch(e) {
-        console.error(e);
-        alert('Error al guardar: ' + e.message);
+        console.error('Error guardarDatos:', e);
+        alert('Error al guardar: ' + (e.message || JSON.stringify(e)));
     } finally {
         spin(false);
     }
