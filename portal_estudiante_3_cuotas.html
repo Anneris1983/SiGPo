@@ -750,8 +750,13 @@ function onDrop(e)       { e.preventDefault(); document.getElementById('dropZone
 function onFileSelect(e) { var f = e.target.files[0]; if (f) procesarArchivo(f); }
 
 function procesarArchivo(file) {
-    var tipos = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-    if (!tipos.includes(file.type)) { toast('❌ Solo PDF, JPG o PNG', 'err'); return; }
+    // Tipos MIME aceptados — incluye todas las variantes de JPG que devuelven distintos SO/browsers
+    var tiposMime = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'image/pjpeg', 'image/x-png'];
+    // Validación por extensión como fallback (algunos browsers reportan type vacío)
+    var ext = file.name.split('.').pop().toLowerCase();
+    var extsOk = ['pdf', 'jpg', 'jpeg', 'png'];
+    var tipoOk  = tiposMime.includes(file.type) || (file.type === '' && extsOk.includes(ext)) || extsOk.includes(ext);
+    if (!tipoOk) { toast('❌ Solo se aceptan PDF, JPG o PNG', 'err'); return; }
     if (file.size > 10 * 1024 * 1024) { toast('❌ El archivo supera los 10 MB', 'err'); return; }
     _fileActual = file;
     document.getElementById('filePreviewName').textContent = file.name;
@@ -827,12 +832,16 @@ async function enviarComprobante() {
 
         if (updError) throw updError;
 
-        // Crear notificación interna para cooperadora
-        await sb.from('notificaciones').insert({
-            rol_destino: 'COOPERADORA',
-            tipo:        'pago',
-            mensaje:     'Nuevo comprobante de ' + SESION.nombre + ' (DNI ' + dni + ') para ' + _cobroActual.concepto + ' · ' + _cobroActual.periodo + '. Monto declarado: $' + Number(monto).toLocaleString('es-AR') + (nroOp ? ' · N° op: ' + nroOp : '') + (obs ? ' · Obs: ' + obs : ''),
-        }).catch(function() {}); // silencioso si falla
+        // Crear notificación interna para cooperadora (silencioso si falla)
+        try {
+            await sb.from('notificaciones').insert({
+                rol_destino: 'COOPERADORA',
+                tipo:        'pago',
+                mensaje:     'Nuevo comprobante de ' + SESION.nombre + ' (DNI ' + dni + ') para ' + _cobroActual.concepto + ' · ' + _cobroActual.periodo + '. Monto declarado: $' + Number(monto).toLocaleString('es-AR') + (nroOp ? ' · N° op: ' + nroOp : '') + (obs ? ' · Obs: ' + obs : ''),
+            });
+        } catch(notifErr) {
+            console.warn('No se pudo crear la notificación:', notifErr);
+        }
 
         bar.style.width = '100%';
 
