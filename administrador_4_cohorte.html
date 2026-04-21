@@ -1182,7 +1182,28 @@ function renderTabla() {
 
         var celdas = columnas.map(function(col) {
             var c = cobrosMap[keyCuota(col.concepto_base, col.periodo)];
-            if (!c) return '<td data-est="NO_APLICA"><div class="cuota-cell-wrap"><span class="cuota-cell-txt" style="color:#ccc;font-style:italic;font-size:10px;">no aplica</span></div></td>';
+            // Sin cobro: el trigger debería haberlo creado al inscribir al estudiante.
+            // Si por datos anteriores al trigger falta el cobro, mostrarlo como A_DEFINIR
+            // editable para que el administrador pueda definir el monto.
+            if (!c) {
+                var sinCobroInfo = JSON.stringify({
+                    cobro_id: null,
+                    dni: String(est.dni),
+                    concepto: col.concepto_base,
+                    periodo:  col.periodo || '',
+                    monto: null,
+                    descuento_porcentaje: est.descuento_porcentaje || 0,
+                    fecha_vencimiento: null,
+                    estado_actual: 'A_DEFINIR',
+                    no_aplica: false,
+                    _sin_cobro: true
+                });
+                return '<td data-est="A_DEFINIR" onclick="avisarSinCobro(event,' + encodeAttr(sinCobroInfo) + ')" style="cursor:pointer;" title="Sin cobro generado — recargá la página o contactá al administrador">'
+                    + '<div class="cuota-cell-wrap">'
+                    + '<div class="cuota-cell-txt" style="color:#f59e0b;font-size:10px;font-style:italic;">A definir</div>'
+                    + '<div style="font-size:9px;color:#bbb;margin-top:2px;">⚠️ sin cobro</div>'
+                    + '</div></td>';
+            }
 
             var estado       = resolverEstadoCobro(c);
             var montoAbonado = calcMontoAbonado(c);
@@ -2927,6 +2948,14 @@ async function guardarCeldaPopup() {
     } finally {
         spin(false);
     }
+}
+
+// Celda sin cobro generado: informar al admin que recargue
+function avisarSinCobro(event, infoJson) {
+    event.stopPropagation();
+    var info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
+    toast('Esta cuota no tiene registro en la BD. Recargá la página — el sistema la generará automáticamente al inscribir al estudiante.', 'err');
+    console.warn('Sin cobro para:', info.concepto, info.periodo, 'DNI:', info.dni);
 }
 
 // Cerrar modales al hacer clic fuera
