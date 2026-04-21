@@ -324,9 +324,9 @@
         </div>
         <div class="banco-box">
             <div><strong>Banco:</strong> Banco Patagonia</div>
-            <div><strong>CBU:</strong> 2850590940090418135201</div>
-            <div><strong>Alias:</strong> COOPERADORA.FCE.UNCUYO</div>
-            <div><strong>Titular:</strong> Cooperadora FCE UNCUYO</div>
+            <div><strong>CBU:</strong> <span id="banco-cbu">—</span></div>
+            <div><strong>Alias:</strong> <span id="banco-alias">—</span></div>
+            <div><strong>Titular:</strong> <span id="banco-titular">—</span></div>
         </div>
         <p style="margin-top:12px; font-size:13px; color:#888;">
             Después de realizar la transferencia, subí el comprobante desde
@@ -337,30 +337,102 @@
 
 </div>
 
+<div id="spin-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,0.75);z-index:9000;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
+    <div style="width:38px;height:38px;border:4px solid #e0e0e0;border-top-color:#1e3a5f;border-radius:50%;animation:_spin 0.8s linear infinite;"></div>
+    <span style="color:#1e3a5f;font-weight:600;font-size:14px;">Cargando...</span>
+</div>
+<style>@keyframes _spin { to { transform:rotate(360deg); } }</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-// Datos actuales (en producción vienen de google.script.run)
-const datos = {
-    razon:    'María González',
-    cuit:     '27-12345678-3',
-    iva:      'Consumidor Final',
-    cp:       '5500',
-    provincia:'Mendoza',
-    telefono: '2615-551234',
-    direccion:'Av. San Martín 1450, Godoy Cruz, Mendoza',
-    email:    'maria.gonzalez@email.com',
-};
+/* ══════════════════════════════════════════════════
+   FACTURACIÓN — conectado a Supabase
+══════════════════════════════════════════════════ */
 
+var _datosEstudiante = null; // datos cargados desde BD
+
+/* ── SPINNER ── */
+function spin(on) {
+    var el = document.getElementById('spin-overlay');
+    if (el) el.style.display = on ? 'flex' : 'none';
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', async function() {
+    var sesion = getSesion();
+    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    obtenerNotificaciones('ESTUDIANTE').then(renderNotificaciones);
+    await cargarDatos();
+    await cargarDatosBancarios();
+});
+
+/* ── CARGAR DATOS DEL ESTUDIANTE ── */
+async function cargarDatos() {
+    spin(true);
+    try {
+        var sesion = getSesion();
+        var sb = await getSupabase();
+        var res = await sb.from('estudiantes')
+            .select('id, dni, nombre, apellido, email, telefono, razon_social, cuit, condicion_iva, direccion_fiscal, provincia, codigo_postal, email_facturacion')
+            .eq('dni', sesion.dni)
+            .single();
+
+        if (res.error) throw res.error;
+        _datosEstudiante = res.data;
+        renderVista(_datosEstudiante);
+    } catch(e) {
+        console.error(e);
+    } finally {
+        spin(false);
+    }
+}
+
+/* ── CARGAR DATOS BANCARIOS DESDE CONFIGURACION ── */
+async function cargarDatosBancarios() {
+    try {
+        var sb  = await getSupabase();
+        var res = await sb.from('configuracion')
+            .select('clave, valor')
+            .in('clave', ['cbu_banco','alias_banco','titular_banco','email_banco']);
+        var cfg = {};
+        (res.data||[]).forEach(function(r){ cfg[r.clave] = r.valor; });
+
+        // Buscar nombre del banco desde CBU (hardcodeado como fallback)
+        if (cfg.cbu_banco)     document.getElementById('banco-cbu').textContent     = cfg.cbu_banco;
+        if (cfg.alias_banco)   document.getElementById('banco-alias').textContent   = cfg.alias_banco;
+        if (cfg.titular_banco) document.getElementById('banco-titular').textContent = cfg.titular_banco;
+    } catch(e) {
+        console.error('Error al cargar datos bancarios:', e);
+    }
+}
+
+/* ── RENDER VISTA ── */
+function renderVista(d) {
+    if (!d) return;
+    // Usar razon_social o construir desde nombre+apellido como fallback
+    var razon = d.razon_social || ((d.apellido||'') + ', ' + (d.nombre||'')).trim();
+    document.getElementById('v-razon').textContent     = razon     || '—';
+    document.getElementById('v-cuit').textContent      = d.cuit    || '—';
+    document.getElementById('v-iva').textContent       = d.condicion_iva   || '—';
+    document.getElementById('v-cp').textContent        = d.codigo_postal   || '—';
+    document.getElementById('v-provincia').textContent = d.provincia       || '—';
+    document.getElementById('v-telefono').textContent  = d.telefono        || '—';
+    document.getElementById('v-direccion').textContent = d.direccion_fiscal|| '—';
+    document.getElementById('v-email').textContent     = d.email_facturacion || d.email || '—';
+}
+
+/* ── ACTIVAR EDICIÓN ── */
 function activarEdicion() {
-    document.getElementById('razon_social').value  = datos.razon;
-    document.getElementById('cuit').value          = datos.cuit;
-    document.getElementById('condicion_iva').value = datos.iva;
-    document.getElementById('cp').value            = datos.cp;
-    document.getElementById('provincia').value     = datos.provincia;
-    document.getElementById('telefono').value      = datos.telefono;
-    document.getElementById('direccion').value     = datos.direccion;
-    document.getElementById('email_alt').value     = datos.email;
+    var d = _datosEstudiante || {};
+    var razon = d.razon_social || ((d.apellido||'') + ', ' + (d.nombre||'')).trim();
+    document.getElementById('razon_social').value  = razon;
+    document.getElementById('cuit').value          = d.cuit             || '';
+    document.getElementById('condicion_iva').value = d.condicion_iva    || '';
+    document.getElementById('cp').value            = d.codigo_postal    || '';
+    document.getElementById('provincia').value     = d.provincia        || '';
+    document.getElementById('telefono').value      = d.telefono         || '';
+    document.getElementById('direccion').value     = d.direccion_fiscal || '';
+    document.getElementById('email_alt').value     = d.email_facturacion|| d.email || '';
     document.getElementById('mainCard').className  = 'card modo-edit';
     document.getElementById('alertSuccess').classList.remove('show');
 }
@@ -369,8 +441,9 @@ function cancelarEdicion() {
     document.getElementById('mainCard').className = 'card modo-ver';
 }
 
-function guardarDatos() {
-    const obligatorios = [
+/* ── GUARDAR DATOS ── */
+async function guardarDatos() {
+    var obligatorios = [
         { id:'razon_social', label:'Razón Social' },
         { id:'cuit',         label:'CUIT' },
         { id:'condicion_iva',label:'Condición IVA' },
@@ -378,43 +451,47 @@ function guardarDatos() {
         { id:'provincia',    label:'Provincia' },
         { id:'cp',           label:'Código Postal' },
     ];
-    for (const c of obligatorios) {
+    for (var i = 0; i < obligatorios.length; i++) {
+        var c = obligatorios[i];
         if (!document.getElementById(c.id).value.trim()) {
-            alert(`⚠️ El campo "${c.label}" es obligatorio.`);
+            alert('⚠️ El campo "' + c.label + '" es obligatorio.');
             document.getElementById(c.id).focus();
             return;
         }
     }
 
-    // Actualizar objeto (en producción → google.script.run.guardarDatosFacturacion(...))
-    datos.razon     = document.getElementById('razon_social').value.trim();
-    datos.cuit      = document.getElementById('cuit').value.trim();
-    datos.iva       = document.getElementById('condicion_iva').value;
-    datos.cp        = document.getElementById('cp').value.trim();
-    datos.provincia = document.getElementById('provincia').value;
-    datos.telefono  = document.getElementById('telefono').value.trim();
-    datos.direccion = document.getElementById('direccion').value.trim();
-    datos.email     = document.getElementById('email_alt').value.trim();
+    var nuevos = {
+        razon_social:       document.getElementById('razon_social').value.trim(),
+        cuit:               document.getElementById('cuit').value.trim(),
+        condicion_iva:      document.getElementById('condicion_iva').value,
+        codigo_postal:      document.getElementById('cp').value.trim(),
+        provincia:          document.getElementById('provincia').value,
+        telefono:           document.getElementById('telefono').value.trim() || null,
+        direccion_fiscal:   document.getElementById('direccion').value.trim(),
+        email_facturacion:  document.getElementById('email_alt').value.trim() || null,
+    };
 
-    // Refrescar vista
-    document.getElementById('v-razon').textContent    = datos.razon;
-    document.getElementById('v-cuit').textContent     = datos.cuit;
-    document.getElementById('v-iva').textContent      = datos.iva;
-    document.getElementById('v-cp').textContent       = datos.cp;
-    document.getElementById('v-provincia').textContent= datos.provincia;
-    document.getElementById('v-telefono').textContent = datos.telefono || '—';
-    document.getElementById('v-direccion').textContent= datos.direccion;
-    document.getElementById('v-email').textContent    = datos.email || '—';
+    spin(true);
+    try {
+        var sb  = await getSupabase();
+        var sesion = getSesion();
+        var res = await sb.from('estudiantes')
+            .update(nuevos)
+            .eq('dni', sesion.dni);
+        if (res.error) throw res.error;
 
-    // Volver a modo vista y mostrar éxito
-    document.getElementById('mainCard').className = 'card modo-ver';
-    document.getElementById('alertSuccess').classList.add('show');
+        // Actualizar datos locales
+        _datosEstudiante = Object.assign({}, _datosEstudiante, nuevos);
+        renderVista(_datosEstudiante);
 
-    /* En producción: google.script.run.guardarDatosFacturacion(datos); */
-}
-
-function cerrarEdicion() {
-    document.getElementById('mainCard').className = 'card modo-ver';
+        document.getElementById('mainCard').className = 'card modo-ver';
+        document.getElementById('alertSuccess').classList.add('show');
+    } catch(e) {
+        console.error(e);
+        alert('Error al guardar: ' + e.message);
+    } finally {
+        spin(false);
+    }
 }
 </script>
 
