@@ -782,107 +782,160 @@ async function enviarComprobante() {
     if (!nroOp)                { toast('⚠️ Ingresá el número de operación', 'err'); return; }
     if (!monto || +monto <= 0) { toast('⚠️ Ingresá el monto transferido', 'err'); return; }
 
-    var btn = document.getElementById('btnEnviar');
+    var btn    = document.getElementById('btnEnviar');
+    var progEl = document.getElementById('uploadProgress');
+    var barEl  = document.getElementById('uploadBar');
+    var lblEl  = document.getElementById('uploadLabel');
+
     btn.disabled = true;
-    btn.textContent = 'Subiendo…';
+    btn.innerHTML = '⏳ Subiendo…';
+    progEl.classList.add('show');
+
+    // Animación de progreso visual
+    var pct = 0;
+    var timer = setInterval(function() {
+        pct = Math.min(pct + 5, 75);
+        barEl.style.width = pct + '%';
+    }, 200);
 
     try {
-        var sb = await getSupabase();
         var cobroId = _cobroActual.cobro_id;
         var dni     = SESION.dni;
-        var ext     = _fileActual.name.split('.').pop();
-        var path    = 'comprobantes/' + cobroId + '/' + Date.now() + '_' + dni + '.' + ext;
 
-        // Mostrar progreso visual
-        var prog = document.getElementById('uploadProgress');
-        var bar  = document.getElementById('uploadBar');
-        var lbl  = document.getElementById('uploadLabel');
-        prog.classList.add('show');
-
-        // Simular progreso mientras sube
-        var pct = 0;
-        var timer = setInterval(function() {
-            pct = Math.min(pct + 8, 85);
-            bar.style.width = pct + '%';
-        }, 150);
-
-        // Subir archivo a Supabase Storage
-        var { error: uploadError } = await sb.storage
-            .from('comprobantes')
-            .upload(path, _fileActual, { upsert: true });
-
+        // ── Paso 1: subir archivo usando subirComprobante de supabase.js ──
+        lblEl.textContent = 'Subiendo archivo…';
+        var resultado = await subirComprobante(cobroId, _fileActual);
         clearInterval(timer);
-        if (uploadError) throw uploadError;
 
-        // Obtener URL pública
-        var { data: urlData } = sb.storage.from('comprobantes').getPublicUrl(path);
-        var comprobanteUrl = urlData.publicUrl;
-
-        bar.style.width = '95%';
-        lbl.textContent = 'Actualizando cuota…';
-
-        // Actualizar cobro: estado → PENDIENTE, guardar URL
-        var { error: updError } = await sb.from('cobros')
-            .update({
-                estado:          'PENDIENTE',
-                comprobante_url: comprobanteUrl,
-                // Guardar también nro operación y observaciones en un campo texto si existe
-            })
-            .eq('cobro_id', cobroId);
-
-        if (updError) throw updError;
-
-        // Crear notificación interna para cooperadora (silencioso si falla)
-        try {
-            await sb.from('notificaciones').insert({
-                rol_destino: 'COOPERADORA',
-                tipo:        'pago',
-                mensaje:     'Nuevo comprobante de ' + SESION.nombre + ' (DNI ' + dni + ') para ' + _cobroActual.concepto + ' · ' + _cobroActual.periodo + '. Monto declarado: $' + Number(monto).toLocaleString('es-AR') + (nroOp ? ' · N° op: ' + nroOp : '') + (obs ? ' · Obs: ' + obs : ''),
-            });
-        } catch(notifErr) {
-            console.warn('No se pudo crear la notificación:', notifErr);
+        if (!resultado.ok) {
+            throw new Error(resultado.mensaje || 'Error al subir el archivo');
         }
 
-        bar.style.width = '100%';
+        barEl.style.width = '85%';
+        lblEl.textContent = 'Notificando a Cooperadora…';
 
-        // Actualizar estado local
-        _cobroActual.estado          = 'PENDIENTE';
-        _cobroActual.comprobante_url = comprobanteUrl;
+        // ── Paso 2: crear notificación interna para Cooperadora ──
+        var sb = await getSupabase();
+        var notifData = {
+            rol_destino: 'COOPERADORA',
+            tipo:        'pago',
+            mensaje:     'Nuevo comprobante de ' + (SESION.nombre || 'Estudiante')
+                         + ' (DNI ' + dni + ') para "'
+                         + _cobroActual.concepto + ' - ' + _cobroActual.periodo
+                         + '". Monto declarado: $' + Number(monto).toLocaleString('es-AR')
+                         + (nroOp ? ' | N° op: ' + nroOp : '')
+                         + (obs   ? ' | Obs: '   + obs   : ''),
+        };
+        var notifResult = await sb.from('notificaciones').insert(notifData);
+        if (notifResult.error) {
+            // No crítico — loguear pero seguir
+            console.warn('Notificación no creada:', notifResult.error.message);
+        }
+
+        barEl.style.width = '100%';
+
+        // ── Paso 3: actualizar estado en memoria local ──
         var idx = COBROS.findIndex(function(c) { return c.cobro_id === cobroId; });
-        if (idx >= 0) COBROS[idx] = Object.assign({}, _cobroActual);
+        if (idx >= 0) {
+            COBROS[idx].estado          = 'PENDIENTE';
+            COBROS[idx].comprobante_url = resultado.url || null;
+        }
 
         cerrarModal();
         toast('✅ Comprobante enviado. Cooperadora lo revisará en 24-48 hs hábiles.', 'ok');
         render();
 
     } catch(e) {
+        clearInterval(timer);
         console.error('Error al subir comprobante:', e);
-        toast('❌ Error al subir el comprobante: ' + e.message, 'err');
+        toast('❌ ' + (e.message || 'No se pudo subir el comprobante'), 'err');
     } finally {
         btn.disabled = false;
         btn.innerHTML = '📤 Enviar Comprobante';
-        document.getElementById('uploadProgress').classList.remove('show');
-        document.getElementById('uploadBar').style.width = '0%';
+        progEl.classList.remove('show');
+        barEl.style.width = '0%';
+        lblEl.textContent = 'Subiendo archivo…';
     }
 }
 
 // ════════════════════════════════════════════════════
-// MODAL VER DOCUMENTO
+// MODAL VER DOCUMENTO — usa Signed URL para buckets privados
 // ════════════════════════════════════════════════════
-function verDocumento(url, tipo, concepto) {
-    document.getElementById('docModalTitle').textContent  = '📎 ' + tipo;
-    document.getElementById('docModalSub').textContent    = concepto;
-    document.getElementById('docModalDescargar').href     = url;
+async function verDocumento(url, tipo, concepto) {
+    document.getElementById('docModalTitle').textContent = '📎 ' + tipo;
+    document.getElementById('docModalSub').textContent   = concepto;
+    document.getElementById('docModalDescargar').href    = '#';
 
     var body = document.getElementById('docModalBody');
-    if (/\.pdf$/i.test(url)) {
-        body.innerHTML = '<iframe src="' + url + '"></iframe>';
-    } else {
-        body.innerHTML = '<img src="' + url + '" alt="Documento">'
-            + '<p style="margin-top:8px;"><a href="' + url + '" target="_blank" style="font-size:13px;color:#1e3a5f;">Abrir en nueva pestaña →</a></p>';
-    }
-
+    body.innerHTML = '<div style="padding:40px;text-align:center;color:#9ca3af;">⏳ Cargando documento…</div>';
     document.getElementById('modalDoc').classList.add('open');
+
+    try {
+        // Extraer el path relativo dentro del bucket a partir de la URL completa
+        // La URL puede ser pública (getPublicUrl) o ya una signed URL previa
+        // Formato típico: https://xxx.supabase.co/storage/v1/object/public/comprobantes/PATH
+        //               o https://xxx.supabase.co/storage/v1/object/sign/comprobantes/PATH?token=...
+        var storageUrl = url;
+        var sb = await getSupabase();
+
+        // Intentar generar signed URL (válida 60 min) a partir del path
+        var bucketName = 'comprobantes';
+        var filePath   = null;
+
+        // Extraer el path del archivo desde la URL almacenada
+        var publicMatch = url.match(/\/object\/(?:public|authenticated)\/comprobantes\/(.+?)(?:\?|$)/);
+        var signMatch   = url.match(/\/object\/sign\/comprobantes\/(.+?)(?:\?|$)/);
+
+        if (publicMatch) {
+            filePath = decodeURIComponent(publicMatch[1]);
+        } else if (signMatch) {
+            filePath = decodeURIComponent(signMatch[1]);
+        }
+
+        if (filePath) {
+            var { data: signedData, error: signErr } = await sb.storage
+                .from(bucketName)
+                .createSignedUrl(filePath, 3600); // 1 hora
+
+            if (!signErr && signedData && signedData.signedUrl) {
+                storageUrl = signedData.signedUrl;
+            }
+            // Si falla la signed URL, usamos la URL original como fallback
+        }
+
+        // Actualizar botón de descarga
+        document.getElementById('docModalDescargar').href = storageUrl;
+
+        // Mostrar según tipo
+        var esPdf = /\.pdf$/i.test(url) || /\.pdf/i.test(filePath || '');
+        if (esPdf) {
+            // Para PDF: intentar iframe; si falla (política del browser), mostrar link
+            body.innerHTML =
+                '<iframe src="' + storageUrl + '" style="width:100%;height:460px;border:none;border-radius:8px;" onerror="this.style.display='none';document.getElementById('pdf-fallback').style.display='block';"></iframe>'
+                + '<div id="pdf-fallback" style="display:none;padding:32px;text-align:center;">'
+                + '<p style="margin-bottom:16px;color:#666;">El browser bloqueó la vista previa del PDF.</p>'
+                + '<a href="' + storageUrl + '" target="_blank" class="btn btn-primary btn-sm">📄 Abrir PDF en nueva pestaña</a>'
+                + '</div>';
+        } else {
+            body.innerHTML =
+                '<img src="' + storageUrl + '" alt="Comprobante" style="max-width:100%;max-height:460px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.12);" '
+                + 'onerror="this.style.display='none';this.nextElementSibling.style.display='block';">'
+                + '<div style="display:none;padding:32px;text-align:center;">'
+                + '<p style="margin-bottom:16px;color:#666;">No se pudo mostrar la imagen.</p>'
+                + '<a href="' + storageUrl + '" target="_blank" class="btn btn-primary btn-sm">🖼️ Abrir en nueva pestaña</a>'
+                + '</div>'
+                + '<p style="margin-top:10px;"><a href="' + storageUrl + '" target="_blank" style="font-size:13px;color:#1e3a5f;">Abrir en nueva pestaña →</a></p>';
+        }
+
+    } catch(e) {
+        console.error('Error al cargar documento:', e);
+        body.innerHTML =
+            '<div style="padding:32px;text-align:center;">'
+            + '<p style="color:#991b1b;margin-bottom:16px;">❌ No se pudo cargar el documento.</p>'
+            + '<a href="' + url + '" target="_blank" class="btn btn-primary btn-sm">🔗 Abrir enlace directo</a>'
+            + '</div>';
+        document.getElementById('docModalDescargar').href = url;
+    }
 }
 
 function cerrarModalDoc() {
