@@ -907,24 +907,53 @@ async function verDocumento(url, tipo, concepto) {
         document.getElementById('docModalDescargar').href = storageUrl;
 
         // Mostrar según tipo
+        // Guardar URL en variable global para los handlers onerror
+        window._docUrlActual = storageUrl;
+
         var esPdf = /\.pdf$/i.test(url) || /\.pdf/i.test(filePath || '');
         if (esPdf) {
-            // Para PDF: intentar iframe; si falla (política del browser), mostrar link
-            body.innerHTML =
-                '<iframe src="' + storageUrl + '" style="width:100%;height:460px;border:none;border-radius:8px;" onerror="this.style.display='none';document.getElementById('pdf-fallback').style.display='block';"></iframe>'
-                + '<div id="pdf-fallback" style="display:none;padding:32px;text-align:center;">'
-                + '<p style="margin-bottom:16px;color:#666;">El browser bloqueó la vista previa del PDF.</p>'
-                + '<a href="' + storageUrl + '" target="_blank" class="btn btn-primary btn-sm">📄 Abrir PDF en nueva pestaña</a>'
-                + '</div>';
+            var iframe = document.createElement('iframe');
+            iframe.src = storageUrl;
+            iframe.style.cssText = 'width:100%;height:460px;border:none;border-radius:8px;';
+
+            var fallback = document.createElement('div');
+            fallback.id = 'pdf-fallback';
+            fallback.style.cssText = 'display:none;padding:32px;text-align:center;';
+            fallback.innerHTML = '<p style="margin-bottom:16px;color:#666;">El browser bloqueó la vista previa del PDF.</p>'
+                + '<a href="' + storageUrl + '" target="_blank" class="btn btn-primary btn-sm">📄 Abrir PDF en nueva pestaña</a>';
+
+            iframe.onerror = function() {
+                iframe.style.display = 'none';
+                fallback.style.display = 'block';
+            };
+
+            body.innerHTML = '';
+            body.appendChild(iframe);
+            body.appendChild(fallback);
         } else {
-            body.innerHTML =
-                '<img src="' + storageUrl + '" alt="Comprobante" style="max-width:100%;max-height:460px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.12);" '
-                + 'onerror="this.style.display='none';this.nextElementSibling.style.display='block';">'
-                + '<div style="display:none;padding:32px;text-align:center;">'
-                + '<p style="margin-bottom:16px;color:#666;">No se pudo mostrar la imagen.</p>'
-                + '<a href="' + storageUrl + '" target="_blank" class="btn btn-primary btn-sm">🖼️ Abrir en nueva pestaña</a>'
-                + '</div>'
-                + '<p style="margin-top:10px;"><a href="' + storageUrl + '" target="_blank" style="font-size:13px;color:#1e3a5f;">Abrir en nueva pestaña →</a></p>';
+            var img = document.createElement('img');
+            img.src = storageUrl;
+            img.alt = 'Comprobante';
+            img.style.cssText = 'max-width:100%;max-height:460px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.12);display:block;margin:0 auto;';
+
+            var imgFallback = document.createElement('div');
+            imgFallback.style.cssText = 'display:none;padding:32px;text-align:center;';
+            imgFallback.innerHTML = '<p style="margin-bottom:16px;color:#666;">No se pudo mostrar la imagen.</p>'
+                + '<a href="' + storageUrl + '" target="_blank" class="btn btn-primary btn-sm">🖼️ Abrir en nueva pestaña</a>';
+
+            img.onerror = function() {
+                img.style.display = 'none';
+                imgFallback.style.display = 'block';
+            };
+
+            var link = document.createElement('p');
+            link.style.marginTop = '10px';
+            link.innerHTML = '<a href="' + storageUrl + '" target="_blank" style="font-size:13px;color:#1e3a5f;">Abrir en nueva pestaña →</a>';
+
+            body.innerHTML = '';
+            body.appendChild(img);
+            body.appendChild(imgFallback);
+            body.appendChild(link);
         }
 
     } catch(e) {
