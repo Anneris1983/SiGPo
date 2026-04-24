@@ -449,7 +449,7 @@ async function obtenerDetallePrograma(programaId) {
             var recaudado = cobrosCoh.reduce(function(s, c) {
                 return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
             }, 0);
-            var egresosMonto = egresosCoh.reduce(function(s, e) {
+            var egresosMonto = egresosCoh.filter(function(e){ return e.tipo === 'EJECUTADO'; }).reduce(function(s, e) {
                 return s + Number(e.monto_pagado || 0);
             }, 0);
 
@@ -773,7 +773,7 @@ async function obtenerDashboardAdmin() {
     var totalRecaudado = cobros.reduce(function (s, c) {
         return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
     }, 0);
-    var totalEgresos = egresos.reduce(function (s, e) { return s + Number(e.monto_pagado || 0); }, 0);
+    var totalEgresos = egresos.filter(function(e){ return e.tipo === 'EJECUTADO'; }).reduce(function (s, e) { return s + Number(e.monto_pagado || 0); }, 0);
 
     // Estudiantes en mora: tienen al menos 1 cobro EN_MORA
     var dnisConMora = new Set(
@@ -812,7 +812,7 @@ async function obtenerDashboardAdmin() {
             var recaudadoProg = cobrosProg.reduce(function (s, c) {
                 return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
             }, 0);
-            var egresosPagadosProg = egresosProg.reduce(function (s, e) {
+            var egresosPagadosProg = egresosProg.filter(function(e){ return e.tipo === 'EJECUTADO'; }).reduce(function (s, e) {
                 return s + Number(e.monto_pagado || 0);
             }, 0);
 
