@@ -179,7 +179,7 @@
             </div>
             <div class="grid-2">
                 <div class="form-group"><label class="form-label">Categoría *</label><select class="form-select" id="g-categoria"></select></div>
-                <div class="form-group"><label class="form-label">Estado *</label><select class="form-select" id="g-estado"><option value="PENDIENTE">Pendiente</option><option value="PAGADO">Pagado</option><option value="PARCIAL">Pago Parcial</option><option value="CANCELADO">Cancelado</option></select></div>
+                <div class="form-group"><label class="form-label">Estado *</label><select class="form-select" id="g-estado"><option value="PENDIENTE">Pendiente</option><option value="CANCELADO">Pagado</option></select></div>
             </div>
             <div class="form-group"><label class="form-label">Concepto / Descripción *</label><textarea class="form-textarea" id="g-concepto" placeholder="Detalle del gasto..."></textarea></div>
             <div class="grid-2">
@@ -321,9 +321,11 @@ function cargarCohortes(programaId) {
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
 
 /* ── STATS ── */
+function esEjecutado(e) { return e.estado==='CANCELADO' || e.tipo==='EJECUTADO'; }
+function esProyectado(e) { return e.estado==='PENDIENTE' || e.tipo==='PROYECTADO'; }
 function renderStats() {
-    var ejec = G.egresos.filter(function(e){ return e.tipo==='EJECUTADO'; });
-    var proy = G.egresos.filter(function(e){ return e.tipo==='PROYECTADO'; });
+    var ejec = G.egresos.filter(esEjecutado);
+    var proy = G.egresos.filter(esProyectado);
     document.getElementById('stat-ejecutado').textContent  = fMonto(ejec.reduce(function(s,e){ return s+(Number(e.monto_pagado)||0); },0));
     document.getElementById('stat-proyectado').textContent = fMonto(proy.reduce(function(s,e){ return s+(Number(e.monto_original)||0); },0));
     document.getElementById('stat-total').textContent      = fMonto(G.egresos.reduce(function(s,e){ return s+(Number(e.monto_pagado||e.monto_original)||0); },0));
@@ -334,21 +336,21 @@ function renderStats() {
 function getNomProg(id) { var p=G.programas.find(function(x){ return x.programa_id===id; }); return p?p.nombre:'—'; }
 function getNomCoh(id)  { var c=G.cohortes.find(function(x){ return x.cohorte_id===id; });  return c?c.nombre:'—'; }
 function badgeEstado(s) {
-    var m={PAGADO:['badge-ejecutado','Pagado'],PENDIENTE:['badge-proyectado','Pendiente'],PARCIAL:['badge-parcial','Pago Parcial'],CANCELADO:['badge-cancelado','Cancelado']};
+    var m={CANCELADO:['badge-ejecutado','Pagado'],PENDIENTE:['badge-proyectado','Pendiente'],PAGADO:['badge-ejecutado','Pagado'],PARCIAL:['badge-parcial','Pago Parcial']};
     var v=m[s]||['badge-proyectado',s||'—'];
     return '<span class="badge '+v[0]+'">'+v[1]+'</span>';
 }
 
 function renderTabla(tipo) {
-    var tbody     = document.getElementById('tbody-'+tipo);
-    var tipoFilt  = tipo==='proyectados' ? 'PROYECTADO' : 'EJECUTADO';
-    var sfx       = tipo==='proyectados' ? 'proy' : 'ejec';
-    var texto     = (document.querySelector('#tab-'+tipo+' .search-box input')||{value:''}).value.toLowerCase();
-    var cat       = document.getElementById('filtro-cat-'+sfx).value;
-    var prog      = document.getElementById('filtro-prog-'+sfx).value;
+    var tbody   = document.getElementById('tbody-'+tipo);
+    var esFn    = tipo==='proyectados' ? esProyectado : esEjecutado;
+    var sfx     = tipo==='proyectados' ? 'proy' : 'ejec';
+    var texto   = (document.querySelector('#tab-'+tipo+' .search-box input')||{value:''}).value.toLowerCase();
+    var cat     = document.getElementById('filtro-cat-'+sfx).value;
+    var prog    = document.getElementById('filtro-prog-'+sfx).value;
 
     var rows = G.egresos.filter(function(e) {
-        if (e.tipo!==tipoFilt) return false;
+        if (!esFn(e)) return false;
         if (cat  && e.categoria!==cat) return false;
         if (prog && String(e.programa_id)!==String(prog)) return false;
         if (texto) { var h=((e.concepto||'')+(e.proveedor||'')+(e.categoria||'')).toLowerCase(); if(h.indexOf(texto)<0) return false; }
@@ -377,7 +379,7 @@ function renderTabla(tipo) {
             +'<td style="font-size:12px;">'+esc(e.cohorte_id?getNomCoh(e.cohorte_id):'—')+'</td>'
             +'<td style="font-weight:700;color:#1e3a5f;">'+monto+'</td>'
             +'<td style="font-size:12px;">'+esc(e.proveedor||'—')+'</td>'
-            +'<td style="font-size:12px;">'+esc(e.periodo||'—')+'</td>'
+            +'<td style="font-size:12px;">'+esc(e.numero_comprobante||'—')+'</td>'
             +'<td>'+badgeEstado(e.estado)+'</td>'
             +'<td>'+acciones+'</td>'
             +'</tr>';
@@ -405,7 +407,7 @@ function abrirModalGasto(tipo, egresoId) {
     poblarFiltros();
     limpiarModal();
     document.getElementById('g-tipo').value  = tipo==='proyectados' ? 'PROYECTADO' : 'EJECUTADO';
-    document.getElementById('g-estado').value= tipo==='proyectados' ? 'PENDIENTE' : 'PAGADO';
+    document.getElementById('g-estado').value= tipo==='proyectados' ? 'PENDIENTE' : 'CANCELADO';
     document.getElementById('g-fecha-estimada').value = new Date().toISOString().split('T')[0];
 
     if (egresoId) {
@@ -417,13 +419,13 @@ function abrirModalGasto(tipo, egresoId) {
             document.getElementById('g-concepto').value         = e.concepto||'';
             document.getElementById('g-categoria').value        = e.categoria||'';
             document.getElementById('g-proveedor').value        = e.proveedor||'';
-            document.getElementById('g-comprobante').value      = e.periodo||'';
+            document.getElementById('g-comprobante').value      = e.numero_comprobante||'';
             document.getElementById('g-observaciones').value    = e.observaciones||'';
             document.getElementById('g-monto-original').value   = e.monto_original||'';
             document.getElementById('g-monto-pagado').value     = e.monto_pagado||'';
             document.getElementById('g-fecha-estimada').value   = e.fecha_estimada||'';
             document.getElementById('g-fecha-pago').value       = e.fecha_pago||'';
-            document.getElementById('g-estado').value           = e.estado||'PROYECTADO';
+            document.getElementById('g-estado').value           = e.estado||'PENDIENTE';
             document.getElementById('g-programa').value         = e.programa_id||'';
             if (e.programa_id) {
                 cargarCohortes(e.programa_id);
@@ -458,7 +460,7 @@ async function guardarGasto() {
         monto_pagado:    montoPag,
         monto_pendiente: montoOrig&&montoPag ? montoOrig-montoPag : montoOrig,
         proveedor:       document.getElementById('g-proveedor').value.trim()||null,
-        periodo:         document.getElementById('g-comprobante').value.trim()||null,
+        numero_comprobante: document.getElementById('g-comprobante').value.trim()||null,
         observaciones:   document.getElementById('g-observaciones').value.trim()||null,
         fecha_estimada:  document.getElementById('g-fecha-estimada').value||null,
         fecha_pago:      document.getElementById('g-fecha-pago').value||null
@@ -507,10 +509,10 @@ async function confirmarEjecucion() {
     try {
         var sb = await getSupabase();
         var res = await sb.from('egresos').update({
-            tipo:'EJECUTADO', estado: esParcial?'PARCIAL':'PAGADO',
+            tipo:'EJECUTADO', estado: 'CANCELADO',
             fecha_pago:fecha, monto_pagado:monto,
             monto_pendiente: e ? Math.max(0,Number(e.monto_original||0)-monto) : 0,
-            periodo:comp, observaciones:obs||null, es_pago_parcial:esParcial
+            numero_comprobante:comp, observaciones:obs||null, es_pago_parcial:esParcial
         }).eq('egreso_id',G.gastoPendEjec);
         if (res.error) throw res.error;
         toast('Gasto ejecutado ✓','ok');
@@ -581,7 +583,7 @@ async function confirmarImportacion() {
     var registros = _impDatos.map(function(r) {
         var prog = G.programas.find(function(p){ return p.nombre.toLowerCase().includes(r.programa_nombre.toLowerCase()); });
         var coh  = prog ? G.cohortes.find(function(c){ return c.programa_id===prog.programa_id && c.nombre.toLowerCase().includes(r.cohorte_nombre.toLowerCase()); }) : null;
-        return { tipo:tipo, estado:tipo==='PROYECTADO'?'PENDIENTE':'PAGADO', fecha_estimada:r.fecha_estimada, categoria:r.categoria, concepto:r.concepto, programa_id:prog?prog.programa_id:null, cohorte_id:coh?coh.cohorte_id:null, monto_original:r.monto_original, monto_pagado:tipo==='EJECUTADO'?r.monto_original:null, proveedor:r.proveedor||null, periodo:r.periodo||null };
+        return { tipo:tipo, estado:tipo==='PROYECTADO'?'PENDIENTE':'CANCELADO', fecha_estimada:r.fecha_estimada, categoria:r.categoria, concepto:r.concepto, programa_id:prog?prog.programa_id:null, cohorte_id:coh?coh.cohorte_id:null, monto_original:r.monto_original, monto_pagado:tipo==='EJECUTADO'?r.monto_original:null, proveedor:r.proveedor||null, numero_comprobante:r.periodo||null };
     });
     spin(true);
     try {
@@ -598,10 +600,10 @@ async function confirmarImportacion() {
 /* ── EXPORTAR EXCEL ── */
 function exportarExcel(tipo) {
     function _exp() {
-        var tipoF = tipo==='proyectados'?'PROYECTADO':'EJECUTADO';
-        var rows  = G.egresos.filter(function(e){ return e.tipo===tipoF; });
+        var esFn = tipo==='proyectados' ? esProyectado : esEjecutado;
+        var rows = G.egresos.filter(esFn);
         var cab   = ['Fecha Est.','Fecha Pago','Categoría','Concepto','Programa','Cohorte','Monto Original','Monto Pagado','Proveedor','Comprobante','Estado','Observaciones'];
-        var data  = rows.map(function(e){ return [e.fecha_estimada||'',e.fecha_pago||'',e.categoria||'',e.concepto||'',getNomProg(e.programa_id),e.cohorte_id?getNomCoh(e.cohorte_id):'',e.monto_original||'',e.monto_pagado||'',e.proveedor||'',e.periodo||'',e.estado||'',e.observaciones||'']; });
+        var data  = rows.map(function(e){ return [e.fecha_estimada||'',e.fecha_pago||'',e.categoria||'',e.concepto||'',getNomProg(e.programa_id),e.cohorte_id?getNomCoh(e.cohorte_id):'',e.monto_original||'',e.monto_pagado||'',e.proveedor||'',e.numero_comprobante||'',e.estado||'',e.observaciones||'']; });
         var ws = XLSX.utils.aoa_to_sheet([cab].concat(data));
         ws['!cols'] = cab.map(function(){ return {wch:18}; });
         var wb = XLSX.utils.book_new();
