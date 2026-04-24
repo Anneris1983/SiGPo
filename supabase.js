@@ -556,13 +556,19 @@ async function rechazarPago(cobroId) {
     var nuevoEstado = 'NO_ABONADA';
 
     if (!cobro.monto_final || cobro.monto_final === 0) {
+        // Sin monto definido → A_DEFINIR (Regla 5)
         nuevoEstado = 'A_DEFINIR';
-    } else if (cobro.fecha_vencimiento && new Date(cobro.fecha_vencimiento) < new Date()) {
-        nuevoEstado = 'EN_MORA';
     } else {
+        // Verificar pagos parciales PRIMERO (tienen prioridad sobre EN_MORA — Regla 5)
         const { data: pagos } = await sb.from('pagos').select('monto').eq('cobro_id', cobroId);
         var totalPagado = (pagos || []).reduce(function (s, p) { return s + Number(p.monto); }, 0);
-        nuevoEstado = totalPagado > 0 ? 'PAGO_PARCIAL' : 'NO_ABONADA';
+        if (totalPagado > 0) {
+            nuevoEstado = 'PAGO_PARCIAL';
+        } else if (cobro.fecha_vencimiento && new Date(cobro.fecha_vencimiento + 'T00:00:00') < new Date()) {
+            nuevoEstado = 'EN_MORA';
+        } else {
+            nuevoEstado = 'NO_ABONADA';
+        }
     }
 
     await sb.from('cobros').update({

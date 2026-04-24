@@ -436,20 +436,12 @@
 <script src="supabase.js"></script>
 <script>
         function selectPaymentType(type) {
-            const fullRadio = document.getElementById('full-payment');
-            const partialRadio = document.getElementById('partial-payment');
-            const partialInput = document.getElementById('partial-input-section');
-            
-            if (type === 'full') {
-                fullRadio.checked = true;
-                document.getElementById('full-option').classList.add('selected');
-                document.getElementById('partial-option').classList.remove('selected');
-                partialInput.classList.remove('active');
-                partialRadio.checked = true;
-                document.getElementById('partial-option').classList.add('selected');
-                document.getElementById('full-option').classList.remove('selected');
-                partialInput.classList.add('active');
-            }
+            var esFull = type === 'full';
+            document.getElementById('full-payment').checked    =  esFull;
+            document.getElementById('partial-payment').checked = !esFull;
+            document.getElementById('full-option').classList.toggle('selected',  esFull);
+            document.getElementById('partial-option').classList.toggle('selected', !esFull);
+            document.getElementById('partial-input-section').classList.toggle('active', !esFull);
         }
 
         function calculateRemaining() {
@@ -491,7 +483,8 @@
             const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
             document.getElementById('file-size').textContent = `${sizeMB} MB`;
 
-            // Habilitar botón de aprobar
+            // Guardar referencia al file y habilitar botón aprobar
+            _reciboFile = file;
             const btnAprobar = document.getElementById('btn-aprobar');
             btnAprobar.disabled = false;
             btnAprobar.style.opacity = '1';
@@ -507,15 +500,105 @@
             document.getElementById('file-uploaded').style.display = 'none';
             document.getElementById('warning-no-file').style.display = 'block';
 
-            // Deshabilitar botón de aprobar
+            // Limpiar referencia y deshabilitar botón aprobar
+            _reciboFile = null;
             const btnAprobar = document.getElementById('btn-aprobar');
             btnAprobar.disabled = true;
             btnAprobar.style.opacity = '0.5';
             btnAprobar.style.cursor = 'not-allowed';
         }
     
+    /* ══ ESTADO GLOBAL ══ */
+    var _cobroId   = null;
+    var _reciboFile = null;
+
+    /* Lee cobroId desde ?cobro_id=XXX en la URL */
+    document.addEventListener('DOMContentLoaded', async function() {
+        var params = new URLSearchParams(window.location.search);
+        _cobroId = params.get('cobro_id') ? parseInt(params.get('cobro_id')) : null;
+        if (!_cobroId) return; // modo preview estático
+
+        var sb = await getSupabase();
+        var { data: cobro } = await sb
+            .from('cobros')
+            .select('*, programas(nombre), cohortes(nombre)')
+            .eq('cobro_id', _cobroId)
+            .single();
+        if (!cobro) return;
+
+        // Poblar datos del estudiante
+        var monto = Number(cobro.monto_final || 0);
+        document.querySelector('.info-grid').innerHTML =
+            '<div class="info-item"><div class="info-label">Estudiante</div><div class="info-value">' + esc(cobro.nombre_completo || cobro.dni) + '</div></div>'
+            + '<div class="info-item"><div class="info-label">DNI</div><div class="info-value">' + esc(cobro.dni) + '</div></div>'
+            + '<div class="info-item"><div class="info-label">Programa</div><div class="info-value">' + esc(cobro.programas ? cobro.programas.nombre : '—') + '</div></div>'
+            + '<div class="info-item"><div class="info-label">Cuota</div><div class="info-value">' + esc(cobro.concepto || '—') + '</div></div>'
+            + '<div class="info-item"><div class="info-label">Monto Total Cuota</div><div class="info-value highlight">$' + monto.toLocaleString('es-AR') + '</div></div>'
+            + '<div class="info-item"><div class="info-label">Estado Actual</div><div class="info-value" style="color:var(--danger);">' + esc(cobro.estado) + '</div></div>';
+
+        // Comprobante
+        if (cobro.comprobante_url) {
+            document.querySelector('.file-name').textContent = 'Comprobante adjunto';
+            document.querySelector('.view-file-btn').onclick = function() { window.open(cobro.comprobante_url, '_blank'); };
+        }
+
+        // Cálculo parcial
+        document.getElementById('calc-total').textContent = '$' + monto.toLocaleString('es-AR');
+        document.getElementById('calc-remaining').textContent = '$' + monto.toLocaleString('es-AR');
+        document.getElementById('monto-abonado').addEventListener('input', function() {
+            var pagado = parseFloat(this.value) || 0;
+            var saldo = monto - pagado;
+            document.getElementById('calc-paid').textContent = '$' + pagado.toLocaleString('es-AR');
+            document.getElementById('calc-remaining').textContent = '$' + saldo.toLocaleString('es-AR');
+        });
+    });
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    /* ══ APROBAR ══ */
+    async function aprobar() {
+        if (!_reciboFile) { alert('⚠️ Debés subir el recibo antes de aprobar (Regla 1)'); return; }
+        var esFull  = document.getElementById('full-payment').checked;
+        var tipo    = esFull ? 'COMPLETO' : 'PARCIAL';
+        var monto   = esFull ? null : parseFloat(document.getElementById('monto-abonado').value);
+        if (!esFull && (!monto || monto <= 0)) { alert('⚠️ Ingresá el monto abonado'); return; }
+
+        var btn = document.getElementById('btn-aprobar');
+        btn.disabled = true;
+        btn.querySelector('span:last-child').textContent = 'Procesando…';
+        try {
+            var res = await aprobarPago(_cobroId, tipo, monto, _reciboFile);
+            if (!res.ok) throw new Error(res.mensaje || 'Error al aprobar');
+            alert('✅ Pago aprobado correctamente');
+            history.back();
+        } catch(e) {
+            alert('❌ ' + e.message);
+            btn.disabled = false;
+            btn.querySelector('span:last-child').textContent = 'Aprobar y Registrar Pago';
+        }
+    }
+
+    /* ══ RECHAZAR ══ */
+    async function rechazar() {
+        if (!_cobroId) { history.back(); return; }
+        if (!confirm('¿Rechazar este comprobante? La cuota volverá al estado que le corresponde.')) return;
+        var btn = document.getElementById('btn-rechazar');
+        btn.disabled = true;
+        btn.textContent = 'Rechazando…';
+        try {
+            var res = await rechazarPago(_cobroId);
+            if (!res.ok) throw new Error('Error al rechazar');
+            alert('Comprobante rechazado. La cuota volvió a: ' + res.nuevoEstado);
+            history.back();
+        } catch(e) {
+            alert('❌ ' + e.message);
+            btn.disabled = false;
+            btn.textContent = '✗ Rechazar';
+        }
+    }
+
     /* Navegación y sesión proporcionadas por supabase.js */
-    
+
         /* ══ CAMPANA ══ */
     var _notifs = [];
     function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
@@ -706,7 +789,8 @@
 
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="history.back()">Cancelar</button>
-            <button class="btn btn-success" id="btn-aprobar" disabled style="opacity: 0.5; cursor: not-allowed;">
+            <button class="btn" id="btn-rechazar" onclick="rechazar()" style="background:var(--danger);color:white;">✗ Rechazar</button>
+            <button class="btn btn-success" id="btn-aprobar" onclick="aprobar()" disabled style="opacity:0.5;cursor:not-allowed;">
                 <span>✓</span>
                 <span>Aprobar y Registrar Pago</span>
             </button>

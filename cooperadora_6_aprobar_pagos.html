@@ -718,7 +718,124 @@
     ESTUDIANTES.valeria  = datosGenericos('Quiroga, Valeria Soledad', 'DNI: 25566778 · Especialización en Costos (Plan 15 cuotas)', '$1.395.000', '$1.125.000', '$270.000');
 
     const ESTADOS = {
-        abonada:  { clase: 'est-abonada', label: 'Abonada' },
-        mora
+        abonada:  { clase: 'est-abonada',  label: 'Abonada'      },
+        mora:     { clase: 'est-mora',     label: 'En mora'      },
+        parcial:  { clase: 'est-parcial',  label: 'Pago parcial' },
+        pendiente:{ clase: 'est-pendiente',label: 'Pendiente'    },
+        nodebe:   { clase: 'est-nodebe',   label: 'No aplica'    }
+    };
+
+    function abrirDetalle(key) {
+        var est = ESTUDIANTES[key];
+        if (!est) return;
+
+        document.getElementById('modal-nombre').textContent      = est.nombre;
+        document.getElementById('modal-sub').textContent         = est.sub;
+        document.getElementById('modal-total-pagar').textContent  = est.totalPagar;
+        document.getElementById('modal-total-abonado').textContent= est.totalAbonado;
+        document.getElementById('modal-saldo').textContent        = est.saldo;
+
+        var html = est.cuotas.map(function(c) {
+            var est_cfg = ESTADOS[c.estado] || { clase: 'est-nodebe', label: c.estado };
+            var compHtml = '';
+            var actHtml  = '';
+
+            if (c.comprobante) {
+                var esPend = c.comprobante.pendiente;
+                compHtml = '<div class="cuota-comprobante">'
+                    + '<div class="comp-icon">📄</div>'
+                    + '<div class="comp-info">'
+                    + '<div class="comp-nombre">' + escHtml(c.comprobante.nombre) + '</div>'
+                    + '<div class="comp-meta">' + escHtml(c.comprobante.fecha) + ' · ' + escHtml(c.comprobante.size) + '</div>'
+                    + '</div>'
+                    + '<div class="comp-time">' + escHtml(c.comprobante.time) + '</div>'
+                    + '</div>';
+
+                // Solo en estado PENDIENTE (comprobante esperando revisión) hay acciones
+                if (esPend) {
+                    actHtml = '<div class="cuota-actions">'
+                        + '<button class="btn btn-ver" onclick="verComprobante()">👁️ Ver Comprobante</button>'
+                        + '<button class="btn btn-aprobar" onclick="irAprobar()">✓ Aprobar</button>'
+                        + '<button class="btn btn-rechazar" onclick="irRechazar()">✗ Rechazar</button>'
+                        + '</div>';
+                } else if (c.estado === 'abonada' || c.estado === 'parcial') {
+                    actHtml = '<div class="cuota-actions">'
+                        + '<button class="btn btn-ver" onclick="verComprobante()">👁️ Ver Comprobante</button>'
+                        + '</div>';
+                }
+            }
+
+            return '<div class="cuota-detalle">'
+                + '<div class="cuota-row">'
+                + '<div class="cuota-num">' + escHtml(c.id) + '</div>'
+                + '<div class="cuota-nombre">' + escHtml(c.id) + '</div>'
+                + '<div class="cuota-fecha">' + escHtml(c.fecha) + '</div>'
+                + '<div class="cuota-monto">' + escHtml(c.monto) + '</div>'
+                + '<div class="cuota-estado-badge ' + est_cfg.clase + '">' + est_cfg.label + '</div>'
+                + '</div>'
+                + compHtml
+                + actHtml
+                + '</div>';
+        }).join('');
+
+        document.getElementById('modal-cuotas').innerHTML = html;
+        document.getElementById('modal-detalle').classList.add('active');
+    }
+
+    function cerrarDetalle() {
+        document.getElementById('modal-detalle').classList.remove('active');
+    }
+
+    function verComprobante() {
+        alert('Abriendo comprobante… (funcionalidad conectada a Supabase en la vista de aprobación)');
+    }
+
+    function irAprobar() {
+        window.location.href = 'cooperadora_8_aprobar_pagos.html';
+    }
+
+    function irRechazar() {
+        if (confirm('¿Rechazar este comprobante? La cuota volverá al estado que le corresponde.')) {
+            alert('Rechazo registrado.');
+            cerrarDetalle();
+        }
+    }
+
+    function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    /* ══ CAMPANA ══ */
+    var _notifs = [];
+    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('click', function(e) {
+        var w = document.querySelector('.notif-wrapper');
+        if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; }
+    });
+    function renderNotificaciones(datos) {
+        _notifs = datos || [];
+        var sinLeer = _notifs.filter(function(n){ return !n.leida; }).length;
+        var badge = document.getElementById('notif-badge');
+        if (badge) { badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none'; }
+        var lista = document.getElementById('notif-list');
+        if (!lista) return;
+        if (!_notifs.length) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+        lista.innerHTML = _notifs.map(function(n) {
+            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida?'#fff':'#fffbeb') + ';">'
+                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;">' + escHtml(n.mensaje) + '</p>'
+                + '<div style="font-size:11px;color:#9ca3af;">' + (n.tiempo||'') + '</div></div></div>';
+        }).join('');
+    }
+    function marcarTodasLeidas() {
+        _notifs.forEach(function(n){ n.leida = true; });
+        renderNotificaciones(_notifs);
+        if (typeof marcarTodasNotificacionesLeidas === 'function') marcarTodasNotificacionesLeidas();
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var sesion = typeof getSesion === 'function' ? getSesion() : null;
+        if (sesion && typeof obtenerNotificaciones === 'function') {
+            obtenerNotificaciones(sesion.rol).then(renderNotificaciones);
+        }
+    });
+
+</script>
 </body>
 </html>
