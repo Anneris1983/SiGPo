@@ -423,12 +423,9 @@ function hoy() { return new Date().toISOString().split('T')[0]; }
 // INIT — carga datos desde Supabase
 // ════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async function() {
-    // Verificar sesión
-    SESION = getSesion();
-    if (!SESION || SESION.rol !== 'ESTUDIANTE') {
-        window.location.href = 'portal_login.html';
-        return;
-    }
+    SESION = await requireAuth();
+    if (!SESION) return;
+    if (SESION.rol !== 'ESTUDIANTE') { window.location.href = 'portal_login.html'; return; }
 
     spin(true);
     try {

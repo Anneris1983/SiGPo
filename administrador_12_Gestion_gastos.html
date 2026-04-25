@@ -240,8 +240,9 @@ var G = { egresos:[], programas:[], cohortes:[], categorias:[], gastoPendEjec:nu
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', async function() {
-    var sesion = getSesion();
-    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    var sesion = await requireAuth();
+    if (!sesion) return;
+    if (sesion.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
     obtenerNotificaciones(sesion.rol).then(renderNotificaciones);
     await cargar();
 });

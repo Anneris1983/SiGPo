@@ -867,13 +867,33 @@ async function obtenerPerfilUsuario() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// INICIALIZACIÓN AUTOMÁTICA DE NOTIFICACIONES
+// INICIALIZACIÓN AUTOMÁTICA: AUTH + NOTIFICACIONES
 // ══════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', async function () {
-    var sesion = getSesion();
-    if (sesion && document.getElementById('notif-badge')) {
-        var notifs = await obtenerNotificaciones(sesion.rol);
+    var pagina = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    var PAGINAS_PUBLICAS = ['portal_login.html', 'index.html', ''];
+    if (PAGINAS_PUBLICAS.indexOf(pagina) >= 0) return;
+
+    var ses = await requireAuth();
+    if (!ses) return;
+
+    var ROL_POR_PREFIJO = [
+        ['administrador_', 'ADMINISTRADOR'],
+        ['secretaria_', 'SECRETARIA'],
+        ['coordinador_', 'COORDINADOR'],
+        ['cooperadora_', 'COOPERADORA'],
+        ['portal_estudiante_', 'ESTUDIANTE']
+    ];
+    for (var i = 0; i < ROL_POR_PREFIJO.length; i++) {
+        if (pagina.startsWith(ROL_POR_PREFIJO[i][0]) && ses.rol !== ROL_POR_PREFIJO[i][1]) {
+            window.location.href = 'portal_login.html';
+            return;
+        }
+    }
+
+    if (document.getElementById('notif-badge')) {
+        var notifs = await obtenerNotificaciones(ses.rol);
         renderNotificaciones(notifs);
     }
 });

@@ -997,10 +997,11 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
 /* ══════════════════════════════════════════════════
    INIT
 ══════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     cargarPlantillasPersistidas();
-    var sesion = getSesion();
-    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    var sesion = await requireAuth();
+    if (!sesion) return;
+    if (sesion.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
     if (!COHORTE_ID || !PROGRAMA_ID) {
         toast('Faltan parámetros cohorte_id y programa_id en la URL', 'err');
         return;

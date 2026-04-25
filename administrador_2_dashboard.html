@@ -379,12 +379,10 @@ function cargarDashboard() {
 /* ══════════════════════════════════════════════
    INICIALIZAR
    ══════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', function() {
-    var sesion = getSesion();
-    if (!sesion) {
-        window.location.href = 'portal_login.html';
-        return;
-    }
+document.addEventListener('DOMContentLoaded', async function() {
+    var sesion = await requireAuth();
+    if (!sesion) return;
+    if (sesion.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
 
     document.getElementById('btn-admin-name').textContent = sesion.nombre || 'Admin';
 
