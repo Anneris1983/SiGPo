@@ -305,80 +305,7 @@
                         <th>Probabilidad Cobro</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Esp. en Costos y Gestión</strong></td>
-                        <td>2024-2025</td>
-                        <td>218</td>
-                        <td>$5,892,000</td>
-                        <td>$5,155,500</td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Maestría en Dirección de Negocios</strong></td>
-                        <td>2023-2025</td>
-                        <td>185</td>
-                        <td>$6,248,500</td>
-                        <td>$5,467,437</td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Doctorado en Ciencias Económicas</strong></td>
-                        <td>2024-2028</td>
-                        <td>142</td>
-                        <td>$4,825,200</td>
-                        <td>$4,222,050</td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Maestría en Agronegocios</strong></td>
-                        <td>2024-2026</td>
-                        <td>268</td>
-                        <td>$5,145,800</td>
-                        <td>$4,502,575</td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Diplomado ODS</strong></td>
-                        <td>Edición 2025</td>
-                        <td>298</td>
-                        <td>$3,458,700</td>
-                        <td>$3,026,362</td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Otros Programas</strong></td>
-                        <td>Varias</td>
-                        <td>136</td>
-                        <td>$2,275,000</td>
-                        <td>$1,990,625</td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 87.5%">87.5%</div>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
+                <tbody id="tbody-reporte"></tbody>
                 <tfoot style="background: #f8f6f1; font-weight: 700;">
                     <tr>
                         <td colspan="2"><strong>TOTAL</strong></td>
@@ -447,22 +374,224 @@
 </script>
 
 <script>
-// Inicializar gráfico del reporte
-document.addEventListener('DOMContentLoaded', function() {
-    
-new Chart(document.getElementById('chart-reporte').getContext('2d'), {
-    type: 'line',
-    data: {
-        labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-        datasets: [
-            { label: '🟢 Optimista (100%)', data: [3200,4100,5800,3900,3500,4600,2800,5200,6100,2300,1800,1200], borderColor: '#16a34a', borderWidth: 3, fill: false, tension: 0.4 },
-            { label: '🟡 Realista (87%)', data: [2784,3567,5046,3393,3045,4002,2436,4524,5307,2001,1566,1044], borderColor: '#f59e0b', borderWidth: 3, fill: false, tension: 0.4 },
-            { label: '🔴 Estrés (70%)', data: [2240,2870,4060,2730,2450,3220,1960,3640,4270,1610,1260,840], borderColor: '#dc2626', borderWidth: 3, fill: false, tension: 0.4 }
-        ]
-    },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'top' }, tooltip:{ callbacks:{ label: c => c.dataset.label+': $'+c.parsed.y.toLocaleString('es-AR')+'K' } } }, scales:{ y:{ beginAtZero:true, ticks:{ callback: v=>'$'+v+'K' } } } }
-});
+// Helpers
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function mesLabel(iso) { var meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; var p=String(iso||'').split('T')[0].split('-'); return p.length>=2 ? meses[parseInt(p[1])-1]+' '+p[0] : iso||''; }
 
+var _chartProyeccion = null;
+
+async function cargarDatos() {
+    try {
+        var sb = await getSupabase();
+
+        // Query cobros pending (not yet paid)
+        var rCobros = await sb.from('cobros').select('*').in('estado', ['NO_ABONADA','PENDIENTE','EN_MORA']);
+        var rProgramas = await sb.from('programas').select('programa_id,nombre,tipo');
+
+        var cobros = (rCobros.data || []);
+        var programas = (rProgramas.data || []);
+
+        // Map programa_id -> nombre
+        var progMap = {};
+        programas.forEach(function(p) { progMap[p.programa_id] = p.nombre || ('Programa ' + p.programa_id); });
+
+        // Group by mes (fecha_vencimiento), sum monto_final
+        var byMes = {};
+        cobros.forEach(function(c) {
+            var ml = mesLabel(c.fecha_vencimiento);
+            if (!ml) return;
+            if (!byMes[ml]) byMes[ml] = 0;
+            byMes[ml] += Number(c.monto_final||0);
+        });
+
+        // Sort months chronologically
+        function parseMesLabel(ml) {
+            var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+            var parts = ml.split(' ');
+            if (parts.length < 2) return 0;
+            return parseInt(parts[1]) * 12 + meses.indexOf(parts[0]);
+        }
+        var sortedMeses = Object.keys(byMes).sort(function(a,b){ return parseMesLabel(a) - parseMesLabel(b); });
+
+        // Use last 12 months from today onwards (future-oriented)
+        // Filter to only months >= today's month or show all found months, max 12
+        var now = new Date();
+        var futureLabels = [];
+        for (var i = 0; i <= 11; i++) {
+            var d2 = new Date(now.getFullYear(), now.getMonth() + i, 1);
+            var meses2 = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+            futureLabels.push(meses2[d2.getMonth()] + ' ' + d2.getFullYear());
+        }
+
+        // Use intersection: months that exist in data within the future window, or fallback to sorted
+        var chartLabels = [];
+        var chartBase = [];
+        // Check if any future months have data
+        var hasFuture = futureLabels.some(function(m){ return byMes[m]; });
+        if (hasFuture) {
+            futureLabels.forEach(function(m) {
+                chartLabels.push(m);
+                chartBase.push(byMes[m] || 0);
+            });
+        } else {
+            // Fall back to all months found in data
+            var useLabels = sortedMeses.slice(-12);
+            useLabels.forEach(function(m) {
+                chartLabels.push(m);
+                chartBase.push(byMes[m] || 0);
+            });
+        }
+
+        // Calculate 3 scenarios
+        var optData = chartBase.map(function(v){ return Math.round(v * 1.0); });
+        var realData = chartBase.map(function(v){ return Math.round(v * 0.87); });
+        var stressData = chartBase.map(function(v){ return Math.round(v * 0.70); });
+
+        // Totals
+        var totalOpt = optData.reduce(function(s,v){ return s+v; }, 0);
+        var totalReal = realData.reduce(function(s,v){ return s+v; }, 0);
+        var totalStress = stressData.reduce(function(s,v){ return s+v; }, 0);
+        var totalBase = chartBase.reduce(function(s,v){ return s+v; }, 0);
+
+        // Count unique students and cuotas
+        var uniqueDnis = new Set(cobros.map(function(c){ return c.dni; }));
+        var cuotasCount = cobros.length;
+
+        // Update summary cards
+        var cards = document.querySelectorAll('.summary-card');
+        if (cards[0]) {
+            cards[0].querySelector('.summary-value').textContent = fM(totalBase);
+            cards[0].querySelector('.summary-change').textContent = 'Cuotas pendientes proyectadas';
+        }
+        if (cards[1]) {
+            cards[1].querySelector('.summary-value').textContent = cuotasCount.toLocaleString('es-AR');
+            cards[1].querySelector('.summary-change').textContent = 'De ' + uniqueDnis.size + ' estudiantes';
+        }
+        if (cards[2]) {
+            cards[2].querySelector('.summary-value').textContent = '87%';
+            cards[2].querySelector('.summary-change').textContent = 'Escenario realista';
+        }
+        if (cards[3]) {
+            cards[3].querySelector('.summary-value').textContent = fM(totalReal);
+            cards[3].querySelector('.summary-change').textContent = 'Con 87% de cobranza';
+        }
+
+        // Update scenario boxes
+        var scenarioBoxes = document.querySelectorAll('.scenario-box');
+        if (scenarioBoxes[0]) {
+            scenarioBoxes[0].querySelector('.scenario-title').textContent = '🟢 Escenario Optimista (100% cobranza)';
+            var valEl0 = scenarioBoxes[0].querySelector('div[style*="font-size: 24px"]');
+            if (valEl0) valEl0.textContent = fM(totalOpt);
+        }
+        if (scenarioBoxes[1]) {
+            scenarioBoxes[1].querySelector('.scenario-title').textContent = '🟡 Escenario Base (87% cobranza)';
+            var valEl1 = scenarioBoxes[1].querySelector('div[style*="font-size: 24px"]');
+            if (valEl1) valEl1.textContent = fM(totalReal);
+        }
+        if (scenarioBoxes[2]) {
+            scenarioBoxes[2].querySelector('.scenario-title').textContent = '🔴 Escenario Estrés (70% cobranza)';
+            var valEl2 = scenarioBoxes[2].querySelector('div[style*="font-size: 24px"]');
+            if (valEl2) valEl2.textContent = fM(totalStress);
+        }
+
+        // Update chart
+        if (_chartProyeccion) { _chartProyeccion.destroy(); _chartProyeccion = null; }
+
+        _chartProyeccion = new Chart(document.getElementById('chart-reporte').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [
+                    { label: '🟢 Optimista (100%)', data: optData, borderColor: '#16a34a', borderWidth: 3, fill: false, tension: 0.4 },
+                    { label: '🟡 Realista (87%)', data: realData, borderColor: '#f59e0b', borderWidth: 3, fill: false, tension: 0.4 },
+                    { label: '🔴 Estrés (70%)', data: stressData, borderColor: '#dc2626', borderWidth: 3, fill: false, tension: 0.4 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { callbacks: { label: function(c){ return c.dataset.label + ': ' + fM(c.parsed.y); } } }
+                },
+                scales: { y: { beginAtZero: true, ticks: { callback: function(v){ return fM(v); } } } }
+            }
+        });
+
+        // Group by programa for table
+        var byProg = {};
+        cobros.forEach(function(c) {
+            var pid = c.programa_id || 'SIN_PROGRAMA';
+            if (!byProg[pid]) byProg[pid] = { nombre: progMap[pid] || pid, count: 0, montoTotal: 0 };
+            byProg[pid].count++;
+            byProg[pid].montoTotal += Number(c.monto_final||0);
+        });
+
+        var progList = Object.entries(byProg).sort(function(a,b){ return b[1].montoTotal - a[1].montoTotal; });
+
+        // Build tbody
+        var tbody = document.getElementById('tbody-reporte');
+        if (tbody) {
+            if (progList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:32px;">No hay cuotas pendientes.</td></tr>';
+            } else {
+                tbody.innerHTML = progList.map(function(entry) {
+                    var d = entry[1];
+                    var realista = Math.round(d.montoTotal * 0.87);
+                    return '<tr>'
+                        + '<td><strong>' + esc(d.nombre) + '</strong></td>'
+                        + '<td>—</td>'
+                        + '<td>' + d.count + '</td>'
+                        + '<td>' + fM(d.montoTotal) + '</td>'
+                        + '<td>' + fM(realista) + '</td>'
+                        + '<td>'
+                        + '<div class="progress-bar"><div class="progress-fill" style="width:87%">87%</div></div>'
+                        + '</td>'
+                        + '</tr>';
+                }).join('');
+            }
+        }
+
+        // Update tfoot
+        var tfoot = document.querySelector('.card table tfoot tr');
+        if (tfoot) {
+            tfoot.innerHTML = '<td colspan="2"><strong>TOTAL</strong></td>'
+                + '<td><strong>' + cuotasCount.toLocaleString('es-AR') + '</strong></td>'
+                + '<td><strong>' + fM(totalBase) + '</strong></td>'
+                + '<td><strong>' + fM(totalReal) + '</strong></td>'
+                + '<td></td>';
+        }
+
+        // Update timeline section (replace with real monthly items)
+        var timeline = document.querySelector('.timeline');
+        if (timeline && chartLabels.length > 0) {
+            timeline.innerHTML = chartLabels.map(function(ml, i) {
+                var base = chartBase[i] || 0;
+                var real = realData[i] || 0;
+                return '<div class="timeline-item">'
+                    + '<div class="timeline-dot"></div>'
+                    + '<div class="timeline-content">'
+                    + '<div class="timeline-month">' + esc(ml) + '</div>'
+                    + '<div class="timeline-amount">' + fM(base) + '</div>'
+                    + '<div class="timeline-detail">Proyección realista: ' + fM(real) + ' (87% cobranza)</div>'
+                    + '</div></div>';
+            }).join('');
+        }
+
+        // Update filter band
+        var band = document.getElementById('filter-band');
+        if (band && band.innerHTML.indexOf('Cargando') !== -1) {
+            band.innerHTML = '<span>🔎 Datos en tiempo real desde Supabase</span>';
+        }
+
+    } catch(err) {
+        console.error('Error cargarDatos proyeccion:', err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    cargarDatos();
 });
 </script>
 </body>

@@ -225,88 +225,7 @@
                         <th>Nivel Riesgo</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Maestría en Agronegocios</strong></td>
-                        <td>2024-2026</td>
-                        <td>52</td>
-                        <td>19</td>
-                        <td>36.5%</td>
-                        <td>$847,500</td>
-                        <td>58 días</td>
-                        <td><span class="mora-indicator mora-critico"></span><span class="badge badge-critico">CRÍTICO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Esp. en Costos y Gestión</strong></td>
-                        <td>2024-2025</td>
-                        <td>45</td>
-                        <td>12</td>
-                        <td>26.7%</td>
-                        <td>$625,000</td>
-                        <td>42 días</td>
-                        <td><span class="mora-indicator mora-alto"></span><span class="badge badge-alto">ALTO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Maestría en Dirección de Negocios</strong></td>
-                        <td>2023-2025</td>
-                        <td>38</td>
-                        <td>15</td>
-                        <td>39.5%</td>
-                        <td>$780,000</td>
-                        <td>51 días</td>
-                        <td><span class="mora-indicator mora-critico"></span><span class="badge badge-critico">CRÍTICO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Doctorado en Ciencias Económicas</strong></td>
-                        <td>2024-2028</td>
-                        <td>22</td>
-                        <td>8</td>
-                        <td>36.4%</td>
-                        <td>$520,000</td>
-                        <td>48 días</td>
-                        <td><span class="mora-indicator mora-alto"></span><span class="badge badge-alto">ALTO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Diplomado ODS</strong></td>
-                        <td>Edición 2024</td>
-                        <td>68</td>
-                        <td>11</td>
-                        <td>16.2%</td>
-                        <td>$187,200</td>
-                        <td>28 días</td>
-                        <td><span class="mora-indicator mora-medio"></span><span class="badge badge-medio">MEDIO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Maestría en Recursos Sustentables</strong></td>
-                        <td>2023-2025</td>
-                        <td>32</td>
-                        <td>9</td>
-                        <td>28.1%</td>
-                        <td>$342,900</td>
-                        <td>39 días</td>
-                        <td><span class="mora-indicator mora-alto"></span><span class="badge badge-alto">ALTO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Esp. en Tributación</strong></td>
-                        <td>2024-2025</td>
-                        <td>28</td>
-                        <td>4</td>
-                        <td>14.3%</td>
-                        <td>$95,000</td>
-                        <td>25 días</td>
-                        <td><span class="mora-indicator mora-bajo"></span><span class="badge badge-bajo">BAJO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Otros programas</strong></td>
-                        <td>Varias</td>
-                        <td>62</td>
-                        <td>11</td>
-                        <td>17.7%</td>
-                        <td>$255,290</td>
-                        <td>33 días</td>
-                        <td><span class="mora-indicator mora-medio"></span><span class="badge badge-medio">MEDIO</span></td>
-                    </tr>
-                </tbody>
+                <tbody id="tbody-reporte"></tbody>
                 <tfoot style="background: #f8f6f1; font-weight: 700;">
                     <tr>
                         <td colspan="2"><strong>TOTAL</strong></td>
@@ -376,21 +295,204 @@
 </script>
 
 <script>
-// Inicializar gráfico del reporte
-document.addEventListener('DOMContentLoaded', function() {
-    
-new Chart(document.getElementById('chart-reporte').getContext('2d'), {
-    type: 'line',
-    data: {
-        labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-        datasets: [
-            { label: 'Mora Total ($K)', data: [180,240,310,290,320,380,350,420,490,460,510,550], backgroundColor: 'rgba(220,38,38,0.12)', borderColor: '#dc2626', borderWidth: 3, fill: true, tension: 0.4 },
-            { label: 'Mora Recuperada ($K)', data: [80,110,150,130,160,190,175,210,245,230,255,275], backgroundColor: 'rgba(22,163,74,0.12)', borderColor: '#16a34a', borderWidth: 3, fill: true, tension: 0.4 }
-        ]
-    },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'top' }, tooltip:{ callbacks:{ label: c => c.dataset.label+': $'+c.parsed.y.toLocaleString('es-AR')+'K' } } }, scales:{ y:{ beginAtZero:true, ticks:{ callback: v=>'$'+v+'K' } } } }
-});
+// Helpers
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function mesLabel(iso) { var meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; var p=String(iso||'').split('T')[0].split('-'); return p.length>=2 ? meses[parseInt(p[1])-1]+' '+p[0] : iso||''; }
 
+var _chartMorosidad = null;
+
+async function cargarDatos() {
+    try {
+        var sb = await getSupabase();
+
+        var rCobros = await sb.from('cobros').select('*');
+        var rProgramas = await sb.from('programas').select('programa_id,nombre,tipo');
+
+        var cobros = (rCobros.data || []);
+        var programas = (rProgramas.data || []);
+
+        // Map programa_id -> nombre
+        var progMap = {};
+        programas.forEach(function(p) { progMap[p.programa_id] = p.nombre || ('Programa ' + p.programa_id); });
+
+        // Filter EN_MORA cobros
+        var enMora = cobros.filter(function(c) { return c.estado === 'EN_MORA'; });
+
+        // Unique DNIs in mora
+        var dnisEnMora = new Set(enMora.map(function(c){ return c.dni; }));
+        var totalEnMora = dnisEnMora.size;
+
+        // Total monto mora (saldo_pendiente sum)
+        var montoTotalMora = enMora.reduce(function(s,c){ return s + Number(c.saldo_pendiente||0); }, 0);
+
+        // Total unique DNIs across all cobros
+        var todosLosDnis = new Set(cobros.map(function(c){ return c.dni; }));
+        var pctMoraGeneral = todosLosDnis.size > 0 ? (dnisEnMora.size / todosLosDnis.size * 100) : 0;
+
+        // Mora promedio por estudiante moroso
+        var moraPromedio = totalEnMora > 0 ? (montoTotalMora / totalEnMora) : 0;
+
+        // Update summary cards
+        var cards = document.querySelectorAll('.summary-card');
+        if (cards[0]) {
+            cards[0].querySelector('.summary-value').textContent = fM(montoTotalMora);
+            cards[0].querySelector('.summary-change').textContent = pctMoraGeneral.toFixed(1) + '% del total a cobrar';
+        }
+        if (cards[1]) {
+            cards[1].querySelector('.summary-value').textContent = totalEnMora;
+            cards[1].querySelector('.summary-change').textContent = pctMoraGeneral.toFixed(1) + '% del total activos';
+        }
+        if (cards[2]) {
+            cards[2].querySelector('.summary-value').textContent = fM(moraPromedio);
+            cards[2].querySelector('.summary-change').textContent = 'Por estudiante moroso';
+        }
+        if (cards[3]) {
+            cards[3].querySelector('.summary-value').textContent = '—';
+            cards[3].querySelector('.summary-change').textContent = 'Desde vencimiento';
+        }
+
+        // Update alert
+        var alertEl = document.querySelector('.alert-warning');
+        if (alertEl) {
+            alertEl.innerHTML = '<strong>⚠️ Atención:</strong> Se detectaron ' + totalEnMora + ' estudiantes con mora que requieren gestión de cobranza.';
+        }
+
+        // Group by programa_id: count mora estudiantes, monto mora, total estudiantes (all cobros)
+        var byProg = {};
+        cobros.forEach(function(c) {
+            var pid = c.programa_id || 'SIN_PROGRAMA';
+            if (!byProg[pid]) byProg[pid] = { nombre: progMap[pid] || pid, dnisTotal: new Set(), dnisMora: new Set(), montoMora: 0 };
+            byProg[pid].dnisTotal.add(c.dni);
+            if (c.estado === 'EN_MORA') {
+                byProg[pid].dnisMora.add(c.dni);
+                byProg[pid].montoMora += Number(c.saldo_pendiente||0);
+            }
+        });
+
+        // Only programs with mora
+        var progConMora = Object.entries(byProg).filter(function(e){ return e[1].dnisMora.size > 0; });
+        progConMora.sort(function(a,b){ return b[1].montoMora - a[1].montoMora; });
+
+        // Build tfoot totals
+        var totalEstFoot = 0, totalMoraCountFoot = 0, totalMontoPFoot = 0;
+        progConMora.forEach(function(e){
+            totalEstFoot += e[1].dnisTotal.size;
+            totalMoraCountFoot += e[1].dnisMora.size;
+            totalMontoPFoot += e[1].montoMora;
+        });
+        var pctFoot = totalEstFoot > 0 ? (totalMoraCountFoot/totalEstFoot*100) : 0;
+
+        // Build tbody rows
+        var tbody = document.getElementById('tbody-reporte');
+        if (tbody) {
+            if (progConMora.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:32px;">No se encontraron cobros en mora.</td></tr>';
+            } else {
+                tbody.innerHTML = progConMora.map(function(entry) {
+                    var pid = entry[0], d = entry[1];
+                    var totalEst = d.dnisTotal.size;
+                    var moraCount = d.dnisMora.size;
+                    var pct = totalEst > 0 ? (moraCount / totalEst * 100) : 0;
+                    var badge = '';
+                    if (pct >= 30) {
+                        badge = '<span class="mora-indicator mora-critico"></span><span class="badge badge-critico">CRÍTICO</span>';
+                    } else if (pct >= 20) {
+                        badge = '<span class="mora-indicator mora-alto"></span><span class="badge badge-alto">ALTO</span>';
+                    } else if (pct >= 10) {
+                        badge = '<span class="mora-indicator mora-medio"></span><span class="badge badge-medio">MEDIO</span>';
+                    } else {
+                        badge = '<span class="mora-indicator mora-bajo"></span><span class="badge badge-bajo">BAJO</span>';
+                    }
+                    return '<tr>'
+                        + '<td><strong>' + esc(d.nombre) + '</strong></td>'
+                        + '<td>—</td>'
+                        + '<td>' + totalEst + '</td>'
+                        + '<td>' + moraCount + '</td>'
+                        + '<td>' + pct.toFixed(1) + '%</td>'
+                        + '<td>' + fM(d.montoMora) + '</td>'
+                        + '<td>—</td>'
+                        + '<td>' + badge + '</td>'
+                        + '</tr>';
+                }).join('');
+            }
+        }
+
+        // Update tfoot
+        var tfoot = document.querySelector('.card table tfoot tr');
+        if (tfoot) {
+            tfoot.innerHTML = '<td colspan="2"><strong>TOTAL</strong></td>'
+                + '<td><strong>' + totalEstFoot + '</strong></td>'
+                + '<td><strong>' + totalMoraCountFoot + '</strong></td>'
+                + '<td><strong>' + pctFoot.toFixed(1) + '%</strong></td>'
+                + '<td><strong>' + fM(totalMontoPFoot) + '</strong></td>'
+                + '<td><strong>—</strong></td>'
+                + '<td></td>';
+        }
+
+        // Chart: monthly mora trend (last 12 months by fecha_vencimiento)
+        // Build last 12 month labels
+        var now = new Date();
+        var monthLabels = [];
+        for (var i = 11; i >= 0; i--) {
+            var d2 = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+            monthLabels.push(meses[d2.getMonth()] + ' ' + d2.getFullYear());
+        }
+
+        // Count EN_MORA per month (by fecha_vencimiento)
+        var moraPerMonth = {};
+        monthLabels.forEach(function(m){ moraPerMonth[m] = 0; });
+        enMora.forEach(function(c) {
+            var ml = mesLabel(c.fecha_vencimiento);
+            if (moraPerMonth.hasOwnProperty(ml)) moraPerMonth[ml]++;
+        });
+
+        var moraData = monthLabels.map(function(m){ return moraPerMonth[m]; });
+
+        // Destroy old chart if any
+        if (_chartMorosidad) { _chartMorosidad.destroy(); _chartMorosidad = null; }
+
+        _chartMorosidad = new Chart(document.getElementById('chart-reporte').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    {
+                        label: 'Cobros EN_MORA (cantidad)',
+                        data: moraData,
+                        backgroundColor: 'rgba(220,38,38,0.12)',
+                        borderColor: '#dc2626',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { callbacks: { label: function(c){ return c.dataset.label + ': ' + c.parsed.y; } } }
+                },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+
+        // Update filter band
+        var band = document.getElementById('filter-band');
+        if (band && band.innerHTML.indexOf('Cargando') !== -1) {
+            band.innerHTML = '<span>🔎 Datos en tiempo real desde Supabase</span>';
+        }
+
+    } catch(err) {
+        console.error('Error cargarDatos morosidad:', err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    cargarDatos();
 });
 </script>
 </body>

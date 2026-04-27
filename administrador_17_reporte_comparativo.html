@@ -424,48 +424,37 @@ let chartHistorico = null;
 let chartVariacion = null;
 let chartDonut     = null;
 
-// ── Datos históricos demo ──
-// En producción estos datos vienen de Google Apps Script
-const HIST = {
-    labels:      ['Q1 2022','Q2 2022','Q3 2022','Q4 2022',
-                  'Q1 2023','Q2 2023','Q3 2023','Q4 2023',
-                  'Q1 2024','Q2 2024','Q3 2024','Q4 2024',
-                  'Q1 2025','Q2 2025','Q3 2025','Q4 2025',
-                  'Q1 2026'],
-    ingresos:    [6200, 6800, 7500, 6100,
-                  8200, 9100,10300, 8400,
-                  9800,10200,11500, 9100,
-                 11800,12300,13500,10200,
-                 13100],
-    egresos:     [1200, 1350, 1550, 1200,
-                  1600, 1750, 2000, 1650,
-                  1950, 2100, 2400, 1800,
-                  2150, 2300, 2600, 1950,
-                  2310],
-    balance:     [5000, 5450, 5950, 4900,
-                  6600, 7350, 8300, 6750,
-                  7850, 8100, 9100, 7300,
-                  9650,10000,10900, 8250,
-                 10790],
-    estudiantes: [165, 178, 190, 172,
-                  210, 225, 240, 218,
-                  252, 265, 278, 260,
-                  265, 272, 285, 275,
-                  287],
-    morosidad:   [900, 1050, 1200, 950,
-                  1800, 1950, 2100, 1700,
-                  2200, 2500, 2700, 2300,
-                  2980, 3100, 3300, 3000,
-                  3453],
-};
+// ── Helpers ──
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function mesLabel(iso) { var meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; var p=String(iso||'').split('T')[0].split('-'); return p.length>=2 ? meses[parseInt(p[1])-1]+' '+p[0] : iso||''; }
+function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
+
+// ── Datos reales de Supabase ──
+var _cobros = [];
+var _egresos = [];
 
 // ──────────────────────────────────────────────────────────
 // INIT
 // ──────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
     leerFiltrosCashflow();
-    poblarSelects();
+    cargarDatos();
 });
+
+async function cargarDatos() {
+    try {
+        var sb = await getSupabase();
+        var rCobros  = await sb.from('cobros').select('*');
+        var rEgresos = await sb.from('egresos').select('*');
+        _cobros  = rCobros.data  || [];
+        _egresos = rEgresos.data || [];
+        poblarSelects();
+    } catch(e) {
+        console.error('cargarDatos error:', e);
+        poblarSelects();
+    }
+}
 
 // ── Lee filtros guardados por administrador_8_Cashflow.html ──
 function leerFiltrosCashflow() {
@@ -517,13 +506,15 @@ function generarOpciones() {
 }
 
 function poblarSelects() {
-    const opts = generarOpciones();
-    const s1   = document.getElementById('periodo1');
-    const s2   = document.getElementById('periodo2');
-    opts.forEach(o => { s1.add(new Option(o, o)); s2.add(new Option(o, o)); });
+    var opts = generarOpciones();
+    var s1   = document.getElementById('periodo1');
+    var s2   = document.getElementById('periodo2');
+    // Clear existing options
+    s1.innerHTML = ''; s2.innerHTML = '';
+    opts.forEach(function(o) { s1.add(new Option(o, o)); s2.add(new Option(o, o)); });
     s1.selectedIndex = 0;
-    const ant = opts[0].replace(/(\d{4})/, m => String(parseInt(m) - 1));
-    const idx = opts.indexOf(ant);
+    var ant = opts[0].replace(/(\d{4})/, function(m) { return String(parseInt(m) - 1); });
+    var idx = opts.indexOf(ant);
     s2.selectedIndex = idx >= 0 ? idx : 4;
     actualizarComparativo();
 }
@@ -543,10 +534,8 @@ function actualizarComparativo() {
     document.getElementById('th-p1').textContent         = p1;
     document.getElementById('th-p2').textContent         = p2;
 
-    // En producción llamar a GAS:
-    // google.script.run.withSuccessHandler(renderTodo).getDatosComparativo({p1,p2,...FILTROS_ACTIVOS});
-    const d1 = getDato(p1);
-    const d2 = getDato(p2);
+    var d1 = getDato(p1);
+    var d2 = getDato(p2);
     renderSummaryCards(d1, d2);
     renderChartHistorico(p1, p2);
     renderChartVariacion(d1, d2, p1, p2);
@@ -554,24 +543,52 @@ function actualizarComparativo() {
     renderTabla(d1, d2);
 }
 
-// Obtiene datos de un período del array demo (o genera al azar si no existe)
+// Parsea un label "Qn YYYY" → rango de meses [YYYY-MM-start, YYYY-MM-end]
+function qToMeses(label) {
+    var m = label.match(/^Q(\d)\s+(\d{4})$/);
+    if (!m) return null;
+    var q = parseInt(m[1]);
+    var y = m[2];
+    var meses = { 1: ['01','02','03'], 2: ['04','05','06'], 3: ['07','08','09'], 4: ['10','11','12'] };
+    return { year: y, meses: meses[q] || [] };
+}
+
 function getDato(label) {
-    const i = HIST.labels.indexOf(label);
-    if (i < 0) {
-        const ing = Math.round(8000 + Math.random() * 6000);
-        const eg  = Math.round(1400 + Math.random() * 1400);
-        return { ingresos: ing * 1000, egresos: eg * 1000,
-                 balance: (ing - eg) * 1000,
-                 estudiantes: Math.round(200 + Math.random() * 100),
-                 morosidad: Math.round(1500 + Math.random() * 2200) * 1000 };
-    }
-    return {
-        ingresos:    HIST.ingresos[i]    * 1000,
-        egresos:     HIST.egresos[i]     * 1000,
-        balance:     HIST.balance[i]     * 1000,
-        estudiantes: HIST.estudiantes[i],
-        morosidad:   HIST.morosidad[i]   * 1000,
-    };
+    var parsed = qToMeses(label);
+    if (!parsed) return { ingresos:0, egresos:0, balance:0, estudiantes:0, morosidad:0 };
+    var year = parsed.year;
+    var meses = parsed.meses;
+
+    var ingresos = 0, morosidad = 0;
+    var estudiantesSet = new Set();
+    _cobros.forEach(function(c) {
+        var fv = (c.fecha_vencimiento || '').substring(0, 7);
+        var mm = fv.substring(5, 7);
+        var yy = fv.substring(0, 4);
+        if (yy !== year || meses.indexOf(mm) < 0) return;
+        if (c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL') {
+            ingresos += Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0);
+        }
+        if (c.estado === 'EN_MORA') {
+            morosidad += Number(c.saldo_pendiente || 0);
+        }
+        if (c.estudiante_id) estudiantesSet.add(c.estudiante_id);
+    });
+
+    var egresos = 0;
+    _egresos.forEach(function(e) {
+        var fe = (e.fecha_ejecucion || '').substring(0, 7);
+        var mm = fe.substring(5, 7);
+        var yy = fe.substring(0, 4);
+        if (yy !== year || meses.indexOf(mm) < 0) return;
+        if (e.tipo === 'EJECUTADO' || e.estado === 'CANCELADO') {
+            egresos += Number(e.monto_pagado || 0);
+        }
+    });
+
+    var balance = ingresos - egresos;
+    return { ingresos: ingresos, egresos: egresos, balance: balance,
+             estudiantes: estudiantesSet.size, morosidad: morosidad };
 }
 
 // ──────────────────────────────────────────────────────────
@@ -607,30 +624,57 @@ function renderSummaryCards(d1, d2) {
 // ──────────────────────────────────────────────────────────
 // GRÁFICA 1 — Barras históricas con P1 y P2 resaltados
 // ──────────────────────────────────────────────────────────
+function buildHistLabels() {
+    var hoy = new Date();
+    var anio = hoy.getFullYear();
+    var q = Math.ceil((hoy.getMonth() + 1) / 3);
+    var opts = [];
+    for (var a = anio; a >= 2022; a--) {
+        var qMax = a === anio ? q : 4;
+        for (var qi = qMax; qi >= 1; qi--) opts.push('Q' + qi + ' ' + a);
+    }
+    opts.reverse();
+    return opts;
+}
+
 function renderChartHistorico(p1, p2) {
-    const ctx = document.getElementById('chart-historico').getContext('2d');
+    var ctx = document.getElementById('chart-historico').getContext('2d');
     if (chartHistorico) chartHistorico.destroy();
 
-    const mkDataset = (data, baseAlpha, solidColor, label) => ({
-        label,
-        data,
-        backgroundColor: HIST.labels.map(l =>
-            l === p1 ? solidColor :
-            l === p2 ? solidColor.replace(')', `, ${baseAlpha + 0.2})`) : solidColor.replace(')', `, ${baseAlpha})`)),
-        borderColor: HIST.labels.map(l =>
-            (l === p1 || l === p2) ? solidColor.replace(/,\s*[\d.]+\)$/, ', 1)') : 'transparent'),
-        borderWidth: HIST.labels.map(l => (l === p1 || l === p2) ? 2.5 : 0),
-        borderRadius: 5,
+    var labels = buildHistLabels();
+    var dataIng = [], dataEg = [], dataBal = [];
+    labels.forEach(function(lbl) {
+        var d = getDato(lbl);
+        dataIng.push(Math.round(d.ingresos));
+        dataEg.push(Math.round(d.egresos));
+        dataBal.push(Math.round(d.balance));
     });
+
+    function mkDataset(data, baseAlpha, solidColor, label) {
+        return {
+            label: label,
+            data: data,
+            backgroundColor: labels.map(function(l) {
+                if (l === p1) return solidColor + ', 0.90)';
+                if (l === p2) return solidColor + ', ' + (baseAlpha + 0.25) + ')';
+                return solidColor + ', ' + baseAlpha + ')';
+            }),
+            borderColor: labels.map(function(l) {
+                return (l === p1 || l === p2) ? solidColor + ', 1)' : 'transparent';
+            }),
+            borderWidth: labels.map(function(l) { return (l === p1 || l === p2) ? 2.5 : 0; }),
+            borderRadius: 5,
+        };
+    }
 
     chartHistorico = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: HIST.labels,
+            labels: labels,
             datasets: [
-                mkDataset(HIST.ingresos,  0.35, 'rgba(22,163,74',   'Ingresos (K)'),
-                mkDataset(HIST.egresos,   0.35, 'rgba(220,38,38',   'Egresos (K)'),
-                mkDataset(HIST.balance,   0.35, 'rgba(8,145,178',   'Balance (K)'),
+                mkDataset(dataIng, 0.35, 'rgba(22,163,74',  'Ingresos'),
+                mkDataset(dataEg,  0.35, 'rgba(220,38,38',  'Egresos'),
+                mkDataset(dataBal, 0.35, 'rgba(8,145,178',  'Balance'),
             ]
         },
         options: {
@@ -639,13 +683,13 @@ function renderChartHistorico(p1, p2) {
                 legend: { position: 'top' },
                 tooltip: {
                     callbacks: {
-                        label: c => `${c.dataset.label}: $${c.parsed.y.toLocaleString('es-AR')}K`
+                        label: function(c) { return c.dataset.label + ': ' + fM(c.parsed.y); }
                     }
                 }
             },
             scales: {
                 y: { beginAtZero: true,
-                     ticks: { callback: v => '$' + v + 'K' },
+                     ticks: { callback: function(v) { return fM(v); } },
                      grid: { color: '#f0f0f0' } },
                 x: { grid: { display: false } }
             }

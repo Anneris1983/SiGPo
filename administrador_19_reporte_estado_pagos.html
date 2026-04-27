@@ -173,20 +173,20 @@
     <!-- RESUMEN -->
     <div class="summary-cards">
         <div class="summary-card">
-            <div class="summary-label">Total Estudiantes</div>
-            <div class="summary-value">287</div>
+            <div class="summary-label">Total Cobros</div>
+            <div class="summary-value" id="sc-total">—</div>
         </div>
         <div class="summary-card" style="border-left: 4px solid #16a34a;">
             <div class="summary-label">Al Día</div>
-            <div class="summary-value" style="color: #16a34a;">198</div>
+            <div class="summary-value" id="sc-aldia" style="color: #16a34a;">—</div>
         </div>
         <div class="summary-card" style="border-left: 4px solid #dc2626;">
             <div class="summary-label">En Mora</div>
-            <div class="summary-value" style="color: #dc2626;">89</div>
+            <div class="summary-value" id="sc-mora" style="color: #dc2626;">—</div>
         </div>
         <div class="summary-card" style="border-left: 4px solid #2563eb;">
             <div class="summary-label">Con Descuento</div>
-            <div class="summary-value" style="color: #2563eb;">124</div>
+            <div class="summary-value" id="sc-descuento" style="color: #2563eb;">—</div>
         </div>
     </div>
 
@@ -271,63 +271,135 @@
         }
     })();
 
-    // ── GRÁFICA 1 — Donut ──
-    new Chart(document.getElementById('chart-donut').getContext('2d'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Al Día', 'En Mora', 'Con Descuento'],
-            datasets: [{ data: [198, 89, 124], backgroundColor: ['#16a34a','#dc2626','#2563eb'], borderColor: '#fff', borderWidth: 3 }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'right', labels: { font: { size: 12 }, boxWidth: 14, padding: 14 } },
-                tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed} estudiantes` } }
-            }
-        }
-    });
+    // ── Instancias de gráficos ──
+    var chartDonut = null;
+    var chartMoraPrograma = null;
+    var chartCohortes = null;
 
-    // ── GRÁFICA 2 — Mora por programa ──
-    new Chart(document.getElementById('chart-mora-programa').getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: ['Maestría Dir. Negocios','Esp. Costos','Maestría Agronegocios','Doctorado C. Econ.','Diplomado ODS'],
-            datasets: [{ label: 'En mora', data: [28,21,18,14,8], backgroundColor: 'rgba(220,38,38,0.80)', borderColor: '#dc2626', borderWidth: 1.5, borderRadius: 7 }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' } }, x: { grid: { display: false }, ticks: { font: { size: 11 } } } }
-        }
-    });
+    // ── Helpers ──
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+    function mesLabel(iso) { var meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; var p=String(iso||'').split('T')[0].split('-'); return p.length>=2 ? meses[parseInt(p[1])-1]+' '+p[0] : iso||''; }
+    function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
 
-    // ── GRÁFICA 3 — Cuotas al día vs mora por cohorte ──
-    new Chart(document.getElementById('chart-cohortes').getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: ['2021-2023','2022-2024','2023-2025','2024-2026','2024-2028','Ed. 2023','Ed. 2024','Ed. 2025'],
-            datasets: [
-                { label: 'Cuotas al día', data: [420,610,780,540,310,180,260,195], backgroundColor: 'rgba(22,163,74,0.80)', borderColor: '#16a34a', borderWidth: 1.5, borderRadius: 6 },
-                { label: 'Cuotas en mora', data: [80,95,140,75,45,20,35,22], backgroundColor: 'rgba(220,38,38,0.75)', borderColor: '#dc2626', borderWidth: 1.5, borderRadius: 6 }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' } },
-            scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } }
+    async function cargarDatos() {
+        try {
+            var sb = await getSupabase();
+            var rCobros = await sb.from('cobros').select('*, programas(nombre), cohortes(nombre)');
+            var cobros = rCobros.data || [];
+
+            // ── Clasificar cobros ──
+            var alDia       = cobros.filter(function(c) { return c.estado === 'ABONADA'; });
+            var enMora      = cobros.filter(function(c) { return c.estado === 'EN_MORA'; });
+            var conDescuento = cobros.filter(function(c) { return Number(c.descuento_aplicado || 0) > 0; });
+
+            // ── Actualizar summary cards ──
+            var scTotal    = document.getElementById('sc-total');
+            var scAldia    = document.getElementById('sc-aldia');
+            var scMora     = document.getElementById('sc-mora');
+            var scDesc     = document.getElementById('sc-descuento');
+            if (scTotal)    scTotal.textContent    = cobros.length;
+            if (scAldia)    scAldia.textContent    = alDia.length;
+            if (scMora)     scMora.textContent     = enMora.length;
+            if (scDesc)     scDesc.textContent     = conDescuento.length;
+
+            // ── GRÁFICA 1 — Donut ──
+            if (chartDonut) chartDonut.destroy();
+            chartDonut = new Chart(document.getElementById('chart-donut').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Al Día', 'En Mora', 'Con Descuento'],
+                    datasets: [{ data: [alDia.length, enMora.length, conDescuento.length],
+                                 backgroundColor: ['#16a34a','#dc2626','#2563eb'],
+                                 borderColor: '#fff', borderWidth: 3 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { font: { size: 12 }, boxWidth: 14, padding: 14 } },
+                        tooltip: { callbacks: { label: function(c) { return c.label + ': ' + c.parsed + ' cobros'; } } }
+                    }
+                }
+            });
+
+            // ── GRÁFICA 2 — Mora por programa ──
+            var moraProgMap = {};
+            enMora.forEach(function(c) {
+                var nombre = (c.programas && c.programas.nombre) ? c.programas.nombre : ('Prog. ' + (c.programa_id || '?'));
+                if (!moraProgMap[nombre]) moraProgMap[nombre] = 0;
+                moraProgMap[nombre]++;
+            });
+            // Ordenar por cantidad desc y tomar top 10
+            var moraProgEntries = Object.keys(moraProgMap).map(function(k) {
+                return { nombre: k, count: moraProgMap[k] };
+            }).sort(function(a, b) { return b.count - a.count; }).slice(0, 10);
+            var moraLabels = moraProgEntries.map(function(e) { return e.nombre; });
+            var moraData   = moraProgEntries.map(function(e) { return e.count; });
+
+            if (chartMoraPrograma) chartMoraPrograma.destroy();
+            chartMoraPrograma = new Chart(document.getElementById('chart-mora-programa').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: moraLabels.length > 0 ? moraLabels : ['Sin datos'],
+                    datasets: [{ label: 'En mora', data: moraData.length > 0 ? moraData : [0],
+                                 backgroundColor: 'rgba(220,38,38,0.80)', borderColor: '#dc2626',
+                                 borderWidth: 1.5, borderRadius: 7 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                        x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                    }
+                }
+            });
+
+            // ── GRÁFICA 3 — Cuotas al día vs mora por cohorte ──
+            var cohMap = {};
+            cobros.forEach(function(c) {
+                var nombre = (c.cohortes && c.cohortes.nombre) ? c.cohortes.nombre : ('Coh. ' + (c.cohorte_id || '?'));
+                if (!cohMap[nombre]) cohMap[nombre] = { alDia: 0, enMora: 0 };
+                if (c.estado === 'ABONADA') cohMap[nombre].alDia++;
+                if (c.estado === 'EN_MORA') cohMap[nombre].enMora++;
+            });
+            var cohEntries = Object.keys(cohMap).sort();
+            var cohLabels  = cohEntries;
+            var cohAlDia   = cohEntries.map(function(k) { return cohMap[k].alDia; });
+            var cohMora    = cohEntries.map(function(k) { return cohMap[k].enMora; });
+
+            if (chartCohortes) chartCohortes.destroy();
+            chartCohortes = new Chart(document.getElementById('chart-cohortes').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: cohLabels.length > 0 ? cohLabels : ['Sin datos'],
+                    datasets: [
+                        { label: 'Cuotas al día',  data: cohAlDia, backgroundColor: 'rgba(22,163,74,0.80)',  borderColor: '#16a34a', borderWidth: 1.5, borderRadius: 6 },
+                        { label: 'Cuotas en mora', data: cohMora,  backgroundColor: 'rgba(220,38,38,0.75)', borderColor: '#dc2626', borderWidth: 1.5, borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } }
+                }
+            });
+
+        } catch(e) {
+            console.error('cargarDatos error:', e);
         }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        cargarDatos();
     });
 
     // ── Exportar ──
     function exportarExcel() {
-        if (typeof google !== 'undefined') {
-            google.script.run.withSuccessHandler(url => { if (url) window.open(url, '_blank'); }).exportarEstadoPagosExcel();
-        } else { alert('Exportando Estado de Pagos a Excel…\n(Disponible en Google Apps Script)'); }
+        alert('Exportar a Excel no disponible en esta versión.');
     }
     function exportarPDF() {
-        if (typeof google !== 'undefined') {
-            google.script.run.withSuccessHandler(url => { if (url) window.open(url, '_blank'); }).exportarEstadoPagosPDF();
-        } else { alert('Exportando Estado de Pagos a PDF…\n(Disponible en Google Apps Script)'); }
+        alert('Exportar a PDF no disponible en esta versión.');
     }
 </script>
 
