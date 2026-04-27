@@ -404,69 +404,67 @@
 </script>
 
 <script>
-// Inicializar gráfico del reporte
-document.addEventListener('DOMContentLoaded', function() {
-    
-// Gráfico 1: Egresos mensuales por categoría (chart-reporte, inyectado)
-new Chart(document.getElementById('chart-reporte').getContext('2d'), {
-    type: 'bar',
-    data: {
-        labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-        datasets: [
-            { label: 'Hon. Profesores', data: [350,400,480,420,370,450,320,430,520,300,250,210], backgroundColor:'rgba(220,38,38,0.75)', borderColor:'#dc2626', borderWidth:2 },
-            { label: 'Plataformas/IT', data: [120,120,120,120,120,120,120,120,120,120,120,120], backgroundColor:'rgba(8,145,178,0.75)', borderColor:'#0891b2', borderWidth:2 },
-            { label: 'Pasajes/Movilidad', data: [70,80,100,85,75,90,60,85,105,55,45,40], backgroundColor:'rgba(245,158,11,0.75)', borderColor:'#f59e0b', borderWidth:2 },
-            { label: 'Agapé/Break', data: [50,60,75,65,55,70,45,65,80,42,35,28], backgroundColor:'rgba(107,114,128,0.75)', borderColor:'#6b7280', borderWidth:2 }
-        ]
-    },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'top' }, tooltip:{ callbacks:{ label: c=> c.dataset.label+': $'+c.parsed.y.toLocaleString('es-AR')+'K' } } }, scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true, ticks:{ callback: v=>'$'+v+'K' } } } }
-});
+var _chart1 = null, _chart2 = null;
+var CAT_COLORS = ['#1e3a5f','#dc2626','#f59e0b','#d97706','#16a34a','#0891b2','#7c3aed','#db2777','#6b7280'];
+function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// Gráfico 2: Distribución por Categoría (dona — chartCategorias, original del archivo)
-new Chart(document.getElementById('chartCategorias').getContext('2d'), {
-    type: 'doughnut',
-    data: {
-        labels: [
-            'Hon. Dirección/Coord.',
-            'Hon. Personal Apoyo',
-            'Hon. Profesores',
-            'Movilidad',
-            'Pasajes Aéreos',
-            'Agapé / Break',
-            'Plataformas / IT',
-            'Servicios Informáticos',
-            'Materiales',
-            'Otros'
-        ],
-        datasets: [{
-            data: [600000, 337500, 980000, 125000, 287000, 156000, 120000, 90000, 45000, 32000],
-            backgroundColor: [
-                '#1e3a5f','#2d5a87','#dc2626','#f59e0b','#d97706',
-                '#16a34a','#0891b2','#7c3aed','#db2777','#6b7280'
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { position: 'right', labels: { font: { size: 12 }, padding: 16 } },
-            tooltip: {
-                callbacks: {
-                    label: function(c) {
-                        const total = c.dataset.data.reduce((a,b) => a+b, 0);
-                        const pct = ((c.parsed / total) * 100).toFixed(1);
-                        return c.label + ': $' + c.parsed.toLocaleString('es-AR') + ' (' + pct + '%)';
-                    }
-                }
-            }
+async function cargarDatos() {
+    try {
+        var sb = await getSupabase();
+        var r = await sb.from('egresos').select('*');
+        var egresos = (r.data || []).filter(function(e) { return e.tipo==='EJECUTADO' || e.estado==='CANCELADO'; });
+
+        var catTotals = {};
+        egresos.forEach(function(e) {
+            var cat = e.categoria || 'Otros';
+            catTotals[cat] = (catTotals[cat]||0) + Number(e.monto_pagado||0);
+        });
+        var catLabels = Object.keys(catTotals);
+        var catData = catLabels.map(function(c) { return catTotals[c]; });
+
+        var monthKeys = Array.from(new Set(egresos.map(function(e) { return mesKey(e.fecha_ejecucion||e.fecha_estimada); }).filter(Boolean))).sort();
+        var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        var monthLabels = monthKeys.map(function(k) { var p=k.split('-'); return meses[parseInt(p[1])-1]+' '+p[0]; });
+
+        var datasets1 = catLabels.map(function(cat, i) {
+            return {
+                label: esc(cat),
+                data: monthKeys.map(function(mk) {
+                    return Math.round(egresos.filter(function(e){return (e.categoria||'Otros')===cat && mesKey(e.fecha_ejecucion||e.fecha_estimada)===mk;}).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0)/1000);
+                }),
+                backgroundColor: CAT_COLORS[i%CAT_COLORS.length]+'bf',
+                borderColor: CAT_COLORS[i%CAT_COLORS.length],
+                borderWidth: 2
+            };
+        });
+
+        var ctx1 = document.getElementById('chart-reporte');
+        if (ctx1) {
+            if (_chart1) _chart1.destroy();
+            _chart1 = new Chart(ctx1.getContext('2d'), {
+                type: 'bar',
+                data: { labels: monthLabels, datasets: datasets1 },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'top'}, tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString('es-AR')+'K';}}} }, scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,ticks:{callback:function(v){return '$'+v+'K';}}}} }
+            });
         }
-    }
-});
 
+        var ctx2 = document.getElementById('chartCategorias');
+        if (ctx2) {
+            if (_chart2) _chart2.destroy();
+            _chart2 = new Chart(ctx2.getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: catLabels.map(esc), datasets: [{ data: catData, backgroundColor: catLabels.map(function(_,i){return CAT_COLORS[i%CAT_COLORS.length];}), borderWidth:2, borderColor:'#fff' }] },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'right',labels:{font:{size:12},padding:16}}, tooltip:{callbacks:{label:function(c){var total=c.dataset.data.reduce(function(a,b){return a+b;},0); return esc(c.label)+': '+fM(c.parsed)+' ('+(c.parsed/total*100).toFixed(1)+'%)'; }}} } }
+            });
+        }
+    } catch(e) { console.error('Error cargando datos:', e); }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    cargarDatos();
+    if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones('ADMINISTRADOR').then(renderNotificaciones);
 });
 </script>
 </body>
-</html>
