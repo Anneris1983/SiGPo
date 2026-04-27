@@ -512,20 +512,51 @@
             }
         };
 
-        document.addEventListener('DOMContentLoaded', cargarVista);
+        document.addEventListener('DOMContentLoaded', function() {
+            var sesion = getSesion();
+            if (!sesion) { window.location.href = 'portal_login.html'; return; }
+            cargarVista();
+        });
 
         async function cargarVista() {
             spin(true);
             try {
-                const data = estaEnAppsScript()
-                    ? await gs('obtenerGestionGastosCoordinador')
-                    : obtenerDemoData();
+                var sb = await getSupabase();
+                var rP = await sb.from('programas').select('programa_id,nombre');
+                var rC = await sb.from('cohortes').select('cohorte_id,nombre,programa_id');
+                var rE = await sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,fecha_ejecucion,fecha_estimada,proveedor,descripcion,categoria,nro_comprobante');
+
+                var programas = rP.data || [];
+                var cohortes = rC.data || [];
+                var egresos = rE.data || [];
+
+                var progMap = {};
+                programas.forEach(function(p){ progMap[p.programa_id] = p.nombre; });
+                var cohMap = {};
+                cohortes.forEach(function(c){ cohMap[c.cohorte_id] = c.nombre; });
+
+                var primerProg = programas[0] || {};
+                var progNombres = programas.map(function(p){return p.nombre;});
+                var cohNombres = cohortes.map(function(c){return c.nombre;});
+
+                function mapEgreso(e) {
+                    return { id:e.egreso_id, fechaEstimada:e.fecha_estimada||'', fechaEjecucion:e.fecha_ejecucion||'', categoria:e.categoria||'', concepto:e.descripcion||'', programa:progMap[e.programa_id]||'', cohorte:cohMap[e.cohorte_id]||'', monto:Number(e.monto_pagado||0), proveedor:e.proveedor||'', comprobante:e.nro_comprobante||'', estado:e.tipo==='EJECUTADO'?'Ejecutado':'Proyectado' };
+                }
+
+                var data = {
+                    programaActual: { nombre: primerProg.nombre || 'Todos los programas' },
+                    programas: progNombres,
+                    cohortes: cohNombres,
+                    gastosProyectados: egresos.filter(function(e){return e.tipo==='PROYECTADO';}).map(mapEgreso),
+                    gastosEjecutados: egresos.filter(function(e){return e.tipo==='EJECUTADO'||e.estado==='CANCELADO';}).map(mapEgreso)
+                };
 
                 normalizarData(data);
                 poblarSelectsBase();
                 renderTodo();
             } catch (e) {
                 toast('No se pudieron cargar los gastos.', 'err');
+                console.error(e);
             } finally {
                 spin(false);
             }

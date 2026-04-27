@@ -1263,11 +1263,13 @@
         let cuotasParaCrear = [];
 
         document.addEventListener('DOMContentLoaded', function () {
+            var sesion = getSesion();
+            if (!sesion) { window.location.href = 'portal_login.html'; return; }
             document.addEventListener('click', cerrarPanelNotificacionesSiCorresponde);
             document.addEventListener('keydown', manejarEscape);
 
-            programaId = obtenerParametroUrl('programaId') || '';
-            cohorteId = obtenerParametroUrl('cohorteId') || obtenerParametroUrl('cohorte') || '';
+            programaId = obtenerParametroUrl('programaId') || obtenerParametroUrl('programa_id') || '';
+            cohorteId = obtenerParametroUrl('cohorteId') || obtenerParametroUrl('cohorte_id') || obtenerParametroUrl('cohorte') || '';
             cargarVista();
         });
 
@@ -1276,18 +1278,52 @@
             cargarNotificaciones();
         }
 
-        function cargarDetalleCohorte() {
+        async function cargarDetalleCohorte() {
             mostrarLoadingTabla();
+            try {
+                var sb = await getSupabase();
+                var rCoh = await sb.from('cohortes').select('*, programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single();
+                var rCob = await sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', cohorteId);
+                var rInsc = await sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico,descuento_motivo').eq('cohorte_id', cohorteId);
+                var rEst = await sb.from('estudiantes').select('id,dni,nombre,apellido,email');
 
-            google.script.run
-                .withSuccessHandler(function (respuesta) {
-                    vistaData = normalizarDetalle(respuesta);
-                    renderVista();
-                })
-                .withFailureHandler(function (error) {
-                    mostrarErrorTabla(obtenerMensajeError(error, 'No se pudo cargar el detalle de la cohorte.'));
-                })
-                .obtenerDetalleCohorteCooperadora(programaId, cohorteId);
+                var cohorte = rCoh.data || {};
+                var prog = cohorte.programas || {};
+                var cobros = rCob.data || [];
+                var inscripciones = rInsc.data || [];
+                var estList = rEst.data || [];
+
+                var estByDni = {};
+                estList.forEach(function(e){ estByDni[String(e.dni)] = e; });
+                var inscByEstId = {};
+                inscripciones.forEach(function(i){ inscByEstId[i.estudiante_id] = i; });
+
+                var dniMap = {};
+                cobros.forEach(function(c){
+                    var dk = String(c.dni);
+                    if (!dniMap[dk]) {
+                        var est = estByDni[dk] || {};
+                        var insc = est.id ? (inscByEstId[est.id] || {}) : {};
+                        dniMap[dk] = { estudianteId:est.id||dk, dni:dk, nombre:est.nombre||'', apellido:est.apellido||dk, nombreCompleto:((est.apellido||dk)+' '+(est.nombre||'')).trim(), email:est.email||'', estadoAcademico:insc.estado_academico||'ACTIVO', descuentoPorcentaje:Number(insc.descuento_porcentaje||0), descuentoFechaInicio:'', descuentoFechaFin:'', descuentoEtiqueta:insc.descuento_motivo||'', noDebeAbonar:false, cuotas:[] };
+                    }
+                    var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
+                    var estadoRaw = c.no_aplica ? 'NODEBE' : (c.estado||'NO_ABONADA');
+                    dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR' });
+                });
+
+                var maxCuota = cobros.reduce(function(m,c){return Math.max(m,Number(c.nro_cuota||0));},0);
+                var respuesta = {
+                    programa: { programaId:cohorte.programa_id||programaId, nombre:prog.nombre||'Programa', tipo:prog.tipo||'', estado:prog.estado||'ACTIVO' },
+                    cohorte: { cohorteId:cohorte.cohorte_id||cohorteId, nombre:cohorte.nombre||'Cohorte', fechaInicio:cohorte.fecha_inicio||'', fechaFin:cohorte.fecha_fin||'', activa:cohorte.estado==='ACTIVO', cantidadCuotasDefault:maxCuota },
+                    estudiantes: Object.values(dniMap),
+                    etiquetasDescuento: ['Beca parcial','Docente','Convenio','Pronto pago']
+                };
+                vistaData = normalizarDetalle(respuesta);
+                renderVista();
+            } catch(e) {
+                mostrarErrorTabla('No se pudo cargar el detalle de la cohorte.');
+                console.error(e);
+            }
         }
 
         function normalizarDetalle(data) {
@@ -2129,20 +2165,13 @@
         }
 
         function cargarNotificaciones() {
-            if (estaEnAppsScript()) {
-                google.script.run
-                    .withSuccessHandler(function (respuesta) {
-                        notificaciones = Array.isArray(respuesta) ? respuesta : [];
-                        renderNotificaciones();
-                    })
-                    .withFailureHandler(function () {
-                        notificaciones = [];
-                        renderNotificaciones();
-                    })
-                    .obtenerNotificacionesCooperadora();
+            obtenerNotificaciones('COOPERADORA').then(function(datos) {
+                notificaciones = Array.isArray(datos) ? datos.map(function(n){ return { titulo:n.tipo||'Notificación', mensaje:n.mensaje||'', fechaRelativa:'', leida:!!n.leida, urlDestino:'' }; }) : [];
+                renderNotificaciones();
+            }).catch(function() {
                 notificaciones = [];
                 renderNotificaciones();
-            }
+            });
         }
 
         function renderNotificaciones() {
@@ -2200,10 +2229,7 @@
         function marcarTodasLeidas() {
             notificaciones = notificaciones.map(function (n) { n.leida = true; return n; });
             renderNotificaciones();
-
-            if (estaEnAppsScript()) {
-                google.script.run.withFailureHandler(function () {}).marcarNotificacionesCooperadoraLeidas();
-            }
+            if (typeof marcarTodasNotificacionesLeidas === 'function') marcarTodasNotificacionesLeidas();
         }
 
         function mostrarLoadingTabla() {

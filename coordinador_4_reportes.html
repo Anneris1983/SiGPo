@@ -398,15 +398,93 @@ function normalizarData(data) {
 async function cargarVista() {
     document.getElementById('statusBar').textContent = 'Cargando reportes…';
     try {
-        const payload = {
-            programaId: document.getElementById('selPrograma')?.value || DEFAULT_PROGRAMA_ID,
-            cohorteId: document.getElementById('selCohorte')?.value || DEFAULT_COHORTE_ID,
-            anio: document.getElementById('selAnio')?.value || DEFAULT_ANIO
-        };
+        var selPrograma = document.getElementById('selPrograma');
+        var selCohorte = document.getElementById('selCohorte');
+        var selAnio = document.getElementById('selAnio');
+        var filtPrograma = (selPrograma && selPrograma.value) || DEFAULT_PROGRAMA_ID;
+        var filtCohorte = (selCohorte && selCohorte.value) || DEFAULT_COHORTE_ID;
+        var filtAnio = (selAnio && selAnio.value) || DEFAULT_ANIO;
 
-        const raw = estaEnAppsScript()
-            ? await gs('obtenerReportesCoordinador', payload)
-            : obtenerDemoData(payload);
+        var sb = await getSupabase();
+        var rP = await sb.from('programas').select('programa_id,nombre');
+        var rC = await sb.from('cohortes').select('cohorte_id,nombre,programa_id');
+        var rCob = await sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento');
+        var rEgr = await sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_ejecucion,fecha_estimada');
+
+        var programas = rP.data || [];
+        var cohortes = rC.data || [];
+        var cobros = rCob.data || [];
+        var egresos = rEgr.data || [];
+
+        // Apply filters
+        var cobF = cobros.filter(function(c){
+            if (filtPrograma && String(c.programa_id) !== String(filtPrograma)) return false;
+            if (filtCohorte && String(c.cohorte_id) !== String(filtCohorte)) return false;
+            if (filtAnio && c.fecha_vencimiento && !c.fecha_vencimiento.startsWith(filtAnio)) return false;
+            return true;
+        });
+        var egrF = egresos.filter(function(e){
+            if (filtPrograma && String(e.programa_id) !== String(filtPrograma)) return false;
+            if (filtCohorte && String(e.cohorte_id) !== String(filtCohorte)) return false;
+            var fecha = e.fecha_ejecucion || e.fecha_estimada || '';
+            if (filtAnio && fecha && !fecha.startsWith(filtAnio)) return false;
+            return true;
+        });
+
+        // Summary
+        var dnisAlDia = new Set(cobF.filter(function(c){return c.estado==='ABONADA';}).map(function(c){return c.dni;}));
+        var dnisEnMora = new Set(cobF.filter(function(c){return c.estado==='EN_MORA';}).map(function(c){return c.dni;}));
+        var dnisParcial = new Set(cobF.filter(function(c){return c.estado==='PAGO_PARCIAL';}).map(function(c){return c.dni;}));
+        var dnisTotal = new Set(cobF.map(function(c){return c.dni;}));
+        var recaudado = cobF.filter(function(c){return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL';}).reduce(function(s,c){return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0));},0);
+        var tasaPago = dnisTotal.size > 0 ? Math.round(dnisAlDia.size / dnisTotal.size * 100) : 0;
+
+        // Monthly cashflow
+        var mesKeys = {};
+        cobF.forEach(function(c){ if (c.fecha_vencimiento) { var k=c.fecha_vencimiento.substring(0,7); mesKeys[k]=1; } });
+        egrF.forEach(function(e){ var d=e.fecha_ejecucion||e.fecha_estimada||''; if(d) { var k=d.substring(0,7); mesKeys[k]=1; } });
+        var meses = Object.keys(mesKeys).sort();
+        var mesesLabels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        function mesLabel(k){ var p=k.split('-'); return mesesLabels[parseInt(p[1])-1]+' '+(p[0]||''); }
+        var cfLabels = meses.map(mesLabel);
+        var cfIngresos = meses.map(function(k){ return cobF.filter(function(c){return (c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL')&&c.fecha_vencimiento&&c.fecha_vencimiento.startsWith(k);}).reduce(function(s,c){return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0));},0); });
+        var cfEgresos = meses.map(function(k){ return egrF.filter(function(e){var d=e.fecha_ejecucion||e.fecha_estimada||'';return e.tipo==='EJECUTADO'&&d.startsWith(k);}).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0); });
+
+        // Estados por cohorte
+        var cohortesF = filtCohorte ? cohortes.filter(function(c){return String(c.cohorte_id)===String(filtCohorte);}) : (filtPrograma ? cohortes.filter(function(c){return String(c.programa_id)===String(filtPrograma);}) : cohortes);
+        var ecLabels = cohortesF.map(function(c){return c.nombre||'Cohorte';});
+        var ecAlDia = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){return x.cohorte_id===c.cohorte_id&&x.estado==='ABONADA';}).map(function(x){return x.dni;})).size; });
+        var ecMora = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){return x.cohorte_id===c.cohorte_id&&x.estado==='EN_MORA';}).map(function(x){return x.dni;})).size; });
+        var ecParcial = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){return x.cohorte_id===c.cohorte_id&&x.estado==='PAGO_PARCIAL';}).map(function(x){return x.dni;})).size; });
+
+        // Evolución mora mensual
+        var emLabels = cfLabels;
+        var emMora = meses.map(function(k){ return new Set(cobF.filter(function(c){return c.estado==='EN_MORA'&&c.fecha_vencimiento&&c.fecha_vencimiento.startsWith(k);}).map(function(c){return c.dni;})).size; });
+
+        // Estudiantes por estado (donut)
+        var epEstados = ['Al Día','En Mora','Pago Parcial','Pendiente','A Definir'];
+        var epValores = [dnisAlDia.size, dnisEnMora.size, dnisParcial.size, new Set(cobF.filter(function(c){return c.estado==='PENDIENTE'||c.estado==='NO_ABONADA';}).map(function(c){return c.dni;})).size, new Set(cobF.filter(function(c){return c.estado==='A_DEFINIR';}).map(function(c){return c.dni;})).size];
+
+        var primerProg = programas.find(function(p){return String(p.programa_id)===String(filtPrograma);}) || programas[0] || {};
+        var aniosList = [];
+        var anioSet = {};
+        cobros.forEach(function(c){if(c.fecha_vencimiento){var y=c.fecha_vencimiento.substring(0,4);if(!anioSet[y]){anioSet[y]=1;aniosList.push(y);}}});
+        aniosList.sort();
+
+        var raw = {
+            programaNombre: primerProg.nombre || 'Programa',
+            programas: programas.map(function(p){return {programaId:p.programa_id,nombre:p.nombre};}),
+            cohortes: cohortesF.map(function(c){return {cohorteId:c.cohorte_id,nombre:c.nombre};}),
+            anios: aniosList.length ? aniosList : [filtAnio],
+            filtros: { programaId:filtPrograma, cohorteId:filtCohorte, anio:filtAnio },
+            resumen: { totalRecaudado:recaudado, estudiantesAlDia:dnisAlDia.size, enMora:dnisEnMora.size, tasaPago:tasaPago, pagoParcial:dnisParcial.size },
+            charts: {
+                cashflow: { labels:cfLabels, ingresos:cfIngresos, egresos:cfEgresos },
+                estadosPorCohorte: { labels:ecLabels, alDia:ecAlDia, enMora:ecMora, pagoParcial:ecParcial },
+                evolucionMora: { labels:emLabels, estudiantes:emMora, intereses:emMora.map(function(){return 0;}) },
+                estudiantesPorEstado: { labels:epEstados, valores:epValores }
+            }
+        };
 
         reportesData = normalizarData(raw);
         renderFiltros();
@@ -417,6 +495,7 @@ async function cargarVista() {
     } catch (e) {
         document.getElementById('statusBar').textContent = 'No se pudieron cargar los reportes.';
         toast('No se pudieron cargar los reportes', 'err');
+        console.error(e);
     }
 }
 
@@ -711,7 +790,11 @@ function obtenerDemoData(payload) {
     };
 }
 
-document.addEventListener('DOMContentLoaded', cargarVista);
+document.addEventListener('DOMContentLoaded', function() {
+    var sesion = getSesion();
+    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    cargarVista();
+});
 </script>
 
 </body>
