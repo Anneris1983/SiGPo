@@ -120,15 +120,15 @@
             <h2 class="card-title">📊 Resumen Financiero</h2>
             <div class="stats-grid">
                 <div class="stat-box" style="border-color: #dc2626;">
-                    <div class="stat-value" style="color: #dc2626;">$8.2M</div>
+                    <div class="stat-value" id="statEjecutados" style="color: #dc2626;">—</div>
                     <div class="stat-label">Gastos Ejecutados</div>
                 </div>
                 <div class="stat-box" style="border-color: #f59e0b;">
-                    <div class="stat-value" style="color: #f59e0b;">$6.5M</div>
+                    <div class="stat-value" id="statProyectados" style="color: #f59e0b;">—</div>
                     <div class="stat-label">Gastos Proyectados</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-value">$14.7M</div>
+                    <div class="stat-value" id="statTotal">—</div>
                     <div class="stat-label">Total Gastos</div>
                 </div>
             </div>
@@ -636,6 +636,13 @@ async function cargarDatos() {
         G.programas = programas;
         var sel = document.getElementById('programa');
         if (sel) sel.innerHTML = '<option value="">— Todos —</option>' + programas.map(function(p){return '<option value="'+p.programa_id+'">'+esc(p.nombre)+'</option>';}).join('');
+
+        var totalEjec = egresos.filter(esEjecutado).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0);
+        var totalProy = egresos.filter(function(e){return !esEjecutado(e);}).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0);
+        document.getElementById('statEjecutados').textContent = fMonto(totalEjec);
+        document.getElementById('statProyectados').textContent = fMonto(totalProy);
+        document.getElementById('statTotal').textContent = fMonto(totalEjec + totalProy);
+
         renderTabla('proyectados');
         renderTabla('ejecutados');
     } catch(e) { console.error(e); }
