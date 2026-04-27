@@ -374,69 +374,166 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-        function exportarExcel() {
-            alert('Exportando reporte a Excel...');
-        }
-        
-        function exportarPDF() {
-            alert('Exportando reporte a PDF...');
-        }
-    </script>
+'use strict';
+function fM(n) {
+    var v = Math.round(Number(n || 0));
+    if (v >= 1000000) return '$' + (v / 1000000).toFixed(1).replace('.0', '') + ' M';
+    if (v >= 1000) return '$' + Math.round(v / 1000) + 'K';
+    return '$' + v.toLocaleString('es-AR');
+}
+function mesLabel(fechaStr) {
+    if (!fechaStr) return '';
+    var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    var p = String(fechaStr).split('T')[0].split('-');
+    return meses[parseInt(p[1], 10) - 1] + ' ' + p[0];
+}
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-<script>
-// ── SHARED: leer filtros desde sessionStorage (guardados por administrador_8_Cashflow.html) ──
-(function() {
-    function fmt(iso) {
-        if (!iso) return '';
-        var p = iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0];
-    }
-    try {
-        var raw = sessionStorage.getItem('sigpo_filtros_cashflow');
-        var f = raw ? JSON.parse(raw) : null;
-        var band = document.getElementById('filter-band');
-        if (!band) return;
-        if (!f) {
-            band.innerHTML = '<span>🔎 Sin filtros activos — mostrando todos los datos</span>';
-            return;
-        }
-        var desde = f.desdeInicio ? 'Inicio' : (f.desde ? fmt(f.desde) : '—');
-        var hasta = f.hasta ? fmt(f.hasta) : 'Sin límite';
-        var rango = f.desdeInicio ? ('Desde el inicio → ' + hasta) : (desde + ' → ' + hasta);
-        var tags = ['📅 ' + rango];
-        if (f.programa) tags.push('🎓 ' + document.getElementById('_prog_label_' + f.programa) ? '' : f.programa);
-        // fallback: usar valor crudo
-        if (f.programa) tags.push('🎓 Programa filtrado');
-        if (f.cohorte) tags.push('📋 ' + (f.cohorte === '' ? 'Todas las cohortes' : 'Cohorte filtrada'));
-        band.innerHTML = '<span>🔎 Filtros aplicados desde Cashflow:</span>' +
-            tags.map(function(t){ return '<span class="ftag">'+t+'</span>'; }).join('');
+var _reporteChart = null;
 
-        // Exponer para que el gráfico específico pueda usarlos
-        window.FILTROS_ACTIVOS = f;
-    } catch(e) {
-        var band = document.getElementById('filter-band');
-        if (band) band.innerHTML = '<span>🔎 Sin filtros activos</span>';
-    }
-})();
-</script>
+function exportarExcel() { alert('Exportando reporte a Excel...'); }
+function exportarPDF()   { alert('Exportando reporte a PDF...'); }
 
-<script>
-// Inicializar gráfico del reporte
 document.addEventListener('DOMContentLoaded', function() {
-    
-new Chart(document.getElementById('chart-reporte').getContext('2d'), {
-    type: 'bar',
-    data: {
-        labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-        datasets: [
-            { label: 'Esp. Costos y Gestión', data: [850,920,1100,980,870,1050,780,1020,1200,760,640,520], backgroundColor: 'rgba(22,163,74,0.7)', borderColor: '#16a34a', borderWidth: 2 },
-            { label: 'Maestría Negocios (MBM)', data: [1200,1350,1700,1450,1300,1580,1100,1500,1800,1100,950,780], backgroundColor: 'rgba(14,165,233,0.7)', borderColor: '#0ea5e9', borderWidth: 2 },
-            { label: 'Doctorado Cs. Económicas', data: [480,550,720,610,500,650,420,620,800,440,350,280], backgroundColor: 'rgba(212,175,55,0.7)', borderColor: '#d4af37', borderWidth: 2 }
-        ]
-    },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'top' }, tooltip:{ callbacks:{ label: c => c.dataset.label+': $'+c.parsed.y.toLocaleString('es-AR')+'K' } } }, scales:{ y:{ beginAtZero:true, ticks:{ callback: v=>'$'+v+'K' } } } }
+    cargarDatos();
 });
 
-});
+async function cargarDatos() {
+    try {
+        var sb = await getSupabase();
+        var rCobros   = await sb.from('cobros').select('*');
+        var rProgramas = await sb.from('programas').select('programa_id,nombre,tipo');
+        var cobros    = rCobros.data   || [];
+        var programas = rProgramas.data || [];
+
+        // Build program map
+        var progMap = {};
+        programas.forEach(function(p) { progMap[p.programa_id] = p.nombre; });
+
+        // Stat calculations
+        var anoActual = new Date().getFullYear();
+        var totalRecaudado = 0, totalEsperado = 0;
+        var dnisActivos = {};
+        cobros.forEach(function(c) {
+            var mf = Number(c.monto_final || 0);
+            var sp = Number(c.saldo_pendiente || 0);
+            var est = c.estado;
+            if (est !== 'A_DEFINIR' && est !== 'NO_APLICA') totalEsperado += mf;
+            if (est === 'ABONADA' || est === 'PAGO_PARCIAL') {
+                totalRecaudado += Math.max(0, mf - sp);
+                if (c.dni) dnisActivos[c.dni] = true;
+            }
+        });
+        var estudiantesActivos = Object.keys(dnisActivos).length;
+        var tasaCobro = totalEsperado > 0 ? (totalRecaudado / totalEsperado * 100) : 0;
+        var promPorEst = estudiantesActivos > 0 ? totalRecaudado / estudiantesActivos : 0;
+
+        // Update summary cards
+        var cards = document.querySelectorAll('.summary-card');
+        if (cards[0]) { cards[0].querySelector('.summary-value').textContent = fM(totalRecaudado); cards[0].querySelector('.summary-change').textContent = 'Total cobrado'; }
+        if (cards[1]) { cards[1].querySelector('.summary-value').textContent = estudiantesActivos; cards[1].querySelector('.summary-change').textContent = 'Con al menos 1 pago'; }
+        if (cards[2]) { cards[2].querySelector('.summary-value').textContent = tasaCobro.toFixed(1) + '%'; cards[2].querySelector('.summary-change').textContent = 'Recaudado / esperado'; }
+        if (cards[3]) { cards[3].querySelector('.summary-value').textContent = fM(promPorEst); cards[3].querySelector('.summary-change').textContent = 'Por estudiante activo'; }
+
+        // Monthly chart — group by mes of fecha_vencimiento, per program (top 5)
+        // Count recaudado per program
+        var recPorProg = {};
+        cobros.forEach(function(c) {
+            if (c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL') return;
+            var pid = c.programa_id;
+            if (!recPorProg[pid]) recPorProg[pid] = 0;
+            recPorProg[pid] += Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0));
+        });
+        // Top 5 programs by collected amount
+        var topProgs = Object.keys(recPorProg).sort(function(a,b){ return recPorProg[b] - recPorProg[a]; }).slice(0, 5);
+
+        // Get months for current year
+        var mesesSet = {};
+        cobros.forEach(function(c) {
+            if (!c.fecha_vencimiento) return;
+            var yr = String(c.fecha_vencimiento).split('T')[0].split('-')[0];
+            if (yr == anoActual) mesesSet[mesLabel(c.fecha_vencimiento)] = c.fecha_vencimiento.substring(0,7);
+        });
+        var mesesLabels = Object.keys(mesesSet).sort(function(a,b){
+            return mesesSet[a].localeCompare(mesesSet[b]);
+        });
+        if (mesesLabels.length === 0) {
+            // Fallback: all months current year
+            var mns=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+            for (var mi=0; mi<12; mi++) mesesLabels.push(mns[mi]+' '+anoActual);
+        }
+
+        var COLORES = ['rgba(22,163,74,0.75)','rgba(14,165,233,0.75)','rgba(212,175,55,0.75)','rgba(220,38,38,0.75)','rgba(139,92,246,0.75)'];
+        var BORDER  = ['#16a34a','#0ea5e9','#d4af37','#dc2626','#8b5cf6'];
+
+        var datasets = topProgs.map(function(pid, idx) {
+            var dataArr = mesesLabels.map(function(ml) {
+                var sum = 0;
+                cobros.forEach(function(c) {
+                    if (String(c.programa_id) !== String(pid)) return;
+                    if (c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL') return;
+                    if (mesLabel(c.fecha_vencimiento) !== ml) return;
+                    sum += Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0));
+                });
+                return Math.round(sum / 1000);
+            });
+            return {
+                label: esc(progMap[pid] || pid),
+                data: dataArr,
+                backgroundColor: COLORES[idx % COLORES.length],
+                borderColor: BORDER[idx % BORDER.length],
+                borderWidth: 2
+            };
+        });
+
+        var ctx = document.getElementById('chart-reporte').getContext('2d');
+        if (_reporteChart) _reporteChart.destroy();
+        _reporteChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: mesesLabels, datasets: datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': $' + c.parsed.y + 'K'; } } }
+                },
+                scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return '$' + v + 'K'; } } } }
+            }
+        });
+
+        // Update programs grid
+        var grid = document.querySelector('.programs-grid');
+        if (grid && topProgs.length) {
+            grid.innerHTML = topProgs.map(function(pid) {
+                var nombre = esc(progMap[pid] || ('Programa ' + pid));
+                var cobrosP = cobros.filter(function(c){ return String(c.programa_id) === String(pid); });
+                var esperado = 0, recaudado = 0, dnisP = {};
+                cobrosP.forEach(function(c) {
+                    var mf = Number(c.monto_final || 0);
+                    var sp = Number(c.saldo_pendiente || 0);
+                    if (c.estado !== 'A_DEFINIR' && c.estado !== 'NO_APLICA') esperado += mf;
+                    if (c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL') { recaudado += Math.max(0, mf - sp); if(c.dni) dnisP[c.dni]=true; }
+                });
+                var tasa = esperado > 0 ? (recaudado / esperado * 100).toFixed(1) : '0.0';
+                var est = Object.keys(dnisP).length;
+                return '<div class="program-card"><div class="program-header"><div><div class="program-name">'+nombre+'</div><div class="program-cohorte">'+est+' estudiantes activos</div></div></div>'
+                    + '<div class="program-stats"><div class="stat-item"><div class="stat-label">Recaudado</div><div class="stat-value" style="font-size:15px;">'+fM(recaudado)+'</div></div>'
+                    + '<div class="stat-item"><div class="stat-label">Esperado</div><div class="stat-value" style="font-size:15px;">'+fM(esperado)+'</div></div>'
+                    + '<div class="stat-item"><div class="stat-label">Tasa</div><div class="stat-value" style="font-size:15px;">'+tasa+'%</div></div></div>'
+                    + '<div class="progress-bar"><div class="progress-fill" style="width:'+Math.min(100,parseFloat(tasa))+'%"></div></div></div>';
+            }).join('');
+        }
+
+        // Update filter band
+        var band = document.getElementById('filter-band');
+        if (band) band.innerHTML = '<span>🔎 Mostrando todos los datos en tiempo real desde Supabase</span>';
+
+    } catch(e) {
+        console.error('Error cargando datos:', e);
+        var band = document.getElementById('filter-band');
+        if (band) band.innerHTML = '<span style="color:#dc2626;">⚠️ Error al cargar datos: ' + esc(e.message) + '</span>';
+    }
+}
 </script>
 </body>
 </html>

@@ -971,6 +971,11 @@ var _gasFunctions = {
         return { ok: true };
     },
 
+    // Cooperadora - detalle cohorte
+    obtenerDetalleCohorteCooperadora: async function(programaId, cohorteId) {
+        return obtenerEstudiantes(programaId, cohorteId);
+    },
+
     // Cooperadora - aprobar pagos
     obtenerListadoAprobarPagosCooperadora: async function(programaId, cohorteId) {
         var sb = await getSupabase();

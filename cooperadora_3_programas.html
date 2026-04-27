@@ -476,55 +476,156 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-        function filtrar(tipo) {
-            const cards = document.querySelectorAll('.program-card');
-            const buttons = document.querySelectorAll('.filter-btn');
-            
-            // Actualizar botones activos
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // Filtrar cards
-            cards.forEach(card => {
-                if (tipo === 'todos') {
-                    card.style.display = 'block';
-                    if (card.dataset.tipo === tipo) {
-                        card.style.display = 'block';
-                        card.style.display = 'none';
-                    }
-                }
-            });
+    /* ══ HELPERS ══ */
+    function fMillones(n) {
+        if (!n) return '$0';
+        var v = Math.round(Number(n));
+        if (v >= 1000000) return '$' + (v/1000000).toFixed(1).replace('.0','') + 'M';
+        if (v >= 1000) return '$' + Math.round(v/1000) + 'K';
+        return '$' + v.toLocaleString('es-AR');
+    }
+
+    /* ══ ESTADO GLOBAL ══ */
+    var _programas = [];
+    var _filtroActivo = 'todos';
+
+    /* ══ ICONO POR TIPO ══ */
+    function iconoTipo(tipo) {
+        var t = (tipo || '').toUpperCase();
+        var iconos = {
+            'DOCTORADO':      '🎓',
+            'MAESTRIA':       '📊',
+            'ESPECIALIZACION':'💼',
+            'DIPLOMADO':      '🏅',
+            'DIPLOMATURA':    '📜',
+            'CURSO':          '📖',
+            'MICRO_MAESTRIA': '🔬'
+        };
+        return iconos[t] || '📚';
+    }
+
+    /* ══ LABEL TIPO ══ */
+    function labelTipo(tipo) {
+        var t = (tipo || '').toUpperCase();
+        var labels = {
+            'DOCTORADO':      'Doctorado',
+            'MAESTRIA':       'Maestria',
+            'ESPECIALIZACION':'Especializacion',
+            'DIPLOMADO':      'Diplomado',
+            'DIPLOMATURA':    'Diplomatura',
+            'CURSO':          'Curso',
+            'MICRO_MAESTRIA': 'Micro Maestria'
+        };
+        return labels[t] || tipo || '—';
+    }
+
+    /* ══ ETIQUETA COHORTES/EDICIONES ══ */
+    function labelCohorte(tipo, cantidad) {
+        var TIPOS_PROGRAMA = ['DOCTORADO', 'MAESTRIA', 'ESPECIALIZACION'];
+        var t = (tipo || '').toUpperCase();
+        var esPrograma = TIPOS_PROGRAMA.indexOf(t) >= 0;
+        if (cantidad === 1) return esPrograma ? 'Cohorte' : 'Edicion';
+        return esPrograma ? 'Cohortes' : 'Ediciones';
+    }
+
+    /* ══ RENDER PROGRAMAS ══ */
+    function renderProgramas(programas) {
+        var grid = document.getElementById('programsGrid');
+        if (!programas || programas.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#666;">No hay programas disponibles.</div>';
+            return;
         }
 
-        function irAPrograma(programaId) {
-            // Aquí se redirige a la vista de cohortes del programa seleccionado
-            window.location.href = 'cooperadora_4_cohortes.html?programa=' + programaId;
-        }
-    
-    /* Navegación y sesión proporcionadas por supabase.js */
-    
-        /* ══ CAMPANA ══ */
-    var _notifs = [];
-    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
-    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
-    function renderNotificaciones(datos) {
-        _notifs = datos || [];
-        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-        var lista = document.getElementById('notif-list');
-        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-        var iconos = { pago:'\u{1f4b0}', mora:'\u{1f534}', solicitud:'\u{1f4cb}', reclamo:'\u26a0\ufe0f', alerta:'\u{1f6a8}' };
-        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
-        lista.innerHTML = _notifs.map(function(n) {
-            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+        grid.innerHTML = programas.map(function(p) {
+            var tipo = (p.tipo || '').toLowerCase().replace('_', '');
+            return '<div class="program-card" data-tipo="' + tipo + '" onclick="navegar('cooperadora_4_cohortes.html?programa=' + p.id + '')">'
+                +   '<div class="program-header">'
+                +     '<div class="program-icon">' + iconoTipo(p.tipo) + '</div>'
+                +     '<div>'
+                +       '<div class="program-name">' + (p.nombre || '—') + '</div>'
+                +       '<div class="program-type">' + labelTipo(p.tipo) + '</div>'
+                +     '</div>'
+                +   '</div>'
+                +   '<div class="program-stats">'
+                +     '<div class="stat"><div class="stat-value">' + (p.estudiantes || 0) + '</div><div class="stat-label">Estudiantes</div></div>'
+                +     '<div class="stat"><div class="stat-value">' + (p.cohortes || 0) + '</div><div class="stat-label">' + labelCohorte(p.tipo, p.cohortes) + '</div></div>'
+                +     '<div class="stat"><div class="stat-value">' + (p.alDia || 0) + '</div><div class="stat-label">Al dia</div></div>'
+                +   '</div>'
+                + '</div>';
         }).join('');
     }
-    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
-    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
-    // Notificaciones cargadas por supabase.js automáticamente
 
+    /* ══ ACTUALIZAR BOTONES FILTRO ══ */
+    function actualizarBotonesFiltro() {
+        var tipos = { todos: 0, doctorado: 0, maestria: 0, especializacion: 0, micro_maestria: 0, diplomatura: 0, diplomado: 0, curso: 0 };
+        tipos.todos = _programas.length;
+        _programas.forEach(function(p) {
+            var t = (p.tipo || '').toLowerCase();
+            if (tipos[t] !== undefined) tipos[t]++;
+        });
+
+        /* Actualizar texto de botones de filtro */
+        var btns = document.querySelectorAll('.filter-btn');
+        btns.forEach(function(btn) {
+            var onclick = btn.getAttribute('onclick') || '';
+            var match = onclick.match(/filtrar\('([^']+)'\)/);
+            if (!match) return;
+            var key = match[1];
+            if (key === 'todos') { btn.textContent = 'Todos (' + tipos.todos + ')'; return; }
+            if (key === 'doctorado') { btn.textContent = 'Doctorados (' + (tipos.doctorado || 0) + ')'; return; }
+            if (key === 'maestria') { btn.textContent = 'Maestrias (' + (tipos.maestria || 0) + ')'; return; }
+            if (key === 'especializacion') { btn.textContent = 'Especializaciones (' + (tipos.especializacion || 0) + ')'; return; }
+            if (key === 'micro') { btn.textContent = 'Micro Maestrias (' + ((tipos.micro_maestria || 0)) + ')'; return; }
+            if (key === 'diplomatura') { btn.textContent = 'Diplomaturas (' + ((tipos.diplomatura || 0) + (tipos.diplomado || 0) + (tipos.curso || 0)) + ')'; return; }
+        });
+    }
+
+    /* ══ FILTRAR ══ */
+    function filtrar(tipo) {
+        _filtroActivo = tipo;
+
+        var buttons = document.querySelectorAll('.filter-btn');
+        buttons.forEach(function(btn) { btn.classList.remove('active'); });
+        if (event && event.target) event.target.classList.add('active');
+
+        var tipoMap = {
+            'doctorado':      ['DOCTORADO'],
+            'maestria':       ['MAESTRIA'],
+            'especializacion':['ESPECIALIZACION'],
+            'micro':          ['MICRO_MAESTRIA'],
+            'diplomatura':    ['DIPLOMADO', 'DIPLOMATURA', 'CURSO']
+        };
+
+        var filtrados = tipo === 'todos'
+            ? _programas
+            : _programas.filter(function(p) {
+                var lista = tipoMap[tipo] || [];
+                return lista.indexOf((p.tipo || '').toUpperCase()) >= 0;
+            });
+
+        renderProgramas(filtrados);
+    }
+
+    /* ══ INIT ══ */
+    document.addEventListener('DOMContentLoaded', function() {
+        var sesion = getSesion();
+        if (!sesion) { navegar('portal_login.html'); return; }
+
+        Promise.all([
+            obtenerDashboardAdmin(),
+            obtenerNotificaciones('COOPERADORA')
+        ]).then(function(resultados) {
+            var dash = resultados[0] || {};
+            var notifs = resultados[1] || [];
+
+            _programas = dash.programas || [];
+            actualizarBotonesFiltro();
+            renderProgramas(_programas);
+            renderNotificaciones(notifs);
+        }).catch(function(err) {
+            console.error('Error cargando programas:', err);
+        });
+    });
 </script>
 </body>
 </html>
