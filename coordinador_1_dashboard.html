@@ -188,23 +188,54 @@
         let notificaciones = [];
 
         document.addEventListener('DOMContentLoaded', function () {
+            var sesion = getSesion();
+            if (!sesion) { window.location.href = 'portal_login.html'; return; }
             document.addEventListener('click', cerrarNotifSiCorresponde);
             cargarVista();
             cargarNotificaciones();
         });
 
-        function cargarVista() {
-            if (estaEnAppsScript()) {
-                google.script.run.withSuccessHandler(function (respuesta) {
-                    dashboardData = normalizarDashboard(respuesta);
-                    renderDashboard();
-                }).withFailureHandler(function () {
-                    dashboardData = normalizarDashboard(obtenerDemoDashboard());
-                    renderDashboard();
-                }).obtenerDashboardCoordinador();
-                dashboardData = normalizarDashboard(obtenerDemoDashboard());
+        async function cargarVista() {
+            try {
+                var sesion = getSesion();
+                var sb = await getSupabase();
+                var rP = await sb.from('programas').select('*');
+                var rC = await sb.from('cohortes').select('*');
+                var rCob = await sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente');
+                var programas = rP.data || [];
+                var cohortes = rC.data || [];
+                var cobros = rCob.data || [];
+                var dnisTotal = new Set(cobros.map(function(c){return c.dni;}));
+                var dnisAlDia = new Set(cobros.filter(function(c){return c.estado==='ABONADA';}).map(function(c){return c.dni;}));
+                var dnisEnMora = new Set(cobros.filter(function(c){return c.estado==='EN_MORA';}).map(function(c){return c.dni;}));
+                var recaudado = cobros.filter(function(c){return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL';}).reduce(function(s,c){return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0));},0);
+                var recTexto = recaudado>=1000000 ? '$'+(recaudado/1000000).toFixed(1)+'M' : '$'+Number(recaudado).toLocaleString('es-AR');
+                var cohActivas = cohortes.filter(function(c){return c.estado==='ACTIVO';}).length;
+                var primerProg = programas[0] || {};
+                var programasStats = programas.map(function(p) {
+                    var cohsProg = cohortes.filter(function(c){return c.programa_id===p.programa_id;});
+                    var cobsProg = cobros.filter(function(c){return c.programa_id===p.programa_id;});
+                    return { programaId:p.programa_id, nombre:p.nombre, tipo:p.tipo||'Programa', estudiantes:new Set(cobsProg.map(function(c){return c.dni;})).size, cohortes:cohsProg.length, estado:p.estado==='ACTIVO'?'Activo':'Cerrado', destino:'Coordinador_3_Programas_de_posgrado.html?programa='+p.programa_id };
+                });
+                var cohortesStats = cohortes.map(function(c) {
+                    var cobs = cobros.filter(function(x){return x.cohorte_id===c.cohorte_id;});
+                    var dnis = new Set(cobs.map(function(x){return x.dni;}));
+                    var alD = new Set(cobs.filter(function(x){return x.estado==='ABONADA';}).map(function(x){return x.dni;})).size;
+                    var mor = new Set(cobs.filter(function(x){return x.estado==='EN_MORA';}).map(function(x){return x.dni;})).size;
+                    var rec = cobs.filter(function(x){return x.estado==='ABONADA'||x.estado==='PAGO_PARCIAL';}).reduce(function(s,x){return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));},0);
+                    var recT = rec>=1000000 ? '$'+(rec/1000000).toFixed(1)+'M' : '$'+Number(rec).toLocaleString('es-AR');
+                    return { cohorteId:c.cohorte_id, nombre:c.nombre||'Cohorte', estado:c.estado==='ACTIVO'?'Activa':'Cerrada', estudiantes:dnis.size, alDia:alD, mora:mor, recaudadoTexto:recT, detalle:(c.fecha_inicio||'')+(c.fecha_fin?' - '+c.fecha_fin:''), destino:'coordinador_3_cohorte.html?cohorte_id='+c.cohorte_id };
+                });
+                dashboardData = {
+                    coordinador: { nombreCompleto: sesion ? (sesion.nombre||'Coordinador/a') : 'Coordinador/a' },
+                    programaActual: { programaId:primerProg.programa_id||'', nombre:primerProg.nombre||'Programa/Curso', cohortesActivas:cohActivas, estudiantesTotales:dnisTotal.size },
+                    resumen: { totalEstudiantes:dnisTotal.size, alDia:dnisAlDia.size, enMora:dnisEnMora.size, recaudadoTexto:recTexto },
+                    programas: programasStats,
+                    cohortes: cohortesStats,
+                    actividadReciente: []
+                };
                 renderDashboard();
-            }
+            } catch(e) { console.error('Error cargando dashboard:', e); }
         }
 
         function normalizarDashboard(data) {
@@ -279,7 +310,7 @@
         }
         function irAGastos() { irADestino('coordinador_5_Gestion_gastos.html'); }
         function irAReportes() { irADestino('coordinador_4_reportes.html'); }
-        function irADestino(destino) { if (!destino) return; if (estaEnAppsScript()) window.top.location.href = '?page=' + destino.replace('.html', '').split('?')[0]; else window.location.href = destino; }
+        function irADestino(destino) { if (!destino) return; navegar(destino); }
         function abrirModalSolicitud() { document.getElementById('modal-solicitud').classList.add('open'); document.getElementById('sol-alert').style.display = 'none'; document.getElementById('sol-success').style.display = 'none'; document.getElementById('sol-programa').value = ''; document.getElementById('sol-cohorte').value = ''; document.getElementById('sol-cuotas').value = ''; document.getElementById('sol-mes').value = ''; document.getElementById('sol-comentarios').value = ''; quitarArchivo(); }
         function cerrarModalSolicitud() { document.getElementById('modal-solicitud').classList.remove('open'); }
         function mostrarArchivo(input) { const archivo = input.files && input.files[0]; if (!archivo) return; document.getElementById('sol-archivo-nombre').textContent = archivo.name; document.getElementById('sol-archivo-preview').classList.add('open'); }
@@ -301,8 +332,7 @@
             } catch (e) { alerta.textContent = '⚠️ No se pudo leer el archivo Excel.'; alerta.style.display = 'block'; success.style.display = 'none'; }
         }
         function cargarNotificaciones() {
-            if (estaEnAppsScript()) google.script.run.withSuccessHandler(renderNotificaciones).withFailureHandler(function () { renderNotificaciones([]); }).obtenerNotificacionesCoordinador();
-            else renderNotificaciones([{ id:'n1', titulo:'María González', mensaje:'Cuota 5 en mora', tiempo:'Hace 2 días', leida:false },{ id:'n2', titulo:'Juan Pérez', mensaje:'Cuota 7 vence mañana', tiempo:'Hace 1 día', leida:false },{ id:'n3', titulo:'Ana Ruiz', mensaje:'Solicitud de readmisión', tiempo:'Hace 5 días', leida:true }]);
+            obtenerNotificaciones('COORDINADOR').then(renderNotificaciones).catch(function(){renderNotificaciones([]);});
         }
         function renderNotificaciones(datos) {
             notificaciones = Array.isArray(datos) ? datos : [];

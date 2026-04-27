@@ -390,258 +390,86 @@
     </div>
 
     <div class="container">
-        <h1 class="page-title">Cohortes Disponibles</h1>
-        <p class="page-subtitle">5 cohortes • 42 estudiantes totales</p>
+        <h1 class="page-title" id="page-title">Cohortes Disponibles</h1>
+        <p class="page-subtitle" id="page-subtitle">Cargando…</p>
 
-        <div class="cohortes-list">
-
-            <!-- COHORTE ACTIVA 2025-2026 -->
-            <div class="cohorte-card active" id="cohorte-1" onclick="navegarCohorte(event)">
-                <div class="cohorte-left">
-                    <div class="cohorte-title">Cohorte 2025-2026</div>
-                    <div class="cohorte-dates">Abril 2025 - Septiembre 2026 • 16 cuotas</div>
-                    <div class="cohorte-stats">
-                        <div class="stat-box">
-                            <div class="stat-label">Estudiantes</div>
-                            <div class="stat-value">15</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Al día</div>
-                            <div class="stat-value success">8</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">En mora</div>
-                            <div class="stat-value danger">5</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Pago parcial</div>
-                            <div class="stat-value warning">2</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Recaudado</div>
-                            <div class="stat-value">$3.2M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Egresos</div>
-                            <div class="stat-value">$2.1M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Saldo</div>
-                            <div class="stat-value saldo-positivo">$1.1M</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="cohorte-right">
-                    <span class="badge active" id="badge-1">Activa</span>
-                    <span class="arrow">→</span>
-                </div>
-            </div>
-
-            <!-- COHORTE 2024-2025 -->
-            <div class="cohorte-card active" id="cohorte-2" onclick="navegarCohorte(event)">
-                <div class="cohorte-left">
-                    <div class="cohorte-title">Cohorte 2024-2025</div>
-                    <div class="cohorte-dates">Abril 2024 - Septiembre 2025 • 16 cuotas</div>
-                    <div class="cohorte-stats">
-                        <div class="stat-box">
-                            <div class="stat-label">Estudiantes</div>
-                            <div class="stat-value">12</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Al día</div>
-                            <div class="stat-value success">10</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">En mora</div>
-                            <div class="stat-value danger">2</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Pago parcial</div>
-                            <div class="stat-value warning">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Recaudado</div>
-                            <div class="stat-value">$2.8M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Egresos</div>
-                            <div class="stat-value">$1.9M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Saldo</div>
-                            <div class="stat-value saldo-positivo">$0.9M</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="cohorte-right">
-                    <span class="badge active" id="badge-2">Activa</span>
-                    <span class="arrow">→</span>
-                </div>
-            </div>
-
-            <!-- COHORTE 2023-2024 -->
-            <div class="cohorte-card" id="cohorte-3" onclick="navegarCohorte(event)">
-                <div class="cohorte-left">
-                    <div class="cohorte-title">Cohorte 2023-2024</div>
-                    <div class="cohorte-dates">Abril 2023 - Septiembre 2024 • 16 cuotas</div>
-                    <div class="cohorte-stats">
-                        <div class="stat-box">
-                            <div class="stat-label">Estudiantes</div>
-                            <div class="stat-value">8</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Al día</div>
-                            <div class="stat-value success">8</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">En mora</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Pago parcial</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Recaudado</div>
-                            <div class="stat-value">$1.9M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Egresos</div>
-                            <div class="stat-value">$1.5M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Saldo</div>
-                            <div class="stat-value saldo-positivo">$0.4M</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="cohorte-right">
-                    <span class="badge closed" id="badge-3">Cerrada</span>
-                    <span class="arrow">→</span>
-                </div>
-            </div>
-
-            <!-- COHORTE 2022-2023 -->
-            <div class="cohorte-card" id="cohorte-4" onclick="navegarCohorte(event)">
-                <div class="cohorte-left">
-                    <div class="cohorte-title">Cohorte 2022-2023</div>
-                    <div class="cohorte-dates">Abril 2022 - Septiembre 2023 • 16 cuotas</div>
-                    <div class="cohorte-stats">
-                        <div class="stat-box">
-                            <div class="stat-label">Estudiantes</div>
-                            <div class="stat-value">5</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Completaron</div>
-                            <div class="stat-value success">5</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">En mora</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Pago parcial</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Recaudado</div>
-                            <div class="stat-value">$1.2M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Egresos</div>
-                            <div class="stat-value">$1.0M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Saldo</div>
-                            <div class="stat-value saldo-positivo">$0.2M</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="cohorte-right">
-                    <span class="badge closed" id="badge-4">Cerrada</span>
-                    <span class="arrow">→</span>
-                </div>
-            </div>
-
-            <!-- COHORTE 2021-2022 -->
-            <div class="cohorte-card" id="cohorte-5" onclick="navegarCohorte(event)">
-                <div class="cohorte-left">
-                    <div class="cohorte-title">Cohorte 2021-2022</div>
-                    <div class="cohorte-dates">Abril 2021 - Septiembre 2022 • 19 cuotas</div>
-                    <div class="cohorte-stats">
-                        <div class="stat-box">
-                            <div class="stat-label">Estudiantes</div>
-                            <div class="stat-value">2</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Completaron</div>
-                            <div class="stat-value success">2</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">En mora</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Pago parcial</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Recaudado</div>
-                            <div class="stat-value">$480k</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Egresos</div>
-                            <div class="stat-value">$390k</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Saldo</div>
-                            <div class="stat-value saldo-positivo">$90k</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="cohorte-right">
-                    <span class="badge closed" id="badge-5">Cerrada</span>
-                    <span class="arrow">→</span>
-                </div>
-            </div>
+        <div class="cohortes-list" id="cohortes-list">
 
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-            /* ── CERRAR SESIÓN ── */
-            function abrirLogout() {
-                document.getElementById('logoutModal').classList.add('show');
-            }
+var _programaId = new URLSearchParams(location.search).get('programa') || new URLSearchParams(location.search).get('id') || '';
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fM(n) { var v=Number(n||0); return v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'k':'$'+v.toLocaleString('es-AR'); }
 
-            function cancelarLogout() {
-                document.getElementById('logoutModal').classList.remove('show');
-            }
+var _notifs = [];
+function toggleNotif() { var dd=document.getElementById('notif-dropdown'); if(dd) dd.style.display=dd.style.display==='block'?'none':'block'; }
+document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
+function renderNotificaciones(datos) {
+    _notifs=datos||[];
+    var sinLeer=_notifs.filter(function(n){return !n.leida;}).length;
+    var badge=document.getElementById('notif-badge'); if(badge){badge.textContent=sinLeer;badge.style.display=sinLeer>0?'flex':'none';}
+    var lista=document.getElementById('notif-list'); if(!lista) return;
+    if(!_notifs.length){lista.innerHTML='<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>';return;}
+    lista.innerHTML=_notifs.map(function(n){return '<div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="leerNotif(\''+n.id+'\')"><p style="font-size:13px;color:#374151;">'+esc(n.mensaje)+'</p></div>';}).join('');
+}
+function leerNotif(id){_notifs.forEach(function(n){if(n.id===id)n.leida=true;});renderNotificaciones(_notifs);}
+function marcarTodasLeidas(){_notifs.forEach(function(n){n.leida=true;});renderNotificaciones(_notifs);}
 
-            function confirmarLogout() {
-                // Limpia el storage de sesión y redirige al login
-                sessionStorage.clear();
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('usuario');
-                // Ajustá esta URL a la página de login de tu sistema
-                window.location.href = 'portal_login.html';
-            }
+function abrirLogout() { document.getElementById('logoutModal').classList.add('show'); }
+function cancelarLogout() { document.getElementById('logoutModal').classList.remove('show'); }
+function confirmarLogout() { sessionStorage.clear(); localStorage.removeItem('authToken'); localStorage.removeItem('usuario'); window.location.href = 'portal_login.html'; }
+document.getElementById('logoutModal').addEventListener('click', function(e) { if (e.target === this) cancelarLogout(); });
 
-            // Cerrar modal al hacer clic fuera del cuadro
-            document.getElementById('logoutModal').addEventListener('click', function(e) {
-                if (e.target === this) cancelarLogout();
-            });
+async function cargarCohortes() {
+    try {
+        var sb = await getSupabase();
+        var q = sb.from('cohortes').select('*');
+        if (_programaId) q = q.eq('programa_id', _programaId);
+        var rC = await q;
+        var rCob = await sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente');
+        var rE = await sb.from('egresos').select('cohorte_id,monto_pagado,tipo');
+        var cohortes = rC.data || [];
+        var cobros = rCob.data || [];
+        var egresos = rE.data || [];
 
-            /* ── TOGGLE ESTADO COHORTE ── */
-            
-        
-        function navegarCohorte(event) {
-            // Solo navegar si NO se hizo clic en el botón de toggle
-            if (!event.target.closest('.btn-toggle')) {
-                window.location.href = 'coordinador_3_cohorte.html';
-            }
+        if (_programaId) {
+            var rP = await sb.from('programas').select('nombre').eq('programa_id', _programaId).single();
+            var pNombre = rP.data ? rP.data.nombre : 'Cohortes';
+            document.getElementById('page-title').textContent = pNombre;
         }
+        var cohActivas = cohortes.filter(function(c){return c.estado==='ACTIVO';}).length;
+        var dnisTotal = new Set(cobros.filter(function(c){return !_programaId||cohortes.some(function(co){return co.cohorte_id===c.cohorte_id;})}).map(function(c){return c.dni;}));
+        document.getElementById('page-subtitle').textContent = cohortes.length + ' cohortes • ' + dnisTotal.size + ' estudiantes totales';
+
+        var lista = document.getElementById('cohortes-list');
+        if (!cohortes.length) { lista.innerHTML = '<p style="color:#666;padding:20px;">No hay cohortes para mostrar.</p>'; return; }
+        lista.innerHTML = cohortes.map(function(c) {
+            var cobs = cobros.filter(function(x){return x.cohorte_id===c.cohorte_id;});
+            var egrs = egresos.filter(function(x){return x.cohorte_id===c.cohorte_id && x.tipo==='EJECUTADO';});
+            var dnis = new Set(cobs.map(function(x){return x.dni;}));
+            var alDia = new Set(cobs.filter(function(x){return x.estado==='ABONADA';}).map(function(x){return x.dni;})).size;
+            var mora = new Set(cobs.filter(function(x){return x.estado==='EN_MORA';}).map(function(x){return x.dni;})).size;
+            var parcial = new Set(cobs.filter(function(x){return x.estado==='PAGO_PARCIAL';}).map(function(x){return x.dni;})).size;
+            var rec = cobs.filter(function(x){return x.estado==='ABONADA'||x.estado==='PAGO_PARCIAL';}).reduce(function(s,x){return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));},0);
+            var egr = egrs.reduce(function(s,x){return s+Number(x.monto_pagado||0);},0);
+            var sal = rec - egr;
+            var isActiva = c.estado==='ACTIVO';
+            var maxCuota = cobs.reduce(function(m,x){return Math.max(m,Number(x.nro_cuota||0));},0);
+            var fechas = (c.fecha_inicio||'') + (c.fecha_fin?' - '+c.fecha_fin:'') + (maxCuota>0?' • '+maxCuota+' cuotas':'');
+            return '<div class="cohorte-card'+(isActiva?' active':'')+'" onclick="navegar(\'coordinador_3_cohorte.html?cohorte_id='+c.cohorte_id+'\')"><div class="cohorte-left"><div class="cohorte-title">'+esc(c.nombre||'Cohorte')+'</div><div class="cohorte-dates">'+esc(fechas)+'</div><div class="cohorte-stats"><div class="stat-box"><div class="stat-label">Estudiantes</div><div class="stat-value">'+dnis.size+'</div></div><div class="stat-box"><div class="stat-label">Al d\xeda</div><div class="stat-value success">'+alDia+'</div></div><div class="stat-box"><div class="stat-label">En mora</div><div class="stat-value danger">'+mora+'</div></div><div class="stat-box"><div class="stat-label">Pago parcial</div><div class="stat-value warning">'+parcial+'</div></div><div class="stat-box"><div class="stat-label">Recaudado</div><div class="stat-value">'+fM(rec)+'</div></div><div class="stat-box"><div class="stat-label">Egresos</div><div class="stat-value">'+fM(egr)+'</div></div><div class="stat-box"><div class="stat-label">Saldo</div><div class="stat-value'+(sal>=0?' saldo-positivo':' saldo-negativo')+'">'+fM(sal)+'</div></div></div></div><div class="cohorte-right"><span class="badge '+(isActiva?'active':'closed')+'">'+(isActiva?'Activa':'Cerrada')+'</span><span class="arrow">→</span></div></div>';
+        }).join('');
+    } catch(e) { console.error('Error cargando cohortes:', e); }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var sesion = getSesion();
+    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    cargarCohortes();
+    if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones('COORDINADOR').then(renderNotificaciones);
+});
 </script>
     </div>
 </body>
