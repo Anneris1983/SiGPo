@@ -170,9 +170,9 @@
             <!-- Fecha Desde -->
             <div class="filter-item">
                 <label>Fecha Desde</label>
-                <input type="date" id="fechaDesde" value="2025-01-01" style="width:170px;">
+                <input type="date" id="fechaDesde" style="width:170px;">
                 <label class="desde-inicio-wrap">
-                    <input type="checkbox" id="chkInicio" onchange="toggleDesdeInicio(this)">
+                    <input type="checkbox" id="chkInicio" checked onchange="toggleDesdeInicio(this)">
                     Desde el inicio (todos los datos)
                 </label>
             </div>
@@ -180,7 +180,7 @@
             <!-- Fecha Hasta -->
             <div class="filter-item">
                 <label>Fecha Hasta</label>
-                <input type="date" id="fechaHasta" value="2025-12-31" style="width:170px;">
+                <input type="date" id="fechaHasta" style="width:170px;">
             </div>
 
             <!-- Programa -->
@@ -188,9 +188,6 @@
                 <label>Programa / Curso</label>
                 <select id="filtroPrograma" style="width:260px;">
                     <option value="">Todos los programas</option>
-                    <option value="1">Doctorado en Ciencias Económicas</option>
-                    <option value="4">Maestría en Dirección de Negocios</option>
-                    <option value="7">Esp. en Costos y Gestión</option>
                 </select>
             </div>
 
@@ -199,9 +196,6 @@
                 <label>Cohorte / Edición</label>
                 <select id="filtroCohorte" style="width:220px;">
                     <option value="">Todas las cohortes</option>
-                    <option value="1">Cohorte 2025-2026</option>
-                    <option value="2">Cohorte 2024-2025</option>
-                    <option value="3">Cohorte 2023-2024</option>
                 </select>
             </div>
 
@@ -453,24 +447,37 @@ function exportarExcel()     { alert('Exportando a Excel...'); }
 function exportarTodoExcel() { alert('Exportando todo a Excel...'); }
 function generarPDF()        { alert('Generando PDF...'); }
 
+function _setEstado(txt) {
+    ['totalIngresos','totalEgresos','balanceNeto'].forEach(function(id){
+        var el = document.getElementById(id); if (el) el.textContent = txt;
+    });
+}
+
 async function cargarInicial() {
+    _setEstado('Cargando…');
     try {
         var sb = await getSupabase();
-        var rP = await sb.from('programas').select('programa_id,nombre');
-        var rC = await sb.from('cohortes').select('cohorte_id,nombre,programa_id');
-        var rCob = await sb.from('cobros').select('programa_id,cohorte_id,dni,monto_final,saldo_pendiente,estado,fecha_vencimiento,fecha_cobro');
-        var rE   = await sb.from('egresos').select('programa_id,monto_pagado,tipo,estado,fecha_ejecucion,fecha_estimada');
+
+        var [rP, rC, rCob, rE] = await Promise.all([
+            sb.from('programas').select('programa_id,nombre'),
+            sb.from('cohortes').select('cohorte_id,nombre,programa_id'),
+            sb.from('cobros').select('programa_id,cohorte_id,dni,monto_final,saldo_pendiente,estado,fecha_vencimiento,fecha_cobro'),
+            sb.from('egresos').select('programa_id,monto_pagado,tipo,estado,fecha_ejecucion,fecha_estimada')
+        ]);
+
+        if (rCob.error) console.error('cobros error:', rCob.error);
+        if (rE.error)   console.error('egresos error:', rE.error);
+
         var programas = rP.data || [];
         var cohortes  = rC.data || [];
         _allCobros  = rCob.data || [];
         _allEgresos = rE.data || [];
 
-        // Populate selects
         var selProg = document.getElementById('filtroPrograma');
         var selCoh  = document.getElementById('filtroCohorte');
-        selProg.innerHTML = '<option value="">Todos los programas</option>' +
+        if (selProg) selProg.innerHTML = '<option value="">Todos los programas</option>' +
             programas.map(function(p){ return '<option value="'+p.programa_id+'">'+p.nombre+'</option>'; }).join('');
-        selCoh.innerHTML = '<option value="">Todas las cohortes</option>' +
+        if (selCoh) selCoh.innerHTML = '<option value="">Todas las cohortes</option>' +
             cohortes.map(function(c){ return '<option value="'+c.cohorte_id+'">'+c.nombre+'</option>'; }).join('');
 
         // Restore saved filters
@@ -478,21 +485,20 @@ async function cargarInicial() {
             var saved = sessionStorage.getItem('sigpo_filtros_cashflow');
             if (saved) {
                 var f = JSON.parse(saved);
-                if (f.desdeInicio) { document.getElementById('chkInicio').checked = true; toggleDesdeInicio({checked:true}); }
+                if (f.desdeInicio !== false) { document.getElementById('chkInicio').checked = true; toggleDesdeInicio({checked:true}); }
                 else if (f.desde) document.getElementById('fechaDesde').value = f.desde;
                 if (f.hasta)    document.getElementById('fechaHasta').value = f.hasta;
-                if (f.programa) document.getElementById('filtroPrograma').value = f.programa;
-                if (f.cohorte)  document.getElementById('filtroCohorte').value  = f.cohorte;
+                if (f.programa && selProg) selProg.value = f.programa;
+                if (f.cohorte  && selCoh)  selCoh.value  = f.cohorte;
             }
-        } catch(e) {}
+        } catch(eSave) {}
 
         _ejecutarFiltros();
     } catch(e) {
         console.error('Error cargando cashflow:', e);
-        document.getElementById('totalIngresos').textContent = 'Error';
-        document.getElementById('totalEgresos').textContent  = 'Error';
-        document.getElementById('balanceNeto').textContent   = 'Error';
-        document.getElementById('loader').classList.remove('visible');
+        _setEstado('Error');
+        var loader = document.getElementById('loader');
+        if (loader) loader.classList.remove('visible');
     }
 }
 
@@ -516,6 +522,8 @@ function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; });
 document.addEventListener('DOMContentLoaded', function() {
     var sesion = getSesion();
     if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    // chkInicio is checked by default — disable the date input visually
+    toggleDesdeInicio({checked: true});
     cargarInicial();
     if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones('ADMINISTRADOR').then(renderNotificaciones);
 });
