@@ -491,38 +491,88 @@
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-            function toggleEstado(id, event) {
-                event.stopPropagation(); // evita que el click navegue a la cohorte
+var _programaId = new URLSearchParams(location.search).get('programa') || new URLSearchParams(location.search).get('programaId') || '';
+var _cohortes = [];
 
-                var card  = document.getElementById('cohorte-' + id);
-                var badge = document.getElementById('badge-' + id);
-                var btn   = event.currentTarget;
-                var esActiva = badge.classList.contains('active');
+function fM(n) {
+    var v = Math.round(Number(n || 0));
+    if (v >= 1000000) return '$' + (v / 1000000).toFixed(1).replace('.0', '') + 'M';
+    if (v >= 1000) return '$' + Math.round(v / 1000) + 'K';
+    return '$' + v.toLocaleString('es-AR');
+}
 
-                if (esActiva) {
-                    // Pasar a CERRADA
-                    card.classList.remove('active');
-                    badge.classList.remove('active');
-                    badge.classList.add('closed');
-                    badge.textContent = 'Cerrada';
-                    btn.classList.remove('cerrar');
-                    btn.classList.add('activar');
-                    btn.textContent = '✅ Activar';
-                    // Pasar a ACTIVA
-                    card.classList.add('active');
-                    badge.classList.remove('closed');
-                    badge.classList.add('active');
-                    badge.textContent = 'Activa';
-                    btn.classList.remove('activar');
-                    btn.classList.add('cerrar');
-                    btn.textContent = '🔒 Cerrar';
-                }
-            }
+function irACohorte(cohorteId, event) {
+    if (event) event.stopPropagation();
+    navegar('cooperadora_5_cohorte.html?programa=' + _programaId + '&cohorte=' + cohorteId);
+}
 
-            function irACohorte(cohorteId) {
-                // Redirige a la vista de detalle de la cohorte seleccionada
-                window.location.href = 'cooperadora_5_cohorte.html?cohorte=' + cohorteId;
-            }
+function toggleEstado(cohorteId, nuevoEstado, event) {
+    if (event) event.stopPropagation();
+    var accion = nuevoEstado === 'ACTIVO' ? 'activar' : 'cerrar';
+    if (!confirm('¿Querés ' + accion + ' esta cohorte?')) return;
+    getSupabase().then(function(sb) {
+        sb.from('cohortes').update({ estado: nuevoEstado }).eq('cohorte_id', cohorteId).then(function() {
+            cargarCohortes();
+        });
+    });
+}
+
+function renderCohortes(data) {
+    var programa = data || {};
+    var cohortes = programa.cohortes || [];
+    _cohortes = cohortes;
+
+    document.querySelector('.page-title').textContent = programa.nombre || 'Cohortes Disponibles';
+    var total = cohortes.reduce(function(s, c) { return s + (c.estudiantes || 0); }, 0);
+    document.querySelector('.page-subtitle').textContent = cohortes.length + ' cohortes • ' + total + ' estudiantes totales';
+
+    var lista = document.querySelector('.cohortes-list');
+    if (!cohortes.length) {
+        lista.innerHTML = '<div style="padding:40px;text-align:center;color:#999;">No hay cohortes registradas para este programa</div>';
+        return;
+    }
+
+    lista.innerHTML = cohortes.map(function(c) {
+        var esActiva = c.estado === 'ACTIVO';
+        var saldo = (c.recaudado || 0) - (c.egresos || 0);
+        return '<div class="cohorte-card' + (esActiva ? ' active' : '') + '" onclick="irACohorte(' + c.id + ', event)">'
+            + '<div class="cohorte-left">'
+            + '<div class="cohorte-title">' + esc(c.nombre || 'Cohorte') + '</div>'
+            + '<div class="cohorte-dates">' + (c.fechaInicio || '') + ' – ' + (c.fechaFin || '') + '</div>'
+            + '<div class="cohorte-stats">'
+            + '<div class="stat-box"><div class="stat-label">ESTUDIANTES</div><div class="stat-value">' + (c.estudiantes || 0) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">AL DÍA</div><div class="stat-value" style="color:#2d7a4f">' + (c.alDia || 0) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">EN MORA</div><div class="stat-value" style="color:' + ((c.enMora || 0) > 0 ? '#dc2626' : '#999') + '">' + (c.enMora || 0) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">RECAUDADO</div><div class="stat-value">' + fM(c.recaudado) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">EGRESOS</div><div class="stat-value" style="color:#f59e0b">' + fM(c.egresos) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">SALDO</div><div class="stat-value" style="color:' + (saldo >= 0 ? '#2d7a4f' : '#dc2626') + '">' + fM(saldo) + '</div></div>'
+            + '</div></div>'
+            + '<div class="cohorte-right">'
+            + '<span class="badge ' + (esActiva ? 'active' : 'closed') + '">' + (esActiva ? 'Activa' : 'Cerrada') + '</span>'
+            + '<button class="btn-toggle ' + (esActiva ? 'cerrar' : 'activar') + '" onclick="toggleEstado(' + c.id + ',\'' + (esActiva ? 'CERRADO' : 'ACTIVO') + '\',event)">' + (esActiva ? '🔒 Cerrar' : '✅ Activar') + '</button>'
+            + '<span class="arrow">→</span>'
+            + '</div></div>';
+    }).join('');
+}
+
+function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function cargarCohortes() {
+    obtenerDetallePrograma(_programaId).then(function(data) {
+        renderCohortes(data);
+    }).catch(function(e) {
+        console.error(e);
+        document.querySelector('.cohortes-list').innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626;">Error al cargar cohortes</div>';
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var sesion = getSesion();
+    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    if (_programaId) cargarCohortes();
+    else document.querySelector('.cohortes-list').innerHTML = '<div style="padding:40px;text-align:center;color:#999;">No se especificó un programa</div>';
+    obtenerNotificaciones('COOPERADORA').then(renderNotificaciones);
+});
         
     /* Navegación y sesión proporcionadas por supabase.js */
     

@@ -482,111 +482,171 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-        let gastoAEjecutar = null;
+var G = { egresos: [], programas: [], gastoAEjecutar: null, editing: null, tabActiva: 'proyectados' };
 
-        function cambiarTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-            
-            event.target.closest('.tab').classList.add('active');
-            document.getElementById('tab-' + tab).classList.add('active');
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fMonto(n) {
+    if (n===null||n===undefined||n==='') return '—';
+    var v = Math.round(Number(n));
+    if (v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
+    if (v>=1000) return '$'+Math.round(v/1000)+'k';
+    return '$'+v.toLocaleString('es-AR');
+}
+function fFechaCorta(f) {
+    if (!f) return '—';
+    var p = String(f).split('T')[0].split('-');
+    return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : f;
+}
+function esEjecutado(e) { return e.tipo==='EJECUTADO' || e.estado==='CANCELADO'; }
+function nomProg(id) { var p=G.programas.find(function(x){return x.programa_id===id;}); return p?p.nombre:'—'; }
+
+function cambiarTab(tab, event) {
+    G.tabActiva = tab;
+    document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+    document.querySelectorAll('.tab-content').forEach(function(tc){tc.classList.remove('active');});
+    if (event && event.target) event.target.closest('.tab').classList.add('active');
+    document.getElementById('tab-'+tab).classList.add('active');
+}
+
+function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function renderTabla(tipo) {
+    var lista = tipo==='proyectados' ? G.egresos.filter(function(e){return !esEjecutado(e);}) : G.egresos.filter(esEjecutado);
+    var tbody = document.querySelector('#tabla' + (tipo==='proyectados'?'Proyectados':'Ejecutados') + ' tbody');
+    if (!tbody) return;
+    if (!lista.length) { tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;color:#aaa;">No hay registros</td></tr>'; return; }
+    tbody.innerHTML = lista.map(function(e) {
+        var esEjec = esEjecutado(e);
+        var acciones = (!esEjec ? '<button class="btn btn-success btn-sm" onclick="abrirEjecutar('+e.egreso_id+')" title="Ejecutar">✓</button>' : '')
+            + '<button class="btn btn-primary btn-sm" onclick="abrirModalGasto(\''+tipo+'\','+e.egreso_id+')" title="Editar">✏️</button>'
+            + '<button class="btn btn-danger btn-sm" onclick="eliminarGasto('+e.egreso_id+')" title="Eliminar">🗑️</button>';
+        return '<tr>'
+            +'<td>'+fFechaCorta(e.fecha_estimada)+'</td>'
+            +'<td>'+esc(e.categoria||'—')+'</td>'
+            +'<td>'+esc(e.concepto||'—')+'</td>'
+            +'<td style="font-size:12px;">'+esc(nomProg(e.programa_id))+'</td>'
+            +'<td style="font-size:12px;">'+esc(e.periodo||'—')+'</td>'
+            +'<td style="font-weight:700">'+fMonto(e.monto_pagado)+'</td>'
+            +'<td style="font-size:12px;">'+esc(e.proveedor||'—')+'</td>'
+            +'<td style="font-size:12px;">'+esc(e.nro_comprobante||'—')+'</td>'
+            +'<td><span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:'+(esEjec?'#d1fae5':'#fef3c7')+';color:'+(esEjec?'#065f46':'#92400e')+'">'+(esEjec?'Ejecutado':'Proyectado')+'</span></td>'
+            +'<td><div style="display:flex;gap:4px;">'+acciones+'</div></td>'
+            +'</tr>';
+    }).join('');
+}
+
+function abrirModalGasto(tipo, egresoId) {
+    G.editing = egresoId || null;
+    var esEjec = tipo==='ejecutados';
+    document.getElementById('modalTitulo').textContent = (egresoId ? '✏️ Editar' : '➕ Nuevo') + ' Gasto ' + (esEjec?'Ejecutado':'Proyectado');
+    document.getElementById('fechaEstimada').value = '';
+    document.getElementById('categoria').value = document.getElementById('categoria').options[0].value;
+    document.getElementById('concepto').value = '';
+    document.getElementById('programa').value = '';
+    document.getElementById('cohorte').value = '';
+    document.getElementById('monto').value = '';
+    document.getElementById('proveedor').value = '';
+    document.getElementById('comprobante').value = '';
+    if (egresoId) {
+        var e = G.egresos.find(function(x){return x.egreso_id===egresoId;});
+        if (e) {
+            document.getElementById('fechaEstimada').value = e.fecha_estimada||'';
+            document.getElementById('categoria').value = e.categoria||'';
+            document.getElementById('concepto').value = e.concepto||'';
+            document.getElementById('programa').value = e.programa_id||'';
+            document.getElementById('cohorte').value = e.periodo||'';
+            document.getElementById('monto').value = e.monto_pagado||'';
+            document.getElementById('proveedor').value = e.proveedor||'';
+            document.getElementById('comprobante').value = e.nro_comprobante||'';
         }
+    }
+    document.getElementById('modalGasto').classList.add('active');
+}
 
-        function nuevoGasto(tipo) {
-            document.getElementById('modalTitulo').textContent = 'Nuevo Gasto ' + (tipo === 'proyectados' ? 'Proyectado' : 'Ejecutado');
-            document.getElementById('modalGasto').classList.add('active');
-        }
+function nuevoGasto(tipo) { abrirModalGasto(tipo, null); }
+function editarGasto(id) { abrirModalGasto(G.tabActiva, id); }
 
-        function editarGasto(id) {
-            document.getElementById('modalTitulo').textContent = 'Editar Gasto';
-            document.getElementById('modalGasto').classList.add('active');
-        }
+async function guardarGasto() {
+    var concepto = document.getElementById('concepto').value.trim();
+    var categoria = document.getElementById('categoria').value;
+    if (!concepto || !categoria) { alert('Completá concepto y categoría'); return; }
+    var esEjec = G.tabActiva==='ejecutados';
+    var datos = {
+        fecha_estimada: document.getElementById('fechaEstimada').value||null,
+        categoria: categoria,
+        concepto: concepto,
+        programa_id: document.getElementById('programa').value||null,
+        periodo: document.getElementById('cohorte').value.trim()||null,
+        monto_pagado: parseFloat(document.getElementById('monto').value)||null,
+        proveedor: document.getElementById('proveedor').value.trim()||null,
+        nro_comprobante: document.getElementById('comprobante').value.trim()||null,
+        tipo: esEjec?'EJECUTADO':'PROYECTADO',
+        estado: esEjec?'CANCELADO':'PENDIENTE'
+    };
+    if (G.editing) datos.egreso_id = G.editing;
+    try {
+        await guardarEgreso(datos);
+        cerrarModal('modalGasto');
+        await cargarDatos();
+    } catch(e) { alert('Error al guardar: '+e.message); }
+}
 
-        function eliminarGasto(id) {
-            if (confirm('¿Está seguro de eliminar este gasto?')) {
-                alert('Gasto eliminado');
-            }
-        }
+async function eliminarGasto(id) {
+    var e = G.egresos.find(function(x){return x.egreso_id===id;});
+    if (!confirm('¿Eliminar "'+esc(e?e.concepto:'este gasto')+'"?')) return;
+    try { await eliminarEgreso(id); await cargarDatos(); } catch(err) { alert('Error: '+err.message); }
+}
 
-        function ejecutarGasto(id) {
-            gastoAEjecutar = id;
-            // Pre-llenar fecha de ejecución con fecha actual
-            document.getElementById('fechaEjecucion').valueAsDate = new Date();
-            document.getElementById('modalEjecutar').classList.add('active');
-        }
+function abrirEjecutar(id) {
+    G.gastoAEjecutar = id;
+    document.getElementById('fechaEjecucion').value = new Date().toISOString().split('T')[0];
+    document.getElementById('comprobanteEjecucion').value = '';
+    document.getElementById('observaciones').value = '';
+    document.getElementById('modalEjecutar').classList.add('active');
+}
 
-        function confirmarEjecucion() {
-            const fechaEjecucion = document.getElementById('fechaEjecucion').value;
-            const comprobante = document.getElementById('comprobanteEjecucion').value;
-            const observaciones = document.getElementById('observaciones').value;
+async function confirmarEjecucion() {
+    var fecha = document.getElementById('fechaEjecucion').value;
+    var comp = document.getElementById('comprobanteEjecucion').value.trim();
+    var obs = document.getElementById('observaciones').value.trim();
+    if (!fecha) { alert('Ingresá la fecha de ejecución'); return; }
+    if (!comp) { alert('Ingresá el número de comprobante'); return; }
+    try {
+        await guardarEgreso({ egreso_id: G.gastoAEjecutar, tipo:'EJECUTADO', estado:'CANCELADO', fecha_ejecucion:fecha, nro_comprobante:comp, observaciones:obs||null });
+        cerrarModal('modalEjecutar');
+        G.gastoAEjecutar = null;
+        await cargarDatos();
+    } catch(e) { alert('Error: '+e.message); }
+}
 
-            if (!fechaEjecucion) {
-                alert('Por favor ingrese la fecha de ejecución');
-                return;
-            }
+function importarProyectados() { document.getElementById('modalImportar').classList.add('active'); document.getElementById('tipoImportacion').value='proyectados'; }
+function importarEjecutados() { document.getElementById('modalImportar').classList.add('active'); document.getElementById('tipoImportacion').value='ejecutados'; }
+function procesarExcel(file) { if (!file) return; cerrarModal('modalImportar'); }
+function buscar(texto, tipo) { renderTabla(tipo); }
+function filtrarCategoria(cat, tipo) { renderTabla(tipo); }
+function filtrarPrograma(prog, tipo) { renderTabla(tipo); }
 
-            if (!comprobante) {
-                alert('Por favor ingrese el número de comprobante');
-                return;
-            }
+async function cargarDatos() {
+    try {
+        var [egresos, programas] = await Promise.all([
+            obtenerEgresos({}),
+            obtenerProgramas()
+        ]);
+        G.egresos = egresos;
+        G.programas = programas;
+        var sel = document.getElementById('programa');
+        if (sel) sel.innerHTML = '<option value="">— Todos —</option>' + programas.map(function(p){return '<option value="'+p.programa_id+'">'+esc(p.nombre)+'</option>';}).join('');
+        renderTabla('proyectados');
+        renderTabla('ejecutados');
+    } catch(e) { console.error(e); }
+}
 
-            // Aquí iría la llamada al backend para actualizar el gasto
-            alert('Gasto ejecutado exitosamente\n\n' + 
-                  'ID: ' + gastoAEjecutar + '\n' +
-                  'Fecha: ' + fechaEjecucion + '\n' +
-                  'Comprobante: ' + comprobante + '\n' +
-                  (observaciones ? 'Observaciones: ' + observaciones : ''));
-
-            cerrarModal('modalEjecutar');
-            
-            // Limpiar campos
-            document.getElementById('comprobanteEjecucion').value = '';
-            document.getElementById('observaciones').value = '';
-            gastoAEjecutar = null;
-
-            // Simular actualización de la interfaz
-            // En producción, esto se haría recargando los datos desde el backend
-        }
-
-        function guardarGasto() {
-            alert('Gasto guardado exitosamente');
-            cerrarModal('modalGasto');
-        }
-
-        function importarProyectados() {
-            document.getElementById('modalImportar').classList.add('active');
-            document.getElementById('tipoImportacion').value = 'proyectados';
-        }
-
-        function importarEjecutados() {
-            document.getElementById('modalImportar').classList.add('active');
-            document.getElementById('tipoImportacion').value = 'ejecutados';
-        }
-
-        function procesarExcel(file) {
-            if (!file) return;
-            
-            const tipo = document.getElementById('tipoImportacion').value;
-            alert('Procesando archivo Excel...\n\nTipo: ' + tipo + '\nArchivo: ' + file.name + '\n\nColumnas esperadas:\nA: Fecha Estimada\nB: Categoría\nC: Concepto/Descripción\nD: Programa/Curso\nE: Cohorte/Edición\nF: Monto\nG: Proveedor\nH: N° comprobante');
-            
-            cerrarModal('modalImportar');
-        }
-
-        function cerrarModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        function buscar(texto, tipo) {
-            console.log('Buscando:', texto, 'en', tipo);
-        }
-
-        function filtrarCategoria(categoria, tipo) {
-            console.log('Filtrando por categoría:', categoria, 'en', tipo);
-        }
-
-        function filtrarPrograma(programa, tipo) {
-            console.log('Filtrando por programa:', programa, 'en', tipo);
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    var sesion = getSesion();
+    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    cargarDatos();
+    obtenerNotificaciones('COOPERADORA').then(renderNotificaciones);
+});
     
     /* Navegación y sesión proporcionadas por supabase.js */
     
