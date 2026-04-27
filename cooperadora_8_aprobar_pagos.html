@@ -435,88 +435,105 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-        function selectPaymentType(type) {
-            const fullRadio = document.getElementById('full-payment');
-            const partialRadio = document.getElementById('partial-payment');
-            const partialInput = document.getElementById('partial-input-section');
-            
-            if (type === 'full') {
-                fullRadio.checked = true;
-                document.getElementById('full-option').classList.add('selected');
-                document.getElementById('partial-option').classList.remove('selected');
-                partialInput.classList.remove('active');
-                partialRadio.checked = true;
-                document.getElementById('partial-option').classList.add('selected');
-                document.getElementById('full-option').classList.remove('selected');
-                partialInput.classList.add('active');
-            }
+    var _cobroId = new URLSearchParams(location.search).get('cobro_id') || new URLSearchParams(location.search).get('cobroId') || '';
+    var _cobroData = null;
+
+    function selectPaymentType(type) {
+        var esFull = type === 'full';
+        document.getElementById('full-payment').checked = esFull;
+        document.getElementById('partial-payment').checked = !esFull;
+        document.getElementById('full-option').classList.toggle('selected', esFull);
+        document.getElementById('partial-option').classList.toggle('selected', !esFull);
+        var seccion = document.getElementById('partial-input-section');
+        if (esFull) seccion.classList.remove('active'); else seccion.classList.add('active');
+    }
+
+    function fmt(n) { return '$' + (n||0).toLocaleString('es-AR', {minimumFractionDigits:2}); }
+
+    function calculateRemaining() {
+        var total = _cobroData ? (_cobroData.monto_final || _cobroData.monto || 0) : 0;
+        var paid = parseFloat(document.getElementById('monto-abonado').value) || 0;
+        document.getElementById('calc-total').textContent = fmt(total);
+        document.getElementById('calc-paid').textContent = fmt(paid);
+        document.getElementById('calc-remaining').textContent = fmt(total - paid);
+    }
+
+    function handleFileUpload(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+        if (file.type !== 'application/pdf') { alert('Solo se permiten archivos PDF'); event.target.value = ''; return; }
+        if (file.size > 10 * 1024 * 1024) { alert('El archivo no puede superar los 10 MB'); event.target.value = ''; return; }
+        document.getElementById('upload-box').style.display = 'none';
+        document.getElementById('file-uploaded').style.display = 'flex';
+        document.getElementById('warning-no-file').style.display = 'none';
+        document.getElementById('file-name-uploaded').textContent = file.name;
+        document.getElementById('file-size').textContent = (file.size / (1024*1024)).toFixed(2) + ' MB';
+        var btn = document.getElementById('btn-aprobar');
+        btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+    }
+
+    function removeFile() {
+        document.getElementById('recibo-file').value = '';
+        document.getElementById('upload-box').style.display = 'block';
+        document.getElementById('file-uploaded').style.display = 'none';
+        document.getElementById('warning-no-file').style.display = 'block';
+        var btn = document.getElementById('btn-aprobar');
+        btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
+    }
+
+    function poblarInfo(cobro) {
+        var vals = document.querySelectorAll('.info-value');
+        var estudiante = cobro.estudiantes || {};
+        var programa = cobro.programas || {};
+        var cohorte = cobro.cohortes || {};
+        var estadoLabel = { NO_ABONADA:'No Abonada', PENDIENTE:'Pendiente', ABONADA:'Abonada', PAGO_PARCIAL:'Pago Parcial', EN_MORA:'En Mora', A_DEFINIR:'A Definir' };
+        if (vals[0]) vals[0].textContent = estudiante.nombre || '—';
+        if (vals[1]) vals[1].textContent = estudiante.dni || '—';
+        if (vals[2]) vals[2].textContent = (programa.nombre||'')+( cohorte.nombre ? ' – '+cohorte.nombre : '');
+        if (vals[3]) vals[3].textContent = cobro.concepto || ('Cuota '+(cobro.nro_cuota||''));
+        if (vals[4]) { vals[4].textContent = fmt(cobro.monto_final || cobro.monto); vals[4].classList.add('highlight'); }
+        if (vals[5]) { vals[5].textContent = estadoLabel[cobro.estado] || cobro.estado || '—'; if (cobro.estado==='EN_MORA') vals[5].style.color='var(--danger)'; }
+        var total = cobro.monto_final || cobro.monto || 0;
+        document.getElementById('calc-total').textContent = fmt(total);
+        document.getElementById('calc-remaining').textContent = fmt(total);
+        var descFull = document.querySelector('#full-option .radio-description');
+        if (descFull) descFull.textContent = 'El estudiante pagó el monto total de la cuota ('+fmt(total)+')';
+    }
+
+    async function cargarCobro() {
+        if (!_cobroId) return;
+        try {
+            var sb = await getSupabase();
+            var res = await sb.from('cobros')
+                .select('*, estudiantes(nombre,dni), programas(nombre), cohortes(nombre)')
+                .eq('cobro_id', _cobroId).single();
+            if (res.error) throw res.error;
+            _cobroData = res.data;
+            poblarInfo(_cobroData);
+        } catch(e) { console.error('Error cargando cobro:', e); }
+    }
+
+    async function aprobarCobro() {
+        if (!_cobroData) return;
+        var esFull = document.getElementById('full-payment').checked;
+        var file = document.getElementById('recibo-file').files[0];
+        if (!file) { alert('Debes subir el recibo oficial antes de aprobar.'); return; }
+        var tipo = esFull ? 'COMPLETO' : 'PARCIAL';
+        var monto = esFull ? (_cobroData.monto_final || _cobroData.monto) : (parseFloat(document.getElementById('monto-abonado').value) || 0);
+        if (!esFull && (!monto || monto <= 0)) { alert('Ingresá el monto abonado.'); return; }
+        var btn = document.getElementById('btn-aprobar');
+        btn.disabled = true; btn.textContent = 'Procesando…';
+        try {
+            await aprobarPago(_cobroId, tipo, monto, file);
+            alert('Pago aprobado correctamente.');
+            navegar('cooperadora_6_aprobar_pagos.html');
+        } catch(e) {
+            console.error('Error aprobando pago:', e);
+            alert('Error al aprobar el pago: '+(e.message||e));
+            btn.disabled = false; btn.innerHTML = '<span>✓</span><span>Aprobar y Registrar Pago</span>';
         }
+    }
 
-        function calculateRemaining() {
-            const total = 115762.50;
-            const paid = parseFloat(document.getElementById('monto-abonado').value) || 0;
-            const remaining = total - paid;
-            
-            document.getElementById('calc-total').textContent = '$' + total.toLocaleString('es-AR', {minimumFractionDigits: 2});
-            document.getElementById('calc-paid').textContent = '$' + paid.toLocaleString('es-AR', {minimumFractionDigits: 2});
-            document.getElementById('calc-remaining').textContent = '$' + remaining.toLocaleString('es-AR', {minimumFractionDigits: 2});
-        }
-
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            
-            if (!file) return;
-
-            // Validar que sea PDF
-            if (file.type !== 'application/pdf') {
-                alert('⚠️ Solo se permiten archivos PDF');
-                event.target.value = '';
-                return;
-            }
-
-            // Validar tamaño (10 MB máximo)
-            if (file.size > 10 * 1024 * 1024) {
-                alert('⚠️ El archivo no puede superar los 10 MB');
-                event.target.value = '';
-                return;
-            }
-
-            // Mostrar archivo subido
-            document.getElementById('upload-box').style.display = 'none';
-            document.getElementById('file-uploaded').style.display = 'flex';
-            document.getElementById('warning-no-file').style.display = 'none';
-            
-            // Mostrar nombre y tamaño
-            document.getElementById('file-name-uploaded').textContent = file.name;
-            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-            document.getElementById('file-size').textContent = `${sizeMB} MB`;
-
-            // Habilitar botón de aprobar
-            const btnAprobar = document.getElementById('btn-aprobar');
-            btnAprobar.disabled = false;
-            btnAprobar.style.opacity = '1';
-            btnAprobar.style.cursor = 'pointer';
-        }
-
-        function removeFile() {
-            // Limpiar input
-            document.getElementById('recibo-file').value = '';
-            
-            // Ocultar archivo subido
-            document.getElementById('upload-box').style.display = 'block';
-            document.getElementById('file-uploaded').style.display = 'none';
-            document.getElementById('warning-no-file').style.display = 'block';
-
-            // Deshabilitar botón de aprobar
-            const btnAprobar = document.getElementById('btn-aprobar');
-            btnAprobar.disabled = true;
-            btnAprobar.style.opacity = '0.5';
-            btnAprobar.style.cursor = 'not-allowed';
-        }
-    
-    /* Navegación y sesión proporcionadas por supabase.js */
-    
-        /* ══ CAMPANA ══ */
     var _notifs = [];
     function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
     document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
@@ -526,18 +543,24 @@
         var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
         var lista = document.getElementById('notif-list');
         if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-        var iconos = { pago:'\u{1f4b0}', mora:'\u{1f534}', solicitud:'\u{1f4cb}', reclamo:'\u26a0\ufe0f', alerta:'\u{1f6a8}' };
+        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
         var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
         lista.innerHTML = _notifs.map(function(n) {
-            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">' 
                 + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
                 + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
         }).join('');
     }
     function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
     function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
-    // Notificaciones cargadas por supabase.js automáticamente
 
+    document.addEventListener('DOMContentLoaded', function() {
+        var sesion = getSesion();
+        if (!sesion) { window.location.href = 'portal_login.html'; return; }
+        document.getElementById('btn-aprobar').onclick = aprobarCobro;
+        cargarCobro();
+        obtenerNotificaciones('COOPERADORA').then(renderNotificaciones);
+    });
 </script>
 </head>
 <body>

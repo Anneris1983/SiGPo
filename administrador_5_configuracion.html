@@ -7,589 +7,568 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #2d7a4f; }
+        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #2d7a4f; --danger: #c0392b; }
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+
         .header { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 20px 40px; display: flex; align-items: flex-start; justify-content: space-between; }
         .header-left { flex: 1; }
         .breadcrumb { font-size: 14px; margin-bottom: 12px; }
         .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
         .header h1 { font-family: 'Crimson Pro', serif; font-size: 24px; }
         .header p { font-size: 14px; opacity: 0.85; margin-top: 4px; }
-        .btn-logout {
-            display: flex; align-items: center; gap: 8px;
-            padding: 9px 18px;
-            background: rgba(255,255,255,0.12);
-            border: 1.5px solid rgba(255,255,255,0.35);
-            color: white; border-radius: 8px;
-            font-size: 14px; font-weight: 600;
-            cursor: pointer; text-decoration: none;
-            font-family: 'DM Sans', sans-serif;
-            transition: background 0.2s, border-color 0.2s;
-            white-space: nowrap;
-            margin-top: 4px;
-            flex-shrink: 0;
-        }
+        .btn-logout { display: flex; align-items: center; gap: 8px; padding: 9px 18px; background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.35); color: white; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: 'DM Sans', sans-serif; transition: background 0.2s; white-space: nowrap; margin-top: 4px; flex-shrink: 0; }
         .btn-logout:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.6); }
-        .btn-logout svg { flex-shrink: 0; }
+
         .container { max-width: 1000px; margin: 40px auto; padding: 0 40px; }
         .config-section { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
         .section-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
-        .config-grid { display: grid; gap: 24px; }
-        .config-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #f8f6f1; border-radius: 8px; }
+        .config-grid { display: grid; gap: 14px; }
+        .config-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; background: #f8f6f1; border-radius: 8px; gap: 24px; }
         .config-label { flex: 1; }
-        .config-label h3 { font-size: 16px; color: var(--primary); margin-bottom: 4px; }
-        .config-label p { font-size: 13px; color: #666; }
-        .config-input { width: 200px; }
-        .config-input input, .config-input select { width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: 'DM Sans', sans-serif; }
-        .config-input input:focus, .config-input select:focus { outline: none; border-color: #1e3a5f; }
-        .btn-save { padding: 14px 32px; background: var(--success); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 20px; width: 100%; font-family: 'DM Sans', sans-serif; }
-        .btn-save:hover { background: #246441; }
-        .alert-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; color: #856404; }
-        .info-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; color: #0d47a1; }
-        .note-box { background: #f0f4ff; border-left: 4px solid #5c7cfa; padding: 14px 16px; border-radius: 8px; margin-top: 14px; font-size: 13px; color: #2c3e7a; }
-        .note-box a { color: #1e3a5f; font-weight: 700; text-decoration: underline; }
+        .config-label h3 { font-size: 15px; color: var(--primary); margin-bottom: 4px; font-weight: 600; }
+        .config-label p { font-size: 13px; color: #666; line-height: 1.4; }
+        .config-input { flex-shrink: 0; }
+        .config-input input, .config-input select { padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: 'DM Sans', sans-serif; background: white; transition: border-color 0.2s; width: 100%; }
+        .config-input input:focus, .config-input select:focus { outline: none; border-color: var(--primary); }
 
-        @keyframes fadeInChip {
-            from { opacity: 0; transform: scale(0.85); }
-            to   { opacity: 1; transform: scale(1); }
-        }
+        /* TOGGLE */
+        .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+        .toggle { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #ccc; border-radius: 26px; transition: 0.3s; }
+        .toggle-slider:before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+        input:checked + .toggle-slider { background: var(--success); }
+        input:checked + .toggle-slider:before { transform: translateX(22px); }
+        .toggle-lbl { font-size: 13px; font-weight: 600; color: #555; min-width: 20px; }
+
+        /* INPUT + COPY */
+        .input-copy { display: flex; gap: 6px; align-items: stretch; }
+        .input-copy input { flex: 1; }
+        .btn-copy { padding: 10px 14px; background: #f0f0f0; border: 2px solid #e0e0e0; border-radius: 6px; cursor: pointer; font-size: 13px; white-space: nowrap; font-family: 'DM Sans', sans-serif; transition: background 0.15s; flex-shrink: 0; }
+        .btn-copy:hover { background: #e0e0e0; }
+
+        /* GUARDAR */
+        .btn-save { padding: 13px 28px; background: var(--success); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 20px; width: 100%; font-family: 'DM Sans', sans-serif; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-save:hover:not(:disabled) { background: #246441; }
+        .btn-save:disabled { opacity: 0.65; cursor: not-allowed; }
+
+        /* MENSAJES */
+        .alert-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; color: #856404; }
+        .info-box  { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; color: #0d47a1; }
+        .note-box  { background: #f0f4ff; border-left: 4px solid #5c7cfa; padding: 14px 16px; border-radius: 8px; font-size: 13px; color: #2c3e7a; margin-bottom: 16px; }
+        .msg-ok  { background: #d1fae5; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #065f46; display: none; margin-top: 14px; font-weight: 600; }
+        .msg-err { background: #fee2e2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #991b1b; display: none; margin-top: 14px; font-weight: 600; }
+
+        /* ETIQUETAS */
+        .etiqueta-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif; animation: fadeInChip 0.2s ease; }
+        .etiqueta-chip button { background: none; border: none; cursor: pointer; font-size: 16px; line-height: 1; padding: 0; opacity: 0.6; transition: opacity 0.15s; }
+        .etiqueta-chip button:hover { opacity: 1; }
+        @keyframes fadeInChip { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
+
+        /* SPINNER */
+        .spin { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: sp 0.7s linear infinite; vertical-align: middle; }
+        @keyframes sp { to { transform: rotate(360deg); } }
+
+        .notif-wrapper { position: relative; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-left">
-            <div class="breadcrumb"><a href="administrador_2_dashboard.html" onclick="navegar('administrador_2_dashboard.html'); return false;">← Volver al Dashboard</a></div>
-            <h1>⚙️ Configuración del Sistema</h1>
-            <p>Parámetros globales y reglas de negocio</p>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;">
-            <!-- Campana de Notificaciones -->
-            <div class="notif-wrapper" style="position:relative;">
-                <button class="notif-bell" onclick="toggleNotif()" title="Notificaciones" aria-label="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;transition:background 0.2s;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
-                </button>
-                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
-                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
-                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
-                    </div>
-                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
-                </div>
-            </div>
-            <a href="portal_login.html" class="btn-logout" onclick="return cerrarSesion(event)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
+
+<div class="header">
+    <div class="header-left">
+        <div class="breadcrumb"><a href="administrador_2_dashboard.html">← Volver al Dashboard</a></div>
+        <h1>⚙️ Configuración del Sistema</h1>
+        <p>Parámetros globales y reglas de negocio</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;">
+        <div class="notif-wrapper">
+            <button onclick="toggleNotif()" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                Cerrar sesión
-            </a>
+                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+            </button>
+            <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
+                    <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                </div>
+                <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+            </div>
         </div>
+        <a href="portal_login.html" class="btn-logout" onclick="return cerrarSesion(event)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Cerrar sesión
+        </a>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="alert-box">
+        <strong>⚠️ Atención:</strong> Los cambios en esta configuración afectan a todos los programas y estudiantes del sistema.
     </div>
 
-    <div class="container">
-        <div class="alert-box">
-            <strong>⚠️ Atención:</strong> Los cambios en esta configuración afectan a todos los programas y estudiantes del sistema.
+    <!-- MORA -->
+    <div class="config-section">
+        <h2 class="section-title">💰 Configuración de Mora</h2>
+        <div class="config-grid">
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>Tasa de Interés Mensual</h3>
+                    <p>Porcentaje de interés aplicado mensualmente sobre saldos vencidos</p>
+                </div>
+                <div class="config-input" style="display:flex;align-items:center;gap:8px;width:160px;">
+                    <input type="number" id="cfg-mora_porcentaje" step="0.1" min="0" max="100">
+                    <span style="font-size:14px;font-weight:600;color:#666;flex-shrink:0;">%</span>
+                </div>
+            </div>
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>Día de Corte de Mora</h3>
+                    <p>Día del mes en que se aplica el interés sobre los saldos vencidos</p>
+                </div>
+                <div class="config-input" style="width:120px;">
+                    <input type="number" id="cfg-dia_corte_mora" min="1" max="31">
+                </div>
+            </div>
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>Tipo de Cálculo</h3>
+                    <p>Forma de aplicación del interés mensual</p>
+                </div>
+                <div class="config-input" style="width:270px;">
+                    <select id="cfg-mora_tipo">
+                        <option value="COMPUESTO">Compuesto (interés sobre interés)</option>
+                        <option value="SIMPLE">Simple (porcentaje fijo mensual)</option>
+                    </select>
+                </div>
+            </div>
         </div>
-
-        <!-- MORA -->
-        <div class="config-section">
-            <h2 class="section-title">💰 Configuración de Mora</h2>
-            <div class="config-grid">
-                <div class="config-item">
-                    <div class="config-label">
-                        <h3>Tasa de Interés Mensual</h3>
-                        <p>Porcentaje de interés aplicado mensualmente sobre saldos vencidos</p>
-                    </div>
-                    <div class="config-input">
-                        <input type="number" id="cfg-mora-tasa" value="5" step="0.1" min="0" max="100">
-                        <span style="margin-left: 8px;">%</span>
-                    </div>
-                </div>
-                <div class="config-item">
-                    <div class="config-label">
-                        <h3>Día de Corte de Mora</h3>
-                        <p>Día del mes en que se aplica el interés (recomendado: día 16)</p>
-                    </div>
-                    <div class="config-input">
-                        <input type="number" id="cfg-mora-dia" value="16" min="1" max="31">
-                    </div>
-                </div>
-                <div class="config-item">
-                    <div class="config-label">
-                        <h3>Tipo de Cálculo</h3>
-                        <p>Forma de aplicación del interés</p>
-                    </div>
-                    <div class="config-input">
-                        <select id="cfg-mora-tipo">
-                            <option value="ACUMULATIVO">Acumulativo (5% + 5% + 5%...)</option>
-                            <option value="SIMPLE">Simple (5% fijo mensual)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <button class="btn-save" onclick="guardarConfigMora()">💾 Guardar Configuración de Mora</button>
-        </div>
-
-        <!-- DESCUENTOS -->
-        <div class="config-section">
-            <h2 class="section-title">🎯 Configuración de Descuentos</h2>
-            <div class="config-grid">
-                <div class="config-item">
-                    <div class="config-label">
-                        <h3>Pérdida de Descuento por Mora</h3>
-                        <p>¿El estudiante pierde el descuento al entrar en mora?</p>
-                    </div>
-                    <div class="config-input">
-                        <select id="cfg-desc-perdida">
-                            <option value="SI">Sí - Pérdida inmediata</option>
-                            <option value="NO">No - Mantiene descuento</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ETIQUETAS -->
-            <div style="margin-top: 32px; padding-top: 28px; border-top: 2px solid #e0e0e0;">
-                <h3 style="font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 6px;">🏷️ Etiquetas de Descuentos</h3>
-                <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Creá etiquetas para clasificar y organizar los descuentos. Luego podrás asignarlas al editar descuentos en las vistas de cohortes.</p>
-
-                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-                    <input
-                        type="text"
-                        id="nueva-etiqueta-input"
-                        placeholder="Nombre de la nueva etiqueta..."
-                        maxlength="40"
-                        style="flex: 1; padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s;"
-                        onfocus="this.style.borderColor='#1e3a5f'"
-                        onblur="this.style.borderColor='#e0e0e0'"
-                        onkeydown="if(event.key==='Enter') agregarEtiqueta()"
-                    >
-                    <button
-                        onclick="agregarEtiqueta()"
-                        style="padding: 10px 22px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.2s; font-family: 'DM Sans', sans-serif;"
-                        onmouseover="this.style.background='#16304f'"
-                        onmouseout="this.style.background='#1e3a5f'"
-                    >+ Agregar etiqueta</button>
-                </div>
-
-                <div id="etiqueta-error" style="display:none; color: #c0392b; font-size: 13px; margin-bottom: 12px; padding: 8px 12px; background: #fdecea; border-radius: 6px; border-left: 3px solid #c0392b;"></div>
-
-                <div id="etiquetas-container" style="display: flex; flex-wrap: wrap; gap: 10px; min-height: 20px;"></div>
-                <p id="etiquetas-empty" style="font-size: 13px; color: #aaa; font-style: italic; margin-top: 4px;">Aún no hay etiquetas creadas.</p>
-            </div>
-
-            <button class="btn-save" onclick="guardarConfiguracionDescuentos()">💾 Guardar Configuración de Descuentos</button>
-        </div>
-
-        <!-- DATOS BANCARIOS -->
-        <div class="config-section">
-            <h2 class="section-title">🏦 Datos Bancarios de Cooperadora</h2>
-            <div class="config-grid">
-                <div class="config-item">
-                    <div class="config-label">
-                        <h3>Banco</h3>
-                        <p>Entidad bancaria a la que pertenece la cuenta</p>
-                    </div>
-                    <div class="config-input" style="width: 300px;">
-                        <input type="text" id="cfg-banco-nombre" placeholder="Ej: Banco Nación, Banco Galicia...">
-                    </div>
-                </div>
-                <div class="config-item">
-                    <div class="config-label">
-                        <h3>CBU</h3>
-                        <p>Clave Bancaria Uniforme para transferencias</p>
-                    </div>
-                    <div class="config-input" style="width: 300px;">
-                        <input type="text" id="cfg-banco-cbu" value="">
-                    </div>
-                </div>
-                <div class="config-item">
-                    <div class="config-label">
-                        <h3>Alias</h3>
-                        <p>Alias de la cuenta bancaria</p>
-                    </div>
-                    <div class="config-input">
-                        <input type="text" id="cfg-banco-alias" value="">
-                    </div>
-                </div>
-                <div class="config-item">
-                    <div class="config-label">
-                        <h3>CUIT</h3>
-                        <p>Número de CUIT de la cooperadora</p>
-                    </div>
-                    <div class="config-input">
-                        <input type="text" id="cfg-banco-cuit" value="">
-                    </div>
-                </div>
-            </div>
-            <button class="btn-save" onclick="guardarConfigBanco()">💾 Guardar Datos Bancarios</button>
-        </div>
-
-        <!-- EMAILS -->
-        <div class="config-section">
-            <h2 class="section-title">📧 Configuración de Emails</h2>
-
-            <div class="info-box">
-                <strong>ℹ️ Información:</strong> Los emails se envían desde el correo del coordinador de cada programa. El remitente se configura automáticamente como "Coordinación [Nombre del Programa]".
-            </div>
-
-            <div class="note-box">
-                📋 <strong>Los mensajes de recordatorio y reclamo</strong> se configuran desde la <strong>gestión de cobranzas de cada cohorte/edición</strong>. Allí podés personalizar el asunto, el cuerpo del mensaje y las variables disponibles (nombre del estudiante, monto, fecha de vencimiento, etc.).
-            </div>
-
-            <div class="config-grid" style="margin-top: 24px;">
-                <div class="config-item">
-                    <div class="config-label">
-                        <h3>Envío Automático de Recordatorios</h3>
-                        <p>¿Se envían recordatorios automáticos de vencimientos próximos?</p>
-                    </div>
-                    <div class="config-input">
-                        <select id="cfg-email-recordatorios">
-                            <option value="SI">Sí - Envío automático</option>
-                            <option value="NO">No - Solo manual</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="config-item">
-                    <div class="config-label">
-                        <h3>Envío Automático de Reclamos</h3>
-                        <p>¿Se envían reclamos automáticos a estudiantes con cuotas vencidas sin pagar?</p>
-                    </div>
-                    <div class="config-input">
-                        <select id="cfg-email-reclamos">
-                            <option value="SI">Sí - Envío automático</option>
-                            <option value="NO">No - Solo manual</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <button class="btn-save" onclick="guardarConfigEmails()">💾 Guardar Configuración de Emails</button>
-        </div>
+        <div id="msg-mora" class="msg-ok"></div>
+        <div id="err-mora" class="msg-err"></div>
+        <button class="btn-save" onclick="guardar('mora', this)">💾 Guardar Configuración de Mora</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- DESCUENTOS -->
+    <div class="config-section">
+        <h2 class="section-title">🎯 Configuración de Descuentos</h2>
+        <div class="config-grid">
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>Pérdida de Descuento por Mora</h3>
+                    <p>¿El estudiante pierde el descuento al entrar en mora?</p>
+                </div>
+                <div class="config-input" style="width:230px;">
+                    <select id="cfg-descuento_perdida_mora">
+                        <option value="SI">Sí — Pérdida inmediata</option>
+                        <option value="NO">No — Mantiene el descuento</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- ETIQUETAS -->
+        <div style="margin-top:28px;padding-top:24px;border-top:2px solid #e0e0e0;">
+            <h3 style="font-size:17px;font-weight:700;color:var(--primary);margin-bottom:6px;">🏷️ Etiquetas de Descuentos</h3>
+            <p style="font-size:13px;color:#666;margin-bottom:18px;">Etiquetas para clasificar los descuentos. Se guardan en la base de datos y están disponibles en todas las cohortes.</p>
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+                <input type="text" id="nueva-etiqueta-input" placeholder="Nombre de la nueva etiqueta…" maxlength="40"
+                    style="flex:1;padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;"
+                    onfocus="this.style.borderColor='#1e3a5f'" onblur="this.style.borderColor='#e0e0e0'"
+                    onkeydown="if(event.key==='Enter')agregarEtiqueta()">
+                <button onclick="agregarEtiqueta()" style="padding:10px 22px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;">
+                    + Agregar
+                </button>
+            </div>
+            <div id="etiqueta-error" style="display:none;color:#c0392b;font-size:13px;margin-bottom:10px;padding:8px 12px;background:#fdecea;border-radius:6px;border-left:3px solid #c0392b;"></div>
+            <div id="etiquetas-container" style="display:flex;flex-wrap:wrap;gap:10px;min-height:20px;"></div>
+            <p id="etiquetas-empty" style="font-size:13px;color:#aaa;font-style:italic;margin-top:6px;">Aún no hay etiquetas creadas.</p>
+        </div>
+
+        <div id="msg-descuentos" class="msg-ok"></div>
+        <div id="err-descuentos" class="msg-err"></div>
+        <button class="btn-save" onclick="guardar('descuentos', this)">💾 Guardar Configuración de Descuentos</button>
+    </div>
+
+    <!-- BANCO -->
+    <div class="config-section">
+        <h2 class="section-title">🏦 Datos Bancarios de Cooperadora</h2>
+        <div class="note-box">
+            📋 Estos datos aparecen en los comprobantes y en el portal del estudiante cuando se le indica dónde transferir el pago.
+        </div>
+        <div class="config-grid">
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>Titular de la Cuenta</h3>
+                    <p>Nombre del titular tal como aparece en el banco</p>
+                </div>
+                <div class="config-input" style="width:320px;">
+                    <input type="text" id="cfg-titular_banco" placeholder="Ej: Cooperadora FCE UNCUYO">
+                </div>
+            </div>
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>Número de Cuenta</h3>
+                    <p>Número de cuenta bancaria</p>
+                </div>
+                <div class="config-input" style="width:320px;">
+                    <input type="text" id="cfg-numero_cuenta" placeholder="Ej: 108-123456/7">
+                </div>
+            </div>
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>CBU</h3>
+                    <p>Clave Bancaria Uniforme para transferencias</p>
+                </div>
+                <div class="config-input" style="width:380px;">
+                    <div class="input-copy">
+                        <input type="text" id="cfg-cbu_banco" placeholder="Ej: 2850590940090418135201">
+                        <button class="btn-copy" onclick="copiar('cfg-cbu_banco', this)">📋 Copiar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>Alias</h3>
+                    <p>Alias de la cuenta bancaria para transferencias</p>
+                </div>
+                <div class="config-input" style="width:380px;">
+                    <div class="input-copy">
+                        <input type="text" id="cfg-alias_banco" placeholder="Ej: COOPERADORA.FCE.UNCUYO">
+                        <button class="btn-copy" onclick="copiar('cfg-alias_banco', this)">📋 Copiar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>Email de Cooperadora</h3>
+                    <p>Correo de contacto (aparece en comunicaciones con estudiantes)</p>
+                </div>
+                <div class="config-input" style="width:320px;">
+                    <input type="email" id="cfg-email_banco" placeholder="Ej: cooperadora@fce.uncu.edu.ar">
+                </div>
+            </div>
+        </div>
+        <div id="msg-banco" class="msg-ok"></div>
+        <div id="err-banco" class="msg-err"></div>
+        <button class="btn-save" onclick="guardar('banco', this)">💾 Guardar Datos Bancarios</button>
+    </div>
+
+    <!-- EMAILS -->
+    <div class="config-section">
+        <h2 class="section-title">📧 Configuración de Emails Automáticos</h2>
+        <div class="info-box">
+            <strong>ℹ️ Información:</strong> Los emails se envían desde el correo del coordinador de cada programa. El remitente aparece como "Coordinación [Nombre del Programa]".
+        </div>
+        <div class="note-box">
+            📋 Los textos de recordatorio y reclamo se personalizan desde la <strong>gestión de cobranzas de cada cohorte/edición</strong>.
+        </div>
+        <div class="config-grid">
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>Envío Automático de Recordatorios</h3>
+                    <p>Se envía el <strong>1.° de cada mes</strong> a estudiantes con cuotas NO_ABONADA</p>
+                </div>
+                <div class="config-input">
+                    <div class="toggle-wrap">
+                        <label class="toggle">
+                            <input type="checkbox" id="cfg-email_recordatorios" onchange="actualizarLbl('cfg-email_recordatorios','lbl-recordatorios')">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-lbl" id="lbl-recordatorios">Sí</span>
+                    </div>
+                </div>
+            </div>
+            <div class="config-item">
+                <div class="config-label">
+                    <h3>Envío Automático de Reclamos</h3>
+                    <p>Se envía el <strong>3 y 16 de cada mes</strong> a estudiantes con cuotas EN_MORA</p>
+                </div>
+                <div class="config-input">
+                    <div class="toggle-wrap">
+                        <label class="toggle">
+                            <input type="checkbox" id="cfg-email_reclamos" onchange="actualizarLbl('cfg-email_reclamos','lbl-reclamos')">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-lbl" id="lbl-reclamos">Sí</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="msg-emails" class="msg-ok"></div>
+        <div id="err-emails" class="msg-err"></div>
+        <button class="btn-save" onclick="guardar('emails', this)">💾 Guardar Configuración de Emails</button>
+    </div>
+
+</div><!-- /container -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-        const COLORES_ETIQUETAS = [
-            { bg: '#e8f0fe', border: '#4a7cdc', text: '#1a4ab0' },
-            { bg: '#fce8f3', border: '#d45fa0', text: '#9c2a6e' },
-            { bg: '#e6f4ea', border: '#4caf80', text: '#1b6b3a' },
-            { bg: '#fff3e0', border: '#f5a623', text: '#a05f00' },
-            { bg: '#f3e8fd', border: '#9b59d0', text: '#5c1a9b' },
-            { bg: '#e0f7f7', border: '#26a69a', text: '#00695c' },
-            { bg: '#fdecea', border: '#e05c4b', text: '#9b1a0d' },
-            { bg: '#e8f5e9', border: '#66bb6a', text: '#1b5e20' },
-        ];
+'use strict';
 
-        let etiquetas = [];
-        let colorIndex = 0;
+/* ══════════════════════════════════
+   COLORES ETIQUETAS
+══════════════════════════════════ */
+var COLORES = [
+    {bg:'#e8f0fe',border:'#4a7cdc',text:'#1a4ab0'},
+    {bg:'#fce8f3',border:'#d45fa0',text:'#9c2a6e'},
+    {bg:'#e6f4ea',border:'#4caf80',text:'#1b6b3a'},
+    {bg:'#fff3e0',border:'#f5a623',text:'#a05f00'},
+    {bg:'#f3e8fd',border:'#9b59d0',text:'#5c1a9b'},
+    {bg:'#e0f7f7',border:'#26a69a',text:'#00695c'},
+    {bg:'#fdecea',border:'#e05c4b',text:'#9b1a0d'},
+    {bg:'#e8f5e9',border:'#66bb6a',text:'#1b5e20'},
+];
+var etiquetas = [];
+var colorIdx  = 0;
 
-        function cargarEtiquetasIniciales() {
-            try {
-                var guardadas = JSON.parse(localStorage.getItem('sigpo_etiquetas_descuento') || '[]');
-                etiquetas = guardadas;
-                colorIndex = etiquetas.length;
-                renderizarEtiquetas();
-            } catch(err) {
-                console.error('Error al cargar etiquetas:', err);
-            }
+/* ══════════════════════════════════
+   NOTIFICACIONES
+══════════════════════════════════ */
+var _notifs = [];
+function toggleNotif() {
+    var dd = document.getElementById('notif-dropdown');
+    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function(e) {
+    var w = document.querySelector('.notif-wrapper');
+    if (w && !w.contains(e.target)) document.getElementById('notif-dropdown').style.display = 'none';
+});
+function renderNotificaciones(datos) {
+    _notifs = datos || [];
+    var sinLeer = _notifs.filter(function(n){ return !n.leida; }).length;
+    var badge = document.getElementById('notif-badge');
+    badge.textContent = sinLeer;
+    badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+    var lista = document.getElementById('notif-list');
+    if (!_notifs.length) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+    var ic = {pago:'💰',mora:'🔴',solicitud:'📋',reclamo:'⚠️',alerta:'🚨'};
+    var cl = {pago:'#dcfce7',mora:'#fee2e2',solicitud:'#dbeafe',reclamo:'#fef3c7',alerta:'#fce7f3'};
+    lista.innerHTML = _notifs.map(function(n){
+        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:'+(n.leida?'#fff':'#fffbeb')+';" onclick="leerNotif(\''+n.id+'\')"><div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:'+(cl[n.tipo]||'#f3f4f6')+';">'+(ic[n.tipo]||'🔔')+'</div><div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">'+n.mensaje+'</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">'+(n.tiempo||'')+'</div></div></div>';
+    }).join('');
+}
+function leerNotif(id) {
+    _notifs.forEach(function(n){ if(n.id===id) n.leida=true; });
+    renderNotificaciones(_notifs);
+    if (typeof marcarNotificacionLeida==='function') marcarNotificacionLeida(id);
+}
+function marcarTodasLeidas() {
+    _notifs.forEach(function(n){ n.leida=true; });
+    renderNotificaciones(_notifs);
+    if (typeof marcarTodasNotificacionesLeidas==='function') marcarTodasNotificacionesLeidas();
+}
+
+/* ══════════════════════════════════
+   INIT — usa obtenerConfiguracion de supabase.js
+══════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // obtenerConfiguracion() está definida en supabase.js
+        // devuelve un objeto plano { clave: valor, ... }
+        var cfg = await obtenerConfiguracion();
+        aplicarConfiguracion(cfg);
+    } catch(e) {
+        console.error('Error cargando configuración:', e);
+    }
+    if (typeof obtenerNotificaciones === 'function') {
+        obtenerNotificaciones('ADMINISTRADOR').then(renderNotificaciones);
+    }
+});
+
+/* ══════════════════════════════════
+   APLICAR CONFIG A LA UI
+══════════════════════════════════ */
+function aplicarConfiguracion(cfg) {
+    if (!cfg) return;
+
+    // MORA
+    setVal('cfg-mora_porcentaje', cfg.mora_porcentaje);
+    setVal('cfg-dia_corte_mora',  cfg.dia_corte_mora);
+    setVal('cfg-mora_tipo',       cfg.mora_tipo);
+
+    // DESCUENTOS
+    setVal('cfg-descuento_perdida_mora', cfg.descuento_perdida_mora);
+
+    // Etiquetas (guardadas como CSV en BD)
+    if (cfg.etiquetas) {
+        var nombres = cfg.etiquetas.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        etiquetas = nombres.map(function(n, i){ return { nombre: n, color: COLORES[i % COLORES.length] }; });
+        colorIdx  = etiquetas.length;
+    }
+    renderizarEtiquetas();
+
+    // BANCO
+    setVal('cfg-titular_banco', cfg.titular_banco);
+    setVal('cfg-numero_cuenta', cfg.numero_cuenta);
+    setVal('cfg-cbu_banco',     cfg.cbu_banco);
+    setVal('cfg-alias_banco',   cfg.alias_banco);
+    setVal('cfg-email_banco',   cfg.email_banco);
+
+    // EMAILS
+    setToggle('cfg-email_recordatorios', cfg.email_recordatorios, 'lbl-recordatorios');
+    setToggle('cfg-email_reclamos',      cfg.email_reclamos,      'lbl-reclamos');
+}
+
+function setVal(id, val) {
+    var el = document.getElementById(id);
+    if (el && val !== undefined && val !== null) el.value = val;
+}
+
+function setToggle(id, val, lblId) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.checked = (val === 'SI' || val === 'TRUE' || val === true);
+    actualizarLbl(id, lblId);
+}
+
+function actualizarLbl(id, lblId) {
+    var lbl = document.getElementById(lblId);
+    if (lbl) lbl.textContent = document.getElementById(id).checked ? 'Sí' : 'No';
+}
+
+/* ══════════════════════════════════
+   GUARDAR — usa guardarConfiguracion de supabase.js
+   Esa función ya usa el cliente con sesión Auth activa
+   → respeta el RLS que exige rol ADMINISTRADOR
+══════════════════════════════════ */
+async function guardar(seccion, btn) {
+    var textoOrig = btn.innerHTML;
+    btn.disabled  = true;
+    btn.innerHTML = '<span class="spin"></span> Guardando…';
+
+    var datos = {};
+
+    if (seccion === 'mora') {
+        datos = {
+            mora_porcentaje: document.getElementById('cfg-mora_porcentaje').value,
+            dia_corte_mora:  document.getElementById('cfg-dia_corte_mora').value,
+            mora_tipo:       document.getElementById('cfg-mora_tipo').value,
+        };
+
+    } else if (seccion === 'descuentos') {
+        datos = {
+            descuento_perdida_mora: document.getElementById('cfg-descuento_perdida_mora').value,
+            etiquetas: etiquetas.map(function(e){ return e.nombre; }).join(','),
+        };
+
+    } else if (seccion === 'banco') {
+        var cbu   = document.getElementById('cfg-cbu_banco').value.trim();
+        var alias = document.getElementById('cfg-alias_banco').value.trim();
+        if (!cbu && !alias) {
+            mostrarMsg(seccion, false, '❌ Ingresá al menos el CBU o el Alias.');
+            btn.disabled = false; btn.innerHTML = textoOrig; return;
         }
+        datos = {
+            titular_banco: document.getElementById('cfg-titular_banco').value.trim(),
+            numero_cuenta: document.getElementById('cfg-numero_cuenta').value.trim(),
+            cbu_banco:     cbu,
+            alias_banco:   alias,
+            email_banco:   document.getElementById('cfg-email_banco').value.trim(),
+        };
 
-        function mostrarError(msg) {
-            const el = document.getElementById('etiqueta-error');
-            el.textContent = msg;
-            el.style.display = 'block';
-            setTimeout(() => { el.style.display = 'none'; }, 3000);
-        }
+    } else if (seccion === 'emails') {
+        datos = {
+            email_recordatorios: document.getElementById('cfg-email_recordatorios').checked ? 'SI' : 'NO',
+            email_reclamos:      document.getElementById('cfg-email_reclamos').checked      ? 'SI' : 'NO',
+        };
+    }
 
-        function renderizarEtiquetas() {
-            const container = document.getElementById('etiquetas-container');
-            const empty = document.getElementById('etiquetas-empty');
-            container.innerHTML = '';
+    try {
+        // guardarConfiguracion está en supabase.js — hace upsert clave a clave
+        // con el cliente autenticado (getSupabase() retorna el cliente con sesión)
+        var r = await guardarConfiguracion(datos);
+        mostrarMsg(seccion, r.ok,
+            r.ok ? '✅ Guardado correctamente.' : '❌ Error al guardar. Verificá que tengas permisos de Administrador.');
+    } catch(e) {
+        console.error('Error guardar ' + seccion + ':', e);
+        mostrarMsg(seccion, false, '❌ Error inesperado: ' + (e.message || String(e)));
+    }
 
-            if (etiquetas.length === 0) {
-                empty.style.display = 'block';
-                return;
-            }
-            empty.style.display = 'none';
+    btn.disabled  = false;
+    btn.innerHTML = textoOrig;
+}
 
-            etiquetas.forEach((etiqueta, idx) => {
-                const color = etiqueta.color;
-                const chip = document.createElement('div');
-                chip.style.cssText = `
-                    display: inline-flex; align-items: center; gap: 8px;
-                    padding: 6px 14px; border-radius: 999px;
-                    background: ${color.bg}; border: 1.5px solid ${color.border};
-                    color: ${color.text}; font-size: 13px; font-weight: 600;
-                    font-family: 'DM Sans', sans-serif;
-                    animation: fadeInChip 0.2s ease;
-                `;
+function mostrarMsg(seccion, ok, texto) {
+    var okEl  = document.getElementById('msg-' + seccion);
+    var errEl = document.getElementById('err-' + seccion);
+    if (!okEl || !errEl) return;
+    okEl.style.display = 'none'; errEl.style.display = 'none';
+    var el = ok ? okEl : errEl;
+    el.textContent = texto; el.style.display = 'block';
+    setTimeout(function(){ el.style.display = 'none'; }, 4000);
+}
 
-                const label = document.createElement('span');
-                label.textContent = etiqueta.nombre;
+/* ══════════════════════════════════
+   ETIQUETAS
+══════════════════════════════════ */
+function renderizarEtiquetas() {
+    var cont  = document.getElementById('etiquetas-container');
+    var empty = document.getElementById('etiquetas-empty');
+    cont.innerHTML = '';
+    if (!etiquetas.length) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    etiquetas.forEach(function(et, idx) {
+        var c    = et.color;
+        var chip = document.createElement('div');
+        chip.className = 'etiqueta-chip';
+        chip.style.cssText = 'background:'+c.bg+';border:1.5px solid '+c.border+';color:'+c.text+';';
+        var lbl = document.createElement('span');
+        lbl.textContent = et.nombre;
+        var del = document.createElement('button');
+        del.innerHTML = '×'; del.title = 'Eliminar';
+        del.style.color = c.text;
+        del.onclick = function(){ eliminarEtiqueta(idx); };
+        chip.appendChild(lbl); chip.appendChild(del);
+        cont.appendChild(chip);
+    });
+}
 
-                const btnEliminar = document.createElement('button');
-                btnEliminar.innerHTML = '×';
-                btnEliminar.title = 'Eliminar etiqueta';
-                btnEliminar.style.cssText = `
-                    background: none; border: none; cursor: pointer;
-                    color: ${color.text}; font-size: 16px; line-height: 1;
-                    padding: 0; opacity: 0.6; font-family: inherit;
-                    transition: opacity 0.15s;
-                `;
-                btnEliminar.onmouseover = () => btnEliminar.style.opacity = '1';
-                btnEliminar.onmouseout = () => btnEliminar.style.opacity = '0.6';
-                btnEliminar.onclick = () => eliminarEtiqueta(idx);
+function agregarEtiqueta() {
+    var input  = document.getElementById('nueva-etiqueta-input');
+    var nombre = input.value.trim();
+    if (!nombre) { mostrarEtError('Ingresá un nombre para la etiqueta.'); input.focus(); return; }
+    if (etiquetas.some(function(e){ return e.nombre.toLowerCase() === nombre.toLowerCase(); })) {
+        mostrarEtError('Ya existe la etiqueta "' + nombre + '".'); input.focus(); return;
+    }
+    etiquetas.push({ nombre: nombre, color: COLORES[colorIdx % COLORES.length] });
+    colorIdx++;
+    input.value = ''; input.focus();
+    renderizarEtiquetas();
+}
 
-                chip.appendChild(label);
-                chip.appendChild(btnEliminar);
-                container.appendChild(chip);
-            });
-        }
+function eliminarEtiqueta(idx) {
+    if (!confirm('¿Eliminar esta etiqueta?')) return;
+    etiquetas.splice(idx, 1);
+    renderizarEtiquetas();
+}
 
-        function agregarEtiqueta() {
-            const input = document.getElementById('nueva-etiqueta-input');
-            const nombre = input.value.trim();
+function mostrarEtError(msg) {
+    var el = document.getElementById('etiqueta-error');
+    el.textContent = msg; el.style.display = 'block';
+    setTimeout(function(){ el.style.display = 'none'; }, 3000);
+}
 
-            if (!nombre) {
-                mostrarError('Por favor ingresá un nombre para la etiqueta.');
-                input.focus();
-                return;
-            }
-            if (etiquetas.some(e => e.nombre.toLowerCase() === nombre.toLowerCase())) {
-                mostrarError(`Ya existe una etiqueta llamada "${nombre}".`);
-                input.focus();
-                return;
-            }
-
-            const color = COLORES_ETIQUETAS[colorIndex % COLORES_ETIQUETAS.length];
-            colorIndex++;
-            etiquetas.push({ nombre, color });
-            input.value = '';
-            input.focus();
-            renderizarEtiquetas();
-        }
-
-        function eliminarEtiqueta(idx) {
-            if (confirm('¿Estás seguro de eliminar esta etiqueta?')) {
-                etiquetas.splice(idx, 1);
-                renderizarEtiquetas();
-            }
-        }
-
-                function navegar(pagina) {
-            if (typeof google !== 'undefined' && google.script) {
-                window.top.location.href = '?page=' + pagina.replace('.html', '');
-                window.location.href = pagina;
-            }
-        }
-
-        /* ── CAMPANA DE NOTIFICACIONES ── */
-        var _notifs = [];
-        function toggleNotif() {
-            var dd = document.getElementById('notif-dropdown');
-            dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-        }
-        document.addEventListener('click', function(e) {
-            var wrapper = document.querySelector('.notif-wrapper');
-            if (wrapper && !wrapper.contains(e.target)) {
-                document.getElementById('notif-dropdown').style.display = 'none';
-            }
-        });
-        function renderNotificaciones(datos) {
-            _notifs = datos || [];
-            var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-            var badge = document.getElementById('notif-badge');
-            badge.textContent = sinLeer;
-            badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-            var lista = document.getElementById('notif-list');
-            if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-            var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
-            var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
-            lista.innerHTML = _notifs.map(function(n) {
-                return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-                    + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-                    + '<div style="flex:1;min-width:0;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p>'
-                    + '<div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
-            }).join('');
-        }
-        function leerNotif(id) {
-            _notifs.forEach(function(n) { if (n.id === id) n.leida = true; });
-            renderNotificaciones(_notifs);
-            if (typeof google !== 'undefined' && google.script) google.script.run.marcarNotificacionLeida(id);
-        }
-        function marcarTodasLeidas() {
-            _notifs.forEach(function(n) { n.leida = true; });
-            renderNotificaciones(_notifs);
-            if (typeof google !== 'undefined' && google.script) google.script.run.marcarTodasNotificacionesLeidas();
-        }
-        function cargarNotificaciones() {
-            if (typeof google !== 'undefined' && google.script) {
-                google.script.run.withSuccessHandler(renderNotificaciones).obtenerNotificaciones('ADMINISTRADOR');
-                renderNotificaciones([
-                    { id:'n1', tipo:'pago', mensaje:'<strong>María González</strong> realizó un pago de <strong>$85.500</strong>', tiempo:'Hace 15 min', leida:false },
-                    { id:'n2', tipo:'mora', mensaje:'<strong>3 estudiantes</strong> nuevos en mora', tiempo:'Hace 1 hora', leida:false },
-                    { id:'n3', tipo:'alerta', mensaje:'Error en proceso automático de <strong>cálculo de mora</strong>', tiempo:'Hace 5 horas', leida:true }
-                ]);
-            }
-        }
-
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeInChip {
-                from { opacity: 0; transform: scale(0.85); }
-                to   { opacity: 1; transform: scale(1); }
-            }
-        `;
-        document.head.appendChild(style);
-
-        cargarEtiquetasIniciales();
-        cargarNotificaciones();
-        cargarConfiguracion();
-
-        /* ══════════════════════════════════════════════
-           CARGAR CONFIGURACIÓN DESDE BACKEND
-           ══════════════════════════════════════════════ */
-        function cargarConfiguracion() {
-            if (typeof google !== 'undefined' && google.script) {
-                google.script.run.withSuccessHandler(aplicarConfiguracion).obtenerConfiguracion();
-                // Datos de ejemplo para desarrollo
-                aplicarConfiguracion({
-                    mora_porcentaje: 5,
-                    mora_dia_inicio: 16,
-                    mora_tipo_calculo: 'ACUMULATIVO',
-                    descuento_perdida_mora: 'SI',
-                    banco_nombre: '',
-                    banco_cbu: '0340 2674 0066 4825 3110 04',
-                    banco_alias: 'FCE.COOP.UNCUYO',
-                    banco_cuit: '30-64825311-3',
-                    email_recordatorios: 'SI',
-                    email_reclamos: 'SI'
-                });
-            }
-        }
-
-        function aplicarConfiguracion(cfg) {
-            if (!cfg) return;
-            // Mora
-            if (cfg.mora_porcentaje !== undefined) document.getElementById('cfg-mora-tasa').value = cfg.mora_porcentaje;
-            if (cfg.mora_dia_inicio !== undefined) document.getElementById('cfg-mora-dia').value = cfg.mora_dia_inicio;
-            if (cfg.mora_tipo_calculo) document.getElementById('cfg-mora-tipo').value = cfg.mora_tipo_calculo;
-            // Descuentos
-            if (cfg.descuento_perdida_mora) document.getElementById('cfg-desc-perdida').value = cfg.descuento_perdida_mora;
-            // Banco
-            if (cfg.banco_nombre !== undefined) document.getElementById('cfg-banco-nombre').value = cfg.banco_nombre;
-            if (cfg.banco_cbu !== undefined) document.getElementById('cfg-banco-cbu').value = cfg.banco_cbu;
-            if (cfg.banco_alias !== undefined) document.getElementById('cfg-banco-alias').value = cfg.banco_alias;
-            if (cfg.banco_cuit !== undefined) document.getElementById('cfg-banco-cuit').value = cfg.banco_cuit;
-            // Emails
-            if (cfg.email_recordatorios) document.getElementById('cfg-email-recordatorios').value = cfg.email_recordatorios;
-            if (cfg.email_reclamos) document.getElementById('cfg-email-reclamos').value = cfg.email_reclamos;
-        }
-
-        /* ══════════════════════════════════════════════
-           GUARDAR SECCIONES
-           ══════════════════════════════════════════════ */
-        function mostrarGuardado(btn, ok) {
-            var textoOriginal = btn.textContent;
-            btn.disabled = true;
-            btn.textContent = ok ? '✅ Guardado correctamente' : '❌ Error al guardar';
-            btn.style.background = ok ? '#2d7a4f' : '#c0392b';
-            setTimeout(function() {
-                btn.disabled = false;
-                btn.textContent = textoOriginal;
-                btn.style.background = '';
-            }, 2500);
-        }
-
-        function guardarConfigMora() {
-            var datos = {
-                mora_porcentaje: parseFloat(document.getElementById('cfg-mora-tasa').value) || 0,
-                mora_dia_inicio: parseInt(document.getElementById('cfg-mora-dia').value) || 16,
-                mora_tipo_calculo: document.getElementById('cfg-mora-tipo').value
-            };
-            var btn = event.target;
-            btn.disabled = true;
-            btn.textContent = '⏳ Guardando…';
-
-            if (typeof google !== 'undefined' && google.script) {
-                google.script.run
-                    .withSuccessHandler(function() { mostrarGuardado(btn, true); })
-                    .withFailureHandler(function() { mostrarGuardado(btn, false); })
-                    .guardarConfiguracion(datos);
-                setTimeout(function() { mostrarGuardado(btn, true); }, 500);
-            }
-        }
-
-        function guardarConfiguracionDescuentos() {
-            var datos = {
-                descuento_perdida_mora: document.getElementById('cfg-desc-perdida').value,
-                etiquetas: etiquetas.map(function(e) { return e.nombre; })
-            };
-            var btn = event.target;
-            btn.disabled = true;
-            btn.textContent = '⏳ Guardando…';
-
-            // Guardar etiquetas en localStorage como respaldo
-            try { localStorage.setItem('sigpo_etiquetas_descuento', JSON.stringify(etiquetas)); } catch(e) {}
-
-            if (typeof google !== 'undefined' && google.script) {
-                google.script.run
-                    .withSuccessHandler(function() { mostrarGuardado(btn, true); })
-                    .withFailureHandler(function() { mostrarGuardado(btn, false); })
-                    .guardarConfiguracion(datos);
-                setTimeout(function() { mostrarGuardado(btn, true); }, 500);
-            }
-        }
-
-        function guardarConfigBanco() {
-            var datos = {
-                banco_nombre: document.getElementById('cfg-banco-nombre').value.trim(),
-                banco_cbu: document.getElementById('cfg-banco-cbu').value.trim(),
-                banco_alias: document.getElementById('cfg-banco-alias').value.trim(),
-                banco_cuit: document.getElementById('cfg-banco-cuit').value.trim()
-            };
-
-            if (!datos.banco_cbu && !datos.banco_alias) {
-                alert('Ingresá al menos el CBU o el Alias.');
-                return;
-            }
-
-            var btn = event.target;
-            btn.disabled = true;
-            btn.textContent = '⏳ Guardando…';
-
-            if (typeof google !== 'undefined' && google.script) {
-                google.script.run
-                    .withSuccessHandler(function() { mostrarGuardado(btn, true); })
-                    .withFailureHandler(function() { mostrarGuardado(btn, false); })
-                    .guardarConfiguracion(datos);
-                setTimeout(function() { mostrarGuardado(btn, true); }, 500);
-            }
-        }
-
-        function guardarConfigEmails() {
-            var datos = {
-                email_recordatorios: document.getElementById('cfg-email-recordatorios').value,
-                email_reclamos: document.getElementById('cfg-email-reclamos').value
-            };
-            var btn = event.target;
-            btn.disabled = true;
-            btn.textContent = '⏳ Guardando…';
-
-            if (typeof google !== 'undefined' && google.script) {
-                google.script.run
-                    .withSuccessHandler(function() { mostrarGuardado(btn, true); })
-                    .withFailureHandler(function() { mostrarGuardado(btn, false); })
-                    .guardarConfiguracion(datos);
-                setTimeout(function() { mostrarGuardado(btn, true); }, 500);
-            }
-        }
-    </script>
+/* ══════════════════════════════════
+   COPIAR CBU / ALIAS
+══════════════════════════════════ */
+function copiar(id, btn) {
+    var val = document.getElementById(id).value;
+    if (!val) return;
+    navigator.clipboard.writeText(val).then(function(){
+        var orig = btn.textContent;
+        btn.textContent = '✓ Copiado';
+        setTimeout(function(){ btn.textContent = orig; }, 1800);
+    }).catch(function(){
+        btn.textContent = 'Error';
+        setTimeout(function(){ btn.textContent = '📋 Copiar'; }, 1800);
+    });
+}
+</script>
 </body>
 </html>

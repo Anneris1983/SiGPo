@@ -293,81 +293,119 @@
 </script>
 
 <script>
+var _chartLine = null, _chartBar = null, _chartDonut = null;
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
+
+function exportarExcel() { alert('Exportando a Excel...'); }
+function exportarPDF() { alert('Exportando a PDF...'); }
+
+async function cargarDatos() {
+    try {
+        var sb = await getSupabase();
+        var rC = await sb.from('cobros').select('programa_id,cohorte_id,dni,estado,fecha_vencimiento,monto_final,saldo_pendiente');
+        var rP = await sb.from('programas').select('programa_id,nombre');
+        var cobros = rC.data || [];
+        var programas = rP.data || [];
+        var progMap = {};
+        programas.forEach(function(p) { progMap[p.programa_id] = p.nombre; });
+
+        // Desertores: cobros con estado A_DEFINIR (estudiantes que salieron del sistema)
+        var desercionPorProg = {};
+        var totalPorProg = {};
+        cobros.forEach(function(c) {
+            var pid = c.programa_id;
+            if (!totalPorProg[pid]) totalPorProg[pid] = new Set();
+            totalPorProg[pid].add(c.dni);
+            if (c.estado === 'A_DEFINIR') {
+                if (!desercionPorProg[pid]) desercionPorProg[pid] = new Set();
+                desercionPorProg[pid].add(c.dni);
+            }
+        });
+
+        var pids = Object.keys(totalPorProg);
+        var progLabels = pids.map(function(pid) { return progMap[pid] || ('Prog. '+pid); });
+        var tasas = pids.map(function(pid) {
+            var t = totalPorProg[pid].size;
+            var d = desercionPorProg[pid] ? desercionPorProg[pid].size : 0;
+            return t > 0 ? parseFloat((d/t*100).toFixed(1)) : 0;
+        });
+        var totalDesercion = pids.reduce(function(s,pid){ return s+(desercionPorProg[pid]?desercionPorProg[pid].size:0); }, 0);
+        var totalEstudiantes = pids.reduce(function(s,pid){ return s+totalPorProg[pid].size; }, 0);
+        var tasaGlobal = totalEstudiantes > 0 ? (totalDesercion/totalEstudiantes*100).toFixed(1) : '0.0';
+        var impacto = cobros.filter(function(c){return c.estado==='A_DEFINIR';}).reduce(function(s,c){return s+Number(c.monto_final||0);},0);
+
+        // Update summary cards
+        var cards = document.querySelectorAll('.summary-card');
+        var svs = document.querySelectorAll('.summary-value');
+        if (svs[0]) svs[0].textContent = tasaGlobal + '%';
+        if (svs[1]) svs[1].textContent = String(totalDesercion);
+        if (svs[2]) svs[2].textContent = fM(impacto);
+
+        // Chart 1: line - cumulative per program (use desercion count / total as % per program)
+        var COLORS = ['#16a34a','#f59e0b','#dc2626','#0ea5e9','#7c3aed','#db2777','#6b7280'];
+        var lineDatasets = pids.slice(0,5).map(function(pid, i) {
+            return {
+                label: esc(progMap[pid] || pid),
+                data: tasas.slice(i,i+1).concat([tasas[i]]), // simplified: flat line at current rate
+                borderColor: COLORS[i%COLORS.length],
+                backgroundColor: COLORS[i%COLORS.length]+'14',
+                borderWidth: 3, fill: true, tension: 0.4, pointRadius: 4
+            };
+        });
+        var ctx1 = document.getElementById('chart-reporte');
+        if (ctx1) {
+            if (_chartLine) _chartLine.destroy();
+            _chartLine = new Chart(ctx1.getContext('2d'), {
+                type: 'line',
+                data: { labels: progLabels.slice(0,5), datasets: lineDatasets },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'top'}, tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y+'%';}}} }, scales:{ y:{beginAtZero:true,ticks:{callback:function(v){return v+'%';}}}, x:{grid:{display:false}} } }
+            });
+        }
+
+        // Chart 2: bar per program
+        var ctx2 = document.getElementById('chart-barras');
+        if (ctx2) {
+            if (_chartBar) _chartBar.destroy();
+            _chartBar = new Chart(ctx2.getContext('2d'), {
+                type: 'bar',
+                data: { labels: progLabels.map(esc), datasets: [{ label:'% Deserción', data: tasas, backgroundColor: pids.map(function(_,i){return COLORS[i%COLORS.length]+'c8';}), borderColor: pids.map(function(_,i){return COLORS[i%COLORS.length];}), borderWidth:1.5, borderRadius:7 }] },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(c){return c.parsed.y+'%';}}} }, scales:{ y:{beginAtZero:true,ticks:{callback:function(v){return v+'%';}}}, x:{grid:{display:false},ticks:{font:{size:11}}} } }
+            });
+        }
+
+        // Chart 3: donut by estado (proxy for motivo)
+        var estadoCounts = { ABONADA:0, EN_MORA:0, A_DEFINIR:0, PENDIENTE:0 };
+        cobros.forEach(function(c) { if (estadoCounts[c.estado] !== undefined) estadoCounts[c.estado]++; else estadoCounts['Otro'] = (estadoCounts['Otro']||0)+1; });
+        var ctx3 = document.getElementById('chart-donut');
+        if (ctx3) {
+            if (_chartDonut) _chartDonut.destroy();
+            _chartDonut = new Chart(ctx3.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Abonada','En Mora','A Definir','Pendiente'],
+                    datasets: [{ data: [estadoCounts.ABONADA, estadoCounts.EN_MORA, estadoCounts.A_DEFINIR, estadoCounts.PENDIENTE], backgroundColor:['#16a34a','#dc2626','#9ca3af','#f59e0b'], borderColor:'#fff', borderWidth:3 }]
+                },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'right',labels:{font:{size:12},boxWidth:14,padding:12}}, tooltip:{callbacks:{label:function(c){return c.label+': '+c.parsed+' cuotas';}}} } }
+            });
+        }
+
+        // Update table
+        var tbody = document.querySelector('.card table tbody');
+        if (tbody) {
+            tbody.innerHTML = pids.map(function(pid,i) {
+                var total = totalPorProg[pid].size;
+                var bajas = desercionPorProg[pid] ? desercionPorProg[pid].size : 0;
+                return '<tr><td>'+esc(progMap[pid]||pid)+'</td><td>—</td><td>'+total+'</td><td>'+bajas+'</td><td>'+tasas[i]+'%</td></tr>';
+            }).join('');
+        }
+    } catch(e) { console.error('Error:', e); }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-
-    // ── GRÁFICA 1 — Línea: evolución acumulada por programa ──
-    new Chart(document.getElementById('chart-reporte').getContext('2d'), {
-        type: 'line',
-        data: {
-            labels: ['Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic','Ene','Feb'],
-            datasets: [
-                { label: 'Esp. Costos y Gestión',      data: [2.1,2.8,3.5,4.2,5.0,5.5,6.1,6.3,6.3,6.3,6.3,6.3], borderColor:'#16a34a', backgroundColor:'rgba(22,163,74,0.08)', borderWidth:3, fill:true, tension:0.4, pointRadius:4 },
-                { label: 'Maestría Dir. Negocios',      data: [1.8,3.2,4.8,5.9,7.1,8.0,8.7,9.2,9.5,9.5,9.5,9.5], borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.08)', borderWidth:3, fill:true, tension:0.4, pointRadius:4 },
-                { label: 'Doctorado Cs. Económicas',    data: [2.5,4.0,6.5,8.2,9.8,10.5,11.2,12.0,12.0,12.0,12.0,12.0], borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,0.08)', borderWidth:3, fill:true, tension:0.4, pointRadius:4 }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}%` } } },
-            scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { callback: v => v + '%' } }, x: { grid: { display: false } } }
-        }
-    });
-
-    // ── GRÁFICA 2 — Barras: % deserción por programa ──
-    new Chart(document.getElementById('chart-barras').getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: ['Esp. Costos y Gestión', 'Maestría Dir. Negocios', 'Doctorado Cs. Econ.', 'Maestría Agronegocios', 'Diplomado ODS'],
-            datasets: [{
-                label: '% Deserción',
-                data: [6.3, 9.5, 12.0, 7.8, 4.2],
-                backgroundColor: ['rgba(22,163,74,0.78)','rgba(245,158,11,0.78)','rgba(220,38,38,0.78)','rgba(14,165,233,0.78)','rgba(107,114,128,0.78)'],
-                borderColor:     ['#16a34a','#f59e0b','#dc2626','#0ea5e9','#6b7280'],
-                borderWidth: 1.5, borderRadius: 7,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.parsed.y}%` } } },
-            scales: {
-                y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { callback: v => v + '%' } },
-                x: { grid: { display: false }, ticks: { font: { size: 11 } } }
-            }
-        }
-    });
-
-    // ── GRÁFICA 3 — Donut: bajas por motivo ──
-    new Chart(document.getElementById('chart-donut').getContext('2d'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Económico', 'Laboral', 'Académico', 'Personal', 'Sin informar'],
-            datasets: [{
-                data: [9, 7, 5, 4, 2],
-                backgroundColor: ['#dc2626','#f59e0b','#4f46e5','#0ea5e9','#9ca3af'],
-                borderColor: '#fff', borderWidth: 3,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'right', labels: { font: { size: 12 }, boxWidth: 14, padding: 12 } },
-                tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed} bajas` } }
-            }
-        }
-    });
-
+    cargarDatos();
+    if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones('ADMINISTRADOR').then(renderNotificaciones);
 });
-
-function exportarExcel() {
-    if (typeof google !== 'undefined') {
-        google.script.run.withSuccessHandler(url => { if (url) window.open(url, '_blank'); }).exportarDesercionExcel();
-    } else { alert('Exportando Tasa de Deserción a Excel…\n(Disponible en Google Apps Script)'); }
-}
-function exportarPDF() {
-    if (typeof google !== 'undefined') {
-        google.script.run.withSuccessHandler(url => { if (url) window.open(url, '_blank'); }).exportarDesercionPDF();
-    } else { alert('Exportando Tasa de Deserción a PDF…\n(Disponible en Google Apps Script)'); }
-}
 </script>
 </body>
-</html>

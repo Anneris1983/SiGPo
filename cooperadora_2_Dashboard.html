@@ -726,19 +726,19 @@
         <div class="stats-grid">
             <div class="stat-card warning">
                 <div class="stat-label">Comprobantes pendientes</div>
-                <div class="stat-value warning">8</div>
+                <div class="stat-value warning" id="stat-pendientes">—</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Recaudado hoy</div>
-                <div class="stat-value">$450k</div>
+                <div class="stat-label">Total recaudado</div>
+                <div class="stat-value" id="stat-recaudado">—</div>
             </div>
             <div class="stat-card danger">
-                <div class="stat-label">Pagos parciales</div>
-                <div class="stat-value danger">12</div>
+                <div class="stat-label">Estudiantes en mora</div>
+                <div class="stat-value danger" id="stat-mora">—</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Aprobados esta semana</div>
-                <div class="stat-value">47</div>
+                <div class="stat-label">Programas activos</div>
+                <div class="stat-value" id="stat-programas">—</div>
             </div>
         </div>
 
@@ -757,7 +757,7 @@
         <div class="tabs">
             <button class="tab active">
                 Nuevos Comprobantes
-                <span class="badge">8</span>
+                <span class="badge" id="tab-badge-pendientes">—</span>
             </button>
 
         </div>
@@ -766,8 +766,12 @@
         <div>
         <h2 class="section-title">🆕 Comprobantes Nuevos - Requieren Aprobación</h2>
 
-        <!-- COMPROBANTE 1 - NUEVO (hace 5 min) -->
-        <div class="comprobante-card new">
+        <div id="comprobantes-lista">
+        <!-- Contenido dinámico -->
+        </div>
+
+        <!-- COMPROBANTE 1 - NUEVO (hace 5 min) - HARDCODED REMOVED -->
+        <div class="comprobante-card new" style="display:none">
             <div class="comprobante-header">
                 <div class="student-info">
                     <h3>María González <span class="new-badge">NUEVO</span></h3>
@@ -989,75 +993,159 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-        function abrirModal(datos) {
-            document.getElementById('modalNombre').textContent = datos.nombre;
-            document.getElementById('modalInfo').textContent = datos.info;
-            document.getElementById('modalCuota').textContent = datos.cuota;
-            document.getElementById('modalMonto').textContent = datos.monto;
-            document.getElementById('modalVencimiento').textContent = datos.vencimiento;
+    /* ══ HELPERS ══ */
+    function fMillones(n) {
+        if (!n) return '$0';
+        var v = Math.round(Number(n));
+        if (v >= 1000000) return '$' + (v/1000000).toFixed(1).replace('.0','') + 'M';
+        if (v >= 1000) return '$' + Math.round(v/1000) + 'K';
+        return '$' + v.toLocaleString('es-AR');
+    }
 
-            const estadoEl = document.getElementById('modalEstado');
-            estadoEl.textContent = datos.estado;
-            estadoEl.className = 'modal-dato-value';
-            if (datos.estado === 'En Mora') estadoEl.classList.add('mora');
-            else if (datos.estado === 'Al día') estadoEl.classList.add('aldia');
+    /* ══ MODAL ══ */
+    function abrirModal(datos) {
+        document.getElementById('modalNombre').textContent = datos.nombre;
+        document.getElementById('modalInfo').textContent = datos.info;
+        document.getElementById('modalCuota').textContent = datos.cuota;
+        document.getElementById('modalMonto').textContent = datos.monto;
+        document.getElementById('modalVencimiento').textContent = datos.vencimiento;
 
-            const visorFrame = document.getElementById('visorFrame');
-            const filename = datos.archivo;
-            const ext = filename.split('.').pop().toLowerCase();
+        var estadoEl = document.getElementById('modalEstado');
+        estadoEl.textContent = datos.estado;
+        estadoEl.className = 'modal-dato-value';
+        if (datos.estado === 'En Mora') estadoEl.classList.add('mora');
+        else if (datos.estado === 'Al dia') estadoEl.classList.add('aldia');
 
-            document.getElementById('btnDescargar').href = filename;
-            document.getElementById('btnDescargar').setAttribute('download', filename);
+        var visorFrame = document.getElementById('visorFrame');
+        var filename = datos.archivo || '';
+        var url = datos.url || filename;
+        var ext = filename.split('.').pop().toLowerCase();
 
-            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-                visorFrame.innerHTML = `<img src="${filename}" alt="Comprobante"
-                    onerror="this.parentElement.innerHTML='<div class=\\'visor-placeholder\\'><div class=\\'icon\\'>🖼️</div><p class=\\'filename\\'>${filename}</p><p>La imagen se verá aquí cuando el sistema esté conectado.</p></div>'" />`;
-            } else if (ext === 'pdf') {
-                visorFrame.innerHTML = `<iframe src="${filename}" title="Comprobante PDF"></iframe>`;
-                visorFrame.innerHTML = `<div class="visor-placeholder"><div class="icon">📎</div><p class="filename">${filename}</p><p>Vista previa disponible cuando el sistema esté conectado a la base de datos.</p></div>`;
-            }
+        document.getElementById('btnDescargar').href = url;
+        document.getElementById('btnDescargar').setAttribute('download', filename);
 
-            document.getElementById('modalOverlay').classList.add('active');
-            document.body.style.overflow = 'hidden';
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].indexOf(ext) >= 0) {
+            visorFrame.innerHTML = '<img src="' + url + '" alt="Comprobante" style="max-width:100%;max-height:420px;object-fit:contain;display:block;" />';
+        } else if (ext === 'pdf') {
+            visorFrame.innerHTML = '<div class="visor-placeholder"><div class="icon">📎</div><p class="filename">' + filename + '</p><p>Vista previa de PDF disponible al descargar.</p></div>';
+        } else {
+            visorFrame.innerHTML = '<div class="visor-placeholder"><div class="icon">📄</div><p class="filename">' + filename + '</p><p>Descargue el archivo para verlo.</p></div>';
         }
 
-        function cerrarModal() {
-            document.getElementById('modalOverlay').classList.remove('active');
-            document.body.style.overflow = '';
+        document.getElementById('modalOverlay').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function cerrarModalSiOverlay(e) {
+        if (e.target === document.getElementById('modalOverlay')) cerrarModal();
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') cerrarModal();
+    });
+
+    /* ══ RENDER COMPROBANTES ══ */
+    function renderComprobantes(cobros) {
+        var lista = document.getElementById('comprobantes-lista');
+        if (!cobros || cobros.length === 0) {
+            lista.innerHTML = '<div class="empty-state"><div class="icon">✅</div><h3>No hay comprobantes pendientes de revision</h3></div>';
+            document.getElementById('stat-pendientes').textContent = '0';
+            document.getElementById('tab-badge-pendientes').textContent = '0';
+            return;
         }
 
-        function cerrarModalSiOverlay(e) {
-            if (e.target === document.getElementById('modalOverlay')) cerrarModal();
-        }
+        document.getElementById('stat-pendientes').textContent = cobros.length;
+        document.getElementById('tab-badge-pendientes').textContent = cobros.length;
 
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') cerrarModal();
-        });
-    
-    /* Navegación y sesión proporcionadas por supabase.js */
-    
-        /* ══ CAMPANA ══ */
-    var _notifs = [];
-    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
-    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
-    function renderNotificaciones(datos) {
-        _notifs = datos || [];
-        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-        var lista = document.getElementById('notif-list');
-        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-        var iconos = { pago:'\u{1f4b0}', mora:'\u{1f534}', solicitud:'\u{1f4cb}', reclamo:'\u26a0\ufe0f', alerta:'\u{1f6a8}' };
-        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
-        lista.innerHTML = _notifs.map(function(n) {
-            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+        lista.innerHTML = cobros.map(function(c) {
+            var estudiante = c.estudiantes || {};
+            var nombre = ((estudiante.apellido || c.apellido || '') + ', ' + (estudiante.nombre || c.nombre || '')).trim().replace(/^,\s*|,\s*$/, '');
+            if (!nombre || nombre === ', ') nombre = c.dni || '—';
+            var dni = estudiante.dni || c.dni || '—';
+            var programa = c.programas ? c.programas.nombre : (c.programa_nombre || '—');
+            var monto = fMillones(c.monto_final || c.monto_cuota || 0);
+            var vencimiento = fFecha(c.fecha_vencimiento);
+            var tiempo = tiempoRelativo(c.updated_at || c.created_at);
+            var esReciente = (new Date() - new Date(c.updated_at || c.created_at)) < 3600000;
+            var enMora = c.estado === 'EN_MORA';
+            var archivoUrl = c.comprobante_url || '';
+            var archivoNombre = archivoUrl ? archivoUrl.split('/').pop() : 'comprobante';
+            var cuotaLabel = c.numero_cuota ? 'Cuota ' + c.numero_cuota : '—';
+            var estadoLabel = enMora ? 'En Mora' : 'Al dia';
+            var nombreEsc = nombre.replace(/'/g, "\\'");
+            var programaEsc = programa.replace(/'/g, "\\'");
+            var modalCall = "abrirModal({nombre:'" + nombreEsc + "',info:'DNI: " + dni + " - " + programaEsc + "',cuota:'" + cuotaLabel + "',monto:'" + monto + "',vencimiento:'" + vencimiento + "',estado:'" + estadoLabel + "',archivo:'" + archivoNombre + "',url:'" + archivoUrl + "'})";
+
+            return '<div class="comprobante-card' + (esReciente ? ' new' : '') + '">'
+                + '<div class="comprobante-header">'
+                +   '<div class="student-info">'
+                +     '<h3>' + nombre + (esReciente ? ' <span class="new-badge">NUEVO</span>' : '') + '</h3>'
+                +     '<p>DNI: ' + dni + ' - ' + programa + '</p>'
+                +   '</div>'
+                +   '<div class="time-badge' + (esReciente ? ' recent' : '') + '">⏱️ ' + tiempo + '</div>'
+                + '</div>'
+                + '<div class="cuota-info"><div class="cuota-grid">'
+                +   '<div class="cuota-item"><div class="cuota-label">Cuota</div><div class="cuota-value">' + cuotaLabel + '</div></div>'
+                +   '<div class="cuota-item"><div class="cuota-label">Monto</div><div class="cuota-value highlight">' + monto + '</div></div>'
+                +   '<div class="cuota-item"><div class="cuota-label">Vencimiento</div><div class="cuota-value">' + vencimiento + '</div></div>'
+                +   '<div class="cuota-item"><div class="cuota-label">Estado</div><div class="cuota-value" style="color:' + (enMora ? 'var(--danger)' : 'var(--success)') + ';">' + estadoLabel + '</div></div>'
+                + '</div></div>'
+                + '<div class="files-section">'
+                +   '<div class="file-preview" onclick="' + modalCall + '">'
+                +     '<div class="file-icon">📎</div>'
+                +     '<div class="file-details"><div class="file-name">' + archivoNombre + '</div><div class="file-meta">Subido: ' + fFecha(c.updated_at || c.created_at) + '</div></div>'
+                +   '</div>'
+                + '</div>'
+                + '<div class="actions">'
+                +   '<button class="btn btn-outline" onclick="' + modalCall + '">🔍 Ver Comprobante</button>'
+                +   '<button class="btn btn-success" onclick="navegar('cooperadora_8_aprobar_pagos.html')">✅ Aprobar</button>'
+                +   '<button class="btn btn-danger">❌ Rechazar</button>'
+                + '</div>'
+                + '</div>';
         }).join('');
     }
-    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
-    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
-    // Notificaciones cargadas por supabase.js automáticamente
 
+    /* ══ INIT ══ */
+    document.addEventListener('DOMContentLoaded', function() {
+        var sesion = getSesion();
+        if (!sesion) { navegar('portal_login.html'); return; }
+
+        /* Dashboard stats + comprobantes pendientes + notificaciones en paralelo */
+        Promise.all([
+            obtenerDashboardAdmin(),
+            getSupabase().then(function(sb) {
+                return sb.from('cobros')
+                    .select('*, estudiantes(nombre, apellido, dni), programas(nombre)')
+                    .eq('estado', 'PENDIENTE')
+                    .not('comprobante_url', 'is', null)
+                    .order('updated_at', { ascending: false })
+                    .then(function(res) { return res.data || []; });
+            }),
+            obtenerNotificaciones('COOPERADORA')
+        ]).then(function(resultados) {
+            var dash = resultados[0] || {};
+            var cobros = resultados[1] || [];
+            var notifs = resultados[2] || [];
+
+            /* Stats */
+            document.getElementById('stat-recaudado').textContent = fMillones(dash.recaudado);
+            document.getElementById('stat-mora').textContent = dash.enMora !== undefined ? dash.enMora : '—';
+            document.getElementById('stat-programas').textContent = dash.totalProgramas !== undefined ? dash.totalProgramas : '—';
+
+            /* Comprobantes */
+            renderComprobantes(cobros);
+
+            /* Notificaciones */
+            renderNotificaciones(notifs);
+        }).catch(function(err) {
+            console.error('Error cargando dashboard:', err);
+        });
+    });
 </script>
 
 </body>

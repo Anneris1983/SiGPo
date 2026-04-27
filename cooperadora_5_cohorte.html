@@ -1279,19 +1279,15 @@
         function cargarDetalleCohorte() {
             mostrarLoadingTabla();
 
-            if (estaEnAppsScript()) {
-                google.script.run
-                    .withSuccessHandler(function (respuesta) {
-                        vistaData = normalizarDetalle(respuesta);
-                        renderVista();
-                    })
-                    .withFailureHandler(function (error) {
-                        mostrarErrorTabla(obtenerMensajeError(error, 'No se pudo cargar el detalle de la cohorte.'));
-                    })
-                    .obtenerDetalleCohorteCooperadora(programaId, cohorteId);
-                vistaData = normalizarDetalle(obtenerDemoDetalle());
-                renderVista();
-            }
+            google.script.run
+                .withSuccessHandler(function (respuesta) {
+                    vistaData = normalizarDetalle(respuesta);
+                    renderVista();
+                })
+                .withFailureHandler(function (error) {
+                    mostrarErrorTabla(obtenerMensajeError(error, 'No se pudo cargar el detalle de la cohorte.'));
+                })
+                .obtenerDetalleCohorteCooperadora(programaId, cohorteId);
         }
 
         function normalizarDetalle(data) {

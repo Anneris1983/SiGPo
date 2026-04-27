@@ -200,15 +200,15 @@
         <div class="summary-cards">
             <div class="summary-card">
                 <div class="summary-label">Total Ingresos</div>
-                <div class="summary-value" style="color: #16a34a;">$42,500,000</div>
+                <div class="summary-value" id="sc-ingresos" style="color: #16a34a;">—</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">Total Egresos</div>
-                <div class="summary-value" style="color: #dc2626;">$8,200,000</div>
+                <div class="summary-value" id="sc-egresos" style="color: #dc2626;">—</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">Balance Neto</div>
-                <div class="summary-value" style="color: #0891b2;">$34,300,000</div>
+                <div class="summary-value" id="sc-balance" style="color: #0891b2;">—</div>
             </div>
         </div>
 
@@ -229,10 +229,7 @@
                         <th>Margen %</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr><td>Enero 2025</td><td>$3,200,000</td><td>$680,000</td><td>$2,520,000</td><td>78.8%</td></tr>
-                    <tr><td>Febrero 2025</td><td>$4,100,000</td><td>$740,000</td><td>$3,360,000</td><td>82.0%</td></tr>
-                    <tr><td>Marzo 2025</td><td>$5,800,000</td><td>$890,000</td><td>$4,910,000</td><td>84.7%</td></tr>
+                <tbody id="tbody-egresos-ingresos">
                 </tbody>
             </table>
 
@@ -446,8 +443,96 @@ function imprimirReporte() {
     window.print();
 }
 
+// ── Helpers ──
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function mesLabel(iso) { var meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; var p=String(iso||'').split('T')[0].split('-'); return p.length>=2 ? meses[parseInt(p[1])-1]+' '+p[0] : iso||''; }
+function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
+
+async function cargarDatos() {
+    try {
+        var sb = await getSupabase();
+        var rCobros  = await sb.from('cobros').select('*');
+        var rEgresos = await sb.from('egresos').select('*');
+        var cobros   = rCobros.data  || [];
+        var egresos  = rEgresos.data || [];
+
+        // ── Agrupar cobros por mes (ingresos) ──
+        var ingMap = {};
+        cobros.forEach(function(c) {
+            if (c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL') return;
+            var k = mesKey(c.fecha_vencimiento);
+            if (!k) return;
+            if (!ingMap[k]) ingMap[k] = 0;
+            ingMap[k] += Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0);
+        });
+
+        // ── Agrupar egresos por mes ──
+        var egMap = {};
+        egresos.forEach(function(e) {
+            if (e.tipo !== 'EJECUTADO' && e.estado !== 'CANCELADO') return;
+            var k = mesKey(e.fecha_ejecucion);
+            if (!k) return;
+            if (!egMap[k]) egMap[k] = 0;
+            egMap[k] += Number(e.monto_pagado || 0);
+        });
+
+        // ── Unión de meses ordenados ──
+        var allKeys = {};
+        Object.keys(ingMap).forEach(function(k) { allKeys[k] = true; });
+        Object.keys(egMap).forEach(function(k) { allKeys[k] = true; });
+        var meses = Object.keys(allKeys).sort();
+
+        // ── Calcular totales ──
+        var totalIng = 0, totalEg = 0;
+        meses.forEach(function(k) {
+            totalIng += ingMap[k] || 0;
+            totalEg  += egMap[k]  || 0;
+        });
+        var totalBal = totalIng - totalEg;
+
+        // ── Actualizar summary cards ──
+        var scI = document.getElementById('sc-ingresos');
+        var scE = document.getElementById('sc-egresos');
+        var scB = document.getElementById('sc-balance');
+        if (scI) scI.textContent = fM(totalIng);
+        if (scE) scE.textContent = fM(totalEg);
+        if (scB) scB.textContent = fM(totalBal);
+
+        // ── Construir filas de tabla ──
+        var tbody = document.getElementById('tbody-egresos-ingresos');
+        if (!tbody) tbody = document.querySelector('#tabla-egresos-ingresos tbody');
+        if (tbody) {
+            if (meses.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#666;">Sin datos disponibles</td></tr>';
+            } else {
+                tbody.innerHTML = meses.map(function(k) {
+                    var ing = ingMap[k] || 0;
+                    var eg  = egMap[k]  || 0;
+                    var bal = ing - eg;
+                    var margen = ing > 0 ? ((bal / ing) * 100).toFixed(1) + '%' : '—';
+                    return '<tr>'
+                        + '<td>' + esc(mesLabel(k + '-01')) + '</td>'
+                        + '<td>' + fM(ing) + '</td>'
+                        + '<td>' + fM(eg)  + '</td>'
+                        + '<td>' + fM(bal) + '</td>'
+                        + '<td>' + margen  + '</td>'
+                        + '</tr>';
+                }).join('');
+            }
+        }
+
+        // ── Iniciar gráfico con datos de la tabla ──
+        iniciarGrafico();
+
+    } catch(e) {
+        console.error('cargarDatos error:', e);
+        iniciarGrafico();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    iniciarGrafico();
+    cargarDatos();
 });
 </script>
 </body>

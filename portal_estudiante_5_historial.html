@@ -167,27 +167,27 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon">💰</div>
-                <div class="stat-value">$1.287.000</div>
+                <div class="stat-value" id="stat-abonado">—</div>
                 <div class="stat-label">Total abonado histórico</div>
-                <div class="stat-sub">↑ En todos los programas</div>
+                <div class="stat-sub" id="stat-abonado-sub">↑ En todos los programas</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">📅</div>
-                <div class="stat-value">$85.500</div>
-                <div class="stat-label">Promedio mensual pagado</div>
-                <div class="stat-sub">Últimos 6 meses</div>
+                <div class="stat-value" id="stat-pendiente">—</div>
+                <div class="stat-label">Saldo pendiente total</div>
+                <div class="stat-sub" id="stat-pendiente-sub">—</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">✅</div>
-                <div class="stat-value">16</div>
-                <div class="stat-label">Cuotas abonadas en total</div>
-                <div class="stat-sub">Sobre 36 cuotas totales</div>
+                <div class="stat-value" id="stat-cuotas">—</div>
+                <div class="stat-label">Cuotas abonadas</div>
+                <div class="stat-sub" id="stat-cuotas-sub">—</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">⚠️</div>
-                <div class="stat-value">$8.550</div>
-                <div class="stat-label">Intereses generados</div>
-                <div class="stat-sub" style="color: var(--danger);">↑ Por mora en 2 cuotas</div>
+                <div class="stat-value" id="stat-mora">—</div>
+                <div class="stat-label">Cuotas en mora</div>
+                <div class="stat-sub" id="stat-mora-sub" style="color:var(--danger);">—</div>
             </div>
         </div>
 
@@ -200,104 +200,18 @@
             </div>
         </div>
 
-        <!-- Distribución por carrera -->
+        <!-- Distribución por programa -->
         <div class="section">
-            <div class="section-title">🎓 Distribución por Carrera</div>
-            <div class="distrib-grid">
-                <div class="distrib-card">
-                    <div class="distrib-nombre">Esp. Costos y Gestión</div>
-                    <div class="distrib-row"><span class="distrib-label">Pagado</span><span class="distrib-valor" style="color:var(--success)">$513.000</span></div>
-                    <div class="distrib-row"><span class="distrib-label">Pendiente</span><span class="distrib-valor" style="color:var(--danger)">$513.000</span></div>
-                    <div class="distrib-row"><span class="distrib-label">Progreso</span><span class="distrib-valor">6/12</span></div>
-                    <div class="distrib-progress"><div class="distrib-progress-fill" style="width:50%; background:#3b82f6;"></div></div>
-                </div>
-                <div class="distrib-card">
-                    <div class="distrib-nombre">Maestría MBM</div>
-                    <div class="distrib-row"><span class="distrib-label">Pagado</span><span class="distrib-valor" style="color:var(--success)">$342.000</span></div>
-                    <div class="distrib-row"><span class="distrib-label">Pendiente</span><span class="distrib-valor" style="color:var(--danger)">$1.710.000</span></div>
-                    <div class="distrib-row"><span class="distrib-label">Progreso</span><span class="distrib-valor">4/18 (parcial)</span></div>
-                    <div class="distrib-progress"><div class="distrib-progress-fill" style="width:22%; background:#7c3aed;"></div></div>
-                </div>
-                <div class="distrib-card">
-                    <div class="distrib-nombre">Diplomado ODS</div>
-                    <div class="distrib-row"><span class="distrib-label">Pagado</span><span class="distrib-valor" style="color:var(--success)">$360.000</span></div>
-                    <div class="distrib-row"><span class="distrib-label">Pendiente</span><span class="distrib-valor" style="color:var(--success)">$0</span></div>
-                    <div class="distrib-row"><span class="distrib-label">Progreso</span><span class="distrib-valor">6/6 ✅</span></div>
-                    <div class="distrib-progress"><div class="distrib-progress-fill" style="width:100%; background:var(--success);"></div></div>
-                </div>
+            <div class="section-title">🎓 Distribución por Programa</div>
+            <div class="distrib-grid" id="distribGrid">
+                <div style="grid-column:1/-1;text-align:center;color:#aaa;padding:24px;">Cargando...</div>
             </div>
         </div>
 
         <!-- Línea de tiempo reciente -->
         <div class="section">
             <div class="section-title">🕐 Actividad Reciente</div>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-success"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-header">
-                            <div class="timeline-titulo">✅ Pago aprobado - Cuota 03/18 MBM</div>
-                            <div class="timeline-fecha">12 ago 2025, 14:30 hs</div>
-                        </div>
-                        <div class="timeline-desc">Cuota 03/18 de Maestría MBM · Aprobado por Cooperadora</div>
-                        <div class="timeline-monto monto-pos">+$114.000</div>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-danger"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-header">
-                            <div class="timeline-titulo">⚠️ Interés por mora generado - Cuota 08/12 Esp. Costos</div>
-                            <div class="timeline-fecha">16 oct 2025, 00:30 hs</div>
-                        </div>
-                        <div class="timeline-desc">Se generó interés del 5% por mora en cuota 08/12 (automático)</div>
-                        <div class="timeline-monto monto-neg">+$4.275 mora</div>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-danger"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-header">
-                            <div class="timeline-titulo">⚠️ Interés por mora generado - Cuota 07/12 Esp. Costos</div>
-                            <div class="timeline-fecha">16 sep 2025, 00:30 hs</div>
-                        </div>
-                        <div class="timeline-desc">Se generó interés del 5% por mora en cuota 07/12 (automático)</div>
-                        <div class="timeline-monto monto-neg">+$4.275 mora</div>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-info"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-header">
-                            <div class="timeline-titulo">📎 Comprobante recibido - Cuota 04/18 MBM (pago parcial)</div>
-                            <div class="timeline-fecha">12 jun 2025, 09:15 hs</div>
-                        </div>
-                        <div class="timeline-desc">Pago parcial de $50.000 · Saldo restante: $64.000 · Pendiente aprobación</div>
-                        <div class="timeline-monto" style="color:#3b82f6;">Pago parcial: $50.000</div>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-success"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-header">
-                            <div class="timeline-titulo">✅ Pago aprobado - Cuota 04/12 Esp. Costos</div>
-                            <div class="timeline-fecha">10 jun 2025, 11:00 hs</div>
-                        </div>
-                        <div class="timeline-desc">Cuota 04/12 de Especialización en Costos · Aprobado por Cooperadora</div>
-                        <div class="timeline-monto monto-pos">+$85.500</div>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-success"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-header">
-                            <div class="timeline-titulo">🏅 Certificado de libre deuda emitido - Diplomado ODS</div>
-                            <div class="timeline-fecha">15 ene 2025, 08:00 hs</div>
-                        </div>
-                        <div class="timeline-desc">Todas las cuotas del Diplomado en ODS fueron abonadas. Certificado disponible en Facturación.</div>
-                        <div class="timeline-monto" style="color:var(--success);">Libre deuda ✅</div>
-                    </div>
-                </div>
+            <div class="timeline" id="timeline">
             </div>
         </div>
 
@@ -310,11 +224,8 @@
 
             <div class="filtros">
                 <span class="filtro-label">Filtrar:</span>
-                <select class="filtro-select" onchange="filtrarCarrera(this.value)">
-                    <option value="todas">Todas las carreras</option>
-                    <option value="costos">Esp. Costos</option>
-                    <option value="mbm">Maestría MBM</option>
-                    <option value="ods">Diplomado ODS</option>
+                <select class="filtro-select" id="filtroPrograma" onchange="filtrarPrograma(this.value)">
+                    <option value="todos">Todos los programas</option>
                 </select>
                 <select class="filtro-select" onchange="filtrarTipo(this.value)">
                     <option value="todos">Todos los tipos</option>
@@ -355,158 +266,270 @@
         </div>
     </div>
 
+    <div id="spin-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,0.75);z-index:9000;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
+        <div style="width:38px;height:38px;border:4px solid #e0e0e0;border-top-color:#1e3a5f;border-radius:50%;animation:_sp 0.8s linear infinite;"></div>
+        <span style="color:#1e3a5f;font-weight:600;">Cargando...</span>
+    </div>
+    <style>@keyframes _sp{to{transform:rotate(360deg);}}</style>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
-<script>
-        const movimientos = [
-            { fecha:'15/08/2025', carreraId:'mbm',    carreraTag:'tag-mbm',    concepto:'Cuota 03/18', orig:120000, desc:5, final:114000, saldo:0,      estado:'ABONADA' },
-            { fecha:'15/07/2025', carreraId:'mbm',    carreraTag:'tag-mbm',    concepto:'Cuota 02/18', orig:120000, desc:5, final:114000, saldo:0,      estado:'ABONADA' },
-            { fecha:'15/06/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 04/12', orig:90000,  desc:5, final:85500,  saldo:0,      estado:'ABONADA' },
-            { fecha:'15/06/2025', carreraId:'mbm',    carreraTag:'tag-mbm',    concepto:'Cuota 04/18', orig:120000, desc:5, final:114000, saldo:64000,  estado:'PAGO_PARCIAL' },
-            { fecha:'15/05/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 03/12', orig:90000,  desc:5, final:85500,  saldo:0,      estado:'ABONADA' },
-            { fecha:'15/05/2025', carreraId:'mbm',    carreraTag:'tag-mbm',    concepto:'Cuota 01/18', orig:120000, desc:5, final:114000, saldo:0,      estado:'ABONADA' },
-            { fecha:'15/04/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 02/12', orig:90000,  desc:5, final:85500,  saldo:0,      estado:'ABONADA' },
-            { fecha:'15/09/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 07/12', orig:90000,  desc:5, final:85500,  saldo:85500,  estado:'EN_MORA' },
-            { fecha:'15/10/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 08/12', orig:90000,  desc:5, final:85500,  saldo:85500,  estado:'EN_MORA' },
-            { fecha:'15/03/2025', carreraId:'costos', carreraTag:'tag-costos', concepto:'Cuota 01/12', orig:90000,  desc:5, final:85500,  saldo:0,      estado:'ABONADA' },
-            { fecha:'15/01/2025', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 06/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
-            { fecha:'15/12/2024', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 05/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
-            { fecha:'15/11/2024', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 04/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
-            { fecha:'15/10/2024', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 03/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
-            { fecha:'15/09/2024', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 02/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
-            { fecha:'15/08/2024', carreraId:'ods',    carreraTag:'tag-ods',    concepto:'Cuota 01/06', orig:60000,  desc:0, final:60000,  saldo:0,      estado:'ABONADA' },
-        ];
+    <script src="supabase.js"></script>
+    <script>
+    /* ══════════════════════════════════════════════════
+       HISTORIAL — datos reales desde Supabase
+    ══════════════════════════════════════════════════ */
+    var _cobros    = [];
+    var _programas = {};
+    var _cohortes  = {};
+    var _fPrograma = 'todos';
+    var _fTipo     = 'todos';
+    var _pag       = 1;
+    var POR_PAGINA = 10;
+    var _filtrados = [];
 
-        const nombreCarrera = { costos:'Esp. Costos', mbm:'Maestría MBM', ods:'Diplomado ODS' };
-        const estadoMap = {
-            'ABONADA':     ['estado-abonada',  '✅ Abonada'],
-            'EN_MORA':     ['estado-mora',      '🔴 En mora'],
-            'PENDIENTE':   ['estado-pendiente', '🕐 Pendiente de revisión'],
-            'NO_ABONADA':  ['estado-noabonada', '🔵 No abonada'],
-            'PAGO_PARCIAL':['estado-parcial',   '🔵 Parcial'],
-            'A_DEFINIR':   ['estado-adefinir',  '⚙️ A definir'],
-        };
+    var ESTADO_MAP = {
+        'ABONADA':     ['estado-abonada',  '✅ Abonada'],
+        'EN_MORA':     ['estado-mora',     '🔴 En mora'],
+        'PENDIENTE':   ['estado-pendiente','🕐 En revisión'],
+        'NO_ABONADA':  ['estado-noabonada','⬜ No abonada'],
+        'PAGO_PARCIAL':['estado-parcial',  '🔵 Parcial'],
+        'A_DEFINIR':   ['estado-adefinir', '⚙️ A definir'],
+        'NO_APLICA':   ['estado-adefinir', '— No aplica'],
+    };
+    var PROG_COLORS = ['#3b82f6','#7c3aed','#059669','#dc2626','#f59e0b','#6366f1','#0891b2'];
 
-        let fCarrera = 'todas', fTipo = 'todos';
-        let paginaActual = 1;
-        const POR_PAGINA = 10;
-        let listaFiltrada = [];
+    function spin(on) { document.getElementById('spin-overlay').style.display = on ? 'flex' : 'none'; }
+    function fM(n) {
+        if (n===null||n===undefined) return '$0';
+        var v = Math.round(Number(n)||0);
+        if (v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
+        if (v>=1000)    return '$'+Math.round(v/1000)+'k';
+        return '$'+v.toLocaleString('es-AR');
+    }
+    function fFecha(f) {
+        if (!f) return '—';
+        var p = String(f).split('T')[0].split('-');
+        return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : f;
+    }
+    function calcAbonado(c) {
+        return Math.max(0,(Number(c.monto_final)||0)-(Number(c.saldo_pendiente)||0));
+    }
+    function resolveEst(c) {
+        if (c.no_aplica===true) return 'NO_APLICA';
+        return String(c.estado||'NO_ABONADA').toUpperCase();
+    }
 
-        function formatM(n) { return '$' + n.toLocaleString('es-AR'); }
+    /* ── INIT ── */
+    document.addEventListener('DOMContentLoaded', async function() {
+        var sesion = getSesion();
+        if (!sesion) { window.location.href = 'portal_login.html'; return; }
+        obtenerNotificaciones('ESTUDIANTE').then(renderNotificaciones);
+        await cargar(sesion);
+    });
 
-        function filtrarCarrera(v) { fCarrera = v; paginaActual = 1; renderTabla(); }
-        function filtrarTipo(v)    { fTipo = v;    paginaActual = 1; renderTabla(); }
+    async function cargar(sesion) {
+        spin(true);
+        try {
+            var sb = await getSupabase();
+            var cobRes = await sb.from('cobros')
+                .select('cobro_id,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,programa_id,cohorte_id')
+                .eq('dni', sesion.dni)
+                .order('fecha_vencimiento', {ascending: false});
+            if (cobRes.error) throw cobRes.error;
+            _cobros = (cobRes.data||[]).filter(function(c){ return c.no_aplica !== true; });
 
-        function cambiarPagina(delta) {
-            const totalPaginas = Math.max(1, Math.ceil(listaFiltrada.length / POR_PAGINA));
-            paginaActual = Math.max(1, Math.min(paginaActual + delta, totalPaginas));
+            var pRes = await sb.from('programas').select('programa_id,nombre');
+            var cRes = await sb.from('cohortes').select('cohorte_id,nombre');
+            (pRes.data||[]).forEach(function(p){ _programas[p.programa_id]=p.nombre; });
+            (cRes.data||[]).forEach(function(c){ _cohortes[c.cohorte_id]=c.nombre; });
+
+            poblarFiltroPrograma();
+            renderStats();
+            renderDistrib();
+            renderTimeline();
+            renderChart();
             renderTabla();
-        }
+        } catch(e) {
+            console.error('Error historial:', e);
+        } finally { spin(false); }
+    }
 
-        function renderTabla() {
-            listaFiltrada = movimientos.slice();
-            if (fCarrera !== 'todas') listaFiltrada = listaFiltrada.filter(m => m.carreraId === fCarrera);
-            if (fTipo !== 'todos')    listaFiltrada = listaFiltrada.filter(m => m.estado === fTipo);
+    /* ── FILTRO PROGRAMA ── */
+    function poblarFiltroPrograma() {
+        var progs = {};
+        _cobros.forEach(function(c){ if(c.programa_id) progs[c.programa_id]=_programas[c.programa_id]||('Programa '+c.programa_id); });
+        var sel = document.getElementById('filtroPrograma');
+        sel.innerHTML = '<option value="todos">Todos los programas</option>'
+            + Object.keys(progs).map(function(id){ return '<option value="'+id+'">'+progs[id]+'</option>'; }).join('');
+    }
+    function filtrarPrograma(v){ _fPrograma=v; _pag=1; renderTabla(); }
+    function filtrarTipo(v)    { _fTipo=v;     _pag=1; renderTabla(); }
+    function cambiarPagina(d) {
+        var tot=Math.max(1,Math.ceil(_filtrados.length/POR_PAGINA));
+        _pag=Math.max(1,Math.min(_pag+d,tot)); renderTabla();
+    }
 
-            const total = listaFiltrada.length;
-            const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
-            if (paginaActual > totalPaginas) paginaActual = totalPaginas;
+    /* ── STATS ── */
+    function renderStats() {
+        var abonadas = _cobros.filter(function(c){ return resolveEst(c)==='ABONADA'; });
+        var mora     = _cobros.filter(function(c){ return resolveEst(c)==='EN_MORA'; });
+        var totalAbon= _cobros.reduce(function(s,c){ return s+calcAbonado(c); },0);
+        var totalPend= _cobros.reduce(function(s,c){ return s+(Number(c.saldo_pendiente)||0); },0);
+        var nProgs   = Object.keys(_cobros.reduce(function(m,c){ if(c.programa_id)m[c.programa_id]=1; return m; },{})).length;
 
-            const desde = (paginaActual - 1) * POR_PAGINA;
-            const hasta = Math.min(desde + POR_PAGINA, total);
-            const pagina = listaFiltrada.slice(desde, hasta);
+        document.getElementById('stat-abonado').textContent     = fM(totalAbon);
+        document.getElementById('stat-abonado-sub').textContent = 'En '+nProgs+' programa(s)';
+        document.getElementById('stat-pendiente').textContent   = fM(totalPend);
+        document.getElementById('stat-pendiente-sub').textContent = totalPend>0 ? '↑ Saldo a regularizar' : '✅ Sin deuda pendiente';
+        document.getElementById('stat-cuotas').textContent      = abonadas.length+'/'+_cobros.length;
+        document.getElementById('stat-cuotas-sub').textContent  = 'cuotas completadas';
+        document.getElementById('stat-mora').textContent        = mora.length;
+        document.getElementById('stat-mora-sub').textContent    = mora.length>0 ? mora.length+' cuota(s) vencida(s)' : '✅ Sin cuotas en mora';
+        document.getElementById('stat-mora-sub').style.color    = mora.length>0 ? 'var(--danger)' : 'var(--success)';
+    }
 
-            document.getElementById('tablaHistorial').innerHTML = pagina.length ? pagina.map(m => {
-                const [cls, txt] = estadoMap[m.estado] || ['estado-pendiente', m.estado];
-                return `
-                    <tr>
-                        <td>${m.fecha}</td>
-                        <td><span class="carrera-tag ${m.carreraTag}">${nombreCarrera[m.carreraId]}</span></td>
-                        <td>${m.concepto}</td>
-                        <td>${m.desc > 0 ? '<span style="text-decoration:line-through;color:#bbb;font-size:12px;">' + formatM(m.orig) + '</span>' : formatM(m.orig)}</td>
-                        <td>${m.desc > 0 ? '<span style="color:var(--success);font-weight:600;">-' + m.desc + '%</span>' : '&mdash;'}</td>
-                        <td style="font-weight:700;">${formatM(m.final)}</td>
-                        <td style="font-weight:700; color:${m.saldo > 0 ? 'var(--danger)':'var(--success)'};">${formatM(m.saldo)}</td>
-                        <td><span class="estado-badge ${cls}">${txt}</span></td>
-                    </tr>
-                `;
-            }).join('') : '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:24px;">Sin resultados</td></tr>';
-
-            // Paginación
-            document.getElementById('pagInfo').innerHTML =
-                total > 0
-                ? '<strong>' + (desde+1) + '–' + hasta + '</strong> de <strong>' + total + '</strong>'
-                : '0 resultados';
-            document.getElementById('pagNum').textContent = 'Página ' + paginaActual + ' de ' + totalPaginas;
-            document.getElementById('btnAnterior').disabled = paginaActual === 1;
-            document.getElementById('btnSiguiente').disabled = paginaActual >= totalPaginas;
-        }
-
-        // Gráfico de barras
-        function renderChart() {
-            const meses = ['Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-            const valores = [85500, 85500, 171000, 249500, 114000, 114000, 85500, 85500, 0, 0];
-            const maxVal = Math.max(...valores);
-
-            const chart = document.getElementById('barChart');
-            const labels = document.getElementById('barLabels');
-            chart.innerHTML = '';
-            labels.innerHTML = '';
-
-            meses.forEach((mes, i) => {
-                const h = maxVal > 0 ? Math.round((valores[i] / maxVal) * 110) : 4;
-                const esMora = mes === 'Sep' || mes === 'Oct';
-                const color = esMora ? 'var(--danger)' : (valores[i] === 0 ? '#e0e0e0' : 'var(--primary)');
-                chart.innerHTML += `
-                    <div class="bar-col">
-                        <div class="bar-val" style="font-size:10px; color:${valores[i]>0?'var(--primary)':'#ccc'}">
-                            ${valores[i] > 0 ? '$'+(valores[i]/1000)+'k' : '—'}
-                        </div>
-                        <div class="bar" style="height:${Math.max(h,4)}px; background:${color};" title="${mes}: ${formatM(valores[i])}"></div>
-                        <div class="bar-label">${mes}</div>
-                    </div>
-                `;
-            });
-
-            labels.innerHTML = `
-                <span style="font-size:12px; color:#666;">
-                    <span style="display:inline-block; width:10px; height:10px; background:var(--primary); border-radius:2px; margin-right:4px;"></span>Pagado
-                    <span style="display:inline-block; width:10px; height:10px; background:var(--danger); border-radius:2px; margin-left:12px; margin-right:4px;"></span>Con mora
-                </span>
-            `;
-        }
-
-        function exportar() {
-            alert('📥 Exportando historial completo... (En producción genera un archivo Excel/PDF desde Apps Script)');
-        }
-
-        renderTabla();
-        renderChart();
-    
-    /* Navegación y sesión proporcionadas por supabase.js */
-    
-        /* ══ CAMPANA ══ */
-    var _notifs = [];
-    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
-    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
-    function renderNotificaciones(datos) {
-        _notifs = datos || [];
-        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-        var lista = document.getElementById('notif-list');
-        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨', cuota:'📅' };
-        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3', cuota:'#dbeafe' };
-        lista.innerHTML = _notifs.map(function(n) {
-            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+    /* ── DISTRIBUCIÓN ── */
+    function renderDistrib() {
+        var pp = {};
+        _cobros.forEach(function(c){
+            var pid=c.programa_id||0;
+            if(!pp[pid]) pp[pid]={nombre:_programas[pid]||'Sin programa',abonado:0,pendiente:0,total:0,abonadas:0};
+            pp[pid].total++;
+            pp[pid].abonado   += calcAbonado(c);
+            pp[pid].pendiente += Number(c.saldo_pendiente)||0;
+            if(resolveEst(c)==='ABONADA') pp[pid].abonadas++;
+        });
+        var keys=Object.keys(pp);
+        if(!keys.length){ document.getElementById('distribGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;color:#aaa;padding:24px;">Sin datos</div>'; return; }
+        document.getElementById('distribGrid').innerHTML=keys.map(function(pid,i){
+            var p=pp[pid], pct=p.total>0?Math.round(p.abonadas/p.total*100):0;
+            var col=PROG_COLORS[i%PROG_COLORS.length];
+            return '<div class="distrib-card">'
+                +'<div class="distrib-nombre">'+p.nombre+'</div>'
+                +'<div class="distrib-row"><span class="distrib-label">Pagado</span><span class="distrib-valor" style="color:var(--success)">'+fM(p.abonado)+'</span></div>'
+                +'<div class="distrib-row"><span class="distrib-label">Pendiente</span><span class="distrib-valor" style="color:'+(p.pendiente>0?'var(--danger)':'var(--success)')+'">'+fM(p.pendiente)+'</span></div>'
+                +'<div class="distrib-row"><span class="distrib-label">Progreso</span><span class="distrib-valor">'+p.abonadas+'/'+p.total+(p.abonadas===p.total?' ✅':'')+'</span></div>'
+                +'<div class="distrib-progress"><div class="distrib-progress-fill" style="width:'+pct+'%;background:'+col+';"></div></div>'
+                +'</div>';
         }).join('');
     }
-    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
-    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
-    // Notificaciones cargadas por supabase.js automáticamente
 
-</script>
-</body>
-</html>
+    /* ── TIMELINE ── */
+    function renderTimeline() {
+        var recientes=_cobros.filter(function(c){
+            return ['ABONADA','PAGO_PARCIAL','PENDIENTE','EN_MORA'].includes(resolveEst(c));
+        }).slice(0,6);
+        if(!recientes.length){ document.getElementById('timeline').innerHTML='<div style="color:#aaa;text-align:center;padding:24px;">Sin actividad reciente</div>'; return; }
+        document.getElementById('timeline').innerHTML=recientes.map(function(c){
+            var s=resolveEst(c);
+            var dot=s==='ABONADA'?'dot-success':s==='EN_MORA'?'dot-danger':s==='PENDIENTE'?'dot-info':'dot-warning';
+            var ico=s==='ABONADA'?'✅':s==='EN_MORA'?'⚠️':s==='PENDIENTE'?'📎':'🔵';
+            var etq=s==='ABONADA'?'Pago aprobado':s==='EN_MORA'?'En mora':s==='PENDIENTE'?'En revisión':'Pago parcial';
+            var prog=_programas[c.programa_id]||'';
+            var abon=calcAbonado(c);
+            return '<div class="timeline-item">'
+                +'<div class="timeline-dot '+dot+'"></div>'
+                +'<div class="timeline-content">'
+                +'<div class="timeline-header">'
+                +'<div class="timeline-titulo">'+ico+' '+etq+' — '+c.concepto+(c.periodo?' ('+c.periodo+')':'')+'</div>'
+                +'<div class="timeline-fecha">Vence: '+fFecha(c.fecha_vencimiento)+'</div>'
+                +'</div>'
+                +'<div class="timeline-desc">'+prog+(c.cohorte_id?' · '+(_cohortes[c.cohorte_id]||''):'')+'</div>'
+                +'<div class="timeline-monto '+(abon>0?'monto-pos':'')+'">'+
+                    (abon>0?'+'+fM(abon)+' abonado':(Number(c.saldo_pendiente)>0?'Saldo: '+fM(c.saldo_pendiente):''))
+                +'</div></div></div>';
+        }).join('');
+    }
+
+    /* ── GRÁFICO ── */
+    function renderChart() {
+        var ahora=new Date(), meses=[];
+        for(var i=11;i>=0;i--){
+            var d=new Date(ahora.getFullYear(),ahora.getMonth()-i,1);
+            meses.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),
+                label:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][d.getMonth()]});
+        }
+        var vals=meses.map(function(m){
+            return _cobros.reduce(function(s,c){
+                if(!c.fecha_vencimiento) return s;
+                return c.fecha_vencimiento.substring(0,7)===m.key ? s+calcAbonado(c) : s;
+            },0);
+        });
+        var moraMeses=meses.map(function(m){
+            return _cobros.some(function(c){ return resolveEst(c)==='EN_MORA'&&c.fecha_vencimiento&&c.fecha_vencimiento.substring(0,7)===m.key; });
+        });
+        var maxVal=Math.max.apply(null,vals.concat([1]));
+        var chart=document.getElementById('barChart'), labels=document.getElementById('barLabels');
+        chart.innerHTML='';
+        meses.forEach(function(m,i){
+            var h=Math.max(Math.round(vals[i]/maxVal*110),4);
+            var col=moraMeses[i]?'var(--danger)':vals[i]===0?'#e0e0e0':'var(--primary)';
+            var vs=vals[i]>0?(vals[i]>=1000?'$'+Math.round(vals[i]/1000)+'k':'$'+vals[i]):'—';
+            chart.innerHTML+='<div class="bar-col">'
+                +'<div class="bar-val" style="font-size:10px;color:'+(vals[i]>0?'var(--primary)':'#ccc')+'">'+vs+'</div>'
+                +'<div class="bar" style="height:'+h+'px;background:'+col+';" title="'+m.label+': '+fM(vals[i])+'"></div>'
+                +'<div class="bar-label">'+m.label+'</div></div>';
+        });
+        labels.innerHTML='<span style="font-size:12px;color:#666;"><span style="display:inline-block;width:10px;height:10px;background:var(--primary);border-radius:2px;margin-right:4px;"></span>Pagado<span style="display:inline-block;width:10px;height:10px;background:var(--danger);border-radius:2px;margin-left:12px;margin-right:4px;"></span>Con mora</span>';
+    }
+
+    /* ── TABLA ── */
+    function renderTabla() {
+        _filtrados=_cobros.slice();
+        if(_fPrograma!=='todos') _filtrados=_filtrados.filter(function(c){ return String(c.programa_id)===String(_fPrograma); });
+        if(_fTipo!=='todos')     _filtrados=_filtrados.filter(function(c){ return resolveEst(c)===_fTipo; });
+        var total=_filtrados.length, totalPags=Math.max(1,Math.ceil(total/POR_PAGINA));
+        if(_pag>totalPags) _pag=totalPags;
+        var desde=(_pag-1)*POR_PAGINA, hasta=Math.min(desde+POR_PAGINA,total);
+        var pag=_filtrados.slice(desde,hasta);
+        document.getElementById('tablaHistorial').innerHTML=pag.length
+            ?pag.map(function(c){
+                var s=resolveEst(c), mp=ESTADO_MAP[s]||['estado-pendiente',s];
+                var orig=Number(c.monto_original)||0, fin=Number(c.monto_final)||0;
+                var sal=Number(c.saldo_pendiente)||0, desc=Number(c.descuento_porcentaje)||0;
+                var pn=_programas[c.programa_id]||'—';
+                return '<tr>'
+                    +'<td>'+fFecha(c.fecha_vencimiento)+'</td>'
+                    +'<td style="font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+pn+'">'+pn+'</td>'
+                    +'<td>'+c.concepto+(c.periodo?' <span style="color:#aaa;font-size:11px;">('+c.periodo+')</span>':'')+'</td>'
+                    +'<td>'+(desc>0?'<span style="text-decoration:line-through;color:#bbb;font-size:12px;">'+fM(orig)+'</span>':fM(orig))+'</td>'
+                    +'<td>'+(desc>0?'<span style="color:var(--success);font-weight:600;">-'+desc+'%</span>':'—')+'</td>'
+                    +'<td style="font-weight:700;">'+fM(fin)+'</td>'
+                    +'<td style="font-weight:700;color:'+(sal>0?'var(--danger)':'var(--success)')+';">'+fM(sal)+'</td>'
+                    +'<td><span class="estado-badge '+mp[0]+'">'+mp[1]+'</span></td>'
+                    +'</tr>';
+            }).join('')
+            :'<tr><td colspan="8" style="text-align:center;color:#aaa;padding:24px;">Sin resultados para este filtro</td></tr>';
+        document.getElementById('pagInfo').innerHTML=total>0?'<strong>'+(desde+1)+'–'+hasta+'</strong> de <strong>'+total+'</strong>':'0 resultados';
+        document.getElementById('pagNum').textContent='Página '+_pag+' de '+totalPags;
+        document.getElementById('btnAnterior').disabled=_pag===1;
+        document.getElementById('btnSiguiente').disabled=_pag>=totalPags;
+    }
+
+    /* ── EXPORTAR ── */
+    function exportar() {
+        function _exp(){
+            var cab=['Vencimiento','Programa','Cohorte','Concepto','Período','Monto Original','Descuento %','Monto Final','Saldo','Estado'];
+            var rows=_cobros.map(function(c){
+                return [fFecha(c.fecha_vencimiento),_programas[c.programa_id]||'',_cohortes[c.cohorte_id]||'',
+                    c.concepto||'',c.periodo||'',c.monto_original||0,c.descuento_porcentaje||0,
+                    c.monto_final||0,c.saldo_pendiente||0,resolveEst(c)];
+            });
+            var ws=XLSX.utils.aoa_to_sheet([cab].concat(rows));
+            var wb=XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb,ws,'Historial');
+            XLSX.writeFile(wb,'historial_pagos_'+new Date().toISOString().split('T')[0]+'.xlsx');
+        }
+        if(!window.XLSX){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';s.onload=_exp;document.head.appendChild(s);}
+        else _exp();
+    }
+
+    /* ── CAMPANA ── */
+    function toggleNotif(){ var dd=document.getElementById('notif-dropdown'); dd.style.display=dd.style.display==='block'?'none':'block'; }
+    document.addEventListener('click',function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
+    function leerNotif(id){ marcarNotificacionLeida(id); }
+    function marcarTodasLeidas(){ marcarTodasNotificacionesLeidas(); }
+
+    </script>
+    </body>
+    </html>

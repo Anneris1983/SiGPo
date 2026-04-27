@@ -438,24 +438,72 @@
 </script>
 
 <script>
-// Inicializar gráfico del reporte
-document.addEventListener('DOMContentLoaded', function() {
-    
-new Chart(document.getElementById('chart-reporte').getContext('2d'), {
-    type: 'bar',
-    data: {
-        labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-        datasets: [
-            { label: 'Hon. Profesores', data: [380,420,510,450,400,480,350,460,560,330,280,240], backgroundColor: 'rgba(220,38,38,0.75)', borderColor:'#dc2626', borderWidth:2 },
-            { label: 'Plataformas/IT', data: [120,120,120,120,120,120,120,120,120,120,120,120], backgroundColor: 'rgba(8,145,178,0.75)', borderColor:'#0891b2', borderWidth:2 },
-            { label: 'Pasajes/Movilidad', data: [80,90,110,95,85,100,70,95,115,65,55,45], backgroundColor: 'rgba(245,158,11,0.75)', borderColor:'#f59e0b', borderWidth:2 },
-            { label: 'Agapé/Break', data: [60,70,85,75,65,80,55,75,90,50,42,35], backgroundColor: 'rgba(107,114,128,0.75)', borderColor:'#6b7280', borderWidth:2 }
-        ]
-    },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'top' }, tooltip:{ callbacks:{ label: c=> c.dataset.label+': $'+c.parsed.y.toLocaleString('es-AR')+'K' } } }, scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true, ticks:{ callback: v=>'$'+v+'K' } } } }
-});
+var _chart1 = null;
+var CAT_COLORS = ['#dc2626','#0891b2','#f59e0b','#6b7280','#16a34a','#7c3aed','#1e3a5f','#db2777','#d97706'];
+function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+async function cargarDatos() {
+    try {
+        var sb = await getSupabase();
+        var r = await sb.from('egresos').select('*');
+        var proyectados = (r.data || []).filter(function(e) { return e.tipo==='PROYECTADO' && e.estado==='PENDIENTE'; });
+
+        var catTotals = {};
+        var monthKeys = [];
+        proyectados.forEach(function(e) {
+            var cat = e.categoria || 'Otros';
+            catTotals[cat] = (catTotals[cat]||0) + Number(e.monto_pagado||0);
+            var k = mesKey(e.fecha_estimada); if (k && monthKeys.indexOf(k)<0) monthKeys.push(k);
+        });
+        monthKeys.sort();
+        var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        var monthLabels = monthKeys.map(function(k){ var p=k.split('-'); return meses[parseInt(p[1])-1]+' '+p[0]; });
+        var catLabels = Object.keys(catTotals);
+
+        // Fallback months if no data
+        if (monthLabels.length === 0) {
+            var yr = new Date().getFullYear();
+            monthLabels = meses.map(function(m) { return m+' '+yr; });
+            monthKeys = meses.map(function(m, i) { return yr+'-'+(i<9?'0':'')+(i+1); });
+        }
+
+        var datasets = catLabels.map(function(cat, i) {
+            return {
+                label: esc(cat),
+                data: monthKeys.map(function(mk) {
+                    return Math.round(proyectados.filter(function(e){return (e.categoria||'Otros')===cat && mesKey(e.fecha_estimada)===mk;}).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0)/1000);
+                }),
+                backgroundColor: CAT_COLORS[i%CAT_COLORS.length]+'bf',
+                borderColor: CAT_COLORS[i%CAT_COLORS.length],
+                borderWidth: 2
+            };
+        });
+
+        var ctx = document.getElementById('chart-reporte');
+        if (ctx) {
+            if (_chart1) _chart1.destroy();
+            _chart1 = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: { labels: monthLabels, datasets: datasets },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'top'}, tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString('es-AR')+'K';}}} }, scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,ticks:{callback:function(v){return '$'+v+'K';}}}} }
+            });
+        }
+
+        // Update summary cards
+        var totalProy = catLabels.reduce(function(s,c){ return s+catTotals[c]; }, 0);
+        var cards = document.querySelectorAll('.summary-card');
+        if (cards[0]) { var sv=cards[0].querySelector('.summary-value'); if(sv) sv.textContent=fM(totalProy); }
+        if (cards[1]) { var sv=cards[1].querySelector('.summary-value'); if(sv) sv.textContent=fM(totalProy*0.87); }
+        if (cards[2]) { var sv=cards[2].querySelector('.summary-value'); if(sv) sv.textContent=String(proyectados.length); }
+        if (cards[3]) { var sv=cards[3].querySelector('.summary-value'); if(sv) sv.textContent=String(catLabels.length); }
+    } catch(e) { console.error('Error cargando datos:', e); }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    cargarDatos();
+    if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones('ADMINISTRADOR').then(renderNotificaciones);
 });
 </script>
 </body>
-</html>

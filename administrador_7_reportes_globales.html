@@ -10,77 +10,45 @@
         :root { --primary: #1e3a5f; --accent: #d4af37; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
 
-        /* NAV */
         .navbar { background: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .nav-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--primary); }
-        .nav-brand img { height: 40px; }
+        .nav-brand { font-weight: 700; color: var(--primary); font-size: 16px; }
         .nav-links { display: flex; gap: 24px; }
         .nav-link { text-decoration: none; color: #666; font-weight: 500; padding: 8px 16px; border-radius: 6px; transition: all 0.2s; }
         .nav-link:hover, .nav-link.active { background: var(--accent); color: white; }
-        .nav-user { display: flex; align-items: center; gap: 16px; }
+        .nav-user { display: flex; align-items: center; gap: 12px; }
 
-        /* LAYOUT */
         .container { max-width: 1400px; margin: 32px auto; padding: 0 32px; }
         .header { margin-bottom: 28px; }
         .header h1 { font-family: 'Crimson Pro', serif; font-size: 32px; color: var(--primary); margin-bottom: 8px; }
         .header p { color: #666; }
 
-        /* FILTERS */
-        .filters {
-            background: white; padding: 24px 28px; border-radius: 12px;
-            margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end;
-        }
+        .filters { background: white; padding: 24px 28px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; }
         .filter-group { display: flex; flex-direction: column; }
         .filter-label { font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px; display: block; }
-        .filter-select,
-        .filter-input {
-            padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px;
-            font-size: 14px; font-family: 'DM Sans', sans-serif;
-            transition: border-color 0.2s;
-        }
+        .filter-select, .filter-input { padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s; }
         .filter-select:focus, .filter-input:focus { outline: none; border-color: var(--primary); }
-
-        /* Checkbox "desde el inicio" */
         .desde-inicio-wrap { display: flex; align-items: center; gap: 7px; margin-top: 6px; font-size: 13px; color: #555; cursor: pointer; }
         .desde-inicio-wrap input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer; }
 
-        /* Botones del filtro */
         .btn { padding: 10px 22px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; font-family: 'DM Sans', sans-serif; transition: opacity 0.15s, transform 0.1s; display: flex; align-items: center; gap: 7px; white-space: nowrap; }
         .btn:hover { opacity: 0.88; }
         .btn:active { transform: scale(0.97); }
         .btn-primary { background: var(--primary); color: white; }
         .btn-export { background: var(--accent); color: white; }
 
-        /* Banda de contexto activo */
-        .filter-context {
-            background: #e8f0fe; border-left: 4px solid #4a7cdc;
-            padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;
-            font-size: 13px; color: #1a4ab0; font-weight: 600;
-            display: flex; align-items: center; gap: 10px;
-        }
+        .filter-context { background: #e8f0fe; border-left: 4px solid #4a7cdc; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #1a4ab0; font-weight: 600; display: flex; align-items: center; gap: 10px; }
         .filter-context.hidden { display: none; }
 
-        /* Loader overlay */
-        #loader {
-            display: none; position: fixed; inset: 0;
-            background: rgba(248,246,241,0.7); z-index: 999;
-            align-items: center; justify-content: center; flex-direction: column; gap: 16px;
-        }
+        #loader { display: none; position: fixed; inset: 0; background: rgba(248,246,241,0.75); z-index: 999; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
         #loader.visible { display: flex; }
-        .spinner {
-            width: 42px; height: 42px;
-            border: 4px solid #e0e0e0; border-top-color: var(--primary);
-            border-radius: 50%; animation: spin 0.7s linear infinite;
-        }
+        .spinner { width: 42px; height: 42px; border: 4px solid #e0e0e0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         #loader p { font-weight: 600; color: var(--primary); font-size: 15px; }
 
-        /* SECCIONES */
-        .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); animation: fadeUp 0.35s ease both; }
         .section-title { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
 
-        /* Semáforo */
         .semaforo-container { height: 400px; position: relative; margin: 32px 0; }
         .semaforo-legend { display: flex; gap: 32px; margin-top: 16px; justify-content: center; flex-wrap: wrap; }
         .legend-item { display: flex; align-items: center; gap: 8px; font-size: 14px; }
@@ -89,7 +57,6 @@
         .legend-yellow { background: var(--warning); }
         .legend-red { background: var(--danger); }
 
-        /* Métricas */
         .metricas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
         .metrica-card { background: linear-gradient(135deg, #f8f6f1 0%, #ffffff 100%); border-left: 4px solid var(--accent); padding: 20px; border-radius: 8px; }
         .metrica-formula { font-size: 12px; color: #666; font-family: monospace; margin-bottom: 12px; background: #f0f0f0; padding: 8px; border-radius: 4px; }
@@ -97,15 +64,14 @@
         .metrica-label { font-size: 14px; color: #666; font-weight: 600; }
         .metrica-desc { font-size: 12px; color: #888; margin-top: 8px; line-height: 1.5; }
 
-        /* Índices */
         .indices-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
         .indice-card { border: 2px solid #e0e0e0; border-radius: 8px; padding: 20px; }
         .indice-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
         .indice-nombre { font-weight: 700; color: var(--primary); }
         .indice-badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
         .badge-critico { background: #fee2e2; color: #991b1b; }
-        .badge-bueno { background: #d1fae5; color: #065f46; }
-        .badge-alerta { background: #fef3c7; color: #92400e; }
+        .badge-bueno   { background: #d1fae5; color: #065f46; }
+        .badge-alerta  { background: #fef3c7; color: #92400e; }
         .indice-value { font-size: 28px; font-weight: 700; margin: 12px 0; }
         .value-green { color: var(--success); }
         .value-yellow { color: var(--warning); }
@@ -116,7 +82,6 @@
         .fill-yellow { background: var(--warning); }
         .fill-red { background: var(--danger); }
 
-        /* Tabla */
         .ajustables-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
         .ajustables-table th { background: #f0f0f0; padding: 12px; text-align: left; font-size: 13px; font-weight: 700; color: var(--primary); border-bottom: 2px solid #e0e0e0; }
         .ajustables-table td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
@@ -124,7 +89,6 @@
         .categoria-ajustable { color: var(--warning); font-weight: 600; }
         .categoria-critica { color: var(--danger); font-weight: 600; }
 
-        /* Aging */
         .aging-item { padding: 12px; border-left: 4px solid #e0e0e0; margin-bottom: 8px; border-radius: 4px; background: #fafafa; }
         .aging-overdue { border-color: var(--danger); background: #fef2f2; }
         .aging-warning { border-color: var(--warning); background: #fffbeb; }
@@ -132,7 +96,6 @@
         .aging-header { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 4px; flex-wrap: wrap; gap: 4px; }
         .aging-days { font-size: 12px; color: #666; }
 
-        /* Churn */
         .churn-card { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         .churn-stat-value { font-size: 48px; font-weight: 700; margin-bottom: 8px; }
         .churn-stat-label { font-size: 14px; color: #666; }
@@ -140,97 +103,41 @@
         .trend-up { color: var(--danger); }
         .trend-down { color: var(--success); }
 
-        /* Animación de entrada para secciones */
-        .section { animation: fadeUp 0.35s ease both; }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
-
-
-        /* ── PANEL CONSULTAS IA ── */
-        .ia-panel {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
-            border-radius: 12px; padding: 22px 28px; margin-bottom: 24px;
-            box-shadow: 0 4px 16px rgba(30,58,95,0.18);
-        }
-        .ia-panel-title {
-            font-size: 15px; font-weight: 700; color: white;
-            display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
-        }
+        /* IA PANEL */
+        .ia-panel { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); border-radius: 12px; padding: 22px 28px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(30,58,95,0.18); }
+        .ia-panel-title { font-size: 15px; font-weight: 700; color: white; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
         .ia-panel-title span { opacity: 0.85; font-size: 12px; font-weight: 400; }
         .ia-input-row { display: flex; gap: 10px; }
-        .ia-input {
-            flex: 1; padding: 12px 16px; border: none; border-radius: 8px;
-            font-size: 14px; font-family: 'DM Sans', sans-serif;
-            background: rgba(255,255,255,0.95);
-            color: #1e3a5f; outline: none;
-            box-shadow: inset 0 1px 4px rgba(0,0,0,0.08);
-            transition: box-shadow 0.2s;
-        }
+        .ia-input { flex: 1; padding: 12px 16px; border: none; border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; background: rgba(255,255,255,0.95); color: #1e3a5f; outline: none; box-shadow: inset 0 1px 4px rgba(0,0,0,0.08); transition: box-shadow 0.2s; }
         .ia-input:focus { box-shadow: 0 0 0 3px rgba(212,175,55,0.5), inset 0 1px 4px rgba(0,0,0,0.08); }
         .ia-input::placeholder { color: #8fa5be; }
-        .ia-btn {
-            padding: 12px 20px; background: #d4af37; color: white;
-            border: none; border-radius: 8px; font-weight: 700; font-size: 14px;
-            cursor: pointer; font-family: 'DM Sans', sans-serif;
-            display: flex; align-items: center; gap: 7px; white-space: nowrap;
-            transition: background 0.2s;
-        }
+        .ia-btn { padding: 12px 20px; background: #d4af37; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 7px; white-space: nowrap; transition: background 0.2s; }
         .ia-btn:hover { background: #b8962e; }
         .ia-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .ia-chips {
-            display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px;
-        }
-        .ia-chip {
-            background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9);
-            padding: 5px 12px; border-radius: 20px; font-size: 12px;
-            cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
-            transition: background 0.2s; white-space: nowrap;
-        }
+        .ia-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+        .ia-chip { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9); padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); transition: background 0.2s; white-space: nowrap; }
         .ia-chip:hover { background: rgba(255,255,255,0.22); }
-        .ia-respuesta {
-            display: none; margin-top: 16px; background: rgba(255,255,255,0.96);
-            border-radius: 10px; padding: 18px 20px; color: #1e3a5f;
-            font-size: 14px; line-height: 1.7; position: relative;
-            max-height: 380px; overflow-y: auto;
-        }
+        .ia-respuesta { display: none; margin-top: 16px; background: rgba(255,255,255,0.96); border-radius: 10px; padding: 18px 20px; color: #1e3a5f; font-size: 14px; line-height: 1.7; position: relative; max-height: 380px; overflow-y: auto; }
         .ia-respuesta.visible { display: block; }
-        .ia-resp-hdr {
-            font-size: 11px; font-weight: 700; color: #8fa5be;
-            text-transform: uppercase; letter-spacing: 0.5px;
-            margin-bottom: 10px; display: flex; justify-content: space-between;
-            align-items: center;
-        }
+        .ia-resp-hdr { font-size: 11px; font-weight: 700; color: #8fa5be; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .ia-resp-body { white-space: pre-wrap; }
-        .ia-resp-body strong { color: #1e3a5f; }
-        .ia-loading {
-            display: none; margin-top: 14px; align-items: center; gap: 10px;
-            color: rgba(255,255,255,0.8); font-size: 13px;
-        }
+        .ia-loading { display: none; margin-top: 14px; align-items: center; gap: 10px; color: rgba(255,255,255,0.8); font-size: 13px; }
         .ia-loading.visible { display: flex; }
-        .ia-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: #d4af37; animation: iaPulse 1.2s ease-in-out infinite;
-        }
+        .ia-dot { width: 8px; height: 8px; border-radius: 50%; background: #d4af37; animation: iaPulse 1.2s ease-in-out infinite; }
         .ia-dot:nth-child(2) { animation-delay: 0.2s; }
         .ia-dot:nth-child(3) { animation-delay: 0.4s; }
         @keyframes iaPulse { 0%,80%,100%{opacity:0.2;transform:scale(0.8);} 40%{opacity:1;transform:scale(1.1);} }
-        .ia-copy-btn {
-            background: none; border: 1px solid #d0d8e8; border-radius: 6px;
-            padding: 3px 9px; font-size: 11px; color: #8fa5be; cursor: pointer;
-            transition: all 0.2s; font-family: 'DM Sans', sans-serif;
-        }
+        .ia-copy-btn { background: none; border: 1px solid #d0d8e8; border-radius: 6px; padding: 3px 9px; font-size: 11px; color: #8fa5be; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
         .ia-copy-btn:hover { background: #f0f4ff; color: #1e3a5f; }
-        .ia-hist {
-            margin-top: 12px; display: flex; flex-direction: column; gap: 8px;
-        }
-        .ia-hist-item {
-            background: rgba(255,255,255,0.08); border-radius: 8px;
-            padding: 10px 14px; font-size: 12px; cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.12); transition: background 0.2s;
-        }
+        .ia-hist { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .ia-hist-item { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; font-size: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); transition: background 0.2s; }
         .ia-hist-item:hover { background: rgba(255,255,255,0.16); }
         .ia-hist-q { color: rgba(255,255,255,0.6); font-size: 11px; margin-bottom: 3px; }
-        .ia-hist-a { color: rgba(255,255,255,0.9); font-size: 12px; line-height: 1.5;
-                     max-height: 48px; overflow: hidden; text-overflow: ellipsis; }
+        .ia-hist-a { color: rgba(255,255,255,0.9); font-size: 12px; line-height: 1.5; max-height: 48px; overflow: hidden; text-overflow: ellipsis; }
+
+        .empty-state { text-align: center; padding: 32px; color: #aaa; font-size: 14px; font-style: italic; }
+
+        .notif-wrapper { position: relative; }
 
         @media (max-width: 900px) {
             .metricas-grid { grid-template-columns: 1fr; }
@@ -241,31 +148,27 @@
 </head>
 <body>
 
-<!-- LOADER -->
 <div id="loader">
     <div class="spinner"></div>
-    <p>Aplicando filtros y recalculando métricas…</p>
+    <p>Calculando métricas…</p>
 </div>
 
 <!-- NAVBAR -->
 <div class="navbar">
-    <div class="nav-brand">
-        <span>Portal de Cobranzas Posgrado</span>
-    </div>
+    <div class="nav-brand">Portal de Cobranzas Posgrado</div>
     <div class="nav-links">
-        <a href="administrador_2_dashboard.html" class="nav-link" onclick="navegar('administrador_2_dashboard.html'); return false;">🏠 Dashboard</a>
-        <a href="administrador_8_Cashflow.html" class="nav-link" onclick="navegar('administrador_8_Cashflow.html'); return false;">📊 Cashflow</a>
+        <a href="administrador_2_dashboard.html" class="nav-link">🏠 Dashboard</a>
+        <a href="administrador_8_Cashflow.html"  class="nav-link">📊 Cashflow</a>
         <a href="administrador_7_reportes_globales.html" class="nav-link active">📈 Planificación</a>
     </div>
-    <div class="nav-user" style="display:flex;align-items:center;gap:12px;">
-        <!-- Campana de Notificaciones -->
-        <div class="notif-wrapper" style="position:relative;">
-            <button onclick="toggleNotif()" title="Notificaciones" aria-label="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;transition:background 0.2s;">
+    <div class="nav-user">
+        <div class="notif-wrapper">
+            <button onclick="toggleNotif()" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid white;line-height:1;">0</span>
+                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid white;line-height:1;">0</span>
             </button>
             <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                 <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -282,71 +185,47 @@
 <div class="container">
 
     <div class="header">
-        <div style="display:flex; align-items:center; gap:16px;">
+        <div style="display:flex;align-items:center;gap:16px;">
             <h1>📈 Planificación Financiera — Análisis Estratégico</h1>
-            <button onclick="abrirConfiguracionCategorias()" style="background:var(--accent);border:none;padding:10px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;color:white;font-weight:600;font-size:14px;">
-                ⚙️ Categorías
-            </button>
+            <button onclick="navegar('administrador_9_categorias_gastos.html')" style="background:var(--accent);border:none;padding:10px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;color:white;font-weight:600;font-size:14px;">⚙️ Categorías</button>
         </div>
         <p>Proyección de liquidez, cobertura de gastos críticos y escenarios de estrés</p>
     </div>
 
-    <!-- ═══════════ FILTROS ═══════════ -->
+    <!-- FILTROS -->
     <div class="filters">
-
-        <!-- Fecha Desde -->
         <div class="filter-group">
             <label class="filter-label">Fecha Desde</label>
-            <input type="date" id="f-desde" class="filter-input" style="width:170px;" value="2025-01-01">
+            <input type="date" id="f-desde" class="filter-input" style="width:170px;">
             <label class="desde-inicio-wrap">
                 <input type="checkbox" id="chk-inicio" onchange="toggleDesdeInicio(this)">
-                Desde el inicio (todos los datos)
+                Desde el inicio
             </label>
         </div>
-
-        <!-- Fecha Hasta -->
         <div class="filter-group">
             <label class="filter-label">Fecha Hasta</label>
-            <input type="date" id="f-hasta" class="filter-input" style="width:170px;" value="2025-03-31">
+            <input type="date" id="f-hasta" class="filter-input" style="width:170px;">
         </div>
-
-        <!-- Programa -->
         <div class="filter-group">
             <label class="filter-label">Programa / Curso</label>
-            <select id="f-programa" class="filter-select" style="width:260px;">
+            <select id="f-programa" class="filter-select" style="width:280px;" onchange="onProgramaChange()">
                 <option value="">Todos los programas</option>
-                <option>Esp. en Costos y Gestión Empresarial</option>
-                <option>Maestría en Dirección de Negocios (MBM)</option>
-                <option>Diplomado ODS</option>
             </select>
         </div>
-
-        <!-- Cohorte -->
         <div class="filter-group">
             <label class="filter-label">Cohorte / Edición</label>
             <select id="f-cohorte" class="filter-select" style="width:220px;">
                 <option value="">Todas las cohortes</option>
-                <option>Cohorte 2025-2026</option>
-                <option>Cohorte 2024-2025</option>
             </select>
         </div>
-
-        <!-- Botones -->
-        <button class="btn btn-primary" onclick="aplicarFiltros()">
-            🔍 Filtrar
-        </button>
-        <button class="btn btn-export" onclick="exportarExcel()">
-            📊 Exportar Reporte Excel
-        </button>
-
+        <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Filtrar</button>
+        <button class="btn btn-export" onclick="exportarCSV()">📊 Exportar CSV</button>
     </div>
 
-    <!-- Banda de contexto activo -->
     <div class="filter-context hidden" id="filter-context"></div>
 
-
-    <!-- ═══════════ PANEL CONSULTAS IA ═══════════ -->
-    <div class="ia-panel" id="ia-panel">
+    <!-- IA PANEL -->
+    <div class="ia-panel">
         <div class="ia-panel-title">
             🤖 Consultor IA de Reportes
             <span>Preguntale al reporte en lenguaje natural — analiza los datos según los filtros activos</span>
@@ -359,7 +238,7 @@
                 <span id="ia-btn-txt">✨ Consultar</span>
             </button>
         </div>
-        <div class="ia-chips" id="ia-chips">
+        <div class="ia-chips">
             <div class="ia-chip" onclick="iaChip(this)">¿El margen de maniobra es saludable?</div>
             <div class="ia-chip" onclick="iaChip(this)">¿Qué índice es el más crítico?</div>
             <div class="ia-chip" onclick="iaChip(this)">¿Vale la pena virtualizar?</div>
@@ -385,28 +264,17 @@
         </div>
     </div>
 
-    <!-- ═══════════ CUERPO DEL REPORTE ═══════════ -->
+    <!-- CUERPO DEL REPORTE -->
     <div id="reporte-body">
 
-        <!-- SEMÁFORO DE LIQUIDEZ -->
+        <!-- SEMÁFORO -->
         <div class="section">
             <div class="section-title">🚦 Semáforo de Liquidez — Escenarios de Flujo de Caja</div>
-            <div class="semaforo-container">
-                <canvas id="semaforoChart"></canvas>
-            </div>
+            <div class="semaforo-container"><canvas id="semaforoChart"></canvas></div>
             <div class="semaforo-legend">
-                <div class="legend-item">
-                    <div class="legend-color legend-green"></div>
-                    <span><strong>🟢 Optimista:</strong> 100% cobranza día 15, Churn 0%, solo gastos críticos y operativos</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color legend-yellow"></div>
-                    <span><strong>🟡 Realista:</strong> Cobrabilidad 85%, Churn 8%, todos los gastos proyectados</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color legend-red"></div>
-                    <span><strong>🔴 Estrés:</strong> Cobrabilidad 70%, Churn 16%, solo gastos críticos</span>
-                </div>
+                <div class="legend-item"><div class="legend-color legend-green"></div><span><strong>🟢 Optimista:</strong> 100% cobranza, Churn 0%, solo gastos críticos</span></div>
+                <div class="legend-item"><div class="legend-color legend-yellow"></div><span><strong>🟡 Realista:</strong> Cobrabilidad real, Churn real, todos los gastos</span></div>
+                <div class="legend-item"><div class="legend-color legend-red"></div><span><strong>🔴 Estrés:</strong> Cobrabilidad 70%, Churn ×2, solo gastos críticos</span></div>
             </div>
         </div>
 
@@ -416,21 +284,40 @@
             <div class="metricas-grid">
                 <div class="metrica-card">
                     <div class="metrica-formula">A = Ingresos Proyectados − Egresos Ejecutados</div>
-                    <div class="metrica-value" id="m-liquidez">$4.850.000</div>
+                    <div class="metrica-value" id="m-liquidez">—</div>
                     <div class="metrica-label">Liquidez Potencial Inmediata</div>
-                    <div class="metrica-desc">Máxima solvencia. Efectivo disponible si cobrás todo hoy y no pagás nada más.</div>
+                    <div class="metrica-desc">Efectivo disponible si cobrás todo hoy y no pagás nada más.</div>
                 </div>
                 <div class="metrica-card">
                     <div class="metrica-formula">B = Egresos Proyectados − Egresos Ejecutados</div>
-                    <div class="metrica-value" id="m-deuda">$2.340.000</div>
+                    <div class="metrica-value" id="m-deuda">—</div>
                     <div class="metrica-label">Deuda Pendiente (Pasivo Exigible)</div>
-                    <div class="metrica-desc">Compromiso asumido aún no pagado. Dinero que ya no te pertenece (incluye saldos parciales).</div>
+                    <div class="metrica-desc">Compromiso asumido aún no pagado.</div>
                 </div>
                 <div class="metrica-card">
-                    <div class="metrica-formula">C = (A) − (B) = Flujo de Caja Neto</div>
-                    <div class="metrica-value" id="m-margen" style="color:var(--success);">$2.510.000</div>
+                    <div class="metrica-formula">C = A − B = Flujo de Caja Neto</div>
+                    <div class="metrica-value" id="m-margen">—</div>
                     <div class="metrica-label">Margen de Maniobra</div>
-                    <div class="metrica-desc">Número real de planificación. Positivo = Ganancia/Reserva. Negativo = No alcanza para pagar.</div>
+                    <div class="metrica-desc">Positivo = Reserva. Negativo = No alcanza para pagar.</div>
+                </div>
+            </div>
+            <!-- Sub-métricas adicionales -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:8px;">
+                <div style="background:#f8f6f1;padding:16px;border-radius:8px;text-align:center;">
+                    <div style="font-size:22px;font-weight:700;color:var(--primary);" id="m-ingreso-proy">—</div>
+                    <div style="font-size:12px;color:#888;margin-top:4px;">Ingresos Proyectados</div>
+                </div>
+                <div style="background:#f8f6f1;padding:16px;border-radius:8px;text-align:center;">
+                    <div style="font-size:22px;font-weight:700;color:var(--success);" id="m-ingreso-ejec">—</div>
+                    <div style="font-size:12px;color:#888;margin-top:4px;">Ingresos Ejecutados</div>
+                </div>
+                <div style="background:#f8f6f1;padding:16px;border-radius:8px;text-align:center;">
+                    <div style="font-size:22px;font-weight:700;color:var(--danger);" id="m-mora-monto">—</div>
+                    <div style="font-size:12px;color:#888;margin-top:4px;">Monto en Mora</div>
+                </div>
+                <div style="background:#f8f6f1;padding:16px;border-radius:8px;text-align:center;">
+                    <div style="font-size:22px;font-weight:700;color:var(--warning);" id="m-est-mora">—</div>
+                    <div style="font-size:12px;color:#888;margin-top:4px;">Estudiantes en Mora</div>
                 </div>
             </div>
         </div>
@@ -442,85 +329,71 @@
                 <div class="indice-card">
                     <div class="indice-header">
                         <div class="indice-nombre">1. Cobertura de Gastos Críticos</div>
-                        <div class="indice-badge badge-bueno" id="badge-1">BUENO</div>
+                        <div class="indice-badge" id="badge-1">—</div>
                     </div>
                     <div class="metrica-formula">Ingresos Ejecutados / Egresos Proyectados CRÍTICOS</div>
-                    <div class="indice-value value-green" id="idx-1">1.85</div>
-                    <div class="indice-bar"><div class="indice-fill fill-green" id="bar-1" style="width:85%;"></div></div>
-                    <div style="font-size:13px;color:#666;margin-top:8px;">
-                        <strong>Interpretación:</strong> La plata que ya entró alcanza para pagar 1.85 veces las plataformas e IT del mes que viene. ✅ Solvente.<br>
-                        <strong>Acción:</strong> Ninguna. El servicio está garantizado.
+                    <div class="indice-value" id="idx-1">—</div>
+                    <div class="indice-bar"><div class="indice-fill" id="bar-1" style="width:0%;"></div></div>
+                    <div style="font-size:13px;color:#666;margin-top:8px;" id="desc-1">
+                        <strong>Interpretación:</strong> La plata que ya entró alcanza para pagar X veces las plataformas e IT. ✅ >1 = Solvente.<br>
+                        <strong>Acción:</strong> Ninguna si &gt;1. Si &lt;1, priorizar gastos críticos.
                     </div>
                 </div>
                 <div class="indice-card">
                     <div class="indice-header">
                         <div class="indice-nombre">2. Ahorro por Virtualización</div>
-                        <div class="indice-badge badge-alerta" id="badge-2">MONITOREAR</div>
+                        <div class="indice-badge" id="badge-2">—</div>
                     </div>
                     <div class="metrica-formula">(Pasajes + Movilidad + Agapé) / Egresos Proyectados Totales</div>
-                    <div class="indice-value value-yellow" id="idx-2">28%</div>
-                    <div class="indice-bar"><div class="indice-fill fill-yellow" id="bar-2" style="width:28%;"></div></div>
-                    <div style="font-size:13px;color:#666;margin-top:8px;">
-                        <strong>Interpretación:</strong> 28% del presupuesto es "lujo presencial". Virtualizando recuperás $656.000.<br>
-                        <strong>Acción:</strong> Si la liquidez se complica, activar modalidad virtual libera casi un tercio del presupuesto.
+                    <div class="indice-value" id="idx-2">—</div>
+                    <div class="indice-bar"><div class="indice-fill" id="bar-2" style="width:0%;"></div></div>
+                    <div style="font-size:13px;color:#666;margin-top:8px;" id="desc-2">
+                        <strong>Interpretación:</strong> % del presupuesto que se libera virtualizando clases presenciales.<br>
+                        <strong>Acción:</strong> Si la liquidez se complica, activar modalidad virtual.
                     </div>
                 </div>
                 <div class="indice-card">
                     <div class="indice-header">
-                        <div class="indice-nombre">3. Dependencia de Mora (5%)</div>
-                        <div class="indice-badge badge-critico" id="badge-3">CRÍTICO</div>
+                        <div class="indice-nombre">3. Tasa de Mora</div>
+                        <div class="indice-badge" id="badge-3">—</div>
                     </div>
-                    <div class="metrica-formula">Intereses Cobrados / Total Ingresos Ejecutados</div>
-                    <div class="indice-value value-red" id="idx-3">22%</div>
-                    <div class="indice-bar"><div class="indice-fill fill-red" id="bar-3" style="width:22%;"></div></div>
-                    <div style="font-size:13px;color:#666;margin-top:8px;">
-                        <strong>Interpretación:</strong> 22% de tus ingresos vienen de multas, no de cuotas. El negocio depende de pagos tardíos.<br>
-                        <strong>⚠️ PELIGRO:</strong> El alumno que paga mucha mora termina dándose de baja (Churn). Mejorar incentivos de pago puntual.
+                    <div class="metrica-formula">Monto en Mora / Ingresos Proyectados Totales</div>
+                    <div class="indice-value" id="idx-3">—</div>
+                    <div class="indice-bar"><div class="indice-fill" id="bar-3" style="width:0%;"></div></div>
+                    <div style="font-size:13px;color:#666;margin-top:8px;" id="desc-3">
+                        <strong>Interpretación:</strong> % de ingresos que no se cobró a tiempo.<br>
+                        <strong>⚠️ Alerta:</strong> >15% indica problema sistémico de cobranza.
                     </div>
                 </div>
                 <div class="indice-card">
                     <div class="indice-header">
                         <div class="indice-nombre">4. Índice de Cobrabilidad Real</div>
-                        <div class="indice-badge badge-bueno" id="badge-4">BUENO</div>
+                        <div class="indice-badge" id="badge-4">—</div>
                     </div>
-                    <div class="metrica-formula">Ingresos Ejecutados / Ingresos Proyectados Originales</div>
-                    <div class="indice-value value-green" id="idx-4">87%</div>
-                    <div class="indice-bar"><div class="indice-fill fill-green" id="bar-4" style="width:87%;"></div></div>
-                    <div style="font-size:13px;color:#666;margin-top:8px;">
-                        <strong>Interpretación:</strong> De lo que esperabas cobrar, estás recaudando el 87%. Es realista para LATAM.<br>
-                        <strong>Acción:</strong> Usar 85-90% como baseline para proyecciones futuras, no 100%.
+                    <div class="metrica-formula">Ingresos Ejecutados / Ingresos Proyectados</div>
+                    <div class="indice-value" id="idx-4">—</div>
+                    <div class="indice-bar"><div class="indice-fill" id="bar-4" style="width:0%;"></div></div>
+                    <div style="font-size:13px;color:#666;margin-top:8px;" id="desc-4">
+                        <strong>Interpretación:</strong> De lo que esperabas cobrar, ¿qué porcentaje entró?<br>
+                        <strong>Acción:</strong> Usar este % como baseline para proyecciones futuras, no 100%.
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- CHURN Y COBRABILIDAD -->
+        <!-- CHURN -->
         <div class="section">
             <div class="section-title">📉 Tasa de Deserción (Churn) e Ingreso Realista</div>
             <div class="churn-card">
                 <div class="churn-stat">
-                    <div class="churn-stat-value" style="color:var(--danger);" id="churn-pct">8.4%</div>
+                    <div class="churn-stat-value" style="color:var(--danger);" id="churn-pct">—</div>
                     <div class="churn-stat-label">Tasa de Churn (Deserción)</div>
-                    <div class="churn-stat-trend trend-up" id="churn-trend">▲ +2.1% vs período anterior</div>
-                    <div style="font-size:13px;color:#666;margin-top:12px;line-height:1.6;">
-                        <strong>Definición:</strong> Porcentaje de estudiantes que abandonan el programa sin completarlo.<br>
-                        <strong>Cálculo:</strong> (Bajas del período / Total estudiantes activos inicio del período) × 100<br>
-                        <strong>Detalle:</strong> 30 bajas de 357 estudiantes activos = 8.4%<br>
-                        <strong>⚠️ Alerta:</strong> Supera el 5% ideal. Investigar causas (mora alta, calidad, competencia).
-                    </div>
+                    <div class="churn-stat-trend" id="churn-detalle" style="color:#666;font-size:13px;margin-top:8px;line-height:1.6;"></div>
                 </div>
                 <div class="churn-stat">
-                    <div class="churn-stat-value" style="color:var(--success);" id="ingreso-realista">$6.840.000</div>
+                    <div class="churn-stat-value" style="color:var(--success);" id="ingreso-realista">—</div>
                     <div class="churn-stat-label">Ingreso Proyectado Realista</div>
-                    <div class="churn-stat-trend trend-down">✓ Ajustado por Churn 8.4% + Cobrabilidad 87%</div>
-                    <div style="font-size:13px;color:#666;margin-top:12px;line-height:1.6;">
-                        <strong>Fórmula:</strong><br>
-                        Ingresos Proyectados × (1 − Churn) × Cobrabilidad<br>
-                        = $8.600.000 × 0.916 × 0.87 = <strong>$6.840.000</strong><br><br>
-                        <strong>vs Proyección Original:</strong> $8.600.000<br>
-                        <strong>Diferencia:</strong> −$1.760.000 (−20%)<br>
-                        <strong>Uso:</strong> Este es el número REAL para presupuestar, no el ideal.
-                    </div>
+                    <div style="font-size:13px;color:#666;margin-top:12px;line-height:1.6;" id="churn-formula-desc"></div>
                 </div>
             </div>
         </div>
@@ -528,88 +401,18 @@
         <!-- GASTOS AJUSTABLES -->
         <div class="section">
             <div class="section-title">🔧 Gastos Ajustables — "Botón de Virtualidad"</div>
-            <p style="color:#666;margin-bottom:16px;font-size:14px;">Si la liquidez se complica, estos gastos pueden eliminarse o reducirse pasando a modalidad virtual:</p>
-            <table class="ajustables-table">
-                <thead>
-                    <tr>
-                        <th>Categoría</th>
-                        <th>Tipo</th>
-                        <th>Monto Proyectado</th>
-                        <th>% del Total</th>
-                        <th>Ahorro Virtualización</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="categoria-ajustable">Pasajes Aéreos / Colectivos</td>
-                        <td><span class="indice-badge" style="background:#fef3c7;color:#92400e;">AJUSTABLE</span></td>
-                        <td>$280.000</td><td>12%</td><td>100% eliminable → $280.000</td>
-                    </tr>
-                    <tr>
-                        <td class="categoria-ajustable">Movilidad</td>
-                        <td><span class="indice-badge" style="background:#fef3c7;color:#92400e;">AJUSTABLE</span></td>
-                        <td>$145.000</td><td>6%</td><td>100% eliminable → $145.000</td>
-                    </tr>
-                    <tr>
-                        <td class="categoria-ajustable">Agapé / Break</td>
-                        <td><span class="indice-badge" style="background:#fef3c7;color:#92400e;">AJUSTABLE</span></td>
-                        <td>$231.000</td><td>10%</td><td>100% eliminable → $231.000</td>
-                    </tr>
-                    <tr style="background:#f0fdf4;font-weight:700;">
-                        <td colspan="2">TOTAL AHORRO POR VIRTUALIZACIÓN</td>
-                        <td>$656.000</td><td>28%</td>
-                        <td style="color:var(--success);">$656.000 liberados</td>
-                    </tr>
-                    <tr>
-                        <td class="categoria-critica">Plataformas de Internet</td>
-                        <td><span class="indice-badge badge-critico">CRÍTICO</span></td>
-                        <td>$120.000</td><td>5%</td><td>NO ELIMINABLE</td>
-                    </tr>
-                    <tr>
-                        <td class="categoria-critica">Servicios Informáticos</td>
-                        <td><span class="indice-badge badge-critico">CRÍTICO</span></td>
-                        <td>$90.000</td><td>4%</td><td>NO ELIMINABLE</td>
-                    </tr>
-                </tbody>
-            </table>
+            <p style="color:#666;margin-bottom:16px;font-size:14px;">Si la liquidez se complica, estos gastos pueden eliminarse pasando a modalidad virtual. Los datos vienen de la tabla de egresos cargados.</p>
+            <div id="gastos-ajustables-body">
+                <div class="empty-state">Cargando datos de egresos…</div>
+            </div>
         </div>
 
         <!-- AGING DE EGRESOS -->
         <div class="section">
             <div class="section-title">⏰ Calidad de la Deuda — Aging de Egresos Proyectados</div>
-            <p style="color:#666;margin-bottom:16px;font-size:14px;">Cuántos días llevás debiéndole a profesores/proveedores saldos que ya estaban proyectados:</p>
-
-            <div class="aging-item aging-overdue">
-                <div class="aging-header">
-                    <span>Dr. Juan Pérez — Costos Avanzados (Saldo Parcial 2/3)</span>
-                    <span style="color:var(--danger);font-weight:700;">23 días de atraso</span>
-                </div>
-                <div class="aging-days">
-                    Fecha proyectada: 05/03/2025 | Saldo pendiente: $100.000<br>
-                    <strong>⚠️ Acción urgente:</strong> Con inflación Argentina, el profesor puede pedir ajuste o no volver.
-                </div>
-            </div>
-
-            <div class="aging-item aging-warning">
-                <div class="aging-header">
-                    <span>Dra. María López — Gestión de Calidad</span>
-                    <span style="color:var(--warning);font-weight:700;">8 días de atraso</span>
-                </div>
-                <div class="aging-days">
-                    Fecha proyectada: 20/03/2025 | Saldo pendiente: $150.000<br>
-                    <strong>Monitorear:</strong> Dentro de margen tolerable, pero pagar esta semana.
-                </div>
-            </div>
-
-            <div class="aging-item aging-ok">
-                <div class="aging-header">
-                    <span>Catering El Buen Gusto — Agapé Módulo 4</span>
-                    <span style="color:var(--success);font-weight:700;">Al día</span>
-                </div>
-                <div class="aging-days">
-                    Fecha proyectada: 30/03/2025 | Saldo: $45.000<br>
-                    <strong>✓ OK:</strong> Aún no vencido, pagar según cronograma.
-                </div>
+            <p style="color:#666;margin-bottom:16px;font-size:14px;">Egresos proyectados cuya fecha estimada ya venció y aún tienen saldo pendiente:</p>
+            <div id="aging-body">
+                <div class="empty-state">Cargando aging…</div>
             </div>
         </div>
 
@@ -621,12 +424,24 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-/* Navegación y sesión proporcionadas por supabase.js */
-    
+'use strict';
 
 /* ══════════════════════════════════════════════
-   CAMPANA DE NOTIFICACIONES
-   ══════════════════════════════════════════════ */
+   ESTADO GLOBAL
+══════════════════════════════════════════════ */
+var _metricas   = {};   // snapshot actual para la IA
+var _programas  = [];   // [{programa_id, nombre, tipo}]
+var _cohortes   = [];   // [{cohorte_id, programa_id, nombre}]
+var _cobrosData = [];   // filas agrupadas por programa+cohorte
+var _egresosData= [];   // egresos planos
+var _catGastos  = [];   // categorías [{nombre, tipo}]
+var _inscData   = [];   // inscripciones agrupadas
+var semaforoChart = null;
+var IA_HIST = [];
+
+/* ══════════════════════════════════════════════
+   NOTIFICACIONES
+══════════════════════════════════════════════ */
 var _notifs = [];
 function toggleNotif() {
     var dd = document.getElementById('notif-dropdown');
@@ -640,91 +455,429 @@ document.addEventListener('click', function(e) {
 });
 function renderNotificaciones(datos) {
     _notifs = datos || [];
-    var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+    var sinLeer = _notifs.filter(function(n){return !n.leida;}).length;
     var badge = document.getElementById('notif-badge');
     badge.textContent = sinLeer;
     badge.style.display = sinLeer > 0 ? 'flex' : 'none';
     var lista = document.getElementById('notif-list');
-    if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-    var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
-    var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
-    lista.innerHTML = _notifs.map(function(n) {
-        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-            + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-            + '<div style="flex:1;min-width:0;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p>'
-            + '<div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+    if (!_notifs.length) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
+    var iconos  = {pago:'💰',mora:'🔴',solicitud:'📋',reclamo:'⚠️',alerta:'🚨'};
+    var colores = {pago:'#dcfce7',mora:'#fee2e2',solicitud:'#dbeafe',reclamo:'#fef3c7',alerta:'#fce7f3'};
+    lista.innerHTML = _notifs.map(function(n){
+        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:'+(n.leida?'#fff':'#fffbeb')+';" onclick="leerNotif(\''+n.id+'\')"><div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:'+(colores[n.tipo]||'#f3f4f6')+';">'+(iconos[n.tipo]||'🔔')+'</div><div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">'+n.mensaje+'</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">'+(n.tiempo||'')+'</div></div></div>';
     }).join('');
 }
-function leerNotif(id) {
-    _notifs.forEach(function(n) { if (n.id === id) n.leida = true; });
-    renderNotificaciones(_notifs);
-    if (typeof google !== 'undefined' && google.script) google.script.run.marcarNotificacionLeida(id);
-}
-function marcarTodasLeidas() {
-    _notifs.forEach(function(n) { n.leida = true; });
-    renderNotificaciones(_notifs);
-    if (typeof google !== 'undefined' && google.script) google.script.run.marcarTodasNotificacionesLeidas();
-}
-(function() {
-    if (typeof google !== 'undefined' && google.script) {
-        google.script.run.withSuccessHandler(renderNotificaciones).obtenerNotificaciones('ADMINISTRADOR');
-        renderNotificaciones([
-            { id:'n1', tipo:'pago', mensaje:'<strong>María González</strong> realizó un pago de <strong>$85.500</strong>', tiempo:'Hace 15 min', leida:false },
-            { id:'n2', tipo:'mora', mensaje:'<strong>3 estudiantes</strong> nuevos en mora', tiempo:'Hace 1 hora', leida:false },
-            { id:'n3', tipo:'alerta', mensaje:'Error en proceso automático de <strong>cálculo de mora</strong>', tiempo:'Hace 5 horas', leida:true }
-        ]);
+function leerNotif(id) { _notifs.forEach(function(n){if(n.id===id)n.leida=true;}); renderNotificaciones(_notifs); if(typeof marcarNotificacionLeida==='function')marcarNotificacionLeida(id); }
+function marcarTodasLeidas() { _notifs.forEach(function(n){n.leida=true;}); renderNotificaciones(_notifs); if(typeof marcarTodasNotificacionesLeidas==='function')marcarTodasNotificacionesLeidas(); }
+
+/* ══════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async function() {
+    // Fechas por defecto: inicio de año → hoy
+    var hoy = new Date();
+    var inicioAno = hoy.getFullYear() + '-01-01';
+    document.getElementById('f-desde').value = inicioAno;
+    document.getElementById('f-hasta').value = hoy.toISOString().split('T')[0];
+
+    mostrarLoader(true);
+    await cargarDatosBase();
+    await aplicarFiltros();
+    mostrarLoader(false);
+
+    if (typeof obtenerNotificaciones === 'function') {
+        obtenerNotificaciones('ADMINISTRADOR').then(renderNotificaciones);
     }
-})();
+});
 
-// ─── DATOS BASE (simulan lo que vendría del backend/Google Sheets) ────────────
-// Cada dataset se indexa por [programaKey][cohorteKey] y luego se filtra por fechas.
-// En producción estos objetos se cargarían dinámicamente desde el Apps Script.
+/* ══════════════════════════════════════════════
+   CARGA DE DATOS BASE
+══════════════════════════════════════════════ */
+async function cargarDatosBase() {
+    var sb = await getSupabase();
 
-const BASE_DATA = {
-    // Liquidez: [liquidezPotencial, deudaPendiente, margenManiobra]
-    liquidez: { default: [4850000, 2340000, 2510000] },
-    // Churn e ingreso realista
-    churn:    { default: { pct: 8.4, tendencia: '+2.1', ingreso: 6840000, proyectado: 8600000 } },
-    // Índices [valor, barWidth, color, badge]
-    indices:  { default: [
-        { val: '1.85', bar: 85, color: 'green', badge: 'BUENO',      badgeClass: 'badge-bueno'   },
-        { val: '28%',  bar: 28, color: 'yellow',badge: 'MONITOREAR', badgeClass: 'badge-alerta'  },
-        { val: '22%',  bar: 22, color: 'red',   badge: 'CRÍTICO',    badgeClass: 'badge-critico' },
-        { val: '87%',  bar: 87, color: 'green', badge: 'BUENO',      badgeClass: 'badge-bueno'   }
-    ]},
-    // Semáforo [verde[], amarillo[], rojo[]]
-    semaforo: { default: {
-        labels:    ['Mes 1','Mes 2','Mes 3','Mes 4','Mes 5','Mes 6'],
-        verde:     [4850, 5200, 5500, 5800, 6100, 6400],
-        amarillo:  [2510, 2680, 2850, 3020, 3190, 3360],
-        rojo:      [850,  920,  1050, 1180, 1310, 1440]
-    }}
-};
+    // Programas
+    var rp = await sb.from('programas').select('programa_id,nombre,tipo').order('nombre');
+    _programas = rp.data || [];
+    var selProg = document.getElementById('f-programa');
+    _programas.forEach(function(p) {
+        var o = document.createElement('option');
+        o.value = p.programa_id;
+        o.textContent = p.nombre;
+        selProg.appendChild(o);
+    });
 
-// Variaciones demo por programa para que el filtro sea visible
-const VARIACIONES = {
-    'Esp. en Costos y Gestión Empresarial': {
-        liquidez: [3200000, 1500000, 1700000],
-        churn: { pct: 6.1, tendencia: '-0.8', ingreso: 2900000, proyectado: 3500000 },
-        semaforo: { labels:['Mes 1','Mes 2','Mes 3','Mes 4','Mes 5','Mes 6'], verde:[2100,2300,2500,2700,2900,3100], amarillo:[1100,1200,1300,1400,1500,1600], rojo:[420,480,540,600,660,720] }
-    },
-    'Maestría en Dirección de Negocios (MBM)': {
-        liquidez: [2800000, 1200000, 1600000],
-        churn: { pct: 10.2, tendencia: '+3.5', ingreso: 2300000, proyectado: 2900000 },
-        semaforo: { labels:['Mes 1','Mes 2','Mes 3','Mes 4','Mes 5','Mes 6'], verde:[1800,1950,2100,2250,2400,2550], amarillo:[900,970,1040,1110,1180,1250], rojo:[310,340,380,420,460,500] }
-    },
-    'Diplomado ODS': {
-        liquidez: [850000, 600000, 250000],
-        churn: { pct: 4.2, tendencia: '-1.2', ingreso: 640000, proyectado: 750000 },
-        semaforo: { labels:['Mes 1','Mes 2','Mes 3','Mes 4','Mes 5','Mes 6'], verde:[600,650,700,750,800,850], amarillo:[200,220,240,260,280,300], rojo:[80,90,100,110,120,130] }
+    // Cohortes
+    var rc = await sb.from('cohortes').select('cohorte_id,programa_id,nombre').order('nombre');
+    _cohortes = rc.data || [];
+
+    // Categorías de gastos
+    var rcat = await sb.from('categorias_gastos').select('nombre,tipo,descripcion').order('tipo,nombre');
+    _catGastos = rcat.data || [];
+}
+
+/* ══════════════════════════════════════════════
+   CAMBIO DE PROGRAMA → actualizar cohortes
+══════════════════════════════════════════════ */
+function onProgramaChange() {
+    var progId = document.getElementById('f-programa').value;
+    var selCoh = document.getElementById('f-cohorte');
+    selCoh.innerHTML = '<option value="">Todas las cohortes</option>';
+    var lista = progId
+        ? _cohortes.filter(function(c){ return String(c.programa_id) === String(progId); })
+        : _cohortes;
+    lista.forEach(function(c) {
+        var o = document.createElement('option');
+        o.value = c.cohorte_id;
+        o.textContent = c.nombre;
+        selCoh.appendChild(o);
+    });
+}
+
+/* ══════════════════════════════════════════════
+   APLICAR FILTROS — punto de entrada principal
+══════════════════════════════════════════════ */
+async function aplicarFiltros() {
+    mostrarLoader(true);
+    var sb       = await getSupabase();
+    var desdeChk = document.getElementById('chk-inicio').checked;
+    var desde    = desdeChk ? null : document.getElementById('f-desde').value;
+    var hasta    = document.getElementById('f-hasta').value;
+    var progId   = document.getElementById('f-programa').value;
+    var cohId    = document.getElementById('f-cohorte').value;
+
+    // ── Cobros agrupados ──────────────────────────────────
+    var qCobros = sb.from('cobros')
+        .select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento');
+    if (progId) qCobros = qCobros.eq('programa_id', progId);
+    if (cohId)  qCobros = qCobros.eq('cohorte_id',  cohId);
+    if (desde)  qCobros = qCobros.gte('fecha_vencimiento', desde);
+    if (hasta)  qCobros = qCobros.lte('fecha_vencimiento', hasta);
+    var rCobros = await qCobros;
+    var cobros = rCobros.data || [];
+
+    // ── Egresos ──────────────────────────────────────────
+    var qEgr = sb.from('egresos')
+        .select('egreso_id,programa_id,cohorte_id,categoria,tipo,estado,concepto,proveedor,monto_original,monto_pagado,monto_pendiente,fecha_estimada,fecha_pago');
+    if (progId) qEgr = qEgr.eq('programa_id', progId);
+    if (cohId)  qEgr = qEgr.eq('cohorte_id',  cohId);
+    if (desde)  qEgr = qEgr.gte('fecha_estimada', desde);
+    if (hasta)  qEgr = qEgr.lte('fecha_estimada', hasta);
+    var rEgr = await qEgr;
+    _egresosData = rEgr.data || [];
+
+    // ── Inscripciones para churn ──────────────────────────
+    var qInsc = sb.from('inscripciones')
+        .select('id,cohorte_id,estado_academico');
+    if (cohId)  qInsc = qInsc.eq('cohorte_id', cohId);
+    else if (progId) {
+        var cohIds = _cohortes.filter(function(c){ return String(c.programa_id)===String(progId); }).map(function(c){return c.cohorte_id;});
+        if (cohIds.length) qInsc = qInsc.in('cohorte_id', cohIds);
     }
-};
+    var rInsc = await qInsc;
+    var inscripciones = rInsc.data || [];
 
-// ─── CHART ────────────────────────────────────────────────────────────────────
-let semaforoChart = null;
+    // ── Calcular métricas ─────────────────────────────────
+    calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId, desdeChk);
 
+    // ── Contexto activo ───────────────────────────────────
+    actualizarContexto(desdeChk, desde, hasta, progId, cohId);
+
+    mostrarLoader(false);
+}
+
+/* ══════════════════════════════════════════════
+   CÁLCULO Y RENDER
+══════════════════════════════════════════════ */
+function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId, desdeChk) {
+    // ── COBROS: sumas globales ──
+    var ingresoProy   = 0; // monto_final donde estado != NO_APLICA, A_DEFINIR
+    var ingresoEjec   = 0; // lo efectivamente cobrado (monto_final - saldo_pendiente donde ABONADA o PAGO_PARCIAL)
+    var montoMora     = 0;
+    var cuotasEnMora  = 0;
+    var dnisEnMora    = {};
+
+    cobros.forEach(function(c) {
+        var mf = Number(c.monto_final || 0);
+        var sp = Number(c.saldo_pendiente || 0);
+        var est = c.estado;
+        if (est !== 'NO_APLICA' && est !== 'A_DEFINIR') {
+            ingresoProy += mf;
+        }
+        if (est === 'ABONADA' || est === 'PAGO_PARCIAL') {
+            ingresoEjec += Math.max(0, mf - sp);
+        }
+        if (est === 'EN_MORA') {
+            montoMora += sp;
+            cuotasEnMora++;
+            dnisEnMora[c.dni] = true;
+        }
+    });
+    var estudiantesEnMora = Object.keys(dnisEnMora).length;
+
+    // ── EGRESOS: sumas ──
+    var egresoProy  = 0;  // monto_original total
+    var egresoEjec  = 0;  // monto_pagado
+    var egresoAjust = 0;  // AJUSTABLE
+    var egresoCrit  = 0;  // CRÍTICO (usando categorías_gastos)
+    var categoriasAjustables = _catGastos.filter(function(c){return c.tipo==='AJUSTABLE';}).map(function(c){return c.nombre;});
+    var categoriasCriticas   = _catGastos.filter(function(c){return c.tipo==='CRITICO';}).map(function(c){return c.nombre;});
+
+    _egresosData.forEach(function(e) {
+        var mo = Number(e.monto_original || 0);
+        var mp = Number(e.monto_pagado   || 0);
+        egresoProy  += mo;
+        egresoEjec  += mp;
+        if (categoriasAjustables.indexOf(e.categoria) >= 0) egresoAjust += mo;
+        if (categoriasCriticas.indexOf(e.categoria)   >= 0) egresoCrit  += mo;
+    });
+
+    // ── MÉTRICAS LIQUIDEZ ──
+    var liquidezPot = ingresoProy - egresoEjec;  // A
+    var deudaPend   = egresoProy  - egresoEjec;  // B
+    var margen      = liquidezPot - deudaPend;    // C = A - B
+
+    // ── ÍNDICES ──
+    var coberturaCrit = egresoCrit > 0 ? (ingresoEjec / egresoCrit) : null;
+    var pctAjust      = egresoProy > 0 ? (egresoAjust / egresoProy * 100) : null;
+    var pctMora       = ingresoProy > 0 ? (montoMora / ingresoProy * 100) : null;
+    var cobrabilidad  = ingresoProy > 0 ? (ingresoEjec / ingresoProy * 100) : null;
+
+    // ── CHURN ──
+    var totalInsc = inscripciones.length;
+    var bajas     = inscripciones.filter(function(i){return i.estado_academico==='BAJA';}).length;
+    var activos   = totalInsc - bajas;
+    var churnPct  = activos > 0 ? (bajas / activos * 100) : 0;
+    var cobrPct   = cobrabilidad !== null ? cobrabilidad / 100 : 0.87;
+    var ingresoRealista = ingresoProy * (1 - churnPct/100) * cobrPct;
+
+    // ── SEMÁFORO: proyección a 6 meses ──
+    var mesesLabels = [];
+    var hoy = new Date();
+    for (var m = 0; m < 6; m++) {
+        var d = new Date(hoy.getFullYear(), hoy.getMonth() + m, 1);
+        mesesLabels.push(d.toLocaleDateString('es-AR', {month:'short', year:'2-digit'}));
+    }
+    // Base mensual
+    var baseM = ingresoProy / 6 || 0;
+    var gastoM = egresoProy  / 6 || 0;
+    var verdeData    = mesesLabels.map(function(_,i){ return Math.round((baseM * 1.0 - gastoM * 0.5) * (1 + i*0.03)); });
+    var amarilloData = mesesLabels.map(function(_,i){ return Math.round((baseM * cobrPct - gastoM * 0.85) * (1 + i*0.02)); });
+    var rojoData     = mesesLabels.map(function(_,i){ return Math.round((baseM * 0.70 - gastoM * 1.0) * (1 + i*0.01)); });
+
+    // ── SNAPSHOT para IA ──
+    _metricas = {
+        ingresoProy, ingresoEjec, montoMora, estudiantesEnMora,
+        liquidezPot, deudaPend, margen,
+        coberturaCrit, pctAjust, pctMora, cobrabilidad,
+        churnPct, bajas, activos: totalInsc, ingresoRealista,
+        egresoProy, egresoEjec, egresoAjust, egresoCrit
+    };
+
+    // ── RENDER ──
+    renderMetricasLiquidez(ingresoProy, ingresoEjec, montoMora, estudiantesEnMora, liquidezPot, deudaPend, margen);
+    renderIndices(coberturaCrit, pctAjust, pctMora, cobrabilidad, ingresoProy);
+    renderChurn(churnPct, bajas, totalInsc, activos, ingresoProy, ingresoRealista, cobrPct);
+    renderGastosAjustables();
+    renderAging();
+    buildChart({ labels: mesesLabels, verde: verdeData, amarillo: amarilloData, rojo: rojoData });
+}
+
+/* ── RENDER: MÉTRICAS LIQUIDEZ ── */
+function renderMetricasLiquidez(ingProy, ingEjec, mora, estMora, liqPot, deuda, margen) {
+    document.getElementById('m-liquidez').textContent   = fPeso(liqPot);
+    document.getElementById('m-deuda').textContent      = fPeso(deuda);
+    var margenEl = document.getElementById('m-margen');
+    margenEl.textContent   = fPeso(margen);
+    margenEl.style.color   = margen >= 0 ? 'var(--success)' : 'var(--danger)';
+    document.getElementById('m-ingreso-proy').textContent = fPeso(ingProy);
+    document.getElementById('m-ingreso-ejec').textContent = fPeso(ingEjec);
+    document.getElementById('m-mora-monto').textContent   = fPeso(mora);
+    document.getElementById('m-est-mora').textContent     = estMora;
+}
+
+/* ── RENDER: ÍNDICES ── */
+function renderIndices(cobCrit, pctAjust, pctMora, cobrPct, ingProy) {
+    // Índice 1: Cobertura crítica
+    if (cobCrit !== null) {
+        var cl1 = cobCrit >= 1.5 ? 'green' : cobCrit >= 1 ? 'yellow' : 'red';
+        var b1  = cobCrit >= 1.5 ? 'BUENO' : cobCrit >= 1 ? 'MONITOREAR' : 'CRÍTICO';
+        setIndice(1, cobCrit.toFixed(2), Math.min(100, cobCrit/3*100), cl1, b1);
+    } else {
+        setIndice(1, 'Sin datos', 0, 'yellow', 'SIN EGRESOS');
+    }
+    // Índice 2: Ahorro virtualización
+    if (pctAjust !== null) {
+        var cl2 = pctAjust >= 25 ? 'yellow' : 'green';
+        var b2  = pctAjust >= 25 ? 'MONITOREAR' : 'BUENO';
+        setIndice(2, pctAjust.toFixed(1)+'%', pctAjust, cl2, b2);
+    } else {
+        setIndice(2, 'Sin datos', 0, 'yellow', 'SIN EGRESOS');
+    }
+    // Índice 3: Tasa mora
+    if (pctMora !== null) {
+        var cl3 = pctMora <= 10 ? 'green' : pctMora <= 20 ? 'yellow' : 'red';
+        var b3  = pctMora <= 10 ? 'BUENO' : pctMora <= 20 ? 'MONITOREAR' : 'CRÍTICO';
+        setIndice(3, pctMora.toFixed(1)+'%', Math.min(100, pctMora), cl3, b3);
+    } else {
+        setIndice(3, '0%', 0, 'green', 'BUENO');
+    }
+    // Índice 4: Cobrabilidad
+    if (cobrPct !== null) {
+        var cl4 = cobrPct >= 80 ? 'green' : cobrPct >= 60 ? 'yellow' : 'red';
+        var b4  = cobrPct >= 80 ? 'BUENO' : cobrPct >= 60 ? 'MONITOREAR' : 'CRÍTICO';
+        setIndice(4, cobrPct.toFixed(1)+'%', cobrPct, cl4, b4);
+    } else {
+        setIndice(4, 'Sin datos', 0, 'yellow', 'SIN DATOS');
+    }
+}
+
+function setIndice(n, val, bar, color, badge) {
+    document.getElementById('idx-'+n).textContent = val;
+    document.getElementById('idx-'+n).className   = 'indice-value value-'+color;
+    var barEl = document.getElementById('bar-'+n);
+    barEl.style.width = Math.max(0, Math.min(100, bar))+'%';
+    barEl.className   = 'indice-fill fill-'+color;
+    var badgeEl = document.getElementById('badge-'+n);
+    badgeEl.textContent = badge;
+    badgeEl.className   = 'indice-badge badge-'+(color==='green'?'bueno':color==='yellow'?'alerta':'critico');
+}
+
+/* ── RENDER: CHURN ── */
+function renderChurn(churnPct, bajas, totalInsc, activos, ingProy, ingresoRealista, cobrPct) {
+    document.getElementById('churn-pct').textContent = churnPct.toFixed(1)+'%';
+    var alerta = churnPct > 5 ? '⚠️ Supera el 5% ideal. Investigar causas.' : '✅ Dentro del rango aceptable.';
+    document.getElementById('churn-detalle').innerHTML =
+        '<strong>Cálculo:</strong> ' + bajas + ' bajas / ' + activos + ' inscriptos activos<br>' +
+        '<strong>Total inscriptos:</strong> ' + totalInsc + '<br>' +
+        '<strong>' + alerta + '</strong>';
+
+    document.getElementById('ingreso-realista').textContent = fPeso(ingresoRealista);
+    document.getElementById('churn-formula-desc').innerHTML =
+        '<strong>Fórmula:</strong><br>' +
+        'Ing. Proy. × (1 − Churn) × Cobrabilidad<br>' +
+        '= ' + fPeso(ingProy) + ' × ' + (1 - churnPct/100).toFixed(3) + ' × ' + (cobrPct*100).toFixed(1) + '% = <strong>' + fPeso(ingresoRealista) + '</strong><br><br>' +
+        '<strong>vs Proyección Original:</strong> ' + fPeso(ingProy) + '<br>' +
+        '<strong>Diferencia:</strong> −' + fPeso(ingProy - ingresoRealista) + '<br>' +
+        '<strong>Uso:</strong> Este es el número REAL para presupuestar.';
+}
+
+/* ── RENDER: GASTOS AJUSTABLES ── */
+function renderGastosAjustables() {
+    var container = document.getElementById('gastos-ajustables-body');
+    if (!_egresosData.length) {
+        container.innerHTML = '<div class="empty-state">📭 No hay egresos cargados para el período / filtro seleccionado.<br>Cargá egresos desde la gestión de cohortes para ver este análisis.</div>';
+        return;
+    }
+
+    var ajustables = _catGastos.filter(function(c){return c.tipo==='AJUSTABLE';}).map(function(c){return c.nombre;});
+    var criticos   = _catGastos.filter(function(c){return c.tipo==='CRITICO';}).map(function(c){return c.nombre;});
+    var totalEgr   = _egresosData.reduce(function(s,e){return s+Number(e.monto_original||0);},0);
+
+    // Agrupar por categoría
+    var porCat = {};
+    _egresosData.forEach(function(e) {
+        var cat = e.categoria || 'Sin categoría';
+        if (!porCat[cat]) porCat[cat] = 0;
+        porCat[cat] += Number(e.monto_original || 0);
+    });
+
+    var filas = '';
+    var totalAjust = 0;
+    // Primero ajustables
+    ajustables.forEach(function(cat) {
+        if (!porCat[cat]) return;
+        var monto = porCat[cat];
+        var pct   = totalEgr > 0 ? (monto/totalEgr*100).toFixed(1) : '0';
+        totalAjust += monto;
+        filas += '<tr><td class="categoria-ajustable">'+esc(cat)+'</td>'
+            + '<td><span class="indice-badge" style="background:#fef3c7;color:#92400e;">AJUSTABLE</span></td>'
+            + '<td>'+fPeso(monto)+'</td><td>'+pct+'%</td><td>100% eliminable → '+fPeso(monto)+'</td></tr>';
+    });
+    if (totalAjust > 0) {
+        filas += '<tr style="background:#f0fdf4;font-weight:700;"><td colspan="2">TOTAL AHORRO POR VIRTUALIZACIÓN</td>'
+            + '<td>'+fPeso(totalAjust)+'</td>'
+            + '<td>'+(totalEgr>0?(totalAjust/totalEgr*100).toFixed(1):0)+'%</td>'
+            + '<td style="color:var(--success);">'+fPeso(totalAjust)+' liberados</td></tr>';
+    }
+    // Luego críticos
+    criticos.forEach(function(cat) {
+        if (!porCat[cat]) return;
+        var monto = porCat[cat];
+        var pct   = totalEgr > 0 ? (monto/totalEgr*100).toFixed(1) : '0';
+        filas += '<tr><td class="categoria-critica">'+esc(cat)+'</td>'
+            + '<td><span class="indice-badge badge-critico">CRÍTICO</span></td>'
+            + '<td>'+fPeso(monto)+'</td><td>'+pct+'%</td><td>NO ELIMINABLE</td></tr>';
+    });
+    // Resto
+    Object.keys(porCat).forEach(function(cat) {
+        if (ajustables.indexOf(cat)>=0 || criticos.indexOf(cat)>=0) return;
+        var monto = porCat[cat];
+        var pct   = totalEgr > 0 ? (monto/totalEgr*100).toFixed(1) : '0';
+        filas += '<tr><td>'+esc(cat)+'</td><td><span class="indice-badge" style="background:#e8f0fe;color:#1a4ab0;">OPERATIVO</span></td>'
+            + '<td>'+fPeso(monto)+'</td><td>'+pct+'%</td><td>Evaluar caso a caso</td></tr>';
+    });
+
+    if (!filas) {
+        container.innerHTML = '<div class="empty-state">No hay egresos con categorías asignadas.</div>';
+        return;
+    }
+
+    container.innerHTML = '<table class="ajustables-table">'
+        + '<thead><tr><th>Categoría</th><th>Tipo</th><th>Monto Proyectado</th><th>% del Total</th><th>Ahorro Virtualización</th></tr></thead>'
+        + '<tbody>' + filas + '</tbody></table>';
+}
+
+/* ── RENDER: AGING ── */
+function renderAging() {
+    var container = document.getElementById('aging-body');
+    if (!_egresosData.length) {
+        container.innerHTML = '<div class="empty-state">📭 No hay egresos cargados para el período seleccionado.</div>';
+        return;
+    }
+
+    var hoy  = new Date(); hoy.setHours(0,0,0,0);
+    // Solo egresos con fecha estimada vencida y saldo pendiente
+    var aging = _egresosData
+        .filter(function(e) {
+            return e.fecha_estimada && Number(e.monto_pendiente||0) > 0;
+        })
+        .map(function(e) {
+            var fEst    = new Date(e.fecha_estimada);
+            var diasAtr = e.estado !== 'PAGADO' && fEst < hoy
+                ? Math.floor((hoy - fEst) / 86400000) : 0;
+            return Object.assign({}, e, { diasAtraso: diasAtr });
+        })
+        .sort(function(a,b){ return b.diasAtraso - a.diasAtraso; });
+
+    if (!aging.length) {
+        container.innerHTML = '<div class="empty-state">✅ Sin egresos vencidos con saldo pendiente. ¡Todo al día!</div>';
+        return;
+    }
+
+    container.innerHTML = aging.map(function(e) {
+        var label    = esc(e.concepto || e.categoria || '—') + (e.proveedor ? ' — ' + esc(e.proveedor) : '');
+        var cls      = e.diasAtraso > 15 ? 'aging-overdue' : e.diasAtraso > 5 ? 'aging-warning' : 'aging-ok';
+        var diasTxt  = e.diasAtraso > 0
+            ? '<span style="color:var(--danger);font-weight:700;">'+e.diasAtraso+' días de atraso</span>'
+            : '<span style="color:var(--success);font-weight:700;">Al día</span>';
+        var accion   = e.diasAtraso > 15
+            ? '<strong>⚠️ Acción urgente:</strong> Pagar inmediatamente.'
+            : e.diasAtraso > 5
+            ? '<strong>Monitorear:</strong> Pagar esta semana.'
+            : '<strong>✓ OK:</strong> Pagar según cronograma.';
+        return '<div class="aging-item '+cls+'">'
+            + '<div class="aging-header"><span>'+label+'</span>'+diasTxt+'</div>'
+            + '<div class="aging-days">Fecha proyectada: '+fFecha(e.fecha_estimada)+' | Saldo pendiente: '+fPeso(e.monto_pendiente)+'<br>'+accion+'</div>'
+            + '</div>';
+    }).join('');
+}
+
+/* ══════════════════════════════════════════════
+   SEMÁFORO
+══════════════════════════════════════════════ */
 function buildChart(data) {
-    const ctx = document.getElementById('semaforoChart').getContext('2d');
+    var ctx = document.getElementById('semaforoChart').getContext('2d');
     if (semaforoChart) { semaforoChart.destroy(); }
     semaforoChart = new Chart(ctx, {
         type: 'line',
@@ -739,423 +892,231 @@ function buildChart(data) {
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
-                tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString('es-AR') + 'K' } }
+                legend: { position: 'top' },
+                tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + fPeso(c.parsed.y); } } }
             },
             scales: {
-                y: { beginAtZero: true, ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                y: { beginAtZero: true, ticks: { callback: function(v) { return '$'+(v/1000).toFixed(0)+'K'; } }, grid: { color: 'rgba(0,0,0,0.05)' } },
                 x: { grid: { display: false } }
             }
         }
     });
 }
 
-// ─── FILTROS ──────────────────────────────────────────────────────────────────
+/* ══════════════════════════════════════════════
+   FILTROS HELPERS
+══════════════════════════════════════════════ */
 function toggleDesdeInicio(chk) {
-    const input = document.getElementById('f-desde');
-    if (chk.checked) {
-        input.value = '';
-        input.disabled = true;
-        input.style.opacity = '0.4';
-        input.disabled = false;
-        input.style.opacity = '1';
-        input.value = '2025-01-01';
+    var input = document.getElementById('f-desde');
+    input.disabled = chk.checked;
+    input.style.opacity = chk.checked ? '0.4' : '1';
+}
+
+function actualizarContexto(desdeChk, desde, hasta, progId, cohId) {
+    var ctx   = document.getElementById('filter-context');
+    var partes = [];
+    if (desdeChk)     partes.push('📅 Desde: <strong>el inicio</strong>');
+    else if (desde)   partes.push('📅 Desde: <strong>'+fFecha(desde)+'</strong>');
+    if (hasta)        partes.push('hasta <strong>'+fFecha(hasta)+'</strong>');
+    if (progId) {
+        var prog = _programas.find(function(p){return String(p.programa_id)===String(progId);});
+        if (prog) partes.push('| 🎓 '+prog.nombre);
     }
-}
-
-function aplicarFiltros() {
-    const loader = document.getElementById('loader');
-    loader.classList.add('visible');
-
-    // Simulamos latencia de red/cálculo (en producción sería la llamada al Apps Script)
-    setTimeout(() => {
-        _ejecutarFiltros();
-        loader.classList.remove('visible');
-    }, 600);
-}
-
-function _ejecutarFiltros() {
-    const desdeChk  = document.getElementById('chk-inicio').checked;
-    const desde     = desdeChk ? null : document.getElementById('f-desde').value;
-    const hasta     = document.getElementById('f-hasta').value;
-    const programa  = document.getElementById('f-programa').value;
-    const cohorte   = document.getElementById('f-cohorte').value;
-
-    // Seleccionar dataset según filtros (en producción: llamada al backend)
-    const d = VARIACIONES[programa] || null;
-
-    // ── Liquidez
-    const liq = d ? d.liquidez : BASE_DATA.liquidez.default;
-    document.getElementById('m-liquidez').textContent = '$' + liq[0].toLocaleString('es-AR');
-    document.getElementById('m-deuda').textContent    = '$' + liq[1].toLocaleString('es-AR');
-    const margen = document.getElementById('m-margen');
-    margen.textContent = '$' + liq[2].toLocaleString('es-AR');
-    margen.style.color = liq[2] >= 0 ? 'var(--success)' : 'var(--danger)';
-
-    // ── Churn
-    const ch = d ? d.churn : BASE_DATA.churn.default;
-    document.getElementById('churn-pct').textContent       = ch.pct + '%';
-    document.getElementById('ingreso-realista').textContent = '$' + ch.ingreso.toLocaleString('es-AR');
-    const trendEl = document.getElementById('churn-trend');
-    const trendNum = parseFloat(ch.tendencia);
-    trendEl.textContent = (trendNum >= 0 ? '▲ +' : '▼ ') + ch.tendencia + '% vs período anterior';
-    trendEl.className   = 'churn-stat-trend ' + (trendNum >= 0 ? 'trend-up' : 'trend-down');
-
-    // ── Índices (en esta demo usamos base; en producción varía por programa)
-    const idxs = BASE_DATA.indices.default;
-    idxs.forEach((idx, i) => {
-        const n = i + 1;
-        document.getElementById('idx-' + n).textContent = idx.val;
-        document.getElementById('bar-' + n).style.width = idx.bar + '%';
-        const badgeEl = document.getElementById('badge-' + n);
-        badgeEl.textContent  = idx.badge;
-        badgeEl.className    = 'indice-badge ' + idx.badgeClass;
-    });
-
-    // ── Semáforo
-    const sem = d ? d.semaforo : BASE_DATA.semaforo.default;
-
-    // "Desde el inicio" → mostrar todos los meses disponibles.
-    // Con rango específico → recortar proporcional al rango.
-    let semData = { ...sem };
-    if (!desdeChk && desde && hasta) {
-        const msDiff = new Date(hasta) - new Date(desde);
-        const meses  = Math.max(1, Math.min(6, Math.ceil(msDiff / (1000*60*60*24*30))));
-        semData = {
-            labels:   sem.labels.slice(0, meses),
-            verde:    sem.verde.slice(0, meses),
-            amarillo: sem.amarillo.slice(0, meses),
-            rojo:     sem.rojo.slice(0, meses)
-        };
+    if (cohId) {
+        var coh = _cohortes.find(function(c){return String(c.cohorte_id)===String(cohId);});
+        if (coh) partes.push('| 📋 '+coh.nombre);
     }
-    buildChart(semData);
-
-    // ── Banda de contexto
-    actualizarContexto(desdeChk, desde, hasta, programa, cohorte);
-}
-
-function actualizarContexto(desdeChk, desde, hasta, programa, cohorte) {
-    const ctx = document.getElementById('filter-context');
-    const partes = [];
-
-    if (desdeChk)       partes.push('📅 Desde: <strong>el inicio</strong>');
-    else if (desde)     partes.push('📅 Desde: <strong>' + formatFecha(desde) + '</strong>');
-    if (hasta)          partes.push('hasta <strong>' + formatFecha(hasta) + '</strong>');
-    if (programa)       partes.push('| 🎓 ' + programa);
-    if (cohorte)        partes.push('| 📋 ' + cohorte);
-
     if (partes.length) {
         ctx.innerHTML = '🔎 Mostrando: ' + partes.join(' ');
         ctx.classList.remove('hidden');
+    } else {
         ctx.classList.add('hidden');
     }
 }
 
-function formatFecha(iso) {
-    if (!iso) return '';
-    const [y, m, d] = iso.split('-');
-    return d + '/' + m + '/' + y;
+/* ══════════════════════════════════════════════
+   EXPORTAR CSV
+══════════════════════════════════════════════ */
+function exportarCSV() {
+    var m = _metricas;
+    if (!m || Object.keys(m).length === 0) { alert('Aplicá los filtros primero.'); return; }
+    var desde = document.getElementById('f-desde').value || 'inicio';
+    var hasta = document.getElementById('f-hasta').value || 'hoy';
+    var prog  = document.getElementById('f-programa').selectedOptions[0].textContent;
+    var coh   = document.getElementById('f-cohorte').selectedOptions[0].textContent;
+
+    var rows = [
+        ['Métrica','Valor'],
+        ['Período', desde + ' → ' + hasta],
+        ['Programa', prog], ['Cohorte', coh],
+        ['---','---'],
+        ['Ingresos Proyectados', m.ingresoProy],
+        ['Ingresos Ejecutados',  m.ingresoEjec],
+        ['Monto en Mora',        m.montoMora],
+        ['Estudiantes en Mora',  m.estudiantesEnMora],
+        ['Liquidez Potencial',   m.liquidezPot],
+        ['Deuda Pendiente',      m.deudaPend],
+        ['Margen de Maniobra',   m.margen],
+        ['---','---'],
+        ['Cobertura Críticos',   m.coberturaCrit !== null ? m.coberturaCrit.toFixed(2) : 'Sin datos'],
+        ['Ahorro Virtualización',m.pctAjust !== null ? m.pctAjust.toFixed(1)+'%' : 'Sin datos'],
+        ['Tasa de Mora',         m.pctMora !== null ? m.pctMora.toFixed(1)+'%' : 'Sin datos'],
+        ['Cobrabilidad Real',    m.cobrabilidad !== null ? m.cobrabilidad.toFixed(1)+'%' : 'Sin datos'],
+        ['---','---'],
+        ['Churn (Deserción)',    m.churnPct.toFixed(1)+'%'],
+        ['Bajas',                m.bajas],
+        ['Total Inscriptos',     m.activos],
+        ['Ingreso Realista',     m.ingresoRealista],
+        ['---','---'],
+        ['Egresos Proyectados',  m.egresoProy],
+        ['Egresos Ejecutados',   m.egresoEjec],
+        ['Gastos Ajustables',    m.egresoAjust],
+        ['Gastos Críticos',      m.egresoCrit],
+    ];
+
+    var csv = '\uFEFF' + rows.map(function(r){ return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(','); }).join('\n');
+    var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'reporte_planificacion_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click(); URL.revokeObjectURL(a.href);
 }
 
-// ─── EXPORTAR (stub — en producción llama al Apps Script con los mismos params) ──
-function exportarExcel() {
-    const desdeChk = document.getElementById('chk-inicio').checked;
-    const desde    = desdeChk
-        ? 'Desde el inicio'
-        : (document.getElementById('f-desde').value ? formatFecha(document.getElementById('f-desde').value) : '—');
-    const hastaVal = document.getElementById('f-hasta').value;
-    const hasta    = hastaVal ? formatFecha(hastaVal) : 'Sin límite';
-    const programa = document.getElementById('f-programa').value || 'Todos los programas';
-    const cohorte  = document.getElementById('f-cohorte').value  || 'Todas las cohortes';
-
-    // Validación: si hay fecha hasta, el reporte tiene límite claro
-    const rangoTexto = desdeChk
-        ? 'Todos los registros hasta ' + hasta
-        : desde + ' → ' + hasta;
-
-    alert(
-        '📊 Exportando reporte Excel…\n\n' +
-        '─────────────────────────────\n' +
-        'Parámetros del reporte:\n' +
-        '• Rango:    ' + rangoTexto + '\n' +
-        '• Programa: ' + programa + '\n' +
-        '• Cohorte:  ' + cohorte + '\n' +
-        '─────────────────────────────\n\n' +
-        'El archivo incluirá todas las métricas, índices, semáforo y aging con estos filtros aplicados.\n\n' +
-        'Esta función se integrará con el Apps Script para generar el archivo.'
-    );
-
-    // ── En producción: llamar al Apps Script pasando los mismos parámetros
-    // google.script.run
-    //   .withSuccessHandler(url => window.open(url))
-    //   .exportarReporteExcel({ desde: desdeChk ? null : desde, hasta: hastaVal, programa, cohorte });
-}
-
-function abrirConfiguracionCategorias() {
-    navegar('administrador_9_categorias_gastos.html');
-}
-
-
-// ─── CONSULTOR IA ─────────────────────────────────────────────────────────────
-const IA_HIST = [];  // { q, a, ctx }
-
+/* ══════════════════════════════════════════════
+   IA — PUTER.JS
+══════════════════════════════════════════════ */
 function iaObtenerContexto() {
-    // Construye un snapshot del estado actual del reporte para enviar a la IA
-    const desdeChk = document.getElementById('chk-inicio').checked;
-    const desde    = desdeChk ? 'Desde el inicio' : (document.getElementById('f-desde').value || '—');
-    const hasta    = document.getElementById('f-hasta').value || '—';
-    const programa = document.getElementById('f-programa').value || 'Todos los programas';
-    const cohorte  = document.getElementById('f-cohorte').value  || 'Todas las cohortes';
-
-    const liqPot   = document.getElementById('m-liquidez').textContent;
-    const deuda    = document.getElementById('m-deuda').textContent;
-    const margen   = document.getElementById('m-margen').textContent;
-    const churnPct = document.getElementById('churn-pct').textContent;
-    const ingReal  = document.getElementById('ingreso-realista').textContent;
-
-    const idx = [1,2,3,4].map(n => ({
-        val:   document.getElementById('idx-' + n).textContent,
-        badge: document.getElementById('badge-' + n).textContent
-    }));
-
-    return `=== CONTEXTO DEL REPORTE (Filtros activos) ===
-Período: ${desde} → ${hasta}
-Programa: ${programa}
-Cohorte: ${cohorte}
-
-=== MÉTRICAS CLAVE DE LIQUIDEZ ===
-• Liquidez Potencial Inmediata (A = Ingresos Proy. − Egresos Ej.): ${liqPot}
-• Deuda Pendiente / Pasivo Exigible (B = Egresos Proy. − Egresos Ej.): ${deuda}
-• Margen de Maniobra (C = A − B = Flujo de Caja Neto): ${margen}
-
-=== ÍNDICES CRÍTICOS ===
-1. Cobertura de Gastos Críticos: ${idx[0].val} → ${idx[0].badge}
-   (Ingresos Ejecutados / Egresos Críticos Proyectados — >1 = solvente)
-2. Ahorro por Virtualización: ${idx[1].val} → ${idx[1].badge}
-   (Pasajes+Movilidad+Agapé / Egresos Totales — cuánto se libera pasando a virtual)
-3. Dependencia de Mora (intereses 5%): ${idx[2].val} → ${idx[2].badge}
-   (Intereses Cobrados / Total Ingresos — peligroso si supera 15%)
-4. Índice de Cobrabilidad Real: ${idx[3].val} → ${idx[3].badge}
-   (Ingresos Ejecutados / Ingresos Proyectados)
-
-=== CHURN Y PROYECCIÓN REALISTA ===
-• Tasa de Churn (Deserción): ${churnPct}
-• Ingreso Proyectado Realista (ajustado por Churn + Cobrabilidad): ${ingReal}
-
-=== GASTOS AJUSTABLES (Botón de Virtualidad) ===
-• Pasajes Aéreos/Colectivos: $280.000 (12%) — 100% eliminable
-• Movilidad: $145.000 (6%) — 100% eliminable
-• Agapé/Break: $231.000 (10%) — 100% eliminable
-• Total Ahorro por Virtualización: $656.000 (28%)
-• Gastos Críticos NO eliminables: Plataformas $120.000 + Servicios IT $90.000
-
-=== AGING DE EGRESOS PROYECTADOS ===
-• Dr. Juan Pérez (Costos Avanzados): $100.000 — 23 días de atraso ⚠️ URGENTE
-• Dra. María López (Gestión de Calidad): $150.000 — 8 días de atraso ⚠️ MONITOREAR
-• Catering El Buen Gusto (Agapé Módulo 4): $45.000 — Al día ✓
-
-=== CONTEXTO INSTITUCIONAL ===
-Institución: Secretaría de Posgrado FCE UNCUYO (Mendoza, Argentina)
-Los datos son dinámicos: cantidad de cuotas, montos, cohortes, programas y estudiantes varían.
-Moneda: Pesos Argentinos (ARS). Considerar contexto inflacionario LATAM.`;
+    var m = _metricas;
+    var desde = document.getElementById('f-desde').value || 'inicio';
+    var hasta = document.getElementById('f-hasta').value || 'hoy';
+    var prog  = document.getElementById('f-programa').selectedOptions[0].textContent;
+    var coh   = document.getElementById('f-cohorte').selectedOptions[0].textContent;
+    return '=== CONTEXTO DEL REPORTE ===\n'
+        + 'Período: ' + desde + ' → ' + hasta + '\nPrograma: ' + prog + '\nCohorte: ' + coh + '\n\n'
+        + '=== MÉTRICAS DE LIQUIDEZ ===\n'
+        + '• Ingresos Proyectados: ' + fPeso(m.ingresoProy||0) + '\n'
+        + '• Ingresos Ejecutados: '  + fPeso(m.ingresoEjec||0) + '\n'
+        + '• Monto en Mora: '        + fPeso(m.montoMora||0) + '\n'
+        + '• Estudiantes en Mora: '  + (m.estudiantesEnMora||0) + '\n'
+        + '• Liquidez Potencial: '   + fPeso(m.liquidezPot||0) + '\n'
+        + '• Deuda Pendiente: '      + fPeso(m.deudaPend||0) + '\n'
+        + '• Margen de Maniobra: '   + fPeso(m.margen||0) + '\n\n'
+        + '=== ÍNDICES ===\n'
+        + '• Cobertura Críticos: ' + (m.coberturaCrit!==null&&m.coberturaCrit!==undefined?m.coberturaCrit.toFixed(2):'Sin egresos') + '\n'
+        + '• Ahorro Virtualización: ' + (m.pctAjust!==null&&m.pctAjust!==undefined?m.pctAjust.toFixed(1)+'%':'Sin egresos') + '\n'
+        + '• Tasa de Mora: ' + (m.pctMora!==null&&m.pctMora!==undefined?m.pctMora.toFixed(1)+'%':'—') + '\n'
+        + '• Cobrabilidad Real: ' + (m.cobrabilidad!==null&&m.cobrabilidad!==undefined?m.cobrabilidad.toFixed(1)+'%':'—') + '\n\n'
+        + '=== CHURN ===\n'
+        + '• Tasa de Churn: ' + (m.churnPct||0).toFixed(1) + '% (' + (m.bajas||0) + ' bajas de ' + (m.activos||0) + ' inscriptos)\n'
+        + '• Ingreso Realista: ' + fPeso(m.ingresoRealista||0) + '\n\n'
+        + '=== EGRESOS ===\n'
+        + '• Proyectados: ' + fPeso(m.egresoProy||0) + '\n'
+        + '• Ejecutados: '  + fPeso(m.egresoEjec||0) + '\n'
+        + '• Ajustables: '  + fPeso(m.egresoAjust||0) + '\n'
+        + '• Críticos: '    + fPeso(m.egresoCrit||0) + '\n\n'
+        + '=== CONTEXTO ===\nInstitución: Secretaría de Posgrado FCE UNCUYO, Mendoza, Argentina. Moneda: ARS.';
 }
-
-/* ── PUTER.JS — Consultor IA ── */
 
 function extraerTextoPuter(resp) {
     if (!resp) return '';
-
     if (typeof resp === 'string') return resp.trim();
-
-    if (typeof resp.text === 'string' && resp.text.trim()) {
-        return resp.text.trim();
-    }
-
-    const content = resp?.message?.content;
-
-    if (typeof content === 'string') {
-        return content.trim();
-    }
-
-    if (Array.isArray(content)) {
-        return content
-            .map(part => {
-                if (typeof part === 'string') return part;
-                if (typeof part?.text === 'string') return part.text;
-                if (typeof part?.content === 'string') return part.content;
-                return '';
-            })
-            .join('')
-            .trim();
-    }
-
-    if (typeof resp?.message === 'string') {
-        return resp.message.trim();
-    }
-
-    try {
-        return JSON.stringify(resp, null, 2);
-    } catch {
-        return 'No se pudo interpretar la respuesta de Puter.';
-    }
+    if (typeof resp.text === 'string' && resp.text.trim()) return resp.text.trim();
+    var content = resp && resp.message && resp.message.content;
+    if (typeof content === 'string') return content.trim();
+    if (Array.isArray(content)) return content.map(function(p){ return typeof p==='string'?p:(typeof p.text==='string'?p.text:''); }).join('').trim();
+    try { return JSON.stringify(resp, null, 2); } catch(e) { return 'No se pudo interpretar la respuesta.'; }
 }
 
 async function asegurarSesionPuter() {
-    if (!window.puter) {
-        throw new Error('Puter.js no cargó correctamente.');
-    }
-
-    if (puter.auth?.isSignedIn && !puter.auth.isSignedIn()) {
+    if (!window.puter) throw new Error('Puter.js no cargó correctamente.');
+    if (puter.auth && puter.auth.isSignedIn && !puter.auth.isSignedIn()) {
         await puter.auth.signIn({ attempt_temp_user_creation: true });
     }
 }
 
 async function iaConsultar() {
-    const input = document.getElementById('ia-input');
-    const pregunta = input.value.trim();
-    if (!pregunta) {
-        input.focus();
-        return;
-    }
-
-    const btn = document.getElementById('ia-btn');
-    const btnTxt = document.getElementById('ia-btn-txt');
-    const loading = document.getElementById('ia-loading');
-    const respDiv = document.getElementById('ia-respuesta');
-    const respBody = document.getElementById('ia-resp-body');
-    const respLabel = document.getElementById('ia-resp-label');
-    const loadTxt = document.getElementById('ia-loading-txt');
-
-    const mensajes = [
-        'Analizando los datos del reporte…',
-        'Cruzando métricas con el contexto activo…',
-        'Evaluando índices y escenarios…',
-        'Preparando análisis estratégico…'
-    ];
-    loadTxt.textContent = mensajes[Math.floor(Math.random() * mensajes.length)];
-
-    btn.disabled = true;
-    if (btnTxt) btnTxt.textContent = 'Consultando…';
-    loading.classList.add('visible');
-    respDiv.classList.remove('visible');
-    respBody.textContent = '';
-
+    var input   = document.getElementById('ia-input');
+    var pregunta = input.value.trim();
+    if (!pregunta) { input.focus(); return; }
+    var btn     = document.getElementById('ia-btn');
+    var btnTxt  = document.getElementById('ia-btn-txt');
+    var loading = document.getElementById('ia-loading');
+    var respDiv = document.getElementById('ia-respuesta');
+    var respBody= document.getElementById('ia-resp-body');
+    var respLabel=document.getElementById('ia-resp-label');
+    var loadTxt = document.getElementById('ia-loading-txt');
+    var msgs = ['Analizando los datos del reporte…','Cruzando métricas con el contexto activo…','Evaluando índices y escenarios…','Preparando análisis estratégico…'];
+    loadTxt.textContent = msgs[Math.floor(Math.random()*msgs.length)];
+    btn.disabled = true; if(btnTxt)btnTxt.textContent='Consultando…';
+    loading.classList.add('visible'); respDiv.classList.remove('visible'); respBody.textContent='';
     try {
         await asegurarSesionPuter();
-
-        const contexto = iaObtenerContexto();
-        const messages = [
-            {
-                role: 'system',
-                content:
-                    'Sos un analista financiero experto en instituciones educativas de posgrado en Argentina. ' +
-                    'Respondé siempre en español. Sé claro, concreto y accionable. ' +
-                    'Usá exclusivamente los datos del contexto provisto. ' +
-                    'No inventes datos. Si falta información, decilo. ' +
-                    'Máximo 220 palabras.'
-            },
-            ...IA_HIST.slice(-3).flatMap(h => ([
-                { role: 'user', content: h.q },
-                { role: 'assistant', content: h.a }
-            ])),
-            {
-                role: 'user',
-                content:
-                    `Contexto del reporte:\n${contexto}\n\n` +
-                    `Pregunta del usuario:\n${pregunta}`
-            }
+        var contexto = iaObtenerContexto();
+        var messages = [
+            { role:'system', content:'Sos un analista financiero experto en instituciones educativas de posgrado en Argentina. Respondé siempre en español. Sé claro, concreto y accionable. Usá exclusivamente los datos del contexto provisto. No inventes datos. Si falta información, decilo. Máximo 220 palabras.' },
+            ...IA_HIST.slice(-3).flatMap(function(h){ return [{role:'user',content:h.q},{role:'assistant',content:h.a}]; }),
+            { role:'user', content:'Contexto del reporte:\n'+contexto+'\n\nPregunta:\n'+pregunta }
         ];
-
-        const resp = await puter.ai.chat(messages, {
-            model: 'gpt-5-nano',
-            temperature: 0.2,
-            max_tokens: 350
-        });
-
-        const respText = extraerTextoPuter(resp) || 'No pude generar una respuesta en este momento.';
-
+        var resp = await puter.ai.chat(messages, { model:'gpt-4o-mini', temperature:0.2, max_tokens:350 });
+        var respText = extraerTextoPuter(resp) || 'No pude generar una respuesta en este momento.';
         respBody.textContent = respText;
-        respLabel.textContent = 'Respuesta · ' + (document.getElementById('f-programa').value || 'Todos los programas');
+        respLabel.textContent = 'Respuesta · ' + (document.getElementById('f-programa').selectedOptions[0].textContent);
         respDiv.classList.add('visible');
-
-        IA_HIST.push({ q: pregunta, a: respText });
-        if (IA_HIST.length > 6) IA_HIST.shift();
-
-        iaActualizarHistorial();
-        input.value = '';
-
-    } catch (err) {
-        respBody.textContent =
-            '⚠️ Error al consultar Puter.\n\n' +
-            (err?.message || String(err)) +
-            '\n\nProbá de nuevo. Si aparece una ventana emergente de Puter, aceptala.';
-        respLabel.textContent = 'Respuesta · Error';
-        respDiv.classList.add('visible');
+        IA_HIST.push({q:pregunta, a:respText});
+        if(IA_HIST.length>6)IA_HIST.shift();
+        iaActualizarHistorial(); input.value='';
+    } catch(err) {
+        respBody.textContent = '⚠️ Error al consultar Puter.\n\n'+(err&&err.message?err.message:String(err))+'\n\nProbá de nuevo.';
+        respLabel.textContent = 'Respuesta · Error'; respDiv.classList.add('visible');
     } finally {
-        btn.disabled = false;
-        if (btnTxt) btnTxt.textContent = '✨ Consultar';
-        loading.classList.remove('visible');
+        btn.disabled=false; if(btnTxt)btnTxt.textContent='✨ Consultar'; loading.classList.remove('visible');
     }
 }
 
-function iaChip(el) {
-    const input = document.getElementById('ia-input');
-    input.value = el.textContent.trim();
-    input.focus();
-    iaConsultar();
-}
+function iaChip(el) { var i=document.getElementById('ia-input'); i.value=el.textContent.trim(); i.focus(); iaConsultar(); }
 
 async function iaCopiar() {
-    const txt = document.getElementById('ia-resp-body').textContent || '';
-    const btn = document.querySelector('.ia-copy-btn');
-
-    try {
-        await navigator.clipboard.writeText(txt);
-        if (btn) {
-            btn.textContent = '✓ Copiado';
-            setTimeout(() => { btn.textContent = '📋 Copiar'; }, 1800);
-        }
-    } catch {
-        if (btn) {
-            btn.textContent = 'No se pudo copiar';
-            setTimeout(() => { btn.textContent = '📋 Copiar'; }, 1800);
-        }
-    }
+    var txt = document.getElementById('ia-resp-body').textContent||'';
+    var btn = document.querySelector('.ia-copy-btn');
+    try { await navigator.clipboard.writeText(txt); if(btn){btn.textContent='✓ Copiado';setTimeout(function(){btn.textContent='📋 Copiar';},1800);} }
+    catch(e) { if(btn){btn.textContent='No se pudo copiar';setTimeout(function(){btn.textContent='📋 Copiar';},1800);} }
 }
 
 function iaActualizarHistorial() {
-    const histEl = document.getElementById('ia-hist');
+    var histEl = document.getElementById('ia-hist');
     if (!histEl) return;
-
-    if (!IA_HIST.length) {
-        histEl.style.display = 'none';
-        return;
-    }
-
-    histEl.style.display = 'block';
-
-    const items = histEl.querySelectorAll('.ia-hist-item');
-    items.forEach(i => i.remove());
-
-    IA_HIST.slice(-3).reverse().forEach(h => {
-        const div = document.createElement('div');
-        div.className = 'ia-hist-item';
-        div.innerHTML = `<div class="ia-hist-q">💬 ${h.q}</div><div class="ia-hist-a"></div>`;
-        div.querySelector('.ia-hist-a').textContent = h.a;
-        div.onclick = () => {
-            document.getElementById('ia-resp-body').textContent = h.a;
-            document.getElementById('ia-respuesta').classList.add('visible');
-            document.getElementById('ia-resp-label').textContent =
-                'Historial · ' + h.q.substring(0, 40) + (h.q.length > 40 ? '…' : '');
-        };
+    if (!IA_HIST.length) { histEl.style.display='none'; return; }
+    histEl.style.display='block';
+    histEl.querySelectorAll('.ia-hist-item').forEach(function(i){i.remove();});
+    IA_HIST.slice(-3).reverse().forEach(function(h){
+        var div=document.createElement('div'); div.className='ia-hist-item';
+        div.innerHTML='<div class="ia-hist-q">💬 '+esc(h.q)+'</div><div class="ia-hist-a"></div>';
+        div.querySelector('.ia-hist-a').textContent=h.a;
+        div.onclick=function(){ document.getElementById('ia-resp-body').textContent=h.a; document.getElementById('ia-respuesta').classList.add('visible'); document.getElementById('ia-resp-label').textContent='Historial · '+h.q.substring(0,40)+(h.q.length>40?'…':''); };
         histEl.appendChild(div);
     });
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-    buildChart(BASE_DATA.semaforo.default);
-});
+/* ══════════════════════════════════════════════
+   UTILIDADES
+══════════════════════════════════════════════ */
+function mostrarLoader(show) { document.getElementById('loader').classList.toggle('visible', show); }
+
+function fPeso(n) {
+    if (n === null || n === undefined || isNaN(n)) return '—';
+    return '$' + Number(n).toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
+
+function fFecha(iso) {
+    if (!iso) return '—';
+    var partes = String(iso).split('T')[0].split('-');
+    if (partes.length !== 3) return iso;
+    return partes[2]+'/'+partes[1]+'/'+partes[0];
+}
+
+function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 </script>
 </body>
 </html>
