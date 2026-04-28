@@ -314,6 +314,9 @@ function iconoTipo(t) {
 function labelTipo(t) {
     return {DOCTORADO:'Doctorado',MAESTRIA:'Maestría',ESPECIALIZACION:'Especialización',DIPLOMADO:'Curso',DIPLOMATURA:'Curso',MICRO_MAESTRIA:'Curso',CURSO:'Curso'}[t]||t;
 }
+function labelTipoPlural(t) {
+    return {DOCTORADO:'DOCTORADOS',MAESTRIA:'MAESTRÍAS',ESPECIALIZACION:'ESPECIALIZACIONES',DIPLOMADO:'CURSOS',DIPLOMATURA:'CURSOS',MICRO_MAESTRIA:'CURSOS',CURSO:'CURSOS'}[t]||(labelTipo(t).toUpperCase()+'S');
+}
 
 // ── CARGAR PROGRAMAS ──────────────────────
 async function cargarProgramas() {
@@ -384,7 +387,7 @@ function renderProgramas(lista) {
     var html = '';
     orden.forEach(function(tipo) {
         if (!grupos[tipo]||!grupos[tipo].length) return;
-        html += '<div class="section-hdr">'+iconoTipo(tipo)+' '+labelTipo(tipo).toUpperCase()+'S<span class="section-count">'+grupos[tipo].length+'</span></div>';
+        html += '<div class="section-hdr">'+iconoTipo(tipo)+' '+labelTipoPlural(tipo)+'<span class="section-count">'+grupos[tipo].length+'</span></div>';
         grupos[tipo].forEach(function(p) {
             var coordStr = p.coordinadores&&p.coordinadores.length ? '👤 '+esc(p.coordinadores.join(', ')) : '👤 Sin coordinador';
             html += '<div class="prog-card">'
