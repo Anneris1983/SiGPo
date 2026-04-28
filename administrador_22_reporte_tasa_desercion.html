@@ -171,19 +171,19 @@
         <div class="summary-cards">
             <div class="summary-card">
                 <div style="font-size: 13px; color: #666;">Tasa Global Deserción</div>
-                <div class="summary-value">8.7%</div>
+                <div class="summary-value">—</div>
             </div>
             <div class="summary-card">
                 <div style="font-size: 13px; color: #666;">Bajas Totales</div>
-                <div class="summary-value">27</div>
+                <div class="summary-value">—</div>
             </div>
             <div class="summary-card">
                 <div style="font-size: 13px; color: #666;">Impacto Financiero</div>
-                <div class="summary-value">$2.8M</div>
+                <div class="summary-value">—</div>
             </div>
             <div class="summary-card">
-                <div style="font-size: 13px; color: #666;">Momento Promedio</div>
-                <div class="summary-value">Mes 4</div>
+                <div style="font-size: 13px; color: #666;">Programas con Baja</div>
+                <div class="summary-value">—</div>
             </div>
         </div>
         <!-- ══ GRÁFICAS ══ -->
@@ -213,10 +213,8 @@
             <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">📊 Deserción por Programa</h2>
             <table>
                 <thead><tr><th>Programa</th><th>Cohorte</th><th>Inscriptos</th><th>Bajas</th><th>% Deserción</th></tr></thead>
-                <tbody>
-                    <tr><td>Esp. en Costos y Gestión</td><td>2024-2025</td><td>48</td><td>3</td><td>6.3%</td></tr>
-                    <tr><td>Maestría en Dirección de Negocios</td><td>2023-2025</td><td>42</td><td>4</td><td>9.5%</td></tr>
-                    <tr><td>Doctorado Ciencias Económicas</td><td>2024-2028</td><td>25</td><td>3</td><td>12.0%</td></tr>
+                <tbody id="tbody-desercion">
+                    <tr><td colspan="5" style="text-align:center;color:#999;">Cargando…</td></tr>
                 </tbody>
             </table>
         </div>
@@ -337,11 +335,11 @@ async function cargarDatos() {
         var impacto = cobros.filter(function(c){return c.estado==='A_DEFINIR';}).reduce(function(s,c){return s+Number(c.monto_final||0);},0);
 
         // Update summary cards
-        var cards = document.querySelectorAll('.summary-card');
         var svs = document.querySelectorAll('.summary-value');
         if (svs[0]) svs[0].textContent = tasaGlobal + '%';
         if (svs[1]) svs[1].textContent = String(totalDesercion);
         if (svs[2]) svs[2].textContent = fM(impacto);
+        if (svs[3]) svs[3].textContent = String(pids.filter(function(pid){return desercionPorProg[pid]&&desercionPorProg[pid].size>0;}).length);
 
         // Chart 1: line - cumulative per program (use desercion count / total as % per program)
         var COLORS = ['#16a34a','#f59e0b','#dc2626','#0ea5e9','#7c3aed','#db2777','#6b7280'];
@@ -392,13 +390,17 @@ async function cargarDatos() {
         }
 
         // Update table
-        var tbody = document.querySelector('.card table tbody');
+        var tbody = document.getElementById('tbody-desercion');
         if (tbody) {
-            tbody.innerHTML = pids.map(function(pid,i) {
-                var total = totalPorProg[pid].size;
-                var bajas = desercionPorProg[pid] ? desercionPorProg[pid].size : 0;
-                return '<tr><td>'+esc(progMap[pid]||pid)+'</td><td>—</td><td>'+total+'</td><td>'+bajas+'</td><td>'+tasas[i]+'%</td></tr>';
-            }).join('');
+            if (pids.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">Sin datos</td></tr>';
+            } else {
+                tbody.innerHTML = pids.map(function(pid,i) {
+                    var total = totalPorProg[pid].size;
+                    var bajas = desercionPorProg[pid] ? desercionPorProg[pid].size : 0;
+                    return '<tr><td>'+esc(progMap[pid]||pid)+'</td><td>—</td><td>'+total+'</td><td>'+bajas+'</td><td>'+tasas[i]+'%</td></tr>';
+                }).join('');
+            }
         }
     } catch(e) { console.error('Error:', e); }
 }

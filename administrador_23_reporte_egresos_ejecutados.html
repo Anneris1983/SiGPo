@@ -177,23 +177,23 @@
         <div class="summary-cards">
             <div class="summary-card">
                 <div class="summary-label">Total Ejecutado</div>
-                <div class="summary-value">$2,847,500</div>
-                <div class="summary-change change-up">↑ +15% vs período anterior</div>
+                <div class="summary-value">—</div>
+                <div class="summary-change">Total ejecutado</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">Comprometido</div>
-                <div class="summary-value">$890,000</div>
+                <div class="summary-value">—</div>
                 <div class="summary-change">Pendiente de ejecución</div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">Presupuestado</div>
-                <div class="summary-value">$4,200,000</div>
-                <div class="summary-change change-down">68% ejecutado</div>
+                <div class="summary-label">Categorías</div>
+                <div class="summary-value">—</div>
+                <div class="summary-change">Tipos de egreso</div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">Disponible</div>
-                <div class="summary-value">$462,500</div>
-                <div class="summary-change">11% del presupuesto</div>
+                <div class="summary-label">Proveedores</div>
+                <div class="summary-value">—</div>
+                <div class="summary-change">Distintos proveedores</div>
             </div>
         </div>
 
@@ -459,6 +459,16 @@ async function cargarDatos() {
                 options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'right',labels:{font:{size:12},padding:16}}, tooltip:{callbacks:{label:function(c){var total=c.dataset.data.reduce(function(a,b){return a+b;},0); return esc(c.label)+': '+fM(c.parsed)+' ('+(c.parsed/total*100).toFixed(1)+'%)'; }}} } }
             });
         }
+
+        // Update summary cards
+        var totalEjec = egresos.reduce(function(s,e){return s+Number(e.monto_pagado||0);},0);
+        var comprometido = (r.data||[]).filter(function(e){return e.tipo==='PROYECTADO'&&e.estado==='PENDIENTE';}).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0);
+        var proveedores = new Set(egresos.map(function(e){return e.proveedor;}).filter(Boolean)).size;
+        var cards = document.querySelectorAll('.summary-card');
+        if (cards[0]) { var sv=cards[0].querySelector('.summary-value'); if(sv) sv.textContent=fM(totalEjec); }
+        if (cards[1]) { var sv=cards[1].querySelector('.summary-value'); if(sv) sv.textContent=fM(comprometido); }
+        if (cards[2]) { var sv=cards[2].querySelector('.summary-value'); if(sv) sv.textContent=String(catLabels.length); }
+        if (cards[3]) { var sv=cards[3].querySelector('.summary-value'); if(sv) sv.textContent=String(proveedores); }
     } catch(e) { console.error('Error cargando datos:', e); }
 }
 
