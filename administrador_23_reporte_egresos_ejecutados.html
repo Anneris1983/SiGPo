@@ -221,126 +221,17 @@
                         <th>Estado</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Hon. Dirección/Coordinación</strong></td>
-                        <td>FIJO</td>
-                        <td>$800,000</td>
-                        <td>$600,000</td>
-                        <td>$200,000</td>
-                        <td>$0</td>
-                        <td>75%</td>
-                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Hon. Personal Apoyo</strong></td>
-                        <td>FIJO</td>
-                        <td>$450,000</td>
-                        <td>$337,500</td>
-                        <td>$112,500</td>
-                        <td>$0</td>
-                        <td>75%</td>
-                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Hon. Profesores</strong></td>
-                        <td>VARIABLE</td>
-                        <td>$1,200,000</td>
-                        <td>$980,000</td>
-                        <td>$150,000</td>
-                        <td>$70,000</td>
-                        <td>82%</td>
-                        <td><span class="badge badge-comprometido">COMPROMETIDO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Movilidad</strong></td>
-                        <td>AJUSTABLE</td>
-                        <td>$180,000</td>
-                        <td>$125,000</td>
-                        <td>$35,000</td>
-                        <td>$20,000</td>
-                        <td>69%</td>
-                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Pasajes Aéreos/Colectivos</strong></td>
-                        <td>AJUSTABLE</td>
-                        <td>$350,000</td>
-                        <td>$287,000</td>
-                        <td>$48,000</td>
-                        <td>$15,000</td>
-                        <td>82%</td>
-                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Agapé/Break</strong></td>
-                        <td>AJUSTABLE</td>
-                        <td>$280,000</td>
-                        <td>$195,000</td>
-                        <td>$65,000</td>
-                        <td>$20,000</td>
-                        <td>70%</td>
-                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Publicidad</strong></td>
-                        <td>OPERATIVO</td>
-                        <td>$250,000</td>
-                        <td>$180,000</td>
-                        <td>$50,000</td>
-                        <td>$20,000</td>
-                        <td>72%</td>
-                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Gastos Varios</strong></td>
-                        <td>OPERATIVO</td>
-                        <td>$180,000</td>
-                        <td>$93,000</td>
-                        <td>$45,000</td>
-                        <td>$42,000</td>
-                        <td>52%</td>
-                        <td><span class="badge badge-pendiente">PENDIENTE</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Servicios Informáticos</strong></td>
-                        <td>CRÍTICO</td>
-                        <td>$120,000</td>
-                        <td>$90,000</td>
-                        <td>$30,000</td>
-                        <td>$0</td>
-                        <td>75%</td>
-                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Papelería y Útiles</strong></td>
-                        <td>OPERATIVO</td>
-                        <td>$95,000</td>
-                        <td>$47,500</td>
-                        <td>$22,500</td>
-                        <td>$25,000</td>
-                        <td>50%</td>
-                        <td><span class="badge badge-pendiente">PENDIENTE</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Plataformas Internet</strong></td>
-                        <td>CRÍTICO</td>
-                        <td>$295,000</td>
-                        <td>$212,500</td>
-                        <td>$82,500</td>
-                        <td>$0</td>
-                        <td>72%</td>
-                        <td><span class="badge badge-ejecutado">EJECUTADO</span></td>
-                    </tr>
+                <tbody id="tbody-egresos">
+                    <tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:32px">Cargando…</td></tr>
                 </tbody>
                 <tfoot style="background: #f8f6f1; font-weight: 700;">
-                    <tr>
+                    <tr id="tfoot-egresos">
                         <td colspan="2"><strong>TOTAL</strong></td>
-                        <td><strong>$4,200,000</strong></td>
-                        <td><strong>$2,847,500</strong></td>
-                        <td><strong>$890,000</strong></td>
-                        <td><strong>$462,500</strong></td>
-                        <td><strong>68%</strong></td>
+                        <td><strong>—</strong></td>
+                        <td><strong>—</strong></td>
+                        <td><strong>—</strong></td>
+                        <td><strong>—</strong></td>
+                        <td><strong>—</strong></td>
                         <td></td>
                     </tr>
                 </tfoot>
@@ -469,6 +360,40 @@ async function cargarDatos() {
         if (cards[1]) { var sv=cards[1].querySelector('.summary-value'); if(sv) sv.textContent=fM(comprometido); }
         if (cards[2]) { var sv=cards[2].querySelector('.summary-value'); if(sv) sv.textContent=String(catLabels.length); }
         if (cards[3]) { var sv=cards[3].querySelector('.summary-value'); if(sv) sv.textContent=String(proveedores); }
+
+        // Update tbody by category
+        var tbody = document.getElementById('tbody-egresos');
+        if (tbody) {
+            if (catLabels.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:32px">No hay egresos ejecutados.</td></tr>';
+            } else {
+                tbody.innerHTML = catLabels.map(function(cat) {
+                    var ejec = catTotals[cat] || 0;
+                    return '<tr>'
+                        + '<td><strong>' + esc(cat) + '</strong></td>'
+                        + '<td>—</td>'
+                        + '<td>—</td>'
+                        + '<td>' + fM(ejec) + '</td>'
+                        + '<td>—</td>'
+                        + '<td>—</td>'
+                        + '<td>—</td>'
+                        + '<td><span class="badge badge-ejecutado">EJECUTADO</span></td>'
+                        + '</tr>';
+                }).join('');
+            }
+        }
+
+        // Update tfoot
+        var tfootRow = document.getElementById('tfoot-egresos');
+        if (tfootRow) {
+            tfootRow.innerHTML = '<td colspan="2"><strong>TOTAL</strong></td>'
+                + '<td><strong>—</strong></td>'
+                + '<td><strong>' + fM(totalEjec) + '</strong></td>'
+                + '<td><strong>—</strong></td>'
+                + '<td><strong>—</strong></td>'
+                + '<td><strong>—</strong></td>'
+                + '<td></td>';
+        }
     } catch(e) { console.error('Error cargando datos:', e); }
 }
 
