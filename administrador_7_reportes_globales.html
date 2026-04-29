@@ -283,10 +283,10 @@
             <div class="section-title">💰 Métricas Clave de Liquidez</div>
             <div class="metricas-grid">
                 <div class="metrica-card">
-                    <div class="metrica-formula">A = Ingresos Proyectados − Egresos Ejecutados</div>
-                    <div class="metrica-value" id="m-liquidez">—</div>
-                    <div class="metrica-label">Liquidez Potencial Inmediata</div>
-                    <div class="metrica-desc">Efectivo disponible si cobrás todo hoy y no pagás nada más.</div>
+                    <div class="metrica-formula">A = Ingresos Proyectados − Ingresos Ejecutados</div>
+                    <div class="metrica-value" id="m-metricaA">—</div>
+                    <div class="metrica-label">Cobros Pendientes</div>
+                    <div class="metrica-desc">Ingresos esperados que aún no ingresaron.</div>
                 </div>
                 <div class="metrica-card">
                     <div class="metrica-formula">B = Egresos Proyectados − Egresos Ejecutados</div>
@@ -295,7 +295,21 @@
                     <div class="metrica-desc">Compromiso asumido aún no pagado.</div>
                 </div>
                 <div class="metrica-card">
-                    <div class="metrica-formula">C = A − B = Flujo de Caja Neto</div>
+                    <div class="metrica-formula">C = Ingresos Proyectados − Egresos Ejecutados</div>
+                    <div class="metrica-value" id="m-liquidez">—</div>
+                    <div class="metrica-label">Liquidez Potencial Inmediata</div>
+                    <div class="metrica-desc">Efectivo disponible si cobrás todo hoy y no pagás nada más.</div>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:32px;">
+                <div class="metrica-card">
+                    <div class="metrica-formula">D = A − B</div>
+                    <div class="metrica-value" id="m-metricaD">—</div>
+                    <div class="metrica-label">Flujo Pendiente Neto</div>
+                    <div class="metrica-desc">Cobros pendientes menos compromisos pendientes.</div>
+                </div>
+                <div class="metrica-card">
+                    <div class="metrica-formula">E = C − B</div>
                     <div class="metrica-value" id="m-margen">—</div>
                     <div class="metrica-label">Margen de Maniobra</div>
                     <div class="metrica-desc">Positivo = Reserva. Negativo = No alcanza para pagar.</div>
@@ -633,9 +647,15 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
     });
 
     // ── MÉTRICAS LIQUIDEZ ──
-    var liquidezPot = ingresoProy - egresoEjec;  // A
-    var deudaPend   = egresoProy  - egresoEjec;  // B
-    var margen      = liquidezPot - deudaPend;    // C = A - B
+    var metricaA = ingresoProy - ingresoEjec;   // A = Ingresos Proyectados − Ingresos Ejecutados
+    var metricaB = egresoProy  - egresoEjec;    // B = Egresos Proyectados − Egresos Ejecutados
+    var metricaC = ingresoProy - egresoEjec;    // C = Ingresos Proyectados − Egresos Ejecutados
+    var metricaD = metricaA - metricaB;         // D = A − B
+    var metricaE = metricaC - metricaB;         // E = C − B
+    // Aliases para índices y IA
+    var liquidezPot = metricaC;
+    var deudaPend   = metricaB;
+    var margen      = metricaE;
 
     // ── ÍNDICES ──
     var coberturaCrit = egresoCrit > 0 ? (ingresoEjec / egresoCrit) : null;
@@ -668,6 +688,7 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
     // ── SNAPSHOT para IA ──
     _metricas = {
         ingresoProy, ingresoEjec, montoMora, estudiantesEnMora,
+        metricaA, metricaB, metricaC, metricaD, metricaE,
         liquidezPot, deudaPend, margen,
         coberturaCrit, pctAjust, pctMora, cobrabilidad,
         churnPct, bajas, activos: totalInsc, ingresoRealista,
@@ -675,7 +696,7 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
     };
 
     // ── RENDER ──
-    renderMetricasLiquidez(ingresoProy, ingresoEjec, montoMora, estudiantesEnMora, liquidezPot, deudaPend, margen);
+    renderMetricasLiquidez(ingresoProy, ingresoEjec, montoMora, estudiantesEnMora, metricaA, metricaB, metricaC, metricaD, metricaE);
     renderIndices(coberturaCrit, pctAjust, pctMora, cobrabilidad, ingresoProy);
     renderChurn(churnPct, bajas, totalInsc, activos, ingresoProy, ingresoRealista, cobrPct);
     renderGastosAjustables();
@@ -684,12 +705,20 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
 }
 
 /* ── RENDER: MÉTRICAS LIQUIDEZ ── */
-function renderMetricasLiquidez(ingProy, ingEjec, mora, estMora, liqPot, deuda, margen) {
-    document.getElementById('m-liquidez').textContent   = fPeso(liqPot);
-    document.getElementById('m-deuda').textContent      = fPeso(deuda);
-    var margenEl = document.getElementById('m-margen');
-    margenEl.textContent   = fPeso(margen);
-    margenEl.style.color   = margen >= 0 ? 'var(--success)' : 'var(--danger)';
+function renderMetricasLiquidez(ingProy, ingEjec, mora, estMora, mA, mB, mC, mD, mE) {
+    var elA = document.getElementById('m-metricaA');
+    elA.textContent = fPeso(mA);
+    elA.style.color = mA >= 0 ? 'var(--primary)' : 'var(--danger)';
+    document.getElementById('m-deuda').textContent = fPeso(mB);
+    var elC = document.getElementById('m-liquidez');
+    elC.textContent = fPeso(mC);
+    elC.style.color = mC >= 0 ? 'var(--primary)' : 'var(--danger)';
+    var elD = document.getElementById('m-metricaD');
+    elD.textContent = fPeso(mD);
+    elD.style.color = mD >= 0 ? 'var(--success)' : 'var(--danger)';
+    var elE = document.getElementById('m-margen');
+    elE.textContent = fPeso(mE);
+    elE.style.color = mE >= 0 ? 'var(--success)' : 'var(--danger)';
     document.getElementById('m-ingreso-proy').textContent = fPeso(ingProy);
     document.getElementById('m-ingreso-ejec').textContent = fPeso(ingEjec);
     document.getElementById('m-mora-monto').textContent   = fPeso(mora);
@@ -954,9 +983,11 @@ function exportarCSV() {
         ['Ingresos Ejecutados',  m.ingresoEjec],
         ['Monto en Mora',        m.montoMora],
         ['Estudiantes en Mora',  m.estudiantesEnMora],
-        ['Liquidez Potencial',   m.liquidezPot],
-        ['Deuda Pendiente',      m.deudaPend],
-        ['Margen de Maniobra',   m.margen],
+        ['A - Cobros Pendientes',        m.metricaA],
+        ['B - Deuda Pendiente',          m.metricaB],
+        ['C - Liquidez Potencial',       m.metricaC],
+        ['D - Flujo Pendiente Neto',     m.metricaD],
+        ['E - Margen de Maniobra',       m.metricaE],
         ['---','---'],
         ['Cobertura Críticos',   m.coberturaCrit !== null ? m.coberturaCrit.toFixed(2) : 'Sin datos'],
         ['Ahorro Virtualización',m.pctAjust !== null ? m.pctAjust.toFixed(1)+'%' : 'Sin datos'],
@@ -997,9 +1028,11 @@ function iaObtenerContexto() {
         + '• Ingresos Ejecutados: '  + fPeso(m.ingresoEjec||0) + '\n'
         + '• Monto en Mora: '        + fPeso(m.montoMora||0) + '\n'
         + '• Estudiantes en Mora: '  + (m.estudiantesEnMora||0) + '\n'
-        + '• Liquidez Potencial: '   + fPeso(m.liquidezPot||0) + '\n'
-        + '• Deuda Pendiente: '      + fPeso(m.deudaPend||0) + '\n'
-        + '• Margen de Maniobra: '   + fPeso(m.margen||0) + '\n\n'
+        + '• A (Cobros Pendientes): '       + fPeso(m.metricaA||0) + '\n'
+        + '• B (Deuda Pendiente): '        + fPeso(m.metricaB||0) + '\n'
+        + '• C (Liquidez Potencial): '     + fPeso(m.metricaC||0) + '\n'
+        + '• D (Flujo Pendiente Neto): '   + fPeso(m.metricaD||0) + '\n'
+        + '• E (Margen de Maniobra): '     + fPeso(m.metricaE||0) + '\n\n'
         + '=== ÍNDICES ===\n'
         + '• Cobertura Críticos: ' + (m.coberturaCrit!==null&&m.coberturaCrit!==undefined?m.coberturaCrit.toFixed(2):'Sin egresos') + '\n'
         + '• Ahorro Virtualización: ' + (m.pctAjust!==null&&m.pctAjust!==undefined?m.pctAjust.toFixed(1)+'%':'Sin egresos') + '\n'
