@@ -365,7 +365,7 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label class="form-label">Programa/Curso</label>
-                        <select class="form-select" id="programa"></select>
+                        <select class="form-select" id="programa" onchange="poblarCohortesPorPrograma(this.value)"></select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cohorte/Edición</label>
@@ -503,6 +503,8 @@
             programaActual: null,
             programas: [],
             cohortes: [],
+            programasList: [],
+            cohortesList: [],
             editing: null,
             gastoAEjecutar: null,
             importFile: null,
@@ -524,29 +526,44 @@
                 var sb = await getSupabase();
                 var rP = await sb.from('programas').select('programa_id,nombre');
                 var rC = await sb.from('cohortes').select('cohorte_id,nombre,programa_id');
-                var rE = await sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,fecha_ejecucion,fecha_estimada,proveedor,descripcion,categoria,nro_comprobante');
+                var rE = await sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,fecha_ejecucion,fecha_estimada,proveedor,concepto,descripcion,categoria,nro_comprobante');
 
                 var programas = rP.data || [];
                 var cohortes = rC.data || [];
                 var egresos = rE.data || [];
+
+                state.programasList = programas;
+                state.cohortesList  = cohortes;
+                state.programas = programas.map(function(p){return p.nombre;});
+                state.cohortes  = cohortes.map(function(c){return c.nombre;});
 
                 var progMap = {};
                 programas.forEach(function(p){ progMap[p.programa_id] = p.nombre; });
                 var cohMap = {};
                 cohortes.forEach(function(c){ cohMap[c.cohorte_id] = c.nombre; });
 
-                var primerProg = programas[0] || {};
-                var progNombres = programas.map(function(p){return p.nombre;});
-                var cohNombres = cohortes.map(function(c){return c.nombre;});
-
                 function mapEgreso(e) {
-                    return { id:e.egreso_id, fechaEstimada:e.fecha_estimada||'', fechaEjecucion:e.fecha_ejecucion||'', categoria:e.categoria||'', concepto:e.descripcion||'', programa:progMap[e.programa_id]||'', cohorte:cohMap[e.cohorte_id]||'', monto:Number(e.monto_pagado||0), proveedor:e.proveedor||'', comprobante:e.nro_comprobante||'', estado:e.tipo==='EJECUTADO'?'Ejecutado':'Proyectado' };
+                    return {
+                        id:          e.egreso_id,
+                        fechaEstimada: e.fecha_estimada||'',
+                        fechaEjecucion: e.fecha_ejecucion||'',
+                        categoria:   e.categoria||'',
+                        concepto:    e.concepto||e.descripcion||'',
+                        programa:    progMap[e.programa_id]||'',
+                        programaId:  e.programa_id||'',
+                        cohorte:     cohMap[e.cohorte_id]||'',
+                        cohorteId:   e.cohorte_id||'',
+                        monto:       Number(e.monto_pagado||e.monto_original||0),
+                        proveedor:   e.proveedor||'',
+                        comprobante: e.nro_comprobante||'',
+                        estado:      e.tipo==='EJECUTADO'?'Ejecutado':'Proyectado'
+                    };
                 }
 
                 var data = {
-                    programaActual: { nombre: primerProg.nombre || 'Todos los programas' },
-                    programas: progNombres,
-                    cohortes: cohNombres,
+                    programaActual: { nombre: programas[0] ? programas[0].nombre : 'Todos los programas' },
+                    programas: state.programas,
+                    cohortes:  state.cohortes,
                     gastosProyectados: egresos.filter(function(e){return e.tipo==='PROYECTADO';}).map(mapEgreso),
                     gastosEjecutados: egresos.filter(function(e){return e.tipo==='EJECUTADO'||e.estado==='CANCELADO';}).map(mapEgreso)
                 };
@@ -630,12 +647,17 @@
 
         function poblarSelectsBase() {
             document.getElementById('categoria').innerHTML = CATEGORIAS.map(c => `<option>${escapeHtml(c)}</option>`).join('');
-            document.getElementById('programa').innerHTML = state.programas.map(p => `<option>${escapeHtml(p)}</option>`).join('');
-            poblarCohortes();
+            document.getElementById('programa').innerHTML = '<option value="">— Seleccionar —</option>'
+                + state.programasList.map(p => `<option value="${p.programa_id}">${escapeHtml(p.nombre)}</option>`).join('');
+            poblarCohortesPorPrograma('');
         }
 
-        function poblarCohortes() {
-            document.getElementById('cohorte').innerHTML = state.cohortes.map(c => `<option>${escapeHtml(c)}</option>`).join('');
+        function poblarCohortesPorPrograma(programaId) {
+            var lista = programaId
+                ? state.cohortesList.filter(function(c){ return String(c.programa_id) === String(programaId); })
+                : state.cohortesList;
+            document.getElementById('cohorte').innerHTML = '<option value="">— Sin cohorte —</option>'
+                + lista.map(c => `<option value="${c.cohorte_id}">${escapeHtml(c.nombre)}</option>`).join('');
         }
 
         function renderTabla(tipo) {
@@ -725,8 +747,9 @@
             document.getElementById('fechaEstimada').value = gasto.fechaEstimada || '';
             document.getElementById('categoria').value = gasto.categoria || CATEGORIAS[0];
             document.getElementById('concepto').value = gasto.concepto || '';
-            document.getElementById('programa').value = gasto.programa || state.programas[0] || '';
-            document.getElementById('cohorte').value = gasto.cohorte || state.cohortes[0] || '';
+            document.getElementById('programa').value = gasto.programaId || '';
+            poblarCohortesPorPrograma(gasto.programaId || '');
+            document.getElementById('cohorte').value = gasto.cohorteId || '';
             document.getElementById('monto').value = gasto.monto || '';
             document.getElementById('proveedor').value = gasto.proveedor || '';
             document.getElementById('comprobante').value = gasto.comprobante || '';
@@ -736,22 +759,17 @@
         async function eliminarGasto(id, tipo) {
             const gasto = state.gastos[tipo].find(g => String(g.id) === String(id));
             if (!gasto) return;
-
             if (!confirm(`¿Está seguro de eliminar este gasto?\n\n${gasto.concepto}`)) return;
-
             spin(true);
             try {
-                if (estaEnAppsScript()) {
-                    await gs('eliminarGastoCoordinador', { gastoId: id, tipo });
-                }
-                state.gastos[tipo] = state.gastos[tipo].filter(g => String(g.id) !== String(id));
-                renderTodo();
+                var result = await eliminarEgreso(id);
+                if (!result.ok) throw new Error('Error al eliminar');
+                await cargarVista();
                 toast('Gasto eliminado.', 'ok');
             } catch (e) {
                 toast('No se pudo eliminar el gasto.', 'err');
-            } finally {
-                spin(false);
-            }
+                console.error(e);
+            } finally { spin(false); }
         }
 
         function ejecutarGasto(id) {
@@ -767,108 +785,82 @@
         }
 
         async function confirmarEjecucion() {
-            const fechaEjecucion = document.getElementById('fechaEjecucion').value;
-            const comprobante = document.getElementById('comprobanteEjecucion').value.trim();
-            const observaciones = document.getElementById('observaciones').value.trim();
+            var fechaEjecucion = document.getElementById('fechaEjecucion').value;
+            var comprobante    = document.getElementById('comprobanteEjecucion').value.trim();
+            var observaciones  = document.getElementById('observaciones').value.trim();
 
             if (!state.gastoAEjecutar) return;
-            if (!fechaEjecucion) {
-                toast('Por favor ingrese la fecha de ejecución.', 'err');
-                return;
-            }
-            if (!comprobante) {
-                toast('Por favor ingrese el número de comprobante.', 'err');
-                return;
-            }
+            if (!fechaEjecucion) { toast('Ingresá la fecha de ejecución.', 'err'); return; }
+            if (!comprobante)    { toast('Ingresá el número de comprobante.', 'err'); return; }
 
             spin(true);
             try {
-                if (estaEnAppsScript()) {
-                    await gs('ejecutarGastoCoordinador', {
-                        gastoId: state.gastoAEjecutar.id,
-                        fechaEjecucion,
-                        comprobante,
-                        observaciones
-                    });
-                }
-
-                const base = { ...state.gastoAEjecutar };
-                base.tipo = 'ejecutados';
-                base.estado = 'Ejecutado';
-                base.comprobante = comprobante;
-                base.fechaEjecucion = fechaEjecucion;
-                base.observaciones = observaciones;
-
-                state.gastos.proyectados = state.gastos.proyectados.filter(g => String(g.id) !== String(base.id));
-                state.gastos.ejecutados.unshift(base);
-
-                cerrarModal('modalEjecutar');
-                renderTodo();
-                toast('Gasto ejecutado exitosamente.', 'ok');
+                var sb = await getSupabase();
+                var res = await sb.from('egresos').update({
+                    tipo:            'EJECUTADO',
+                    estado:          'CANCELADO',
+                    fecha_ejecucion: fechaEjecucion,
+                    monto_pagado:    state.gastoAEjecutar.monto,
+                    nro_comprobante: comprobante,
+                    observaciones:   observaciones || null
+                }).eq('egreso_id', state.gastoAEjecutar.id);
+                if (res.error) throw res.error;
                 state.gastoAEjecutar = null;
+                cerrarModal('modalEjecutar');
+                await cargarVista();
+                toast('Gasto ejecutado exitosamente.', 'ok');
             } catch (e) {
                 toast('No se pudo ejecutar el gasto.', 'err');
-            } finally {
-                spin(false);
-            }
+                console.error(e);
+            } finally { spin(false); }
         }
 
         async function guardarGasto() {
-            const payload = {
-                fechaEstimada: document.getElementById('fechaEstimada').value,
-                categoria: document.getElementById('categoria').value,
-                concepto: document.getElementById('concepto').value.trim(),
-                programa: document.getElementById('programa').value,
-                cohorte: document.getElementById('cohorte').value,
-                monto: Number(document.getElementById('monto').value || 0),
-                proveedor: document.getElementById('proveedor').value.trim(),
-                comprobante: document.getElementById('comprobante').value.trim()
-            };
+            var tipo       = state.editing ? state.editing.tipo : state.activeTab;
+            var programaId = document.getElementById('programa').value || null;
+            var cohorteId  = document.getElementById('cohorte').value  || null;
+            var concepto   = document.getElementById('concepto').value.trim();
+            var categoria  = document.getElementById('categoria').value;
+            var monto      = Number(document.getElementById('monto').value || 0);
+            var proveedor  = document.getElementById('proveedor').value.trim();
+            var comprobante = document.getElementById('comprobante').value.trim();
+            var fecha      = document.getElementById('fechaEstimada').value;
 
-            const tipo = state.editing ? state.editing.tipo : state.activeTab;
-
-            if (!payload.fechaEstimada || !payload.categoria || !payload.concepto || !payload.programa || !payload.cohorte || !payload.monto || !payload.proveedor) {
+            if (!fecha || !categoria || !concepto || !monto) {
                 toast('Completá los campos obligatorios.', 'err');
                 return;
             }
 
-            if (tipo === 'ejecutados' && !payload.comprobante) {
-                toast('Para gastos ejecutados el comprobante es obligatorio.', 'err');
-                return;
+            var datos = {
+                tipo:            tipo === 'ejecutados' ? 'EJECUTADO' : 'PROYECTADO',
+                estado:          tipo === 'ejecutados' ? 'CANCELADO' : 'PENDIENTE',
+                fecha_estimada:  fecha || null,
+                categoria:       categoria,
+                concepto:        concepto,
+                programa_id:     programaId || null,
+                cohorte_id:      cohorteId  || null,
+                monto_original:  monto,
+                monto_pagado:    tipo === 'ejecutados' ? monto : null,
+                proveedor:       proveedor || null,
+                nro_comprobante: comprobante || null
+            };
+
+            if (state.editing && state.editing.id) {
+                datos.egreso_id = state.editing.id;
             }
 
             spin(true);
             try {
-                let savedId = state.editing && state.editing.id ? state.editing.id : crearIdLocal();
-                if (estaEnAppsScript()) {
-                    const res = await gs('guardarGastoCoordinador', {
-                        gastoId: state.editing ? state.editing.id : null,
-                        tipo,
-                        ...payload
-                    });
-                    if (res && res.gastoId) savedId = res.gastoId;
-                }
-
-                const gasto = {
-                    id: savedId,
-                    tipo,
-                    estado: tipo === 'ejecutados' ? 'Ejecutado' : 'Proyectado',
-                    ...payload
-                };
-
-                if (state.editing && state.editing.id) {
-                    state.gastos[tipo] = state.gastos[tipo].map(g => String(g.id) === String(state.editing.id) ? gasto : g);
-                    state.gastos[tipo].unshift(gasto);
-                }
-
+                var result = await guardarEgreso(datos);
+                if (!result.ok) throw new Error('Error al guardar');
+                state.editing = null;
                 cerrarModal('modalGasto');
-                renderTodo();
+                await cargarVista();
                 toast('Gasto guardado exitosamente.', 'ok');
             } catch (e) {
                 toast('No se pudo guardar el gasto.', 'err');
-            } finally {
-                spin(false);
-            }
+                console.error(e);
+            } finally { spin(false); }
         }
 
         function abrirImportacion() {
