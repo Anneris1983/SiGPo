@@ -538,7 +538,7 @@
 
         grid.innerHTML = programas.map(function(p) {
             var tipo = (p.tipo || '').toLowerCase().replace('_', '');
-            return '<div class="program-card" data-tipo="' + tipo + '" onclick="navegar('cooperadora_4_cohortes.html?programa=' + p.id + '')">'
+            return '<div class="program-card" data-tipo="' + tipo + '" onclick="navegar(\'cooperadora_4_cohortes.html?programa=' + p.id + '\')">'
                 +   '<div class="program-header">'
                 +     '<div class="program-icon">' + iconoTipo(p.tipo) + '</div>'
                 +     '<div>'

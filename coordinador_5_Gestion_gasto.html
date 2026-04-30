@@ -526,7 +526,7 @@
                 var sb = await getSupabase();
                 var rP = await sb.from('programas').select('programa_id,nombre');
                 var rC = await sb.from('cohortes').select('cohorte_id,nombre,programa_id');
-                var rE = await sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,fecha_ejecucion,fecha_estimada,proveedor,concepto,descripcion,categoria,nro_comprobante');
+                var rE = await sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,fecha_ejecucion,fecha_estimada,proveedor,concepto,categoria,nro_comprobante');
 
                 var programas = rP.data || [];
                 var cohortes = rC.data || [];
