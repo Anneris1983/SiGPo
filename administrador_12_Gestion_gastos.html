@@ -511,7 +511,7 @@ async function confirmarEjecucion() {
         var sb = await getSupabase();
         var res = await sb.from('egresos').update({
             tipo:'EJECUTADO', estado: 'CANCELADO',
-            fecha_ejecucion:fecha, monto_pagado:monto,
+            fecha_pago:fecha, monto_pagado:monto,
             nro_comprobante:comp, observaciones:obs||null
         }).eq('egreso_id',G.gastoPendEjec);
         if (res.error) throw res.error;

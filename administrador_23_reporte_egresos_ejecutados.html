@@ -315,7 +315,7 @@ async function cargarDatos() {
         var catLabels = Object.keys(catTotals);
         var catData = catLabels.map(function(c) { return catTotals[c]; });
 
-        var monthKeys = Array.from(new Set(egresos.map(function(e) { return mesKey(e.fecha_ejecucion||e.fecha_estimada); }).filter(Boolean))).sort();
+        var monthKeys = Array.from(new Set(egresos.map(function(e) { return mesKey(e.fecha_pago||e.fecha_estimada); }).filter(Boolean))).sort();
         var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
         var monthLabels = monthKeys.map(function(k) { var p=k.split('-'); return meses[parseInt(p[1])-1]+' '+p[0]; });
 
@@ -323,7 +323,7 @@ async function cargarDatos() {
             return {
                 label: esc(cat),
                 data: monthKeys.map(function(mk) {
-                    return Math.round(egresos.filter(function(e){return (e.categoria||'Otros')===cat && mesKey(e.fecha_ejecucion||e.fecha_estimada)===mk;}).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0)/1000);
+                    return Math.round(egresos.filter(function(e){return (e.categoria||'Otros')===cat && mesKey(e.fecha_pago||e.fecha_estimada)===mk;}).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0)/1000);
                 }),
                 backgroundColor: CAT_COLORS[i%CAT_COLORS.length]+'bf',
                 borderColor: CAT_COLORS[i%CAT_COLORS.length],

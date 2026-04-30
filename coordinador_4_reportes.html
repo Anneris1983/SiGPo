@@ -409,7 +409,7 @@ async function cargarVista() {
         var rP = await sb.from('programas').select('programa_id,nombre');
         var rC = await sb.from('cohortes').select('cohorte_id,nombre,programa_id');
         var rCob = await sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento');
-        var rEgr = await sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_ejecucion,fecha_estimada');
+        var rEgr = await sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada');
 
         var programas = rP.data || [];
         var cohortes = rC.data || [];
@@ -426,7 +426,7 @@ async function cargarVista() {
         var egrF = egresos.filter(function(e){
             if (filtPrograma && String(e.programa_id) !== String(filtPrograma)) return false;
             if (filtCohorte && String(e.cohorte_id) !== String(filtCohorte)) return false;
-            var fecha = e.fecha_ejecucion || e.fecha_estimada || '';
+            var fecha = e.fecha_pago || e.fecha_estimada || '';
             if (filtAnio && fecha && !fecha.startsWith(filtAnio)) return false;
             return true;
         });
@@ -442,13 +442,13 @@ async function cargarVista() {
         // Monthly cashflow
         var mesKeys = {};
         cobF.forEach(function(c){ if (c.fecha_vencimiento) { var k=c.fecha_vencimiento.substring(0,7); mesKeys[k]=1; } });
-        egrF.forEach(function(e){ var d=e.fecha_ejecucion||e.fecha_estimada||''; if(d) { var k=d.substring(0,7); mesKeys[k]=1; } });
+        egrF.forEach(function(e){ var d=e.fecha_pago||e.fecha_estimada||''; if(d) { var k=d.substring(0,7); mesKeys[k]=1; } });
         var meses = Object.keys(mesKeys).sort();
         var mesesLabels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
         function mesLabel(k){ var p=k.split('-'); return mesesLabels[parseInt(p[1])-1]+' '+(p[0]||''); }
         var cfLabels = meses.map(mesLabel);
         var cfIngresos = meses.map(function(k){ return cobF.filter(function(c){return (c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL')&&c.fecha_vencimiento&&c.fecha_vencimiento.startsWith(k);}).reduce(function(s,c){return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0));},0); });
-        var cfEgresos = meses.map(function(k){ return egrF.filter(function(e){var d=e.fecha_ejecucion||e.fecha_estimada||'';return e.tipo==='EJECUTADO'&&d.startsWith(k);}).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0); });
+        var cfEgresos = meses.map(function(k){ return egrF.filter(function(e){var d=e.fecha_pago||e.fecha_estimada||'';return e.tipo==='EJECUTADO'&&d.startsWith(k);}).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0); });
 
         // Estados por cohorte
         var cohortesF = filtCohorte ? cohortes.filter(function(c){return String(c.cohorte_id)===String(filtCohorte);}) : (filtPrograma ? cohortes.filter(function(c){return String(c.programa_id)===String(filtPrograma);}) : cohortes);

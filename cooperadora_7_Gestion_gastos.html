@@ -612,7 +612,7 @@ async function confirmarEjecucion() {
     if (!fecha) { alert('Ingresá la fecha de ejecución'); return; }
     if (!comp) { alert('Ingresá el número de comprobante'); return; }
     try {
-        await guardarEgreso({ egreso_id: G.gastoAEjecutar, tipo:'EJECUTADO', estado:'CANCELADO', fecha_ejecucion:fecha, nro_comprobante:comp, observaciones:obs||null });
+        await guardarEgreso({ egreso_id: G.gastoAEjecutar, tipo:'EJECUTADO', estado:'CANCELADO', fecha_pago:fecha, nro_comprobante:comp, observaciones:obs||null });
         cerrarModal('modalEjecutar');
         G.gastoAEjecutar = null;
         await cargarDatos();

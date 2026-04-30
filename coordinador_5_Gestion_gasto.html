@@ -526,7 +526,7 @@
                 var sb = await getSupabase();
                 var rP = await sb.from('programas').select('programa_id,nombre');
                 var rC = await sb.from('cohortes').select('cohorte_id,nombre,programa_id');
-                var rE = await sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,fecha_ejecucion,fecha_estimada,proveedor,concepto,categoria,nro_comprobante');
+                var rE = await sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,fecha_pago,fecha_estimada,proveedor,concepto,categoria,nro_comprobante');
 
                 var programas = rP.data || [];
                 var cohortes = rC.data || [];
@@ -546,7 +546,7 @@
                     return {
                         id:          e.egreso_id,
                         fechaEstimada: e.fecha_estimada||'',
-                        fechaEjecucion: e.fecha_ejecucion||'',
+                        fechaEjecucion: e.fecha_pago||'',
                         categoria:   e.categoria||'',
                         concepto:    e.concepto||e.descripcion||'',
                         programa:    progMap[e.programa_id]||'',
@@ -601,7 +601,7 @@
                 comprobante: g.comprobante || g.numeroComprobante || g.nro_comprobante || '',
                 estado: tipo === 'ejecutados' ? 'Ejecutado' : 'Proyectado',
                 observaciones: g.observaciones || '',
-                fechaEjecucion: g.fechaEjecucion || g.fecha_ejecucion || '',
+                fechaEjecucion: g.fechaEjecucion || g.fecha_pago || '',
                 tipo: tipo
             };
         }
@@ -799,7 +799,7 @@
                 var res = await sb.from('egresos').update({
                     tipo:            'EJECUTADO',
                     estado:          'CANCELADO',
-                    fecha_ejecucion: fechaEjecucion,
+                    fecha_pago: fechaEjecucion,
                     monto_pagado:    state.gastoAEjecutar.monto,
                     nro_comprobante: comprobante,
                     observaciones:   observaciones || null

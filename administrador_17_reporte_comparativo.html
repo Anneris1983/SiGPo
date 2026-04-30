@@ -577,7 +577,7 @@ function getDato(label) {
 
     var egresos = 0;
     _egresos.forEach(function(e) {
-        var fe = (e.fecha_ejecucion || '').substring(0, 7);
+        var fe = (e.fecha_pago || '').substring(0, 7);
         var mm = fe.substring(5, 7);
         var yy = fe.substring(0, 4);
         if (yy !== year || meses.indexOf(mm) < 0) return;
