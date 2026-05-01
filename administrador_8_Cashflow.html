@@ -332,7 +332,7 @@
 <script src="supabase.js"></script>
 <script>
 var filtrosActivos = {};
-var _allCobros = [], _allEgresos = [];
+var _allCobros = [], _allEgresos = [], _allCohortes = [];
 
 function formatFecha(iso) {
     if (!iso) return '';
@@ -343,6 +343,16 @@ function formatMillones(n) {
     return '$' + Number(n||0).toLocaleString('es-AR');
 }
 function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
+
+function actualizarCohortes(programaId) {
+    var selCoh = document.getElementById('filtroCohorte');
+    if (!selCoh) return;
+    var lista = programaId
+        ? _allCohortes.filter(function(c){ return String(c.programa_id) === String(programaId); })
+        : _allCohortes;
+    selCoh.innerHTML = '<option value="">Todas las cohortes</option>' +
+        lista.map(function(c){ return '<option value="'+c.cohorte_id+'">'+c.nombre+'</option>'; }).join('');
+}
 
 function toggleDesdeInicio(chk) {
     var input = document.getElementById('fechaDesde');
@@ -504,16 +514,20 @@ async function cargarInicial() {
         if (rE.error)   console.error('egresos error:', rE.error);
 
         var programas = rP.data || [];
-        var cohortes  = rC.data || [];
-        _allCobros  = rCob.data || [];
-        _allEgresos = rE.data || [];
+        _allCohortes = rC.data || [];
+        _allCobros   = rCob.data || [];
+        _allEgresos  = rE.data || [];
 
         var selProg = document.getElementById('filtroPrograma');
-        var selCoh  = document.getElementById('filtroCohorte');
-        if (selProg) selProg.innerHTML = '<option value="">Todos los programas</option>' +
-            programas.map(function(p){ return '<option value="'+p.programa_id+'">'+p.nombre+'</option>'; }).join('');
-        if (selCoh) selCoh.innerHTML = '<option value="">Todas las cohortes</option>' +
-            cohortes.map(function(c){ return '<option value="'+c.cohorte_id+'">'+c.nombre+'</option>'; }).join('');
+        if (selProg) {
+            selProg.innerHTML = '<option value="">Todos los programas</option>' +
+                programas.map(function(p){ return '<option value="'+p.programa_id+'">'+p.nombre+'</option>'; }).join('');
+            selProg.addEventListener('change', function() {
+                actualizarCohortes(this.value);
+                document.getElementById('filtroCohorte').value = '';
+            });
+        }
+        actualizarCohortes('');
 
         // Restore saved filters
         try {
@@ -523,8 +537,8 @@ async function cargarInicial() {
                 if (f.desdeInicio !== false) { document.getElementById('chkInicio').checked = true; toggleDesdeInicio({checked:true}); }
                 else if (f.desde) document.getElementById('fechaDesde').value = f.desde;
                 if (f.hasta)    document.getElementById('fechaHasta').value = f.hasta;
-                if (f.programa && selProg) selProg.value = f.programa;
-                if (f.cohorte  && selCoh)  selCoh.value  = f.cohorte;
+                if (f.programa && selProg) { selProg.value = f.programa; actualizarCohortes(f.programa); }
+                if (f.cohorte) document.getElementById('filtroCohorte').value = f.cohorte;
             }
         } catch(eSave) {}
 
