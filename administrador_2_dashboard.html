@@ -195,7 +195,7 @@
         <div class="stat-card primary"><div class="stat-label">Cursos</div><div class="stat-value" id="stat-cursos"><span class="loading-spinner"></span></div></div>
         <div class="stat-card"><div class="stat-label">Estudiantes Activos</div><div class="stat-value" id="stat-estudiantes"><span class="loading-spinner"></span></div></div>
         <div class="stat-card success"><div class="stat-label">Al Día</div><div class="stat-value" id="stat-aldia"><span class="loading-spinner"></span></div></div>
-        <div class="stat-card danger"><div class="stat-label">En Mora</div><div class="stat-value" id="stat-mora"><span class="loading-spinner"></span></div></div>
+        <div class="stat-card danger"><div class="stat-label">En Mora</div><div class="stat-value" id="stat-mora"><span class="loading-spinner"></span></div><div id="stat-mora-cuotas" style="font-size:12px;color:#9ca3af;margin-top:4px;"></div></div>
         <div class="stat-card"><div class="stat-label">Recaudado</div><div class="stat-value" id="stat-recaudado"><span class="loading-spinner"></span></div></div>
         <div class="stat-card warning"><div class="stat-label">Egresos</div><div class="stat-value" id="stat-egresos"><span class="loading-spinner"></span></div></div>
         <div class="stat-card success"><div class="stat-label">Saldo</div><div class="stat-value" id="stat-saldo"><span class="loading-spinner"></span></div></div>
@@ -317,9 +317,13 @@ function renderDashboard(data) {
     document.getElementById('stat-estudiantes').textContent = data.estudiantesActivos || 0;
     document.getElementById('stat-aldia').textContent       = data.alDia || 0;
     document.getElementById('stat-mora').textContent        = data.enMora || 0;
+    var cuotasEl = document.getElementById('stat-mora-cuotas');
+    if (cuotasEl) cuotasEl.textContent = data.cuotasEnMora ? data.cuotasEnMora + ' cuotas en mora' : '';
     document.getElementById('stat-recaudado').textContent   = fMillones(data.recaudado);
     document.getElementById('stat-egresos').textContent     = fMillones(data.egresos);
-    document.getElementById('stat-saldo').textContent       = fMillones(data.saldo);
+    var saldoEl = document.getElementById('stat-saldo');
+    saldoEl.textContent = fMillones(data.saldo);
+    saldoEl.style.color = (data.saldo || 0) < 0 ? 'var(--danger)' : '';
 
     if (data.nombreAdmin) {
         document.getElementById('btn-admin-name').textContent = data.nombreAdmin;
@@ -357,6 +361,7 @@ function renderTarjeta(p) {
         + '<div class="program-stat"><span>Estudiantes:</span><strong>' + (p.estudiantes || 0) + '</strong></div>'
         + '<div class="program-stat"><span>' + label + ':</span><strong>' + (p.cohortes || 0) + '</strong></div>'
         + '<div class="program-stat"><span>Al día:</span><strong style="color:' + colorAlDia + ';">' + (p.alDia || 0) + '</strong></div>'
+        + '<div class="program-stat"><span>En mora:</span><strong style="color:#c0392b;">' + (p.enMora || 0) + (p.cuotasEnMora ? ' est. (' + p.cuotasEnMora + ' cuotas)' : '') + '</strong></div>'
         + '<div class="program-stat"><span>Recaudado:</span><strong>' + fMillones(p.recaudado) + '</strong></div>'
         + '<div class="program-stat"><span>Egresos:</span><strong style="color:#e67e22;">' + fMillones(p.egresos) + '</strong></div>'
         + '<div class="program-stat"><span>Saldo:</span><strong style="color:' + colorSaldo + ';">' + fMillones(p.saldo) + '</strong></div>'
@@ -373,6 +378,12 @@ function cargarDashboard() {
         }
     }).catch(function(err) {
         console.error('Error cargando dashboard:', err);
+        var banner = document.createElement('div');
+        banner.style.cssText = 'background:#fee2e2;border:1px solid #dc2626;color:#991b1b;padding:12px 20px;border-radius:8px;margin:16px;font-size:14px;';
+        banner.innerHTML = '<strong>Error al cargar el dashboard:</strong> ' + (err.message || String(err));
+        document.querySelector('.container') && document.querySelector('.container').prepend(banner);
+        ['stat-programas','stat-cursos','stat-estudiantes','stat-aldia','stat-mora','stat-recaudado','stat-egresos','stat-saldo']
+            .forEach(function(id){ var el = document.getElementById(id); if (el) el.textContent = 'Error'; });
     });
 }
 

@@ -767,15 +767,16 @@ async function obtenerDashboardAdmin() {
     var cohProgMap = {};
     cohortes.forEach(function(c) { cohProgMap[c.cohorte_id] = c.programa_id; });
 
-    var totalRecaudado = cobros.reduce(function (s, c) {
-        return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
-    }, 0);
+    var totalRecaudado = cobros
+        .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
+        .reduce(function (s, c) { return s + Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)); }, 0);
     var totalEgresos = egresos.filter(function(e){ return e.tipo === 'EJECUTADO'; }).reduce(function (s, e) { return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
 
     // Estudiantes en mora: tienen al menos 1 cobro EN_MORA
     var dnisConMora = new Set(
         cobros.filter(function(c) { return c.estado === 'EN_MORA'; }).map(function(c) { return c.dni; })
     );
+    var cuotasEnMora = cobros.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
 
     var totalProgramasPosgrado = programas.filter(function(p) { return getCategoriaPrograma(p.tipo) === 'Programa'; }).length;
     var totalCursos            = programas.filter(function(p) { return getCategoriaPrograma(p.tipo) === 'Curso'; }).length;
@@ -787,6 +788,7 @@ async function obtenerDashboardAdmin() {
         estudiantesActivos:      totalEstActivos,
         alDia:                   totalEstActivos - dnisConMora.size,
         enMora:                  dnisConMora.size,
+        cuotasEnMora:            cuotasEnMora,
         recaudado:               totalRecaudado,
         egresos:                 totalEgresos,
         saldo:                   totalRecaudado - totalEgresos,
@@ -802,15 +804,16 @@ async function obtenerDashboardAdmin() {
                 cobrosProg.filter(function(c) { return c.estado === 'EN_MORA'; }).map(function(c) { return c.dni; })
             );
 
-            var recaudadoProg = cobrosProg.reduce(function (s, c) {
-                return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
-            }, 0);
+            var recaudadoProg = cobrosProg
+                .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
+                .reduce(function (s, c) { return s + Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)); }, 0);
             var egresosPagadosProg = egresosProg.filter(function(e){ return e.tipo === 'EJECUTADO'; }).reduce(function (s, e) {
                 return s + Number(e.monto_pagado || e.monto_original || 0);
             }, 0);
 
-            var totalEstProg = dnisProg.size;
-            var enMoraProg   = dnisConMoraProg.size;
+            var totalEstProg    = dnisProg.size;
+            var enMoraProg      = dnisConMoraProg.size;
+            var cuotasMoraProg  = cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
 
             return {
                 id:               p.programa_id,
@@ -822,6 +825,7 @@ async function obtenerDashboardAdmin() {
                 cohortes:         cohsProg.length,
                 alDia:            Math.max(0, totalEstProg - enMoraProg),
                 enMora:           enMoraProg,
+                cuotasEnMora:     cuotasMoraProg,
                 recaudado:        recaudadoProg,
                 egresos:          egresosPagadosProg,
                 saldo:            recaudadoProg - egresosPagadosProg
