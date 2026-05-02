@@ -794,11 +794,17 @@ async function obtenerDashboardAdmin() {
         saldo:                   totalRecaudado - totalEgresos,
         programas: programas.map(function (p) {
             // Cohortes del programa
-            var cohsProg = cohortes.filter(function(c) { return c.programa_id === p.programa_id; });
+            var cohsProg = cohortes.filter(function(c) { return String(c.programa_id) === String(p.programa_id); });
 
-            var cobrosProg  = cobros.filter(function(c) { return c.programa_id === p.programa_id; });
+            var cobrosProg  = cobros.filter(function(c) {
+                var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id];
+                return String(pid) === String(p.programa_id);
+            });
             var dnisProg = new Set(cobrosProg.filter(function(c){ return c.estado !== 'A_DEFINIR'; }).map(function(c){ return c.dni; }));
-            var egresosProg = egresos.filter(function(e) { return e.programa_id === p.programa_id; });
+            var egresosProg = egresos.filter(function(e) {
+                var pid = e.programa_id != null ? e.programa_id : cohProgMap[e.cohorte_id];
+                return String(pid) === String(p.programa_id);
+            });
 
             var dnisConMoraProg = new Set(
                 cobrosProg.filter(function(c) { return c.estado === 'EN_MORA'; }).map(function(c) { return c.dni; })
