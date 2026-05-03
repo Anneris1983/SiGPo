@@ -154,19 +154,18 @@ function enviarReclamosMora() {
 // ══════════════════════════════════════════════════════════════
 
 function alertarCuotasADefinir() {
-  var hoy    = new Date();
-  var limite = new Date(hoy.getTime() + 45 * 86400000);
-  var desde  = hoy.toISOString().split('T')[0];
-  var hasta  = limite.toISOString().split('T')[0];
+  var hoy       = new Date();
+  // El alerta se envía UNA sola vez: el día en que quedan exactamente 45 días para el vencimiento
+  var objetivo  = new Date(hoy.getTime() + 45 * 86400000);
+  var fechaObj  = objetivo.toISOString().split('T')[0];
 
-  Logger.log('--- Alerta A_DEFINIR: vencimientos hasta ' + hasta + ' ---');
+  Logger.log('--- Alerta A_DEFINIR: cuotas que vencen exactamente el ' + fechaObj + ' ---');
 
   var cobros = _sbGet(
     'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final' +
     '&estado=eq.A_DEFINIR' +
     '&no_aplica=not.is.true' +
-    '&fecha_vencimiento=gte.' + desde +
-    '&fecha_vencimiento=lte.' + hasta
+    '&fecha_vencimiento=eq.' + fechaObj
   );
 
   if (!cobros.length) { Logger.log('Sin cuotas A_DEFINIR próximas.'); return; }
