@@ -131,9 +131,18 @@ async function cargar(sesion) {
     var cohIds = new Set(_cohortes.map(function(c){ return c.cohorte_id; }));
     var inscFilt = insc.filter(function(i){ return cohIds.has(i.cohorte_id); });
 
-    // Totales globales
-    var totalEst   = new Set(inscFilt.map(function(i){ return i.estudiante_id; })).size;
-    var dnisConMora = new Set(cobros.filter(function(c){ return c.estado === 'EN_MORA'; }).map(function(c){ return c.dni; }));
+    // Totales globales — enrollment-based counting (estudiante × programa):
+    // un estudiante en 2 programas cuenta como 2 unidades
+    var totalEst = new Set(
+        inscFilt.map(function(i){ return i.estudiante_id + '|' + _cohProgMap[i.cohorte_id]; })
+    ).size;
+    var dnisConMora = new Set(
+        cobros.filter(function(c){ return c.estado === 'EN_MORA'; })
+              .map(function(c){
+                  var pid = c.programa_id != null ? c.programa_id : _cohProgMap[c.cohorte_id];
+                  return c.dni + '|' + pid;
+              })
+    );
     var recaudado  = cobros
         .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
         .reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
