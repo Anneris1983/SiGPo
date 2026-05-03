@@ -157,6 +157,7 @@ function cerrarSesion(e) {
 const RUTAS_POR_ROL = {
     'ESTUDIANTE':    'portal_estudiante_2_dashboard.html',
     'COORDINADOR':   'coordinador_1_dashboard.html',
+    'PROFESOR':      'profesor_1_dashboard.html',
     'SECRETARIA':    'secretaria_1_dashboard.html',
     'COOPERADORA':   'cooperadora_2_Dashboard.html',
     'ADMINISTRADOR': 'administrador_2_dashboard.html'
