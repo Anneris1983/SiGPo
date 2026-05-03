@@ -431,11 +431,15 @@ async function cargarVista() {
             return true;
         });
 
-        // Summary
-        var dnisAlDia = new Set(cobF.filter(function(c){return c.estado==='ABONADA';}).map(function(c){return c.dni;}));
-        var dnisEnMora = new Set(cobF.filter(function(c){return c.estado==='EN_MORA';}).map(function(c){return c.dni;}));
-        var dnisParcial = new Set(cobF.filter(function(c){return c.estado==='PAGO_PARCIAL';}).map(function(c){return c.dni;}));
-        var dnisTotal = new Set(cobF.map(function(c){return c.dni;}));
+        // Mapa cohorte_id → programa_id para enrollment-based counting
+        var cohProgMap = {};
+        cohortes.forEach(function(c){ cohProgMap[c.cohorte_id] = c.programa_id; });
+        // Summary — conteo por enrollment (dni × programa): estudiante en 2 programas = 2 unidades
+        function enrollKey(c){ var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id]; return c.dni + '|' + pid; }
+        var dnisAlDia = new Set(cobF.filter(function(c){return c.estado==='ABONADA';}).map(enrollKey));
+        var dnisEnMora = new Set(cobF.filter(function(c){return c.estado==='EN_MORA';}).map(enrollKey));
+        var dnisParcial = new Set(cobF.filter(function(c){return c.estado==='PAGO_PARCIAL';}).map(enrollKey));
+        var dnisTotal = new Set(cobF.map(enrollKey));
         var recaudado = cobF.filter(function(c){return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL';}).reduce(function(s,c){return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0));},0);
         var tasaPago = dnisTotal.size > 0 ? Math.round(dnisAlDia.size / dnisTotal.size * 100) : 0;
 
@@ -463,7 +467,7 @@ async function cargarVista() {
 
         // Estudiantes por estado (donut)
         var epEstados = ['Al Día','En Mora','Pago Parcial','Pendiente','A Definir'];
-        var epValores = [dnisAlDia.size, dnisEnMora.size, dnisParcial.size, new Set(cobF.filter(function(c){return c.estado==='PENDIENTE'||c.estado==='NO_ABONADA';}).map(function(c){return c.dni;})).size, new Set(cobF.filter(function(c){return c.estado==='A_DEFINIR';}).map(function(c){return c.dni;})).size];
+        var epValores = [dnisAlDia.size, dnisEnMora.size, dnisParcial.size, new Set(cobF.filter(function(c){return c.estado==='PENDIENTE'||c.estado==='NO_ABONADA';}).map(enrollKey)).size, new Set(cobF.filter(function(c){return c.estado==='A_DEFINIR';}).map(enrollKey)).size];
 
         var primerProg = programas.find(function(p){return String(p.programa_id)===String(filtPrograma);}) || programas[0] || {};
         var aniosList = [];

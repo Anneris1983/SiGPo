@@ -319,15 +319,16 @@ async function cargarDatos() {
         // Filter EN_MORA cobros
         var enMora = cobros.filter(function(c) { return c.estado === 'EN_MORA'; });
 
-        // Unique DNIs in mora
-        var dnisEnMora = new Set(enMora.map(function(c){ return c.dni; }));
+        // Enrollment-based counting (dni × programa): estudiante en 2 programas = 2 unidades
+        // Unique enrollments in mora (across programs)
+        var dnisEnMora = new Set(enMora.map(function(c){ return c.dni + '|' + (c.programa_id != null ? c.programa_id : ''); }));
         var totalEnMora = dnisEnMora.size;
 
         // Total monto mora (saldo_pendiente sum)
         var montoTotalMora = enMora.reduce(function(s,c){ return s + Number(c.saldo_pendiente||0); }, 0);
 
-        // Total unique DNIs across all cobros
-        var todosLosDnis = new Set(cobros.map(function(c){ return c.dni; }));
+        // Total unique enrollments across all cobros (enrollment-based)
+        var todosLosDnis = new Set(cobros.map(function(c){ return c.dni + '|' + (c.programa_id != null ? c.programa_id : ''); }));
         var pctMoraGeneral = todosLosDnis.size > 0 ? (dnisEnMora.size / todosLosDnis.size * 100) : 0;
 
         // Mora promedio por estudiante moroso

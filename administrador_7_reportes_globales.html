@@ -604,12 +604,16 @@ async function aplicarFiltros() {
    CÁLCULO Y RENDER
 ══════════════════════════════════════════════ */
 function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId, desdeChk) {
+    // Mapa cohorte_id → programa_id para enrollment-based counting
+    var cohProgMap = {};
+    _cohortes.forEach(function(c){ cohProgMap[c.cohorte_id] = c.programa_id; });
+
     // ── COBROS: sumas globales ──
     var ingresoProy   = 0; // monto_final donde estado != NO_APLICA, A_DEFINIR
     var ingresoEjec   = 0; // lo efectivamente cobrado (monto_final - saldo_pendiente donde ABONADA o PAGO_PARCIAL)
     var montoMora     = 0;
     var cuotasEnMora  = 0;
-    var dnisEnMora    = {};
+    var dnisEnMora    = {}; // clave: dni|programa_id (enrollment-based)
 
     cobros.forEach(function(c) {
         var mf = Number(c.monto_final || 0);
@@ -624,7 +628,8 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
         if (est === 'EN_MORA') {
             montoMora += sp;
             cuotasEnMora++;
-            dnisEnMora[c.dni] = true;
+            var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id];
+            dnisEnMora[c.dni + '|' + pid] = true;
         }
     });
     var estudiantesEnMora = Object.keys(dnisEnMora).length;
