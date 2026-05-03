@@ -478,11 +478,9 @@
 <script>
     /* ══ HELPERS ══ */
     function fMillones(n) {
-        if (!n) return '$0';
-        var v = Math.round(Number(n));
-        if (v >= 1000000) return '$' + (v/1000000).toFixed(1).replace('.0','') + 'M';
-        if (v >= 1000) return '$' + Math.round(v/1000) + 'K';
-        return '$' + v.toLocaleString('es-AR');
+        var num = parseFloat(n || 0);
+        if (isNaN(num)) return '$0,00';
+        return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
     }
 
     /* ══ ESTADO GLOBAL ══ */

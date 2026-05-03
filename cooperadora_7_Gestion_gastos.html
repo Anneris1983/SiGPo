@@ -487,10 +487,9 @@ var G = { egresos: [], programas: [], gastoAEjecutar: null, editing: null, tabAc
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fMonto(n) {
     if (n===null||n===undefined||n==='') return '—';
-    var v = Math.round(Number(n));
-    if (v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
-    if (v>=1000) return '$'+Math.round(v/1000)+'k';
-    return '$'+v.toLocaleString('es-AR');
+    var num = parseFloat(n);
+    if (isNaN(num)) return '—';
+    return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 function fFechaCorta(f) {
     if (!f) return '—';

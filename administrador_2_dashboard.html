@@ -298,12 +298,10 @@ function cargarNotificaciones() {
    FORMATEO DE MONTOS
    ══════════════════════════════════════════════ */
 function fMillones(valor) {
-    if (valor === null || valor === undefined) return '$0';
+    if (valor === null || valor === undefined) return '$0,00';
     var num = parseFloat(valor);
-    if (num < 0) return '-' + fMillones(Math.abs(num));
-    if (num >= 1000000) return '$' + (num / 1000000).toFixed(1).replace('.0', '') + 'M';
-    if (num >= 1000) return '$' + (num / 1000).toFixed(0) + 'K';
-    return '$' + num.toLocaleString('es-AR');
+    if (isNaN(num)) return '$0,00';
+    return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
 /* ══════════════════════════════════════════════

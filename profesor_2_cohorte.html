@@ -311,11 +311,9 @@ function mostrarError(msg) {
 }
 
 function fM(n) {
-    var v = Number(n||0);
-    if (v < 0) return '-' + fM(-v);
-    if (v >= 1000000) return '$' + (v/1000000).toFixed(1).replace('.0','') + 'M';
-    if (v >= 1000)    return '$' + (v/1000).toFixed(0) + 'K';
-    return '$' + v.toLocaleString('es-AR');
+    var num = parseFloat(n || 0);
+    if (isNaN(num)) return '$0,00';
+    return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 function esc(v) { return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 </script>

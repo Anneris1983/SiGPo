@@ -339,8 +339,9 @@ function formatFecha(iso) {
     var p = iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0];
 }
 function formatMillones(n) {
-    if (Math.abs(n) >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
-    return '$' + Number(n||0).toLocaleString('es-AR');
+    var num = parseFloat(n || 0);
+    if (isNaN(num)) return '$0,00';
+    return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
 

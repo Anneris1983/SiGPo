@@ -213,7 +213,7 @@
                 var dnisAlDia = new Set(cobros.filter(function(c){return c.estado==='ABONADA';}).map(function(c){ var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id]; return c.dni + '|' + pid; }));
                 var dnisEnMora = new Set(cobros.filter(function(c){return c.estado==='EN_MORA';}).map(function(c){ var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id]; return c.dni + '|' + pid; }));
                 var recaudado = cobros.filter(function(c){return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL';}).reduce(function(s,c){return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0));},0);
-                var recTexto = recaudado>=1000000 ? '$'+(recaudado/1000000).toFixed(1)+'M' : '$'+Number(recaudado).toLocaleString('es-AR');
+                var recTexto = '$'+Number(recaudado).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
                 var cohActivas = cohortes.filter(function(c){return c.estado==='ACTIVO';}).length;
                 var primerProg = programas[0] || {};
                 var programasStats = programas.map(function(p) {
@@ -227,7 +227,7 @@
                     var alD = new Set(cobs.filter(function(x){return x.estado==='ABONADA';}).map(function(x){return x.dni;})).size;
                     var mor = new Set(cobs.filter(function(x){return x.estado==='EN_MORA';}).map(function(x){return x.dni;})).size;
                     var rec = cobs.filter(function(x){return x.estado==='ABONADA'||x.estado==='PAGO_PARCIAL';}).reduce(function(s,x){return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));},0);
-                    var recT = rec>=1000000 ? '$'+(rec/1000000).toFixed(1)+'M' : '$'+Number(rec).toLocaleString('es-AR');
+                    var recT = '$'+Number(rec).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
                     return { cohorteId:c.cohorte_id, nombre:c.nombre||'Cohorte', estado:c.estado==='ACTIVO'?'Activa':'Cerrada', estudiantes:dnis.size, alDia:alD, mora:mor, recaudadoTexto:recT, detalle:(c.fecha_inicio||'')+(c.fecha_fin?' - '+c.fecha_fin:''), destino:'coordinador_3_cohorte.html?cohorte_id='+c.cohorte_id };
                 });
                 dashboardData = {
