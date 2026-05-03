@@ -766,8 +766,14 @@ async function obtenerDashboardAdmin() {
     var cohProgMap = {};
     cohortes.forEach(function(c) { cohProgMap[c.cohorte_id] = c.programa_id; });
 
-    // Estudiantes globales: únicos por inscripción (misma fuente que secretaría)
-    var totalEstActivos = new Set(inscripciones.map(function(i){ return i.estudiante_id; })).size;
+    // Estudiantes activos: por enrollment (estudiante × programa), no por persona única.
+    // Un estudiante inscripto en 2 programas = 2 unidades de seguimiento distintas
+    // (cobros distintos, deuda distinta, saldo distinto).
+    var totalEstActivos = new Set(
+        inscripciones.map(function(i){
+            return i.estudiante_id + '|' + (cohProgMap[i.cohorte_id] || '');
+        })
+    ).size;
 
     var totalRecaudado = cobros
         .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
@@ -776,8 +782,14 @@ async function obtenerDashboardAdmin() {
         .filter(function(e){ return e.tipo === 'EJECUTADO'; })
         .reduce(function (s, e) { return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
 
-    // Mora global: estudiantes con al menos 1 cobro EN_MORA
-    var dnisConMora  = new Set(cobros.filter(function(c){ return c.estado === 'EN_MORA'; }).map(function(c){ return c.dni; }));
+    // Mora global: por enrollment (dni × programa) — mismo criterio que el conteo de activos
+    var dnisConMora = new Set(
+        cobros.filter(function(c){ return c.estado === 'EN_MORA'; })
+              .map(function(c){
+                  var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id];
+                  return c.dni + '|' + pid;
+              })
+    );
     var cuotasEnMora = cobros.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
 
     var totalProgramasPosgrado = programas.filter(function(p){ return getCategoriaPrograma(p.tipo) === 'Programa'; }).length;
