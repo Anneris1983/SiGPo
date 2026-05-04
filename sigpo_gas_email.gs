@@ -19,10 +19,19 @@
  * ══════════════════════════════════════════════════════════════
  */
 
-var SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
-var SUPABASE_KEY = 'REEMPLAZAR_CON_SERVICE_ROLE_KEY'; // ← pegar service_role key SOLO en script.google.com, nunca en el repo
-var SECRET       = 'SIGPO_KEY_FCE_2025';
-var NOMBRE_INST  = 'Secretaría de Posgrado — FCE UNCUYO';
+var SUPABASE_URL  = 'https://fdevypdowdhqaxvfiywt.supabase.co';
+var SUPABASE_KEY  = 'REEMPLAZAR_CON_SERVICE_ROLE_KEY'; // ← pegar service_role key SOLO en script.google.com, nunca en el repo
+var SECRET        = 'SIGPO_KEY_FCE_2025';
+var NOMBRE_INST   = 'Secretaría de Posgrado — FCE UNCUYO';
+
+// ══════════════════════════════════════════════════════════════
+// CONFIGURACIÓN POR COORDINADOR
+// Cada GAS pertenece a un coordinador. Listar acá los programa_id
+// que ese coordinador gestiona (puede ser uno o varios).
+// Ejemplo un programa:  var PROGRAMA_IDS = [3];
+// Ejemplo dos programas: var PROGRAMA_IDS = [3, 7];
+// ══════════════════════════════════════════════════════════════
+var PROGRAMA_IDS = [REEMPLAZAR_CON_ID_DEL_PROGRAMA]; // ← número(s) sin comillas
 
 // ══════════════════════════════════════════════════════════════
 // TRIGGER PRINCIPAL — ejecuta las 3 lógicas según el día
@@ -30,7 +39,7 @@ var NOMBRE_INST  = 'Secretaría de Posgrado — FCE UNCUYO';
 
 function ejecutarTareasDiarias() {
   var dia = new Date().getDate();
-  Logger.log('=== SiGPo tareas automáticas — día ' + dia + ' ===');
+  Logger.log('=== SiGPo tareas automáticas — día ' + dia + ' — programas: [' + PROGRAMA_IDS.join(',') + '] ===');
   if (dia === 1)  enviarRecordatoriosVencimiento();
   if (dia === 16) enviarReclamosMora();
   alertarCuotasADefinir();
@@ -73,6 +82,7 @@ function enviarRecordatoriosVencimiento() {
 
   var cobros = _sbGet(
     'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
+    '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
     '&estado=not.in.(ABONADA,A_DEFINIR)' +
     '&no_aplica=not.is.true' +
     '&fecha_vencimiento=gte.' + desde +
@@ -118,6 +128,7 @@ function enviarReclamosMora() {
 
   var cobros = _sbGet(
     'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
+    '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
     '&estado=eq.EN_MORA'
   );
 
@@ -162,6 +173,7 @@ function alertarCuotasADefinir() {
 
   var cobros = _sbGet(
     'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final' +
+    '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
     '&estado=eq.A_DEFINIR' +
     '&no_aplica=not.is.true' +
     '&fecha_vencimiento=eq.' + fechaObj
