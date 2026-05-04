@@ -1,0 +1,208 @@
+/**
+ * ══════════════════════════════════════════════════════════════
+ * SiGPo — GAS del ADMINISTRADOR
+ * Google Apps Script — uno solo, en la cuenta del administrador
+ *
+ * DESPLIEGUE (una sola vez):
+ *  1. script.google.com desde la cuenta del ADMINISTRADOR
+ *  2. Pegar este código
+ *  3. Configurar SUPABASE_KEY (service role key)
+ *  4. Ejecutar configurarTriggers() una vez → autorizar permisos
+ *  5. No necesita implementarse como Web App (no tiene doPost)
+ *
+ * FUNCIÓN AUTOMÁTICA (sale desde el email del administrador):
+ *  · Todos los días a las 07:00 → Alerta cuotas A_DEFINIR
+ *    Se dispara UNA SOLA VEZ cuando quedan exactamente 45 días
+ *    para el vencimiento de una cuota sin monto definido.
+ *    Destinatarios: cooperadora, secretaria y admin del programa.
+ * ══════════════════════════════════════════════════════════════
+ */
+
+var SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
+var SUPABASE_KEY = 'REEMPLAZAR_CON_SERVICE_ROLE_KEY'; // ← solo en script.google.com, nunca en el repo
+var NOMBRE_INST  = 'Secretaría de Posgrado — FCE UNCUYO';
+
+// ══════════════════════════════════════════════════════════════
+// TRIGGER PRINCIPAL
+// ══════════════════════════════════════════════════════════════
+
+function ejecutarTareasDiarias() {
+  Logger.log('=== SiGPo admin — alerta A_DEFINIR ===');
+  alertarCuotasADefinir();
+}
+
+function configurarTriggers() {
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'ejecutarTareasDiarias') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('ejecutarTareasDiarias').timeBased().everyDays(1).atHour(7).create();
+  Logger.log('✅ Trigger diario 07:00 configurado.');
+}
+
+// ══════════════════════════════════════════════════════════════
+// ALERTA CUOTAS A_DEFINIR
+// Todos los días revisa si hay cobros con estado A_DEFINIR cuyo
+// vencimiento es exactamente hoy + 45 días. Si los hay, avisa
+// a cooperadora, secretaria y admin para que definan el monto.
+// Al ser fecha exacta, el aviso se envía una sola vez por cuota.
+// ══════════════════════════════════════════════════════════════
+
+function alertarCuotasADefinir() {
+  var hoy      = new Date();
+  var objetivo = new Date(hoy.getTime() + 45 * 86400000);
+  var fechaObj = objetivo.toISOString().split('T')[0];
+
+  Logger.log('--- Alerta A_DEFINIR: cuotas que vencen exactamente el ' + fechaObj + ' ---');
+
+  var cobros = _sbGet(
+    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final' +
+    '&estado=eq.A_DEFINIR' +
+    '&no_aplica=not.is.true' +
+    '&fecha_vencimiento=eq.' + fechaObj
+  );
+
+  if (!cobros.length) { Logger.log('Sin cuotas A_DEFINIR para esa fecha.'); return; }
+
+  var porCohorte = {};
+  cobros.forEach(function(c) {
+    if (!porCohorte[c.cohorte_id]) porCohorte[c.cohorte_id] = [];
+    porCohorte[c.cohorte_id].push(c);
+  });
+
+  var cohorteIds = Object.keys(porCohorte);
+  var cohortes   = _sbGet('cohortes?select=cohorte_id,nombre,programa_id&cohorte_id=in.(' + cohorteIds.join(',') + ')');
+  var programas  = _sbGet('programas?select=programa_id,nombre');
+  var cohMap     = _indexar(cohortes,  'cohorte_id');
+  var progMap    = _indexar(programas, 'programa_id');
+
+  // Receptores: cooperadora, secretaria y admin
+  var receptores = _sbGet('usuarios?select=dni,nombre,apellido,email,rol,programa_id&rol=in.(COOPERADORA,SECRETARIA,ADMINISTRADOR)&activo=eq.true');
+  var recPorProg = {};
+  receptores.forEach(function(r) {
+    var key = String(r.programa_id || 'global');
+    if (!recPorProg[key]) recPorProg[key] = [];
+    recPorProg[key].push(r);
+  });
+
+  var enviados = 0;
+  cohorteIds.forEach(function(cid) {
+    var coh      = cohMap[cid] || {};
+    var prog     = progMap[coh.programa_id] || {};
+    var cuotas   = porCohorte[cid];
+    var nEst     = _uniq(cuotas.map(function(c){ return c.dni; })).length;
+    var fechaVenc = cuotas[0] ? cuotas[0].fecha_vencimiento : '';
+    var dias     = 45;
+
+    var dests  = (recPorProg[String(coh.programa_id)] || []).concat(recPorProg['global'] || []).filter(function(r){ return r.email; });
+    var emails = _uniq(dests.map(function(r){ return r.email; }));
+
+    if (!emails.length) { Logger.log('Sin destinatarios para cohorte ' + cid); return; }
+
+    var subject = '⚠️ Alerta: cuotas A_DEFINIR — ' + (coh.nombre||cid) + ' — ' + (prog.nombre||'Posgrado');
+    var html    = _htmlADefinir(prog.nombre||'Posgrado', coh.nombre||cid, cuotas, nEst, _fmtFecha(fechaVenc), dias);
+
+    emails.forEach(function(email) {
+      if (_enviarMail(email, subject, html)) enviados++;
+    });
+  });
+
+  Logger.log('Alertas A_DEFINIR enviadas: ' + enviados);
+}
+
+// ══════════════════════════════════════════════════════════════
+// HELPERS — SUPABASE
+// ══════════════════════════════════════════════════════════════
+
+function _sbGet(path) {
+  try {
+    var resp = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + path, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      muteHttpExceptions: true
+    });
+    if (resp.getResponseCode() !== 200) {
+      Logger.log('Supabase error ' + resp.getResponseCode() + ': ' + resp.getContentText().substring(0,200));
+      return [];
+    }
+    return JSON.parse(resp.getContentText()) || [];
+  } catch(err) {
+    Logger.log('_sbGet excepción: ' + err.message);
+    return [];
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// HELPERS — UTILIDADES
+// ══════════════════════════════════════════════════════════════
+
+function _indexar(arr, campo)  { var m={}; arr.forEach(function(x){ m[x[campo]] = x; }); return m; }
+function _uniq(arr)            { return arr.filter(function(v,i,a){ return a.indexOf(v)===i; }); }
+function _nombreCompleto(u)    { return ((u.nombre||'') + ' ' + (u.apellido||'')).trim(); }
+
+function _fmtFecha(f) {
+  if (!f) return '—';
+  var p = f.split('T')[0].split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+function _enviarMail(to, subject, html) {
+  try {
+    MailApp.sendEmail(to, subject, html.replace(/<[^>]+>/g,''), { name: NOMBRE_INST, htmlBody: html });
+    Logger.log('✅ → ' + to);
+    return true;
+  } catch(err) {
+    Logger.log('❌ ' + to + ': ' + err.message);
+    return false;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// TEMPLATE HTML
+// ══════════════════════════════════════════════════════════════
+
+var _CSS = '<style>' +
+  'body{font-family:Arial,sans-serif;color:#1e3a5f;max-width:620px;margin:0 auto;padding:0;}' +
+  '.hdr{background:#1e3a5f;color:#fff;padding:20px 28px;border-radius:8px 8px 0 0;}' +
+  '.hdr h1{margin:0;font-size:20px;font-weight:700;}' +
+  '.hdr p{margin:4px 0 0;font-size:13px;opacity:.8;}' +
+  '.bod{background:#f8f6f1;padding:24px 28px;}' +
+  '.ftr{background:#e5e7eb;padding:12px 28px;font-size:11px;color:#6b7280;border-radius:0 0 8px 8px;}' +
+  'table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}' +
+  'th{background:#1e3a5f;color:#fff;padding:7px 10px;text-align:left;}' +
+  'td{padding:7px 10px;border-bottom:1px solid #e5e7eb;}' +
+  '.warn{background:#fef3c7;border-left:4px solid #d4af37;padding:12px 16px;margin:16px 0;border-radius:0 4px 4px 0;font-size:14px;}' +
+  'p{font-size:14px;line-height:1.6;}' +
+  '</style>';
+
+function _wrapHtml(contenido) {
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8">' + _CSS + '</head><body>' +
+    '<div class="hdr"><h1>' + NOMBRE_INST + '</h1><p>Sistema de Gestión de Posgrado</p></div>' +
+    '<div class="bod">' + contenido + '</div>' +
+    '<div class="ftr">Mensaje automático del sistema SiGPo. Por consultas comuníquese con la Secretaría de Posgrado.</div>' +
+    '</body></html>';
+}
+
+function _htmlADefinir(prog, cohorte, cuotas, nEst, fechaVenc, dias) {
+  var filas = cuotas.map(function(c) {
+    return '<tr><td>' + c.dni + '</td><td>' + (c.concepto||'—') + '</td>' +
+           '<td>' + (c.periodo||'—') + '</td><td>' + _fmtFecha(c.fecha_vencimiento) + '</td></tr>';
+  }).join('');
+  return _wrapHtml(
+    '<div class="warn"><strong>⚠️ Alerta de gestión — acción requerida</strong><br>' +
+    'Existen <strong>' + nEst + ' estudiante/s</strong> con cuotas cuyo monto está <strong>A DEFINIR</strong> ' +
+    'y cuyo vencimiento es el <strong>' + fechaVenc + '</strong> (en <strong>' + dias + ' días</strong>).<br>' +
+    'Es necesario definir los montos antes de esa fecha para habilitar los pagos.</div>' +
+    '<p><strong>Programa:</strong> ' + prog + '<br><strong>Cohorte / Edición:</strong> ' + cohorte + '</p>' +
+    '<table><tr><th>DNI</th><th>Concepto</th><th>Período</th><th>Vencimiento</th></tr>' + filas + '</table>'
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// PRUEBA — ejecutar manualmente desde el editor
+// ══════════════════════════════════════════════════════════════
+
+function testADefinir()         { alertarCuotasADefinir(); }
+function testConexionSupabase() {
+  var programas = _sbGet('programas?select=programa_id,nombre&limit=3');
+  Logger.log('Conexión OK — ' + programas.length + ' programas:');
+  programas.forEach(function(p){ Logger.log('  · ' + p.programa_id + ': ' + p.nombre); });
+}
