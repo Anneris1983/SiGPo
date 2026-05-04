@@ -20,7 +20,7 @@
  */
 
 var SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
-var SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
+var SUPABASE_KEY = 'REEMPLAZAR_CON_SERVICE_ROLE_KEY'; // ← pegar service_role key SOLO en script.google.com, nunca en el repo
 var SECRET       = 'SIGPO_KEY_FCE_2025';
 var NOMBRE_INST  = 'Secretaría de Posgrado — FCE UNCUYO';
 
