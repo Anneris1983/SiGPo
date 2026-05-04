@@ -1097,6 +1097,18 @@
                     <div class="label">Parcial</div>
                     <div class="value" id="statParcial">0</div>
                 </div>
+                <div class="summary-stat">
+                    <div class="label">Ingresos</div>
+                    <div class="value" id="statIngresos">—</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="label">Egresos</div>
+                    <div class="value" id="statEgresos" style="color:#e67e22;">—</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="label">Saldo</div>
+                    <div class="value" id="statSaldo">—</div>
+                </div>
             </div>
         </section>
 
@@ -1282,16 +1294,20 @@
             mostrarLoadingTabla();
             try {
                 var sb = await getSupabase();
-                var rCoh = await sb.from('cohortes').select('*, programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single();
-                var rCob = await sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', cohorteId);
-                var rInsc = await sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico,descuento_motivo').eq('cohorte_id', cohorteId);
-                var rEst = await sb.from('estudiantes').select('id,dni,nombre,apellido,email');
+                var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
+                    sb.from('cohortes').select('*, programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
+                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', cohorteId),
+                    sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico,descuento_motivo').eq('cohorte_id', cohorteId),
+                    sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
+                    sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', cohorteId)
+                ]);
 
                 var cohorte = rCoh.data || {};
                 var prog = cohorte.programas || {};
                 var cobros = rCob.data || [];
                 var inscripciones = rInsc.data || [];
                 var estList = rEst.data || [];
+                var egresosRaw = rEgr.data || [];
 
                 var estByDni = {};
                 estList.forEach(function(e){ estByDni[String(e.dni)] = e; });
@@ -1319,6 +1335,7 @@
                     etiquetasDescuento: ['Beca parcial','Docente','Convenio','Pronto pago']
                 };
                 vistaData = normalizarDetalle(respuesta);
+                vistaData.egresos = egresosRaw;
                 renderVista();
             } catch(e) {
                 mostrarErrorTabla('No se pudo cargar el detalle de la cohorte.');
@@ -1427,6 +1444,21 @@
             document.getElementById('statAlDia').textContent = resumen.alDia;
             document.getElementById('statMora').textContent = resumen.mora;
             document.getElementById('statParcial').textContent = resumen.parcial;
+
+            // Financial stats
+            var estudiantes = vistaData.estudiantes;
+            var ingresos = estudiantes.reduce(function(s, est) {
+                return s + est.cuotas.filter(function(c){ return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL'; })
+                                     .reduce(function(ss,c){ return ss + c.montoAbonado; }, 0);
+            }, 0);
+            var egrExec = (vistaData.egresos || []).filter(function(e){ return e.tipo==='EJECUTADO'; })
+                                                   .reduce(function(s,e){ return s + Number(e.monto_pagado||e.monto_original||0); }, 0);
+            var saldo = ingresos - egrExec;
+            document.getElementById('statIngresos').textContent = formatearMoneda(ingresos);
+            document.getElementById('statEgresos').textContent  = formatearMoneda(egrExec);
+            var sEl = document.getElementById('statSaldo');
+            sEl.textContent = formatearMoneda(saldo);
+            sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
         }
 
         function renderTabla() {

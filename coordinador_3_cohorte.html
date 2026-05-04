@@ -288,7 +288,9 @@
                 <div class="stat-item"><div class="stat-label">Al día</div><div class="stat-value" id="s-aldia">—</div></div>
                 <div class="stat-item"><div class="stat-label">En mora</div><div class="stat-value" id="s-mora" style="color:#ffc107;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
-                <div class="stat-item"><div class="stat-label">Recaudado</div><div class="stat-value" id="s-recaudado">—</div></div>
+                <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado">—</div></div>
+                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Saldo</div><div class="stat-value" id="s-saldo">—</div></div>
             </div>
         </div>
     </div>
@@ -598,10 +600,13 @@ async function cargar() {
     spin(true);
     try {
         var sb = await getSupabase();
-        var rCoh = await sb.from('cohortes').select('*, programas(nombre)').eq('cohorte_id', COHORTE_ID).single();
-        var rCob = await sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', COHORTE_ID);
-        var rInsc = await sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico');
-        var rEst = await sb.from('estudiantes').select('id,dni,nombre,apellido,email');
+        var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
+            sb.from('cohortes').select('*, programas(nombre)').eq('cohorte_id', COHORTE_ID).single(),
+            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', COHORTE_ID),
+            sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico'),
+            sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
+            sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', COHORTE_ID)
+        ]);
 
         var cohorte = rCoh.data || {};
         var cobros = rCob.data || [];
@@ -639,6 +644,7 @@ async function cargar() {
             estudiantes: Object.values(dniMap)
         };
         V.data = normalizarVista(res);
+        V.data.egresos = rEgr.data || [];
         renderHeader();
         renderTabla();
         actualizarStats();
@@ -850,10 +856,17 @@ function actualizarStats() {
     const ests = V.data.estudiantes;
     const cg = e => calcEstadoGeneral(e.cobros);
     const recaud = ests.reduce((s,e)=>s + e.cobros.reduce((ss,c)=>ss+(c?Number(c.monto_abonado||0):0),0), 0);
+    const egrExec = (V.data.egresos || []).filter(e => e.tipo === 'EJECUTADO')
+                                          .reduce((s,e) => s + Number(e.monto_pagado || e.monto_original || 0), 0);
+    const saldo = recaud - egrExec;
     document.getElementById('s-aldia').textContent     = ests.filter(e=>cg(e)==='ABONADA').length;
     document.getElementById('s-mora').textContent      = ests.filter(e=>cg(e)==='EN_MORA').length;
     document.getElementById('s-parcial').textContent   = ests.filter(e=>cg(e)==='PAGO_PARCIAL').length;
     document.getElementById('s-recaudado').textContent = fMillones(recaud);
+    document.getElementById('s-egresos').textContent   = fMillones(egrExec);
+    const sEl = document.getElementById('s-saldo');
+    sEl.textContent = fMillones(saldo);
+    sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
 }
 
 function actualizarFiltros() {
