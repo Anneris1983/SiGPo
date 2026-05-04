@@ -552,8 +552,8 @@
 <script src="supabase.js"></script>
 <script>
 const QS = new URLSearchParams(location.search);
-const COHORTE_ID  = parseInt(QS.get('cohorte_id') || QS.get('cohorteId') || '1', 10);
-const PROGRAMA_ID = parseInt(QS.get('programa_id') || QS.get('programaId') || '1', 10);
+const COHORTE_ID  = QS.get('cohorte_id') || QS.get('cohorteId') || '';
+const PROGRAMA_ID = QS.get('programa_id') || QS.get('programaId') || '';
 
 const PLANTILLAS_DEF = {
     recordatorio: {
@@ -579,7 +579,11 @@ const V = {
     importFile: null
 };
 
-document.addEventListener('DOMContentLoaded', cargar);
+document.addEventListener('DOMContentLoaded', function() {
+    var sesion = getSesion();
+    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    cargar();
+});
 document.addEventListener('click', function(e) {
     const wrapper = document.getElementById('notif-wrapper');
     if (wrapper && !wrapper.contains(e.target)) {
@@ -593,11 +597,48 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 async function cargar() {
     spin(true);
     try {
-        const res = estaEnAppsScript()
-            ? await gs('obtenerDetalleCohorteCoordinador', PROGRAMA_ID, COHORTE_ID)
-            : obtenerDemoData();
+        var sb = await getSupabase();
+        var rCoh = await sb.from('cohortes').select('*, programas(nombre)').eq('cohorte_id', COHORTE_ID).single();
+        var rCob = await sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', COHORTE_ID);
+        var rInsc = await sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico');
+        var rEst = await sb.from('estudiantes').select('id,dni,nombre,apellido,email');
+
+        var cohorte = rCoh.data || {};
+        var cobros = rCob.data || [];
+        var inscripciones = rInsc.data || [];
+        var estList = rEst.data || [];
+
+        var estByDni = {};
+        estList.forEach(function(e){ estByDni[String(e.dni)] = e; });
+        var inscById = {};
+        inscripciones.forEach(function(i){ inscById[i.estudiante_id] = i; });
+
+        var conceptosMap = {};
+        var columnas = [];
+        cobros.forEach(function(c){
+            var key = c.concepto || '';
+            if (key && !conceptosMap[key]) { conceptosMap[key] = true; columnas.push({ concepto_base:key, periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'' }); }
+        });
+
+        var dniMap = {};
+        cobros.forEach(function(c){
+            var dk = String(c.dni);
+            if (!dniMap[dk]) {
+                var est = estByDni[dk] || {};
+                var insc = est.id ? (inscById[est.id] || {}) : {};
+                dniMap[dk] = { dni:c.dni, apellido:est.apellido||dk, nombre:est.nombre||'', email:est.email||'', telefono:'', descuento_porcentaje:insc.descuento_porcentaje||0, estado_academico:insc.estado_academico||'ACTIVO', cobros:[] };
+            }
+            var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
+            dniMap[dk].cobros.push({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:Number(c.monto_final||0), monto_abonado:abonado, saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'A_DEFINIR':(c.estado||'NO_ABONADA') });
+        });
+
+        var res = {
+            programa: { nombre: cohorte.programas ? cohorte.programas.nombre : '', programa_id: cohorte.programa_id || PROGRAMA_ID },
+            cohorte:  { nombre:cohorte.nombre||'Cohorte', cohorte_id:cohorte.cohorte_id||COHORTE_ID, fecha_inicio:cohorte.fecha_inicio||'', fecha_fin:cohorte.fecha_fin||'', estado:cohorte.estado||'' },
+            columnas: columnas,
+            estudiantes: Object.values(dniMap)
+        };
         V.data = normalizarVista(res);
-        if (res && res.plantillas) V.plantillas = { ...V.plantillas, ...res.plantillas };
         renderHeader();
         renderTabla();
         actualizarStats();
@@ -605,6 +646,7 @@ async function cargar() {
         initFiltros();
     } catch(e) {
         toast('Error al cargar los datos', 'err');
+        console.error(e);
     } finally {
         spin(false);
     }
@@ -1153,7 +1195,7 @@ function navegar(destino, params={}) {
 
 async function cargarNotificaciones() {
     try {
-        V.notifications = estaEnAppsScript() ? await gs('obtenerNotificacionesCoordinador') : obtenerDemoNotificaciones();
+        V.notifications = await obtenerNotificaciones('COORDINADOR');
     } catch(e) {
         V.notifications = [];
     }

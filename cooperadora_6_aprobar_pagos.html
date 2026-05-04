@@ -553,172 +553,188 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-    const ESTUDIANTES = {
-        maria: {
-            nombre: 'Martínez, Ana Laura',
-            sub: 'DNI: 23456789 · Especialización en Costos 2025-2026',
-            totalPagar: '$1.396.801',
-            totalAbonado: '$745.000',
-            saldo: '$651.801',
-            cuotas: [
-                { id: 'Inscripción', fecha: 'AGO 2025', monto: '$45.000', estado: 'abonada', comprobante: { nombre: 'inscripcion_ago2025.pdf', fecha: '10/08/2025', size: '0.8 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 1', fecha: 'AGO 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'transferencia_cuota1.pdf', fecha: '20/08/2025', size: '1.1 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 2', fecha: 'SEP 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'transferencia_cuota2.pdf', fecha: '19/09/2025', size: '0.9 MB', time: 'Hace 6 meses' } },
-                { id: 'Cuota 3', fecha: 'OCT 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'transferencia_cuota3.pdf', fecha: '20/10/2025', size: '1.0 MB', time: 'Hace 5 meses' } },
-                { id: 'Cuota 4', fecha: 'NOV 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'pago_noviembre.jpg', fecha: '18/11/2025', size: '1.2 MB', time: 'Hace 4 meses' } },
-                { id: 'Cuota 5', fecha: 'DIC 2025', monto: '$115.551', estado: 'mora', comprobante: { nombre: 'transferencia_diciembre.pdf', fecha: '24/03/2026', size: '1.2 MB', time: 'Hace 5 minutos', pendiente: true } },
-                { id: 'Cuota 6', fecha: 'ENE 2026', monto: '$110/$115k', estado: 'mora', comprobante: null },
-                { id: 'Cuota 7', fecha: 'FEB 2026', monto: '$110.250', estado: 'abonada', comprobante: { nombre: 'pago_febrero.pdf', fecha: '20/02/2026', size: '0.7 MB', time: 'Hace 1 mes' } },
-                { id: 'Cuota 8', fecha: 'MAR 2026', monto: '$105.000', estado: 'abonada', comprobante: { nombre: 'comprobante_marzo.pdf', fecha: '20/03/2026', size: '1.0 MB', time: 'Hace 10 días' } },
-                { id: 'Cuota 9', fecha: 'ABR 2026', monto: '$100.000', estado: 'abonada', comprobante: { nombre: 'pago_abril.pdf', fecha: '28/03/2026', size: '0.9 MB', time: 'Hace 2 días', pendiente: true } },
-                { id: 'Cuota 10', fecha: 'MAY 2026', monto: '$95.000', estado: 'pendiente' },
-                { id: 'Cuota 11', fecha: 'JUN 2026', monto: '$90.000', estado: 'pendiente' },
-                { id: 'Cuota 12', fecha: 'JUL 2026', monto: '$90.000', estado: 'pendiente' },
-                { id: 'Cuota 13', fecha: 'AGO 2026', monto: '$90.000', estado: 'pendiente' },
-                { id: 'Cuota 14', fecha: 'SEP 2026', monto: '$90.000', estado: 'pendiente' },
-                { id: 'Cuota 15', fecha: 'OCT 2026', monto: '$90.000', estado: 'pendiente' },
-            ]
-        },
-        roberto: {
-            nombre: 'González, Roberto Carlos',
-            sub: 'DNI: 34567890 · Especialización en Costos 2025-2026 (Plan 8 cuotas)',
-            totalPagar: '$765.000',
-            totalAbonado: '$675.000',
-            saldo: '$90.000',
-            cuotas: [
-                { id: 'Inscripción', fecha: 'AGO 2025', monto: '$45.000', estado: 'abonada', comprobante: { nombre: 'inscripcion.pdf', fecha: '10/08/2025', size: '0.8 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 1', fecha: 'AGO 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota1.pdf', fecha: '20/08/2025', size: '1.0 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 2', fecha: 'SEP 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota2.pdf', fecha: '20/09/2025', size: '1.0 MB', time: 'Hace 6 meses' } },
-                { id: 'Cuota 3', fecha: 'OCT 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota3.pdf', fecha: '20/10/2025', size: '1.0 MB', time: 'Hace 5 meses' } },
-                { id: 'Cuota 4', fecha: 'NOV 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota4.pdf', fecha: '20/11/2025', size: '1.0 MB', time: 'Hace 4 meses' } },
-                { id: 'Cuota 5', fecha: 'DIC 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota5.pdf', fecha: '20/12/2025', size: '1.0 MB', time: 'Hace 3 meses' } },
-                { id: 'Cuota 6', fecha: 'ENE 2026', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota6.pdf', fecha: '20/01/2026', size: '1.0 MB', time: 'Hace 2 meses' } },
-                { id: 'Cuota 7', fecha: 'FEB 2026', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota7.pdf', fecha: '20/02/2026', size: '1.0 MB', time: 'Hace 1 mes' } },
-                { id: 'Cuota 8', fecha: 'MAR 2026', monto: '$90.000', estado: 'pendiente' },
-                { id: 'Cuota 9', fecha: 'ABR 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 10', fecha: 'MAY 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 11', fecha: 'JUN 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 12', fecha: 'JUL 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 13', fecha: 'AGO 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 14', fecha: 'SEP 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 15', fecha: 'OCT 2026', monto: '-', estado: 'nodebe' },
-            ]
-        },
-        lucia: {
-            nombre: 'Pérez, Lucía Fernanda',
-            sub: 'DNI: 28765432 · Especialización en Costos 2025-2026 (Plan 9 cuotas)',
-            totalPagar: '$805.750',
-            totalAbonado: '$522.750',
-            saldo: '$283.000',
-            cuotas: [
-                { id: 'Inscripción', fecha: 'AGO 2025', monto: '$42.500', estado: 'abonada', comprobante: { nombre: 'inscripcion.pdf', fecha: '10/08/2025', size: '0.8 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 1', fecha: 'AGO 2025', monto: '$85.000', estado: 'abonada', comprobante: { nombre: 'cuota1.pdf', fecha: '20/08/2025', size: '1.0 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 2', fecha: 'SEP 2025', monto: '$85.000', estado: 'abonada', comprobante: { nombre: 'cuota2.pdf', fecha: '20/09/2025', size: '1.0 MB', time: 'Hace 6 meses' } },
-                { id: 'Cuota 3', fecha: 'OCT 2025', monto: '$85.000', estado: 'abonada', comprobante: { nombre: 'cuota3.pdf', fecha: '20/10/2025', size: '1.0 MB', time: 'Hace 5 meses' } },
-                { id: 'Cuota 4', fecha: 'NOV 2025', monto: '$115.000', estado: 'abonada', comprobante: { nombre: 'cuota4.pdf', fecha: '20/11/2025', size: '1.0 MB', time: 'Hace 4 meses' } },
-                { id: 'Cuota 5', fecha: 'DIC 2025', monto: '$110.250', estado: 'abonada', comprobante: { nombre: 'cuota5.pdf', fecha: '20/12/2025', size: '1.0 MB', time: 'Hace 3 meses' } },
-                { id: 'Cuota 6', fecha: 'ENE 2026', monto: '$108.000', estado: 'mora', comprobante: { nombre: 'comprobante_enero.pdf', fecha: '30/03/2026', size: '0.9 MB', time: 'Hace 15 minutos', pendiente: true } },
-                { id: 'Cuota 7', fecha: 'FEB 2026', monto: '$90.000', estado: 'pendiente' },
-                { id: 'Cuota 8', fecha: 'MAR 2026', monto: '$85.000', estado: 'pendiente' },
-                { id: 'Cuota 9', fecha: 'ABR 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 10', fecha: 'MAY 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 11', fecha: 'JUN 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 12', fecha: 'JUL 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 13', fecha: 'AGO 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 14', fecha: 'SEP 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 15', fecha: 'OCT 2026', monto: '-', estado: 'nodebe' },
-            ]
-        },
-        belen: {
-            nombre: 'Sánchez, María Belén',
-            sub: 'DNI: 32109876 · Especialización en Costos 2025-2026 (Plan 6 cuotas)',
-            totalPagar: '$555.000',
-            totalAbonado: '$275.000',
-            saldo: '$280.000',
-            cuotas: [
-                { id: 'Inscripción', fecha: 'AGO 2025', monto: '$45.000', estado: 'abonada', comprobante: { nombre: 'inscripcion.pdf', fecha: '10/08/2025', size: '0.8 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 1', fecha: 'AGO 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota1.pdf', fecha: '20/08/2025', size: '1.0 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 2', fecha: 'SEP 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota2.pdf', fecha: '20/09/2025', size: '1.0 MB', time: 'Hace 6 meses' } },
-                { id: 'Cuota 3', fecha: 'OCT 2025', monto: '$50.000 / $90.000', estado: 'parcial', comprobante: { nombre: 'pago_parcial_oct.jpg', fecha: '24/03/2026', size: '0.7 MB', time: 'Hace 2 horas', pendiente: true } },
-                { id: 'Cuota 4', fecha: 'NOV 2025', monto: '$100.000', estado: 'mora' },
-                { id: 'Cuota 5', fecha: 'DIC 2025', monto: '$90.000', estado: 'pendiente' },
-                { id: 'Cuota 6', fecha: 'ENE 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 7', fecha: 'FEB 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 8', fecha: 'MAR 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 9', fecha: 'ABR 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 10', fecha: 'MAY 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 11', fecha: 'JUN 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 12', fecha: 'JUL 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 13', fecha: 'AGO 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 14', fecha: 'SEP 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 15', fecha: 'OCT 2026', monto: '-', estado: 'nodebe' },
-            ]
-        },
-        nicolas: {
-            nombre: 'Vargas, Nicolás Ezequiel',
-            sub: 'DNI: 31122334 · Especialización en Costos 2025-2026 (Plan 7 cuotas)',
-            totalPagar: '$550.000',
-            totalAbonado: '$265.000',
-            saldo: '$285.000',
-            cuotas: [
-                { id: 'Inscripción', fecha: 'AGO 2025', monto: '$45.000', estado: 'abonada', comprobante: { nombre: 'inscripcion.pdf', fecha: '10/08/2025', size: '0.8 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 1', fecha: 'AGO 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota1.pdf', fecha: '20/08/2025', size: '1.0 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 2', fecha: 'SEP 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota2.pdf', fecha: '20/09/2025', size: '1.0 MB', time: 'Hace 6 meses' } },
-                { id: 'Cuota 3', fecha: 'OCT 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota3.pdf', fecha: '20/10/2025', size: '1.0 MB', time: 'Hace 5 meses' } },
-                { id: 'Cuota 4', fecha: 'NOV 2025', monto: '$40.000 / $90.000', estado: 'parcial', comprobante: { nombre: 'pago_parcial.pdf', fecha: '24/03/2026', size: '0.9 MB', time: 'Hace 1 hora', pendiente: true } },
-                { id: 'Cuota 5', fecha: 'DIC 2025', monto: '$105.000', estado: 'mora' },
-                { id: 'Cuota 6', fecha: 'ENE 2026', monto: '$90.000', estado: 'pendiente' },
-                { id: 'Cuota 7', fecha: 'FEB 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 8', fecha: 'MAR 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 9', fecha: 'ABR 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 10', fecha: 'MAY 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 11', fecha: 'JUN 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 12', fecha: 'JUL 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 13', fecha: 'AGO 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 14', fecha: 'SEP 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 15', fecha: 'OCT 2026', monto: '-', estado: 'nodebe' },
-            ]
-        },
-    };
+    var _cobros = [];
+    var _cobroActivo = null;
 
-    // Datos genéricos para estudiantes sin detalle completo
-    function datosGenericos(nombre, sub, totalPagar, totalAbonado, saldo) {
-        return {
-            nombre, sub, totalPagar, totalAbonado, saldo,
-            cuotas: [
-                { id: 'Inscripción', fecha: 'AGO 2025', monto: '$45.000', estado: 'abonada', comprobante: { nombre: 'inscripcion.pdf', fecha: '10/08/2025', size: '0.8 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 1', fecha: 'AGO 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota1.pdf', fecha: '20/08/2025', size: '1.0 MB', time: 'Hace 7 meses' } },
-                { id: 'Cuota 2', fecha: 'SEP 2025', monto: '$90.000', estado: 'abonada', comprobante: { nombre: 'cuota2.pdf', fecha: '20/09/2025', size: '1.0 MB', time: 'Hace 6 meses' } },
-                { id: 'Cuota 3', fecha: 'OCT 2025', monto: '$90.000', estado: 'pendiente' },
-                { id: 'Cuota 4', fecha: 'NOV 2025', monto: '$90.000', estado: 'pendiente' },
-                { id: 'Cuota 5', fecha: 'DIC 2025', monto: '$90.000', estado: 'pendiente' },
-                { id: 'Cuota 6', fecha: 'ENE 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 7', fecha: 'FEB 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 8', fecha: 'MAR 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 9', fecha: 'ABR 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 10', fecha: 'MAY 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 11', fecha: 'JUN 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 12', fecha: 'JUL 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 13', fecha: 'AGO 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 14', fecha: 'SEP 2026', monto: '-', estado: 'nodebe' },
-                { id: 'Cuota 15', fecha: 'OCT 2026', monto: '-', estado: 'nodebe' },
-            ]
-        };
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+    function fMonto(n) {
+        if (n===null||n===undefined||n==='') return '—';
+        var v = Math.round(Number(n));
+        if (v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
+        if (v>=1000) return '$'+Math.round(v/1000)+'k';
+        return '$'+v.toLocaleString('es-AR');
+    }
+    function fFecha(f) {
+        if (!f) return '—';
+        var p = String(f).split('T')[0].split('-');
+        return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : f;
     }
 
-    ESTUDIANTES.martin   = datosGenericos('Rodríguez, Martín Alejandro', 'DNI: 30123456 · Especialización en Costos (Plan 10 cuotas)', '$855.000', '$675.000', '$180.000');
-    ESTUDIANTES.carolina = datosGenericos('Fernández, Carolina', 'DNI: 27654321 · Especialización en Costos (Plan 6 cuotas)', '$495.000', '$495.000', '$0 ✓');
-    ESTUDIANTES.diego    = datosGenericos('López, Diego Sebastián', 'DNI: 25678901 · Especialización en Costos (Plan 15 cuotas)', '$1.450.000', '$135.000', '$1.315.000');
-    ESTUDIANTES.pablo    = datosGenericos('Torres, Pablo Javier', 'DNI: 22334455 · Especialización en Costos (Plan 10 cuotas)', '$855.000', '$765.000', '$90.000');
-    ESTUDIANTES.silvia   = datosGenericos('Ramírez, Silvia Beatriz', 'DNI: 29988776 · Especialización en Costos (Plan 13 cuotas)', '$1.080.000', '$315.000', '$765.000');
-    ESTUDIANTES.claudia  = datosGenericos('Herrera, Claudia Beatriz', 'DNI: 24455667 · Especialización en Costos (Plan 13 cuotas)', '$1.125.000', '$1.035.000', '$90.000');
-    ESTUDIANTES.juan     = datosGenericos('Morales, Juan Pablo', 'DNI: 26778899 · Especialización en Costos (Plan 5 cuotas)', '$495.000', '$405.000', '$90.000');
-    ESTUDIANTES.romina   = datosGenericos('Castillo, Romina Andrea', 'DNI: 23344556 · Especialización en Costos (Plan 10 cuotas)', '$900.000', '$225.000', '$675.000');
-    ESTUDIANTES.federico = datosGenericos('Ibáñez, Federico Hernán', 'DNI: 28899001 · Especialización en Costos (Plan 8 cuotas)', '$718.000', '$45.000', '$673.000');
-    ESTUDIANTES.valeria  = datosGenericos('Quiroga, Valeria Soledad', 'DNI: 25566778 · Especialización en Costos (Plan 15 cuotas)', '$1.395.000', '$1.125.000', '$270.000');
+    /* ── INIT ── */
+    document.addEventListener('DOMContentLoaded', async function() {
+        var sesion = getSesion();
+        if (!sesion) { window.location.href = 'portal_login.html'; return; }
+        obtenerNotificaciones(sesion.rol).then(renderNotificaciones);
+        await cargarCobros();
+    });
 
-    const ESTADOS = {
-        abonada:  { clase: 'est-abonada', label: 'Abonada' },
-        mora
+    /* ── CARGAR COBROS PENDIENTES ── */
+    async function cargarCobros() {
+        try {
+            var sb = await getSupabase();
+            var r = await sb.from('cobros')
+                .select('cobro_id, dni, nombre, apellido, programa_id, cohorte_id, concepto, monto_final, saldo_pendiente, estado, comprobante_url, fecha_vencimiento')
+                .eq('estado', 'PENDIENTE')
+                .order('fecha_vencimiento');
+            _cobros = r.data || [];
+            renderResumen();
+            renderLista();
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    /* ── RESUMEN STATS ── */
+    function renderResumen() {
+        var pend = _cobros.length;
+        document.querySelector('.summary-card.pend .summary-value').textContent = pend;
+        var totalSaldo = _cobros.reduce(function(s,c){ return s+(Number(c.saldo_pendiente)||0); }, 0);
+        document.querySelectorAll('.summary-card')[1].querySelector('.summary-value').textContent = fMonto(totalSaldo);
+    }
+
+    /* ── RENDER LISTA ── */
+    function renderLista() {
+        var lista = document.querySelector('.students-list');
+        if (!_cobros.length) {
+            lista.innerHTML = '<div style="text-align:center;padding:60px;color:#aaa;font-size:16px;">No hay comprobantes pendientes de aprobación</div>';
+            return;
+        }
+        lista.innerHTML = _cobros.map(function(c) {
+            var nombre = esc((c.apellido||'')+(c.apellido&&c.nombre?', ':'')+( c.nombre||''));
+            var iniciales = ((c.apellido||'').charAt(0)+(c.nombre||'').charAt(0)).toUpperCase() || '?';
+            var saldo = Number(c.saldo_pendiente)||0;
+            var claseRow = saldo > 0 ? 'tiene-pendiente' : 'al-dia';
+            return '<div class="student-row '+claseRow+'" onclick="abrirDetalle(\''+c.cobro_id+'\')" style="cursor:pointer;">'
+                +'<div class="student-avatar">'+iniciales+'</div>'
+                +'<div class="student-main">'
+                  +'<div class="student-name">'+nombre+'</div>'
+                  +'<div class="student-sub">DNI: '+esc(c.dni||'—')+' · '+esc(c.concepto||'—')+'</div>'
+                +'</div>'
+                +'<div class="student-badges">'
+                  +'<span class="badge badge-pendiente">Comprobante pendiente</span>'
+                +'</div>'
+                +'<div class="student-totales">'
+                  +'<div class="tot-label">Saldo pendiente</div>'
+                  +'<div class="tot-deuda">'+fMonto(c.saldo_pendiente)+'</div>'
+                +'</div>'
+                +'<div class="arrow">›</div>'
+                +'</div>';
+        }).join('');
+    }
+
+    /* ── ABRIR MODAL DETALLE ── */
+    function abrirDetalle(cobroId) {
+        _cobroActivo = _cobros.find(function(c){ return String(c.cobro_id)===String(cobroId); });
+        if (!_cobroActivo) return;
+        var c = _cobroActivo;
+        var nombre = (c.apellido||'')+(c.apellido&&c.nombre?', ':'')+( c.nombre||'');
+        document.getElementById('modal-nombre').textContent = nombre;
+        document.getElementById('modal-sub').textContent = 'DNI: '+(c.dni||'—')+' · '+( c.concepto||'—');
+        document.getElementById('modal-total-pagar').textContent = fMonto(c.monto_final);
+        document.getElementById('modal-total-abonado').textContent = fMonto((Number(c.monto_final)||0)-(Number(c.saldo_pendiente)||0));
+        document.getElementById('modal-saldo').textContent = fMonto(c.saldo_pendiente);
+
+        /* Cuotas area → comprobante y acciones */
+        var cuotasDiv = document.getElementById('modal-cuotas');
+        var comprobanteHtml = '';
+        if (c.comprobante_url) {
+            var esImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(c.comprobante_url);
+            if (esImagen) {
+                comprobanteHtml = '<div style="margin-bottom:16px;"><img src="'+esc(c.comprobante_url)+'" style="max-width:100%;border-radius:8px;border:1px solid #e0e0e0;" alt="Comprobante"></div>';
+            } else {
+                comprobanteHtml = '<div class="cuota-comprobante">'
+                    +'<div class="comp-icon">📄</div>'
+                    +'<div class="comp-info">'
+                      +'<div class="comp-nombre">Comprobante adjunto</div>'
+                      +'<div class="comp-meta">Vencimiento: '+fFecha(c.fecha_vencimiento)+'</div>'
+                    +'</div>'
+                    +'<a href="'+esc(c.comprobante_url)+'" target="_blank" class="btn btn-ver" style="text-decoration:none;">👁️ Ver</a>'
+                    +'</div>';
+            }
+        } else {
+            comprobanteHtml = '<div style="padding:12px 0;color:#aaa;font-size:13px;">Sin comprobante adjunto</div>';
+        }
+
+        /* Pago parcial input */
+        var parcialHtml = '<div style="margin-top:16px;padding:14px;background:#f0f8ff;border-radius:8px;border:1px solid #cce5ff;">'
+            +'<div style="font-size:13px;font-weight:600;color:#1e3a5f;margin-bottom:8px;">Monto parcial a aprobar:</div>'
+            +'<div style="display:flex;gap:8px;align-items:center;">'
+            +'<input type="number" id="monto-parcial" placeholder="Ingresá el monto" min="1" max="'+Number(c.monto_final)+'" step="100" style="flex:1;padding:9px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:\'DM Sans\',sans-serif;">'
+            +'<button class="btn" style="background:#e67e22;color:white;white-space:nowrap;" onclick="accionParcial()">📊 Aprobar Parcial</button>'
+            +'</div></div>';
+
+        cuotasDiv.innerHTML = comprobanteHtml
+            +'<div style="margin-top:8px;font-size:13px;color:#555;margin-bottom:8px;">Vencimiento: <strong>'+fFecha(c.fecha_vencimiento)+'</strong></div>'
+            +'<div class="cuota-actions">'
+            +'<button class="btn btn-aprobar" onclick="accionAprobar()">✓ Aprobar pago completo</button>'
+            +'<button class="btn btn-rechazar" onclick="accionRechazar()">✗ Rechazar</button>'
+            +'</div>'
+            +parcialHtml;
+
+        document.getElementById('modal-detalle').classList.add('active');
+    }
+
+    function cerrarDetalle() {
+        document.getElementById('modal-detalle').classList.remove('active');
+        _cobroActivo = null;
+    }
+
+    /* ── ACCIONES ── */
+    async function accionAprobar() {
+        if (!_cobroActivo) return;
+        if (!confirm('¿Aprobar el pago completo de '+fMonto(_cobroActivo.monto_final)+'?')) return;
+        try {
+            await aprobarPago(_cobroActivo.cobro_id, 'total', _cobroActivo.monto_final, null);
+            cerrarDetalle();
+            await cargarCobros();
+        } catch(e) {
+            alert('Error al aprobar: '+(e.message||e));
+        }
+    }
+
+    async function accionParcial() {
+        if (!_cobroActivo) return;
+        var montoInput = document.getElementById('monto-parcial');
+        var monto = parseFloat(montoInput.value);
+        if (!monto || monto <= 0) { alert('Ingresá un monto válido'); return; }
+        if (!confirm('¿Aprobar pago parcial de '+fMonto(monto)+'?')) return;
+        try {
+            await aprobarPago(_cobroActivo.cobro_id, 'parcial', monto, null);
+            cerrarDetalle();
+            await cargarCobros();
+        } catch(e) {
+            alert('Error al aprobar pago parcial: '+(e.message||e));
+        }
+    }
+
+    async function accionRechazar() {
+        if (!_cobroActivo) return;
+        if (!confirm('¿Rechazar este comprobante de pago?')) return;
+        try {
+            await rechazarPago(_cobroActivo.cobro_id);
+            cerrarDetalle();
+            await cargarCobros();
+        } catch(e) {
+            alert('Error al rechazar: '+(e.message||e));
+        }
+    }
+
+    /* ── CAMPANA ── */
+    var _notifs = [];
+    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
+    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+</script>
 </body>
 </html>

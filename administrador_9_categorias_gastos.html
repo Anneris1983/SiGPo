@@ -133,20 +133,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-        // Categorías de gastos con su configuración actual
-        const categorias = [
-            { id: 1, nombre: 'Hon. Dirección/Coordinación', tipo: 'FIJO', desc: 'No ajustable, honorarios fijos por programa' },
-            { id: 2, nombre: 'Hon. Personal Apoyo', tipo: 'FIJO', desc: 'Personal administrativo y soporte' },
-            { id: 3, nombre: 'Hon. Profesores', tipo: 'VARIABLE', desc: 'Varía según cantidad de módulos y profesores' },
-            { id: 4, nombre: 'Movilidad', tipo: 'AJUSTABLE', desc: 'Puede eliminarse al virtualizar (-$145K)' },
-            { id: 5, nombre: 'Pasajes Aéreos/Colectivos', tipo: 'AJUSTABLE', desc: 'Puede eliminarse al virtualizar (-$280K)' },
-            { id: 6, nombre: 'Agapé/Break', tipo: 'AJUSTABLE', desc: 'Puede eliminarse al virtualizar (-$231K)' },
-            { id: 7, nombre: 'Publicidad', tipo: 'OPERATIVO', desc: 'Gasto operativo para promoción' },
-            { id: 8, nombre: 'Gastos Varios', tipo: 'OPERATIVO', desc: 'Gastos operativos generales' },
-            { id: 9, nombre: 'Servicios Informáticos', tipo: 'CRITICO', desc: 'Esencial para funcionamiento del programa' },
-            { id: 10, nombre: 'Papelería y Útiles', tipo: 'OPERATIVO', desc: 'Material de oficina y suministros' },
-            { id: 11, nombre: 'Plataformas Internet', tipo: 'CRITICO', desc: 'Zoom, Moodle, herramientas esenciales' }
-        ];
+        var categorias = [];
         
         const tiposDisponibles = ['FIJO', 'VARIABLE', 'AJUSTABLE', 'CRITICO', 'OPERATIVO'];
         
@@ -173,57 +160,28 @@
             });
         }
         
-        // Guardar cambios
-        function guardarCambios() {
-            const selects = document.querySelectorAll('.select-tipo');
-            const cambios = [];
-            
-            selects.forEach(select => {
-                const categoriaId = parseInt(select.dataset.categoriaId);
-                const nuevoTipo = select.value;
-                const categoria = categorias.find(c => c.id === categoriaId);
-                
+        async function guardarCambios() {
+            var selects = document.querySelectorAll('.select-tipo');
+            var cambios = [];
+            selects.forEach(function(select) {
+                var categoriaId = parseInt(select.dataset.categoriaId);
+                var nuevoTipo = select.value;
+                var categoria = categorias.find(function(c){ return c.id === categoriaId; });
                 if (categoria && categoria.tipo !== nuevoTipo) {
-                    cambios.push({
-                        id: categoriaId,
-                        nombre: categoria.nombre,
-                        tipoAnterior: categoria.tipo,
-                        tipoNuevo: nuevoTipo
-                    });
+                    cambios.push({ id:categoriaId, nombre:categoria.nombre, tipoAnterior:categoria.tipo, tipoNuevo:nuevoTipo });
                     categoria.tipo = nuevoTipo;
                 }
             });
-            
-            if (cambios.length === 0) {
-                alert('No se realizaron cambios.');
-                return;
-            }
-            
-            var btn = event.target;
-            btn.disabled = true;
-            btn.textContent = '⏳ Guardando…';
-
-            if (typeof google !== 'undefined' && google.script) {
-                google.script.run
-                    .withSuccessHandler(function() {
-                        btn.textContent = '✅ Guardado';
-                        btn.style.background = '#2d7a4f';
-                        setTimeout(function() { navegar('administrador_7_reportes_globales.html'); }, 1200);
-                    })
-                    .withFailureHandler(function() {
-                        btn.disabled = false;
-                        btn.textContent = '💾 Guardar Cambios';
-                        btn.style.background = '';
-                        alert('Error al guardar. Intentá de nuevo.');
-                    })
-                    .guardarCategoriasGastos(cambios);
-                setTimeout(function() {
-                    btn.textContent = '✅ Guardado';
-                    btn.style.background = '#2d7a4f';
-                    alert('✅ Se guardaron ' + cambios.length + ' cambios:\n\n' +
-                        cambios.map(function(c) { return c.nombre + ': ' + c.tipoAnterior + ' → ' + c.tipoNuevo; }).join('\n'));
-                    setTimeout(function() { navegar('administrador_7_reportes_globales.html'); }, 800);
-                }, 500);
+            if (!cambios.length) { alert('No se realizaron cambios.'); return; }
+            var btn = document.querySelector('.btn-primary');
+            btn.disabled = true; btn.textContent = '⏳ Guardando…';
+            try {
+                await guardarCategoriasGastos(cambios);
+                btn.textContent = '✅ Guardado'; btn.style.background = '#2d7a4f';
+                setTimeout(function() { navegar('administrador_7_reportes_globales.html'); }, 1200);
+            } catch(e) {
+                btn.disabled = false; btn.textContent = '💾 Guardar Cambios'; btn.style.background = '';
+                alert('Error al guardar. Intentá de nuevo.');
             }
         }
         
@@ -251,18 +209,20 @@
                     + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
             }).join('');
         }
-        function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); if (typeof google !== 'undefined' && google.script) google.script.run.marcarNotificacionLeida(id); }
-        function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); if (typeof google !== 'undefined' && google.script) google.script.run.marcarTodasNotificacionesLeidas(); }
+        function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); if (typeof marcarNotificacionLeida === 'function') marcarNotificacionLeida(id); }
+        function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); if (typeof marcarTodasNotificacionesLeidas === 'function') marcarTodasNotificacionesLeidas(); }
         
-        // Inicializar
-        renderizarCategorias();
-        if (typeof google !== 'undefined' && google.script) {
-            google.script.run.withSuccessHandler(renderNotificaciones).obtenerNotificaciones('ADMINISTRADOR');
-            renderNotificaciones([
-                { id:'n1', tipo:'pago', mensaje:'<strong>María González</strong> realizó un pago', tiempo:'Hace 15 min', leida:false },
-                { id:'n2', tipo:'mora', mensaje:'<strong>3 estudiantes</strong> nuevos en mora', tiempo:'Hace 1 hora', leida:true }
-            ]);
+        async function inicializar() {
+            var sesion = getSesion();
+            if (!sesion) { window.location.href = 'portal_login.html'; return; }
+            try {
+                var cats = await obtenerCategoriasGastos();
+                categorias = cats.map(function(c){ return { id:c.id, nombre:c.nombre||c.categoria||'', tipo:c.tipo||'OPERATIVO', desc:c.descripcion||'' }; });
+            } catch(e) { console.error('Error cargando categorías:', e); }
+            renderizarCategorias();
+            if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones('ADMINISTRADOR').then(renderNotificaciones);
         }
+        document.addEventListener('DOMContentLoaded', inicializar);
     </script>
 </body>
 </html>

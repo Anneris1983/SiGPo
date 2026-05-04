@@ -35,10 +35,41 @@
         /* LAYOUT */
         .container { max-width: 1400px; margin: 40px auto; padding: 0 40px; }
 
+        /* STATS */
+        .stats-row {
+            display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
+        }
+        .stat-card {
+            background: white; border-radius: 12px; padding: 16px 24px;
+            flex: 1; min-width: 160px; border-top: 4px solid #1e3a5f;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .stat-card.pago   { border-top-color: #388e3c; }
+        .stat-card.mora   { border-top-color: #f57c00; }
+        .stat-card.plan   { border-top-color: #1976d2; }
+        .stat-card.insc   { border-top-color: #7b1fa2; }
+        .stat-num  { font-size: 28px; font-weight: 700; color: #1e3a5f; font-family: 'Crimson Pro', serif; }
+        .stat-label { font-size: 12px; color: #888; margin-top: 2px; }
+
+        /* TABS */
+        .tabs {
+            display: flex; gap: 0; margin-bottom: 0;
+            border-bottom: 2px solid #e0ddd8;
+        }
+        .tab-btn {
+            padding: 12px 24px; border: none; background: none;
+            font-size: 14px; font-weight: 600; color: #888;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+            border-bottom: 3px solid transparent; margin-bottom: -2px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .tab-btn.active { color: #1e3a5f; border-bottom-color: #1e3a5f; }
+        .tab-btn:hover:not(.active) { color: #1e3a5f; }
+
         /* FILTERS */
         .filters {
             background: white; padding: 20px 32px;
-            border-radius: 12px 12px 0 0; border-bottom: 2px solid #f0ede8;
+            border-radius: 0; border-bottom: 2px solid #f0ede8;
             display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
         }
         .filter-group { display: flex; flex-direction: column; }
@@ -69,11 +100,12 @@
         .result-info.hidden { display: none; }
 
         /* LOGS */
-        .logs-container { background: white; border-radius: 0 0 12px 12px; padding: 24px; }
+        .logs-wrapper { background: white; border-radius: 0 0 12px 12px; }
+        .logs-container { padding: 24px; }
         .log-entry {
             padding: 16px; background: #f8f6f1;
             border-left: 4px solid #e0e0e0; border-radius: 4px;
-            margin-bottom: 12px; font-family: 'Courier New', monospace; font-size: 13px;
+            margin-bottom: 12px; font-size: 13px;
             transition: opacity 0.2s, transform 0.2s;
         }
         .log-entry.hidden { display: none; }
@@ -81,32 +113,77 @@
         .log-entry.warning { border-left-color: #f57c00; }
         .log-entry.error   { border-left-color: #d32f2f; }
         .log-entry.success { border-left-color: #388e3c; }
-        .log-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; flex-wrap: wrap; gap: 4px; }
-        .log-timestamp { color: #666; }
-        .log-user { color: var(--primary); }
-        .log-action { color: #333; margin-bottom: 6px; }
-        .log-details { color: #666; line-height: 1.6; }
+        .log-entry.purple  { border-left-color: #7b1fa2; }
+        .log-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; flex-wrap: wrap; gap: 4px; font-family: 'Courier New', monospace; }
+        .log-timestamp { color: #666; font-size: 12px; }
+        .log-user { color: var(--primary); font-size: 12px; }
+        .log-action { color: #333; margin-bottom: 6px; font-weight: 700; font-size: 13px; }
+        .log-details { color: #555; line-height: 1.7; font-family: 'Courier New', monospace; font-size: 12px; }
+        .log-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 99px;
+            font-size: 11px; font-weight: 700; margin-left: 8px; vertical-align: middle;
+        }
+        .badge-mora    { background: #fff3e0; color: #e65100; }
+        .badge-pago    { background: #e8f5e9; color: #2e7d32; }
+        .badge-parcial { background: #fff8e1; color: #f57f17; }
+        .badge-no_abonada { background: #fce4ec; color: #c62828; }
+        .badge-pendiente  { background: #e3f2fd; color: #1565c0; }
+        .badge-abonada    { background: #e8f5e9; color: #2e7d32; }
+        .badge-a_definir  { background: #f3e5f5; color: #6a1b9a; }
+        .badge-no_aplica  { background: #eceff1; color: #546e7a; }
+
         .no-results { text-align: center; padding: 48px 24px; color: #aaa; font-size: 15px; font-style: italic; display: none; }
         .no-results.visible { display: block; }
+
+        /* LOADING */
+        .loading-overlay {
+            display: flex; align-items: center; justify-content: center;
+            padding: 60px 24px; flex-direction: column; gap: 16px;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #1e3a5f;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* PAGINACIÓN */
+        .pagination {
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; padding: 16px 24px; border-top: 1px solid #f0ede8;
+        }
+        .page-btn {
+            padding: 6px 14px; border: 1.5px solid #e0e0e0; border-radius: 6px;
+            background: white; cursor: pointer; font-size: 13px; font-weight: 600;
+            color: #555; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+        }
+        .page-btn:hover { background: #f0f4ff; border-color: #1e3a5f; color: #1e3a5f; }
+        .page-btn.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-info { font-size: 13px; color: #888; }
+
+        /* NOTIF */
+        .notif-wrapper { position: relative; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div class="header-left">
-        <div class="breadcrumb"><a href="administrador_2_dashboard.html" onclick="navegar('administrador_2_dashboard.html'); return false;">← Volver al Dashboard</a></div>
+        <div class="breadcrumb"><a href="administrador_2_dashboard.html">← Volver al Dashboard</a></div>
         <h1>📋 Logs y Auditoría</h1>
         <p>Registro de actividad y trazabilidad del sistema</p>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;">
-        <!-- Campana de Notificaciones -->
-        <div class="notif-wrapper" style="position:relative;">
-            <button onclick="toggleNotif()" title="Notificaciones" aria-label="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;transition:background 0.2s;">
+        <div class="notif-wrapper">
+            <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
             </button>
             <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                 <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -129,359 +206,672 @@
 
 <div class="container">
 
+    <!-- STATS -->
+    <div class="stats-row" id="stats-row">
+        <div class="stat-card pago">
+            <div class="stat-num" id="stat-pagos">—</div>
+            <div class="stat-label">Cambios de Cobros</div>
+        </div>
+        <div class="stat-card mora">
+            <div class="stat-num" id="stat-moras">—</div>
+            <div class="stat-label">Registros en Mora</div>
+        </div>
+        <div class="stat-card plan">
+            <div class="stat-num" id="stat-insc">—</div>
+            <div class="stat-label">Cambios de Inscripción</div>
+        </div>
+        <div class="stat-card insc">
+            <div class="stat-num" id="stat-total">—</div>
+            <div class="stat-label">Total de Registros</div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-cobros" onclick="cambiarTab('cobros')">💰 Historial de Cobros</button>
+        <button class="tab-btn" id="tab-inscripciones" onclick="cambiarTab('inscripciones')">🎓 Historial de Inscripciones</button>
+    </div>
+
+    <!-- FILTERS -->
     <div class="filters">
-        <div class="filter-group">
-            <label class="filter-label">Tipo de Evento</label>
-            <select id="f-tipo" style="width: 190px;">
-                <option value="">Todos</option>
-                <option value="PAGO">Aprobación de Pagos</option>
-                <option value="PLAN DE CUOTAS">Creación de Cuotas</option>
-                <option value="MORA">Aplicación de Mora</option>
-                <option value="RECLAMO">Reclamos Enviados</option>
-                <option value="DESCUENTO">Modificación de Descuentos</option>
-                <option value="CONFIGURACIÓN">Configuración</option>
-                <option value="LOGIN">Login / Logout</option>
-                <option value="USUARIO">Gestión de Usuarios</option>
+        <div class="filter-group" id="fg-estado-cobro">
+            <label class="filter-label">Estado (Cobros)</label>
+            <select id="f-estado-cobro" style="width:180px;" onchange="aplicarFiltros()">
+                <option value="">Todos los estados</option>
+                <option value="EN_MORA">En mora</option>
+                <option value="ABONADA">Abonada</option>
+                <option value="PAGO_PARCIAL">Pago parcial</option>
+                <option value="PENDIENTE">Pendiente</option>
+                <option value="NO_ABONADA">No abonada</option>
+                <option value="A_DEFINIR">A definir</option>
+                <option value="NO_APLICA">No aplica</option>
+            </select>
+        </div>
+        <div class="filter-group" id="fg-estado-insc" style="display:none;">
+            <label class="filter-label">Estado (Inscripción)</label>
+            <select id="f-estado-insc" style="width:180px;" onchange="aplicarFiltros()">
+                <option value="">Todos los estados</option>
+                <option value="ACTIVO">Activo</option>
+                <option value="BAJA">Baja</option>
+                <option value="GRADUADO">Graduado</option>
+                <option value="SUSPENSION">Suspensión</option>
             </select>
         </div>
         <div class="filter-group">
-            <label class="filter-label">Rol de Usuario</label>
-            <select id="f-rol" style="width: 180px;">
-                <option value="">Todos</option>
-                <option value="admin">Admin Sistema</option>
-                <option value="cooperadora">Cooperadora</option>
-                <option value="coordinador">Coordinadores</option>
-                <option value="estudiante">Estudiantes</option>
-                <option value="sistema">Sistema Automático</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label class="filter-label">Buscar por correo electrónico</label>
+            <label class="filter-label">DNI / Estudiante</label>
             <div class="input-icon-wrap">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input type="text" id="f-email" placeholder="ej: cooperadora@fce..." style="width: 240px;" oninput="aplicarFiltros()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="f-dni" placeholder="DNI o nombre…" style="width:200px;" oninput="aplicarFiltros()">
             </div>
         </div>
         <div class="filter-group">
+            <label class="filter-label">Programa</label>
+            <select id="f-programa" style="width:220px;" onchange="aplicarFiltros()">
+                <option value="">Todos los programas</option>
+            </select>
+        </div>
+        <div class="filter-group">
             <label class="filter-label">Fecha Desde</label>
-            <input type="date" id="f-desde" value="2026-03-01">
+            <input type="date" id="f-desde" onchange="aplicarFiltros()">
         </div>
         <div class="filter-group">
             <label class="filter-label">Fecha Hasta</label>
-            <input type="date" id="f-hasta" value="2026-03-28">
+            <input type="date" id="f-hasta" onchange="aplicarFiltros()">
         </div>
-        <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Filtrar</button>
         <button class="btn btn-secondary" onclick="limpiarFiltros()">✕ Limpiar</button>
-        <button class="btn btn-export" onclick="exportarLogs()">📥 Exportar</button>
+        <button class="btn btn-export" onclick="exportarLogs()">📥 Exportar CSV</button>
     </div>
 
     <div class="result-info hidden" id="result-info">
         <span id="result-text"></span>
-        <span id="result-email-badge" style="display:none; background:#1e3a5f; color:white; padding:2px 10px; border-radius:999px; font-size:12px;"></span>
     </div>
 
-    <div class="logs-container" id="logs-container">
-
-        <div class="log-entry success" data-tipo="PAGO" data-user="cooperadora@fce.uncuyo.edu.ar" data-rol="cooperadora" data-fecha="2026-03-28">
-            <div class="log-header">
-                <span class="log-timestamp">2026-03-28 14:23:15</span>
-                <span class="log-user">cooperadora@fce.uncuyo.edu.ar</span>
-            </div>
-            <div class="log-action">✓ PAGO APROBADO</div>
-            <div class="log-details">
-                Estudiante: María González (DNI: 23456789)<br>
-                Cuota: Cuota 5 - Diciembre 2025<br>
-                Monto aprobado: $70.000 (pago parcial)<br>
-                Saldo pendiente: $45.762,50<br>
-                Recibo subido: recibo_parcial_1_maria_cuota5.pdf
+    <div class="logs-wrapper">
+        <div class="logs-container" id="logs-container">
+            <div class="loading-overlay" id="loading-overlay">
+                <div class="spinner"></div>
+                <span style="color:#888;font-size:14px;">Cargando registros…</span>
             </div>
         </div>
-
-        <div class="log-entry info" data-tipo="PLAN DE CUOTAS" data-user="carlos.mendez@fce.uncuyo.edu.ar" data-rol="coordinador" data-fecha="2026-03-28">
-            <div class="log-header">
-                <span class="log-timestamp">2026-03-28 12:15:42</span>
-                <span class="log-user">carlos.mendez@fce.uncuyo.edu.ar</span>
-            </div>
-            <div class="log-action">📝 PLAN DE CUOTAS CREADO</div>
-            <div class="log-details">
-                Programa: Esp. en Costos 2025-2026<br>
-                Cuotas creadas: 5 (Readmisión, Inscripción, Cuota 1, Cuota 14, Cuota 15)<br>
-                Aplicado a: Toda la cohorte (15 estudiantes)<br>
-                Total registros: 75<br>
-                Cuotas "A DEFINIR": 2 (Cuota 14, Cuota 15)
-            </div>
-        </div>
-
-        <div class="log-entry warning" data-tipo="MORA" data-user="SISTEMA AUTOMÁTICO" data-rol="sistema" data-fecha="2026-03-28">
-            <div class="log-header">
-                <span class="log-timestamp">2026-03-28 10:30:28</span>
-                <span class="log-user">SISTEMA AUTOMÁTICO</span>
-            </div>
-            <div class="log-action">⚠️ APLICACIÓN DE MORA</div>
-            <div class="log-details">
-                Día de corte: 16 de marzo 2026<br>
-                Estudiantes afectados: 78<br>
-                Cuotas con mora aplicada: 142<br>
-                Tasa aplicada: 5% mensual acumulativo<br>
-                Monto total de mora generada: $2.847.325
-            </div>
-        </div>
-
-        <div class="log-entry info" data-tipo="CONFIGURACIÓN" data-user="admin@fce.uncuyo.edu.ar" data-rol="admin" data-fecha="2026-03-28">
-            <div class="log-header">
-                <span class="log-timestamp">2026-03-28 09:15:10</span>
-                <span class="log-user">admin@fce.uncuyo.edu.ar</span>
-            </div>
-            <div class="log-action">⚙️ CONFIGURACIÓN MODIFICADA</div>
-            <div class="log-details">
-                Parámetro: Tasa de mora mensual<br>
-                Valor anterior: 4.5%<br>
-                Valor nuevo: 5.0%<br>
-                Aplica desde: 01/04/2026
-            </div>
-        </div>
-
-        <div class="log-entry success" data-tipo="RECLAMO" data-user="cooperadora@fce.uncuyo.edu.ar" data-rol="cooperadora" data-fecha="2026-03-27">
-            <div class="log-header">
-                <span class="log-timestamp">2026-03-27 16:45:33</span>
-                <span class="log-user">cooperadora@fce.uncuyo.edu.ar</span>
-            </div>
-            <div class="log-action">📧 RECLAMOS ENVIADOS</div>
-            <div class="log-details">
-                Plantilla utilizada: Plantilla Formal<br>
-                Destinatarios: 3 estudiantes<br>
-                Cuotas reclamadas: 15 cuotas en mora<br>
-                Monto total reclamado: $897.575<br>
-                Estudiantes: María González, Ana Ruiz, Carlos López
-            </div>
-        </div>
-
-        <div class="log-entry info" data-tipo="DESCUENTO" data-user="carlos.mendez@fce.uncuyo.edu.ar" data-rol="coordinador" data-fecha="2026-03-27">
-            <div class="log-header">
-                <span class="log-timestamp">2026-03-27 14:20:18</span>
-                <span class="log-user">carlos.mendez@fce.uncuyo.edu.ar</span>
-            </div>
-            <div class="log-action">💰 DESCUENTO MODIFICADO</div>
-            <div class="log-details">
-                Estudiante: Ruiz, Ana Carolina (DNI: 28765432)<br>
-                Descuento anterior: 10%<br>
-                Descuento nuevo: 15%<br>
-                Motivo: Beca por rendimiento académico<br>
-                Aplicación: Solo cuotas futuras
-            </div>
-        </div>
-
-        <div class="log-entry error" data-tipo="LOGIN" data-user="maria.gonzalez@email.com" data-rol="estudiante" data-fecha="2026-03-27">
-            <div class="log-header">
-                <span class="log-timestamp">2026-03-27 11:08:52</span>
-                <span class="log-user">maria.gonzalez@email.com</span>
-            </div>
-            <div class="log-action">❌ INTENTO DE LOGIN FALLIDO</div>
-            <div class="log-details">
-                Usuario: maria.gonzalez@email.com<br>
-                DNI intentado: 23456789<br>
-                Razón: Contraseña incorrecta<br>
-                IP: 181.47.xxx.xxx<br>
-                Intentos fallidos consecutivos: 2
-            </div>
-        </div>
-
-        <div class="log-entry success" data-tipo="USUARIO" data-user="admin@fce.uncuyo.edu.ar" data-rol="admin" data-fecha="2026-03-27">
-            <div class="log-header">
-                <span class="log-timestamp">2026-03-27 09:30:05</span>
-                <span class="log-user">admin@fce.uncuyo.edu.ar</span>
-            </div>
-            <div class="log-action">👥 USUARIO CREADO</div>
-            <div class="log-details">
-                Nuevo usuario: Dr. Roberto Fernández<br>
-                Email: rfernandez@fce.uncuyo.edu.ar<br>
-                Rol: Coordinador<br>
-                Programa asignado: Maestría en Responsabilidad Social<br>
-                Estado: Activo<br>
-                Debe cambiar contraseña: Sí
-            </div>
-        </div>
-
-        <div class="no-results" id="no-results">
-            🔍 No se encontraron registros con los filtros aplicados.
-        </div>
+        <div class="pagination" id="pagination" style="display:none;"></div>
     </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-    /* ══════════════════════════════════════════════
-       NAVEGACIÓN
-       ══════════════════════════════════════════════ */
-    function navegar(pagina) {
-        if (typeof google !== 'undefined' && google.script) {
-            window.top.location.href = '?page=' + pagina.replace('.html', '');
-            window.location.href = pagina;
-        }
-    }
+/* ══════════════════════════════════════════════════════
+   ESTADO GLOBAL
+══════════════════════════════════════════════════════ */
+var _tabActual      = 'cobros';
+var _todosLogs      = [];
+var _logsFiltrados  = [];
+var _programasMap   = {};   // programa_id → nombre
+var _cohortesMapa   = {};   // cohorte_id  → nombre
+var _usuariosMap    = {};   // usuario_id  → {email, rol}
+var _estudiantesMap = {};   // dni         → apellido, nombre
+var _cobrosMap      = {};   // cobro_id    → {concepto, periodo, fecha_vencimiento}
 
-        /* ══════════════════════════════════════════════
-       CAMPANA DE NOTIFICACIONES
-       ══════════════════════════════════════════════ */
-    var _notifs = [];
-    function toggleNotif() {
-        var dd = document.getElementById('notif-dropdown');
-        dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-    }
-    document.addEventListener('click', function(e) {
-        var wrapper = document.querySelector('.notif-wrapper');
-        if (wrapper && !wrapper.contains(e.target)) {
-            document.getElementById('notif-dropdown').style.display = 'none';
-        }
-    });
-    function renderNotificaciones(datos) {
-        _notifs = datos || [];
-        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-        var badge = document.getElementById('notif-badge');
-        badge.textContent = sinLeer;
-        badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-        var lista = document.getElementById('notif-list');
-        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
-        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
-        lista.innerHTML = _notifs.map(function(n) {
-            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-                + '<div style="flex:1;min-width:0;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p>'
-                + '<div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
-        }).join('');
-    }
-    function leerNotif(id) {
-        _notifs.forEach(function(n) { if (n.id === id) n.leida = true; });
-        renderNotificaciones(_notifs);
-        if (typeof google !== 'undefined' && google.script) google.script.run.marcarNotificacionLeida(id);
-    }
-    function marcarTodasLeidas() {
-        _notifs.forEach(function(n) { n.leida = true; });
-        renderNotificaciones(_notifs);
-        if (typeof google !== 'undefined' && google.script) google.script.run.marcarTodasNotificacionesLeidas();
-    }
-    function cargarNotificaciones() {
-        if (typeof google !== 'undefined' && google.script) {
-            google.script.run.withSuccessHandler(renderNotificaciones).obtenerNotificaciones('ADMINISTRADOR');
-            renderNotificaciones([
-                { id:'n1', tipo:'pago', mensaje:'<strong>María González</strong> realizó un pago de <strong>$85.500</strong>', tiempo:'Hace 15 min', leida:false },
-                { id:'n2', tipo:'mora', mensaje:'<strong>3 estudiantes</strong> nuevos en mora', tiempo:'Hace 1 hora', leida:false },
-                { id:'n3', tipo:'alerta', mensaje:'Error en proceso automático de <strong>cálculo de mora</strong>', tiempo:'Hace 5 horas', leida:true }
-            ]);
-        }
-    }
+var PAGE_SIZE     = 20;
+var _paginaActual = 1;
 
-    /* ══════════════════════════════════════════════
-       FILTRADO
-       ══════════════════════════════════════════════ */
-    var entries = Array.from(document.querySelectorAll('.log-entry'));
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async function () {
+    // Fechas por defecto: últimos 90 días
+    var hoy   = new Date();
+    var hace90 = new Date(hoy); hace90.setDate(hoy.getDate() - 90);
+    document.getElementById('f-hasta').value = hoy.toISOString().split('T')[0];
+    document.getElementById('f-desde').value = hace90.toISOString().split('T')[0];
 
-    function aplicarFiltros() {
-        var tipo  = document.getElementById('f-tipo').value.trim().toLowerCase();
-        var rol   = document.getElementById('f-rol').value.trim().toLowerCase();
-        var email = document.getElementById('f-email').value.trim().toLowerCase();
-        var desde = document.getElementById('f-desde').value;
-        var hasta = document.getElementById('f-hasta').value;
+    await cargarDatosBase();
+    await cargarTab();
+    cargarNotificaciones();
+});
 
-        var visibles = 0;
+/* ══════════════════════════════════════════════════════
+   DATOS DE APOYO — queries simples sin joins anidados
+══════════════════════════════════════════════════════ */
+async function cargarDatosBase() {
+    var sb = await getSupabase();
 
-        entries.forEach(function(entry) {
-            var eTipo  = (entry.dataset.tipo  || '').toLowerCase();
-            var eRol   = (entry.dataset.rol   || '').toLowerCase();
-            var eUser  = (entry.dataset.user  || '').toLowerCase();
-            var eFecha = (entry.dataset.fecha || '');
-
-            var okTipo  = !tipo  || eTipo.includes(tipo);
-            var okRol   = !rol   || eRol === rol;
-            var okEmail = !email || eUser.includes(email);
-            var okDesde = !desde || eFecha >= desde;
-            var okHasta = !hasta || eFecha <= hasta;
-
-            var visible = okTipo && okRol && okEmail && okDesde && okHasta;
-            entry.classList.toggle('hidden', !visible);
-
-            // highlight del email buscado
-            var userSpan = entry.querySelector('.log-user');
-            if (userSpan) {
-                var originalText = entry.dataset.user || userSpan.textContent;
-                if (email && visible) {
-                    var regex = new RegExp('(' + email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-                    userSpan.innerHTML = originalText.replace(regex, '<mark>$1</mark>');
-                    userSpan.textContent = originalText;
-                }
-            }
-
-            if (visible) visibles++;
-        });
-
-        // Barra de resultados
-        var info     = document.getElementById('result-info');
-        var text     = document.getElementById('result-text');
-        var badge    = document.getElementById('result-email-badge');
-        var noResult = document.getElementById('no-results');
-
-        var hayFiltro = tipo || rol || email || desde || hasta;
-        if (hayFiltro) {
-            info.classList.remove('hidden');
-            text.textContent = visibles === 0
-                ? 'Sin resultados'
-                : visibles + ' registro' + (visibles !== 1 ? 's' : '') + ' encontrado' + (visibles !== 1 ? 's' : '');
-            if (email) {
-                badge.style.display = 'inline';
-                badge.textContent = '📧 ' + email;
-                badge.style.display = 'none';
-            }
-            info.classList.add('hidden');
-        }
-
-        noResult.classList.toggle('visible', visibles === 0);
-    }
-
-    function limpiarFiltros() {
-        document.getElementById('f-tipo').value  = '';
-        document.getElementById('f-rol').value   = '';
-        document.getElementById('f-email').value = '';
-        document.getElementById('f-desde').value = '2026-03-01';
-        document.getElementById('f-hasta').value = '2026-03-28';
-        aplicarFiltros();
-        entries.forEach(function(e) {
-            var span = e.querySelector('.log-user');
-            if (span && e.dataset.user) span.textContent = e.dataset.user;
-        });
-        document.getElementById('result-info').classList.add('hidden');
-        document.getElementById('no-results').classList.remove('visible');
-    }
-
-    // Filtrar al cambiar selects y fechas
-    ['f-tipo','f-rol','f-desde','f-hasta'].forEach(function(id) {
-        document.getElementById(id).addEventListener('change', aplicarFiltros);
+    // Programas (SELECT abierto por RLS)
+    var rp = await sb.from('programas').select('programa_id,nombre').order('nombre');
+    var programas = rp.data || [];
+    programas.forEach(function (p) { _programasMap[p.programa_id] = p.nombre; });
+    var sel = document.getElementById('f-programa');
+    programas.forEach(function (p) {
+        var opt = document.createElement('option');
+        opt.value = p.programa_id;
+        opt.textContent = p.nombre;
+        sel.appendChild(opt);
     });
 
-    /* ══════════════════════════════════════════════
-       EXPORTAR A EXCEL
-       ══════════════════════════════════════════════ */
-    function exportarLogs() {
-        if (typeof google !== 'undefined' && google.script) {
-            // Pasar los filtros actuales al backend para generar el Excel
-            var filtros = {
-                tipo:  document.getElementById('f-tipo').value,
-                rol:   document.getElementById('f-rol').value,
-                email: document.getElementById('f-email').value,
-                desde: document.getElementById('f-desde').value,
-                hasta: document.getElementById('f-hasta').value
+    // Cohortes (SELECT abierto por RLS)
+    var rc = await sb.from('cohortes').select('cohorte_id,nombre');
+    (rc.data || []).forEach(function (c) { _cohortesMapa[c.cohorte_id] = c.nombre; });
+
+    // Usuarios — puede fallar si no hay auth; ignoramos silenciosamente
+    try {
+        var ru = await sb.from('usuarios').select('usuario_id,email,rol,nombre_completo');
+        (ru.data || []).forEach(function (u) {
+            _usuariosMap[u.usuario_id] = { email: u.email, rol: u.rol };
+        });
+    } catch (e) { console.warn('No se pudieron cargar usuarios:', e); }
+
+    // Estudiantes — puede fallar si no hay auth
+    try {
+        var re = await sb.from('estudiantes').select('id,apellido,nombre,dni');
+        (re.data || []).forEach(function (e) {
+            _estudiantesMap[e.dni] = (e.apellido || '') + (e.nombre ? ', ' + e.nombre : '');
+        });
+    } catch (e) { console.warn('No se pudieron cargar estudiantes:', e); }
+
+    // Cobros (concepto + periodo) — para historial_cobros
+    try {
+        var rco = await sb.from('cobros').select('cobro_id,concepto,periodo,fecha_vencimiento');
+        (rco.data || []).forEach(function (c) {
+            _cobrosMap[c.cobro_id] = {
+                concepto:          c.concepto || '—',
+                periodo:           c.periodo  || '',
+                fecha_vencimiento: c.fecha_vencimiento || ''
             };
-            google.script.run.withSuccessHandler(function(url) {
-                if (url) window.open(url, '_blank');
-            }).exportarLogsExcel(filtros);
-            return;
+        });
+    } catch (e) { console.warn('No se pudieron cargar cobros:', e); }
+}
+
+async function cargarTab() {
+    mostrarLoading(true);
+    _paginaActual = 1;
+    if (_tabActual === 'cobros') {
+        await cargarHistorialCobros();
+    } else {
+        await cargarHistorialInscripciones();
+    }
+    actualizarStats();
+    aplicarFiltros();
+    mostrarLoading(false);
+}
+
+/* ══════════════════════════════════════════════════════
+   CARGA DE DATOS — sin joins anidados
+══════════════════════════════════════════════════════ */
+async function cargarHistorialCobros() {
+    var sb  = await getSupabase();
+    // Solo campos planos de historial_cobros — sin joins
+    var r   = await sb
+        .from('historial_cobros')
+        .select('id,cobro_id,dni,programa_id,cohorte_id,estado_anterior,estado_nuevo,monto_final,saldo_pendiente,registrado_por,created_at')
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+    if (r.error) {
+        console.error('Error historial_cobros:', r.error);
+        mostrarError('No se pudieron cargar los registros de cobros. ¿Estás logueado?');
+        _todosLogs = [];
+        return;
+    }
+
+    _todosLogs = (r.data || []).map(function (h) {
+        var usr      = h.registrado_por ? (_usuariosMap[h.registrado_por] || {}) : {};
+        var cobro    = _cobrosMap[h.cobro_id] || {};
+        var concepto = cobro.concepto || '—';
+        var periodo  = cobro.periodo  ? ' (' + cobro.periodo + ')' : '';
+
+        return {
+            id:               h.id,
+            tipo:             'cobro',
+            programa_id:      h.programa_id,
+            cohorte_id:       h.cohorte_id,
+            dni:              h.dni,
+            estado_ant:       h.estado_anterior,
+            estado_nuevo:     h.estado_nuevo,
+            monto:            h.monto_final,
+            saldo:            h.saldo_pendiente,
+            registrado_email: usr.email || 'Sistema automático',
+            registrado_rol:   usr.rol   || 'SISTEMA',
+            created_at:       h.created_at,
+            estudiante:       _estudiantesMap[h.dni] || h.dni || '—',
+            cuota:            concepto + periodo,
+            cohorte:          _cohortesMapa[h.cohorte_id] || ('Cohorte ' + h.cohorte_id),
+            programa_nombre:  _programasMap[h.programa_id] || ('Programa ' + h.programa_id)
+        };
+    });
+}
+
+async function cargarHistorialInscripciones() {
+    var sb = await getSupabase();
+    var r  = await sb
+        .from('historial_inscripciones')
+        .select('id,inscripcion_id,estudiante_id,cohorte_id,estado_anterior,estado_nuevo,motivo,registrado_por,created_at')
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+    if (r.error) {
+        console.error('Error historial_inscripciones:', r.error);
+        mostrarError('No se pudieron cargar los registros de inscripciones. ¿Estás logueado?');
+        _todosLogs = [];
+        return;
+    }
+
+    // Mapear estudiante_id → datos
+    var _estIdMap = {};
+    try {
+        var estIds = [...new Set((r.data || []).map(function (h) { return h.estudiante_id; }).filter(Boolean))];
+        if (estIds.length > 0) {
+            var re = await sb.from('estudiantes').select('id,apellido,nombre,dni').in('id', estIds);
+            (re.data || []).forEach(function (e) {
+                _estIdMap[e.id] = {
+                    nombre: (e.apellido || '') + (e.nombre ? ', ' + e.nombre : ''),
+                    dni:    e.dni
+                };
+            });
+        }
+    } catch (e) { console.warn('No se pudieron cargar estudiantes para inscripciones:', e); }
+
+    // Obtener programa_id desde cohortes
+    _todosLogs = (r.data || []).map(function (h) {
+        var usr      = h.registrado_por ? (_usuariosMap[h.registrado_por] || {}) : {};
+        var est      = _estIdMap[h.estudiante_id] || { nombre: 'Est. ID ' + h.estudiante_id, dni: '' };
+        var cohNombre = _cohortesMapa[h.cohorte_id] || ('Cohorte ' + h.cohorte_id);
+
+        // Buscar programa a partir de cohorte (cohorte ya fue cargada con programa_id en cargarDatosBase)
+        // En la versión simplificada usamos el mapa de cohortes
+        var progNombre = '—';
+        // Intentar deducir programa por dni del estudiante si cobros lo tiene
+        // En este contexto simplemente mostramos lo que tenemos
+        Object.keys(_programasMap).forEach(function(pid) {
+            // skip — no tenemos la relación directa acá sin join adicional
+        });
+
+        return {
+            id:               h.id,
+            tipo:             'inscripcion',
+            programa_id:      null,
+            cohorte_id:       h.cohorte_id,
+            dni:              est.dni,
+            estado_ant:       h.estado_anterior,
+            estado_nuevo:     h.estado_nuevo,
+            motivo:           h.motivo,
+            registrado_email: usr.email || 'Sistema automático',
+            registrado_rol:   usr.rol   || 'SISTEMA',
+            created_at:       h.created_at,
+            estudiante:       est.nombre,
+            cohorte:          cohNombre,
+            programa_nombre:  progNombre
+        };
+    });
+}
+
+/* ══════════════════════════════════════════════════════
+   MOSTRAR ERROR
+══════════════════════════════════════════════════════ */
+function mostrarError(msg) {
+    var container = document.getElementById('logs-container');
+    container.innerHTML = '<div style="text-align:center;padding:48px 24px;color:#d32f2f;">'
+        + '<div style="font-size:32px;margin-bottom:12px;">⚠️</div>'
+        + '<p style="font-size:15px;font-weight:600;">' + escHtml(msg) + '</p>'
+        + '<p style="font-size:13px;color:#888;margin-top:8px;">Verificá que hayas iniciado sesión correctamente.</p>'
+        + '</div>';
+    document.getElementById('pagination').style.display = 'none';
+}
+
+/* ══════════════════════════════════════════════════════
+   STATS
+══════════════════════════════════════════════════════ */
+function actualizarStats() {
+    if (_tabActual === 'cobros') {
+        var moras = _todosLogs.filter(function(l) { return l.estado_nuevo === 'EN_MORA'; }).length;
+        var pagos = _todosLogs.filter(function(l) { return l.estado_nuevo === 'ABONADA' || l.estado_nuevo === 'PAGO_PARCIAL'; }).length;
+        document.getElementById('stat-pagos').textContent = pagos;
+        document.getElementById('stat-moras').textContent = moras;
+        document.getElementById('stat-insc').textContent  = '—';
+        document.getElementById('stat-total').textContent = _todosLogs.length;
+    } else {
+        var bajas = _todosLogs.filter(function(l) { return l.estado_nuevo === 'BAJA'; }).length;
+        document.getElementById('stat-pagos').textContent = '—';
+        document.getElementById('stat-moras').textContent = bajas;
+        document.getElementById('stat-insc').textContent  = _todosLogs.length;
+        document.getElementById('stat-total').textContent = _todosLogs.length;
+    }
+}
+
+/* ══════════════════════════════════════════════════════
+   FILTRADO
+══════════════════════════════════════════════════════ */
+function aplicarFiltros() {
+    var estadoCobro = document.getElementById('f-estado-cobro').value;
+    var estadoInsc  = document.getElementById('f-estado-insc').value;
+    var dni         = document.getElementById('f-dni').value.trim().toLowerCase();
+    var programaId  = document.getElementById('f-programa').value;
+    var desde       = document.getElementById('f-desde').value;
+    var hasta       = document.getElementById('f-hasta').value;
+
+    _logsFiltrados = _todosLogs.filter(function(log) {
+        // Filtro estado
+        if (_tabActual === 'cobros' && estadoCobro && log.estado_nuevo !== estadoCobro) return false;
+        if (_tabActual === 'inscripciones' && estadoInsc && log.estado_nuevo !== estadoInsc) return false;
+
+        // Filtro DNI / nombre
+        if (dni) {
+            var hayDni = (log.dni || '').toLowerCase().includes(dni);
+            var hayNombre = (log.estudiante || '').toLowerCase().includes(dni);
+            if (!hayDni && !hayNombre) return false;
         }
 
-        // Fallback local: exportar los visibles como TSV
-        var visibles = entries.filter(function(e) { return !e.classList.contains('hidden'); });
-        if (visibl
+        // Filtro programa
+        if (programaId && String(log.programa_id) !== String(programaId)) return false;
+
+        // Filtro fechas
+        var fecha = (log.created_at || '').split('T')[0];
+        if (desde && fecha < desde) return false;
+        if (hasta && fecha > hasta) return false;
+
+        return true;
+    });
+
+    _paginaActual = 1;
+    renderLogs();
+
+    // Resultado info
+    var hayFiltro = estadoCobro || estadoInsc || dni || programaId || desde || hasta;
+    var info = document.getElementById('result-info');
+    if (hayFiltro) {
+        info.classList.remove('hidden');
+        document.getElementById('result-text').textContent =
+            _logsFiltrados.length === 0
+                ? 'Sin resultados para los filtros aplicados'
+                : _logsFiltrados.length + ' registro' + (_logsFiltrados.length !== 1 ? 's' : '') + ' encontrado' + (_logsFiltrados.length !== 1 ? 's' : '');
+    } else {
+        info.classList.add('hidden');
+    }
+}
+
+function limpiarFiltros() {
+    document.getElementById('f-estado-cobro').value = '';
+    document.getElementById('f-estado-insc').value  = '';
+    document.getElementById('f-dni').value   = '';
+    document.getElementById('f-programa').value = '';
+    var hoy = new Date();
+    var hace30 = new Date(hoy); hace30.setDate(hoy.getDate() - 30);
+    document.getElementById('f-hasta').value = hoy.toISOString().split('T')[0];
+    document.getElementById('f-desde').value = hace30.toISOString().split('T')[0];
+    aplicarFiltros();
+    document.getElementById('result-info').classList.add('hidden');
+}
+
+/* ══════════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════════ */
+function renderLogs() {
+    var container = document.getElementById('logs-container');
+    var pag = document.getElementById('pagination');
+
+    if (_logsFiltrados.length === 0) {
+        container.innerHTML = '<div class="no-results visible">🔍 No se encontraron registros con los filtros aplicados.</div>';
+        pag.style.display = 'none';
+        return;
+    }
+
+    var inicio = (_paginaActual - 1) * PAGE_SIZE;
+    var fin    = Math.min(inicio + PAGE_SIZE, _logsFiltrados.length);
+    var pagina = _logsFiltrados.slice(inicio, fin);
+
+    container.innerHTML = pagina.map(renderEntrada).join('');
+
+    // Paginación
+    var totalPags = Math.ceil(_logsFiltrados.length / PAGE_SIZE);
+    if (totalPags <= 1) {
+        pag.style.display = 'none';
+    } else {
+        pag.style.display = 'flex';
+        renderPaginacion(totalPags);
+    }
+}
+
+function renderEntrada(log) {
+    var dt        = new Date(log.created_at);
+    var fechaStr  = dt.toLocaleDateString('es-AR') + ' ' + dt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    var claseCard = claseLog(log);
+    var accion    = iconoAccion(log);
+
+    var detalles = '';
+    if (log.tipo === 'cobro') {
+        detalles += 'Estudiante: ' + (log.estudiante || log.dni) + ' (DNI: ' + (log.dni || '—') + ')<br>';
+        detalles += 'Cuota: ' + (log.cuota || '—') + '<br>';
+        detalles += 'Cohorte/Edición: ' + (log.cohorte || '—') + '<br>';
+        detalles += 'Estado anterior → nuevo: ' + badgeEstado(log.estado_ant) + ' → ' + badgeEstado(log.estado_nuevo) + '<br>';
+        if (log.monto) detalles += 'Monto: ' + formatPeso(log.monto) + '<br>';
+        if (log.saldo && Number(log.saldo) > 0) detalles += 'Saldo pendiente: ' + formatPeso(log.saldo) + '<br>';
+        detalles += 'Registrado por: ' + (log.registrado_email) + ' <span style="color:#888;">[' + (log.registrado_rol || 'SISTEMA') + ']</span>';
+    } else {
+        detalles += 'Estudiante: ' + (log.estudiante || '—') + '<br>';
+        detalles += 'Programa: ' + (log.programa_nombre || '—') + '<br>';
+        detalles += 'Cohorte/Edición: ' + (log.cohorte || '—') + '<br>';
+        detalles += 'Estado anterior → nuevo: ' + badgeEstado(log.estado_ant) + ' → ' + badgeEstado(log.estado_nuevo) + '<br>';
+        if (log.motivo) detalles += 'Motivo: ' + escHtml(log.motivo) + '<br>';
+        detalles += 'Registrado por: ' + (log.registrado_email) + ' <span style="color:#888;">[' + (log.registrado_rol || 'SISTEMA') + ']</span>';
+    }
+
+    return '<div class="log-entry ' + claseCard + '">'
+        + '<div class="log-header">'
+        + '<span class="log-timestamp">' + fechaStr + '</span>'
+        + '<span class="log-user">' + escHtml(log.registrado_email) + '</span>'
+        + '</div>'
+        + '<div class="log-action">' + accion + '</div>'
+        + '<div class="log-details">' + detalles + '</div>'
+        + '</div>';
+}
+
+function claseLog(log) {
+    var en = (log.estado_nuevo || '').toUpperCase();
+    if (en === 'EN_MORA')     return 'warning';
+    if (en === 'ABONADA')     return 'success';
+    if (en === 'PAGO_PARCIAL') return 'success';
+    if (en === 'PENDIENTE')   return 'info';
+    if (en === 'BAJA')        return 'error';
+    if (en === 'ACTIVO')      return 'success';
+    if (en === 'A_DEFINIR')   return 'purple';
+    return 'info';
+}
+
+function iconoAccion(log) {
+    var ea = (log.estado_ant  || '').toUpperCase();
+    var en = (log.estado_nuevo || '').toUpperCase();
+    if (log.tipo === 'inscripcion') {
+        if (en === 'BAJA')    return '❌ BAJA DE INSCRIPCIÓN';
+        if (en === 'ACTIVO')  return '✅ INSCRIPCIÓN ACTIVADA';
+        if (en === 'GRADUADO') return '🎓 ESTUDIANTE GRADUADO';
+        return '📝 CAMBIO DE ESTADO — INSCRIPCIÓN';
+    }
+    if (en === 'EN_MORA')      return '⚠️ CUOTA PASÓ A MORA';
+    if (en === 'ABONADA')      return '✅ PAGO APROBADO';
+    if (en === 'PAGO_PARCIAL') return '💛 PAGO PARCIAL APROBADO';
+    if (en === 'PENDIENTE')    return '⏳ COMPROBANTE SUBIDO — PENDIENTE DE REVISIÓN';
+    if (en === 'NO_ABONADA')   return '🔄 CUOTA MARCADA COMO NO ABONADA';
+    if (en === 'A_DEFINIR')    return '❓ MONTO A DEFINIR';
+    if (en === 'NO_APLICA')    return '⊘ CUOTA MARCADA COMO NO APLICA';
+    return '📝 CAMBIO DE ESTADO';
+}
+
+function badgeEstado(estado) {
+    if (!estado) return '<span style="color:#aaa;">—</span>';
+    var e = estado.toUpperCase();
+    var clases = {
+        'EN_MORA':    'badge-mora',
+        'ABONADA':    'badge-abonada',
+        'PAGO_PARCIAL':'badge-parcial',
+        'PENDIENTE':  'badge-pendiente',
+        'NO_ABONADA': 'badge-no_abonada',
+        'A_DEFINIR':  'badge-a_definir',
+        'NO_APLICA':  'badge-no_aplica',
+        'ACTIVO':     'badge-abonada',
+        'BAJA':       'badge-no_abonada',
+    };
+    var c = clases[e] || '';
+    return '<span class="log-badge ' + c + '">' + estado + '</span>';
+}
+
+function formatPeso(n) {
+    if (!n) return '—';
+    return '$' + Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ══════════════════════════════════════════════════════
+   PAGINACIÓN
+══════════════════════════════════════════════════════ */
+function renderPaginacion(totalPags) {
+    var pag = document.getElementById('pagination');
+    var html = '';
+
+    html += '<button class="page-btn" onclick="irPagina(' + (_paginaActual - 1) + ')" '
+        + (_paginaActual === 1 ? 'disabled' : '') + '>← Anterior</button>';
+
+    var inicio = Math.max(1, _paginaActual - 2);
+    var fin    = Math.min(totalPags, _paginaActual + 2);
+    for (var i = inicio; i <= fin; i++) {
+        html += '<button class="page-btn' + (i === _paginaActual ? ' active' : '') + '" onclick="irPagina(' + i + ')">' + i + '</button>';
+    }
+
+    html += '<button class="page-btn" onclick="irPagina(' + (_paginaActual + 1) + ')" '
+        + (_paginaActual === totalPags ? 'disabled' : '') + '>Siguiente →</button>';
+
+    html += '<span class="page-info">Página ' + _paginaActual + ' de ' + totalPags + ' (' + _logsFiltrados.length + ' registros)</span>';
+    pag.innerHTML = html;
+}
+
+function irPagina(n) {
+    var totalPags = Math.ceil(_logsFiltrados.length / PAGE_SIZE);
+    if (n < 1 || n > totalPags) return;
+    _paginaActual = n;
+    renderLogs();
+    window.scrollTo({ top: document.querySelector('.tabs').offsetTop - 20, behavior: 'smooth' });
+}
+
+/* ══════════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════════ */
+function cambiarTab(tab) {
+    _tabActual = tab;
+    document.getElementById('tab-cobros').classList.toggle('active', tab === 'cobros');
+    document.getElementById('tab-inscripciones').classList.toggle('active', tab === 'inscripciones');
+    document.getElementById('fg-estado-cobro').style.display = tab === 'cobros' ? '' : 'none';
+    document.getElementById('fg-estado-insc').style.display  = tab === 'inscripciones' ? '' : 'none';
+    cargarTab();
+}
+
+/* ══════════════════════════════════════════════════════
+   LOADING
+══════════════════════════════════════════════════════ */
+function mostrarLoading(show) {
+    var container = document.getElementById('logs-container');
+    if (show) {
+        container.innerHTML = '<div class="loading-overlay"><div class="spinner"></div><span style="color:#888;font-size:14px;">Cargando registros…</span></div>';
+        document.getElementById('pagination').style.display = 'none';
+    }
+}
+
+/* ══════════════════════════════════════════════════════
+   EXPORTAR CSV
+══════════════════════════════════════════════════════ */
+function exportarLogs() {
+    if (_logsFiltrados.length === 0) {
+        alert('No hay registros para exportar.');
+        return;
+    }
+    var cols, filas;
+    if (_tabActual === 'cobros') {
+        cols = ['Fecha', 'Estudiante', 'DNI', 'Cuota', 'Cohorte', 'Estado Anterior', 'Estado Nuevo', 'Monto', 'Saldo Pendiente', 'Registrado por', 'Rol'];
+        filas = _logsFiltrados.map(function(l) {
+            return [
+                new Date(l.created_at).toLocaleString('es-AR'),
+                l.estudiante, l.dni, l.cuota, l.cohorte,
+                l.estado_ant, l.estado_nuevo,
+                l.monto || '', l.saldo || '',
+                l.registrado_email, l.registrado_rol
+            ];
+        });
+    } else {
+        cols = ['Fecha', 'Estudiante', 'Programa', 'Cohorte', 'Estado Anterior', 'Estado Nuevo', 'Motivo', 'Registrado por', 'Rol'];
+        filas = _logsFiltrados.map(function(l) {
+            return [
+                new Date(l.created_at).toLocaleString('es-AR'),
+                l.estudiante, l.programa_nombre, l.cohorte,
+                l.estado_ant, l.estado_nuevo, l.motivo || '',
+                l.registrado_email, l.registrado_rol
+            ];
+        });
+    }
+
+    var csv = [cols.join(',')].concat(filas.map(function(f) {
+        return f.map(function(v) { return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(',');
+    })).join('\n');
+
+    var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href   = url;
+    a.download = 'logs_' + _tabActual + '_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+/* ══════════════════════════════════════════════════════
+   NOTIFICACIONES
+══════════════════════════════════════════════════════ */
+var _notifs = [];
+function toggleNotif() {
+    var dd = document.getElementById('notif-dropdown');
+    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function(e) {
+    var wrapper = document.querySelector('.notif-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('notif-dropdown').style.display = 'none';
+    }
+});
+function renderNotificaciones(datos) {
+    _notifs = datos || [];
+    var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
+    var badge = document.getElementById('notif-badge');
+    badge.textContent = sinLeer;
+    badge.style.display = sinLeer > 0 ? 'flex' : 'none';
+    var lista = document.getElementById('notif-list');
+    if (_notifs.length === 0) {
+        lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>';
+        return;
+    }
+    var iconos  = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨', cuota:'📅' };
+    var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3', cuota:'#dbeafe' };
+    lista.innerHTML = _notifs.map(function(n) {
+        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+            + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
+            + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p>'
+            + '<div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
+    }).join('');
+}
+function leerNotif(id) {
+    _notifs.forEach(function(n) { if (n.id === id) n.leida = true; });
+    renderNotificaciones(_notifs);
+    if (typeof marcarNotificacionLeida === 'function') marcarNotificacionLeida(id);
+}
+function marcarTodasLeidas() {
+    _notifs.forEach(function(n) { n.leida = true; });
+    renderNotificaciones(_notifs);
+    if (typeof marcarTodasNotificacionesLeidas === 'function') marcarTodasNotificacionesLeidas();
+}
+function cargarNotificaciones() {
+    if (typeof obtenerNotificaciones === 'function') {
+        obtenerNotificaciones('ADMINISTRADOR').then(renderNotificaciones);
+    }
+}
+</script>
 </body>
 </html>
