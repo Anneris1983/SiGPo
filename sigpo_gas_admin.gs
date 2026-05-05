@@ -77,7 +77,7 @@ function alertarCuotasADefinir() {
   var progMap    = _indexar(programas, 'programa_id');
 
   // Receptores: cooperadora, secretaria y admin — usando estado_usuario
-  var receptores = _sbGet('usuarios?select=dni,nombre,apellido,email,rol,programa_id&rol=in.(COOPERADORA,SECRETARIA,ADMINISTRADOR)&estado_usuario=eq.ACTIVO');
+  var receptores = _sbGet('usuarios?select=dni,nombre,apellido,email,rol,programa_id&rol=in.(COOPERADORA,SECRETARIA,ADMINISTRADOR,COORDINADOR)&estado_usuario=eq.ACTIVO');
   var recPorProg = {};
   receptores.forEach(function(r) {
     var key = String(r.programa_id || 'global');
