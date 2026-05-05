@@ -12,7 +12,7 @@
  *
  * FUNCIÓN AUTOMÁTICA (sale desde el email del administrador):
  *  · Todos los días a las 07:00 → Alerta cuotas A_DEFINIR
- *    Se dispara UNA SOLA VEZ cuando quedan exactamente 45 días
+ *    Se dispara UNA SOLA VEZ cuando quedan 45 días o menos
  *    para el vencimiento de una cuota sin monto definido.
  *    Destinatarios: cooperadora, secretaria y admin del programa.
  * ══════════════════════════════════════════════════════════════
@@ -41,27 +41,28 @@ function configurarTriggers() {
 
 // ══════════════════════════════════════════════════════════════
 // ALERTA CUOTAS A_DEFINIR
-// Todos los días revisa si hay cobros con estado A_DEFINIR cuyo
-// vencimiento es exactamente hoy + 45 días. Si los hay, avisa
-// a cooperadora, secretaria y admin para que definan el monto.
-// Al ser fecha exacta, el aviso se envía una sola vez por cuota.
+// Todos los días revisa cobros con estado A_DEFINIR cuyo
+// vencimiento es dentro de 45 días o menos, y que todavía no
+// recibieron aviso (aviso_coordinador_enviado = false).
+// Marca el flag al enviar → cada cuota recibe el aviso una sola vez.
 // ══════════════════════════════════════════════════════════════
 
 function alertarCuotasADefinir() {
-  var hoy      = new Date();
-  var objetivo = new Date(hoy.getTime() + 45 * 86400000);
-  var fechaObj = objetivo.toISOString().split('T')[0];
+  var hoy        = new Date();
+  var limite     = new Date(hoy.getTime() + 45 * 86400000);
+  var fechaLimite = limite.toISOString().split('T')[0];
 
-  Logger.log('--- Alerta A_DEFINIR: cuotas que vencen exactamente el ' + fechaObj + ' ---');
+  Logger.log('--- Alerta A_DEFINIR: cuotas sin aviso que vencen hasta el ' + fechaLimite + ' ---');
 
   var cobros = _sbGet(
     'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,fecha_vencimiento,monto_final' +
     '&estado=eq.A_DEFINIR' +
     '&no_aplica=not.is.true' +
-    '&fecha_vencimiento=eq.' + fechaObj
+    '&aviso_coordinador_enviado=eq.false' +
+    '&fecha_vencimiento=lte.' + fechaLimite
   );
 
-  if (!cobros.length) { Logger.log('Sin cuotas A_DEFINIR para esa fecha.'); return; }
+  if (!cobros.length) { Logger.log('Sin cuotas A_DEFINIR pendientes de aviso.'); return; }
 
   var porCohorte = {};
   cobros.forEach(function(c) {
@@ -75,8 +76,8 @@ function alertarCuotasADefinir() {
   var cohMap     = _indexar(cohortes,  'cohorte_id');
   var progMap    = _indexar(programas, 'programa_id');
 
-  // Receptores: cooperadora, secretaria y admin
-  var receptores = _sbGet('usuarios?select=dni,nombre,apellido,email,rol,programa_id&rol=in.(COOPERADORA,SECRETARIA,ADMINISTRADOR)&activo=eq.true');
+  // Receptores: cooperadora, secretaria y admin — usando estado_usuario
+  var receptores = _sbGet('usuarios?select=dni,nombre,apellido,email,rol,programa_id&rol=in.(COOPERADORA,SECRETARIA,ADMINISTRADOR)&estado_usuario=eq.ACTIVO');
   var recPorProg = {};
   receptores.forEach(function(r) {
     var key = String(r.programa_id || 'global');
@@ -86,12 +87,12 @@ function alertarCuotasADefinir() {
 
   var enviados = 0;
   cohorteIds.forEach(function(cid) {
-    var coh      = cohMap[cid] || {};
-    var prog     = progMap[coh.programa_id] || {};
-    var cuotas   = porCohorte[cid];
-    var nEst     = _uniq(cuotas.map(function(c){ return c.dni; })).length;
+    var coh       = cohMap[cid] || {};
+    var prog      = progMap[coh.programa_id] || {};
+    var cuotas    = porCohorte[cid];
+    var nEst      = _uniq(cuotas.map(function(c){ return c.dni; })).length;
     var fechaVenc = cuotas[0] ? cuotas[0].fecha_vencimiento : '';
-    var dias     = 45;
+    var dias      = fechaVenc ? Math.round((new Date(fechaVenc) - hoy) / 86400000) : 0;
 
     var dests  = (recPorProg[String(coh.programa_id)] || []).concat(recPorProg['global'] || []).filter(function(r){ return r.email; });
     var emails = _uniq(dests.map(function(r){ return r.email; }));
@@ -101,9 +102,20 @@ function alertarCuotasADefinir() {
     var subject = '⚠️ Alerta: cuotas A_DEFINIR — ' + (coh.nombre||cid) + ' — ' + (prog.nombre||'Posgrado');
     var html    = _htmlADefinir(prog.nombre||'Posgrado', coh.nombre||cid, cuotas, nEst, _fmtFecha(fechaVenc), dias);
 
+    var okEnvio = false;
     emails.forEach(function(email) {
-      if (_enviarMail(email, subject, html)) enviados++;
+      if (_enviarMail(email, subject, html)) { enviados++; okEnvio = true; }
     });
+
+    // Marcar flag en cada cobro de esta cohorte para no volver a avisar
+    if (okEnvio) {
+      cuotas.forEach(function(c) {
+        _sbPatch('cobros?cobro_id=eq.' + c.cobro_id, {
+          aviso_coordinador_enviado: true,
+          fecha_aviso_coordinador: new Date().toISOString()
+        });
+      });
+    }
   });
 
   Logger.log('Alertas A_DEFINIR enviadas: ' + enviados);
@@ -145,12 +157,37 @@ function _fmtFecha(f) {
 }
 
 function _enviarMail(to, subject, html) {
+  if (!to || !subject || !html) { Logger.log('_enviarMail: parámetros inválidos (llamada sin argumentos)'); return false; }
   try {
     MailApp.sendEmail(to, subject, html.replace(/<[^>]+>/g,''), { name: NOMBRE_INST, htmlBody: html });
     Logger.log('✅ → ' + to);
     return true;
   } catch(err) {
     Logger.log('❌ ' + to + ': ' + err.message);
+    return false;
+  }
+}
+
+function _sbPatch(path, data) {
+  try {
+    var resp = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + path, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      payload: JSON.stringify(data),
+      muteHttpExceptions: true
+    });
+    if (resp.getResponseCode() !== 204) {
+      Logger.log('Supabase PATCH error ' + resp.getResponseCode() + ': ' + resp.getContentText().substring(0,200));
+      return false;
+    }
+    return true;
+  } catch(err) {
+    Logger.log('_sbPatch excepción: ' + err.message);
     return false;
   }
 }
