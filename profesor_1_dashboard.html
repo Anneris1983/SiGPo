@@ -98,23 +98,31 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 async function cargar(sesion) {
-    var sb    = await getSupabase();
-    var pid   = sesion.programa_id;
+    var sb     = await getSupabase();
+    var progIds = await obtenerProgramasAsignadosPorDni(sesion.dni);
 
-    // Todo en paralelo — filtrado server-side por programa_id
+    if (!progIds.length) {
+        // Sin programas asignados — mostrar estado vacío
+        _programas = []; _cohortes = [];
+        document.getElementById('s-programas').textContent   = 0;
+        document.getElementById('s-cohortes').textContent    = 0;
+        document.getElementById('s-estudiantes').textContent = 0;
+        document.getElementById('s-aldia').textContent       = 0;
+        document.getElementById('s-mora').textContent        = 0;
+        document.getElementById('s-recaudado').textContent   = fM(0);
+        document.getElementById('s-egresos').textContent     = fM(0);
+        document.getElementById('s-saldo').textContent       = fM(0);
+        renderCohortes([], [], []);
+        renderProgramas([], [], []);
+        return;
+    }
+
+    // Todo en paralelo — filtrado server-side por programas asignados
     var [progRes, cohRes, cobRes, egrRes, inscRes] = await Promise.all([
-        pid
-            ? sb.from('programas').select('programa_id,nombre,tipo,estado').eq('programa_id', pid)
-            : sb.from('programas').select('programa_id,nombre,tipo,estado'),
-        pid
-            ? sb.from('cohortes').select('cohorte_id,nombre,programa_id,estado,fecha_inicio,fecha_fin').eq('programa_id', pid)
-            : sb.from('cohortes').select('cohorte_id,nombre,programa_id,estado,fecha_inicio,fecha_fin'),
-        pid
-            ? sb.from('cobros').select('dni,cohorte_id,programa_id,estado,monto_final,saldo_pendiente').eq('programa_id', pid)
-            : sb.from('cobros').select('dni,cohorte_id,programa_id,estado,monto_final,saldo_pendiente'),
-        pid
-            ? sb.from('egresos').select('cohorte_id,programa_id,tipo,monto_pagado,monto_original').eq('programa_id', pid)
-            : sb.from('egresos').select('cohorte_id,programa_id,tipo,monto_pagado,monto_original'),
+        sb.from('programas').select('programa_id,nombre,tipo,estado').in('programa_id', progIds),
+        sb.from('cohortes').select('cohorte_id,nombre,programa_id,estado,fecha_inicio,fecha_fin').in('programa_id', progIds),
+        sb.from('cobros').select('dni,cohorte_id,programa_id,estado,monto_final,saldo_pendiente').in('programa_id', progIds),
+        sb.from('egresos').select('cohorte_id,programa_id,tipo,monto_pagado,monto_original').in('programa_id', progIds),
         sb.from('inscripciones').select('estudiante_id,cohorte_id')
     ]);
 
