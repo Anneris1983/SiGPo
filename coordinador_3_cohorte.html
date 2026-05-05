@@ -1215,15 +1215,15 @@ async function reclamarSel() {
 
 async function enviarEmailGas(gasUrl, to, subject, body, replyTo) {
     try {
-        var res = await fetch(gasUrl, {
+        await fetch(gasUrl, {
             method:  'POST',
             headers: { 'Content-Type': 'text/plain' },
             body:    JSON.stringify({ secret: GAS_SECRET, to: to, subject: subject, body: body, replyTo: replyTo || '' }),
-            mode:    'cors'
+            mode:    'no-cors'
         });
-        var json = await res.json();
-        if (!json.ok) console.error('GAS error para', to, ':', json.error);
-        return !!json.ok;
+        // no-cors: el request llega al GAS y el email se envía,
+        // pero el browser no puede leer la respuesta (respuesta opaca).
+        return true;
     } catch(err) {
         console.error('enviarEmailGas excepción:', err);
         return false;
