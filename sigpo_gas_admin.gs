@@ -55,7 +55,7 @@ function alertarCuotasADefinir() {
   Logger.log('--- Alerta A_DEFINIR: cuotas sin aviso que vencen hasta el ' + fechaLimite + ' ---');
 
   var cobros = _sbGet(
-    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,fecha_vencimiento,monto_final' +
+    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,fecha_vencimiento,monto_final,estudiantes(nombre,apellido)' +
     '&estado=eq.A_DEFINIR' +
     '&no_aplica=not.is.true' +
     '&aviso_coordinador_enviado=eq.false' +
@@ -220,8 +220,11 @@ function _wrapHtml(contenido) {
 
 function _htmlADefinir(prog, cohorte, cuotas, nEst, fechaVenc, dias) {
   var filas = cuotas.map(function(c) {
-    return '<tr><td>' + c.dni + '</td><td>' + (c.concepto||'—') + '</td>' +
-           '<td>' + (c.periodo||'—') + '</td><td>' + _fmtFecha(c.fecha_vencimiento) + '</td></tr>';
+    var apellido = (c.estudiantes && c.estudiantes.apellido) ? c.estudiantes.apellido : '—';
+    var nombre   = (c.estudiantes && c.estudiantes.nombre)   ? c.estudiantes.nombre   : '—';
+    return '<tr><td>' + apellido + '</td><td>' + nombre + '</td><td>' + c.dni + '</td>' +
+           '<td>' + (c.concepto||'—') + '</td><td>' + (c.periodo||'—') + '</td>' +
+           '<td>' + _fmtFecha(c.fecha_vencimiento) + '</td></tr>';
   }).join('');
   return _wrapHtml(
     '<div class="warn"><strong>⚠️ Alerta de gestión — acción requerida</strong><br>' +
@@ -229,7 +232,7 @@ function _htmlADefinir(prog, cohorte, cuotas, nEst, fechaVenc, dias) {
     'y cuyo vencimiento es el <strong>' + fechaVenc + '</strong> (en <strong>' + dias + ' días</strong>).<br>' +
     'Es necesario definir los montos antes de esa fecha para habilitar los pagos.</div>' +
     '<p><strong>Programa:</strong> ' + prog + '<br><strong>Cohorte / Edición:</strong> ' + cohorte + '</p>' +
-    '<table><tr><th>DNI</th><th>Concepto</th><th>Período</th><th>Vencimiento</th></tr>' + filas + '</table>'
+    '<table><tr><th>Apellido</th><th>Nombre</th><th>DNI</th><th>Concepto</th><th>Período</th><th>Vencimiento</th></tr>' + filas + '</table>'
   );
 }
 
