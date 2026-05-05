@@ -55,7 +55,7 @@ function alertarCuotasADefinir() {
   Logger.log('--- Alerta A_DEFINIR: cuotas sin aviso que vencen hasta el ' + fechaLimite + ' ---');
 
   var cobros = _sbGet(
-    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,fecha_vencimiento,monto_final,estudiantes(nombre,apellido)' +
+    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,fecha_vencimiento,monto_final,estudiantes!cobros_dni_fkey(nombre,apellido)' +
     '&estado=eq.A_DEFINIR' +
     '&no_aplica=not.is.true' +
     '&aviso_coordinador_enviado=eq.false' +
