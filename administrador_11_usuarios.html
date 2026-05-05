@@ -41,7 +41,7 @@
         .rb{padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;text-transform:uppercase;white-space:nowrap}
         .rADMINISTRADOR{background:#e3f2fd;color:#1565c0}.rCOOPERADORA{background:#f3e5f5;color:#7b1fa2}
         .rCOORDINADOR{background:#fff3e0;color:#e65100}.rESTUDIANTE{background:#e8f5e9;color:#2e7d32}
-        .rSECRETARIA{background:#fce4ec;color:#c2185b}
+        .rSECRETARIA{background:#fce4ec;color:#c2185b}.rPROFESOR{background:#e8eaf6;color:#283593}
         .sb2{padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700}
         .sACTIVO{background:#d1fae5;color:#065f46}.sBLOQUEADO{background:#fee2e2;color:#991b1b}.sPASIVO{background:#fef3c7;color:#92400e}
         .abts{display:flex;gap:4px;flex-wrap:wrap}
@@ -131,6 +131,7 @@
                 <button class="fb" data-r="SECRETARIA" onclick="setRol(this)">Secretaría</button>
                 <button class="fb" data-r="COOPERADORA" onclick="setRol(this)">Cooperadora</button>
                 <button class="fb" data-r="COORDINADOR" onclick="setRol(this)">Coordinador</button>
+                <button class="fb" data-r="PROFESOR" onclick="setRol(this)">Profesor</button>
                 <button class="fb" data-r="ESTUDIANTE" onclick="setRol(this)">Estudiante</button>
             </div>
         </div>
@@ -184,6 +185,7 @@
                     <option value="SECRETARIA">Secretaría de Posgrado</option>
                     <option value="COOPERADORA">Cooperadora</option>
                     <option value="COORDINADOR">Coordinador/a</option>
+                    <option value="PROFESOR">Profesor/a</option>
                     <option value="ESTUDIANTE">Estudiante</option>
                 </select>
             </div>
@@ -268,7 +270,7 @@
             <div class="abox" style="background:#e0f2fe;border-left:4px solid #0284c7;color:#075985;">
                 <strong>Columnas requeridas (fila 1 = cabecera):</strong>
                 <div style="margin-top:6px;font-family:monospace;font-size:12px;background:#fff;padding:8px;border-radius:6px;">apellido · nombre · dni · email · password · rol</div>
-                <div style="margin-top:6px;font-size:12px;"><strong>Roles:</strong> ADMINISTRADOR · SECRETARIA · COOPERADORA · COORDINADOR · ESTUDIANTE</div>
+                <div style="margin-top:6px;font-size:12px;"><strong>Roles:</strong> ADMINISTRADOR · SECRETARIA · COOPERADORA · COORDINADOR · PROFESOR · ESTUDIANTE</div>
             </div>
             <div class="mf" style="margin-top:14px;">
                 <label>Archivo .xlsx</label>
@@ -354,7 +356,7 @@ async function cargar(){
     finally{spin(false);}
 }
 
-var _RL={ADMINISTRADOR:'Administrador',SECRETARIA:'Secretaría',COOPERADORA:'Cooperadora',COORDINADOR:'Coordinador/a',ESTUDIANTE:'Estudiante'};
+var _RL={ADMINISTRADOR:'Administrador',SECRETARIA:'Secretaría',COOPERADORA:'Cooperadora',COORDINADOR:'Coordinador/a',PROFESOR:'Profesor/a',ESTUDIANTE:'Estudiante'};
 var _SL={ACTIVO:'Activo',BLOQUEADO:'Bloqueado',PASIVO:'Pasivo'};
 
 function renderTabla(){
@@ -407,7 +409,7 @@ async function abrirU(id){
             document.getElementById('u-rol').value=u.rol||'';
             onRol();
             var sb=await getSupabase();
-            if(u.rol==='COORDINADOR'){
+            if(u.rol==='COORDINADOR'||u.rol==='PROFESOR'){
                 var ra=await sb.from('coordinadores_programas').select('programa_id,cohorte_id').eq('coordinador_id',id);
                 _coordAsigs=(ra.data||[]).map(function(a){return{programa_id:a.programa_id,cohorte_id:a.cohorte_id||null};});
                 if(!_coordAsigs.length)_coordAsigs=[{programa_id:null,cohorte_id:null}];
@@ -433,9 +435,9 @@ async function abrirU(id){
 
 function onRol(){
     var r=document.getElementById('u-rol').value;
-    document.getElementById('g-coord').style.display=r==='COORDINADOR'?'block':'none';
+    document.getElementById('g-coord').style.display=(r==='COORDINADOR'||r==='PROFESOR')?'block':'none';
     document.getElementById('g-est').style.display=r==='ESTUDIANTE'?'block':'none';
-    if(r==='COORDINADOR'&&!_coordAsigs.length){_coordAsigs=[{programa_id:null,cohorte_id:null}];renderCoordRows();}
+    if((r==='COORDINADOR'||r==='PROFESOR')&&!_coordAsigs.length){_coordAsigs=[{programa_id:null,cohorte_id:null}];renderCoordRows();}
 }
 
 function mkProgOpts(sel){return '<option value="">— Programa —</option>'+_pr.map(function(p){return'<option value="'+p.programa_id+'"'+(sel===p.programa_id?' selected':'')+'>'+esc(p.nombre)+'</option>';}).join('');}
@@ -487,7 +489,7 @@ async function guardarU(){
     if(!id&&!pw){toast('La contraseña es obligatoria para usuarios nuevos','err');return;}
     if(pw&&pw.length<8){toast('La contraseña debe tener al menos 8 caracteres','err');return;}
     var nc=ap+' '+no;
-    var asigs=rol==='COORDINADOR'?_coordAsigs.filter(function(a){return a.programa_id;}):[];
+    var asigs=(rol==='COORDINADOR'||rol==='PROFESOR')?_coordAsigs.filter(function(a){return a.programa_id;}):[];
     var insc=rol==='ESTUDIANTE'?_estInsc.filter(function(a){return a.programa_id&&a.cohorte_id;}):[];
     spin(true);
     try{
@@ -496,7 +498,7 @@ async function guardarU(){
             var uid=parseInt(id);
             var e1=await sb.from('usuarios').update({apellido:ap,nombre:no,nombre_completo:nc,email:em,rol:rol}).eq('usuario_id',uid);
             if(e1.error)throw e1.error;
-            if(rol==='COORDINADOR'){
+            if(rol==='COORDINADOR'||rol==='PROFESOR'){
                 await sb.from('coordinadores_programas').delete().eq('coordinador_id',uid);
                 if(asigs.length){
                     var e2=await sb.from('coordinadores_programas').insert(asigs.map(function(a){return{coordinador_id:uid,programa_id:a.programa_id,cohorte_id:a.cohorte_id||null};}));
@@ -593,7 +595,7 @@ async function doImp(){
         var wb=XLSX.read(data,{type:'array'});
         var rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
         if(!rows.length){toast('Archivo vacío','err');return;}
-        var rolesOK=['ADMINISTRADOR','SECRETARIA','COOPERADORA','COORDINADOR','ESTUDIANTE'];
+        var rolesOK=['ADMINISTRADOR','SECRETARIA','COOPERADORA','COORDINADOR','PROFESOR','ESTUDIANTE'];
         var sb=await getSupabase();var ok=0,errs=[];
         for(var i=0;i<rows.length;i++){
             var r=rows[i];
