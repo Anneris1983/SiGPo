@@ -199,9 +199,24 @@
             try {
                 var sesion = getSesion();
                 var sb = await getSupabase();
-                var rP = await sb.from('programas').select('*');
-                var rC = await sb.from('cohortes').select('*');
-                var rCob = await sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente');
+
+                var progIds = sesion ? await obtenerProgramasAsignadosPorDni(sesion.dni) : [];
+                if (!progIds.length) {
+                    dashboardData = {
+                        coordinador: { nombreCompleto: sesion ? (sesion.nombre || 'Coordinador/a') : 'Coordinador/a' },
+                        programaActual: { nombre: 'Sin programas asignados', cohortesActivas: 0, estudiantesTotales: 0 },
+                        resumen: { totalEstudiantes: 0, alDia: 0, enMora: 0, recaudadoTexto: '$0' },
+                        programas: [], cohortes: [], actividadReciente: []
+                    };
+                    renderDashboard();
+                    return;
+                }
+
+                var [rP, rC, rCob] = await Promise.all([
+                    sb.from('programas').select('*').in('programa_id', progIds),
+                    sb.from('cohortes').select('*').in('programa_id', progIds),
+                    sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente').in('programa_id', progIds)
+                ]);
                 var programas = rP.data || [];
                 var cohortes = rC.data || [];
                 var cobros = rCob.data || [];
@@ -336,7 +351,9 @@
             } catch (e) { alerta.textContent = '⚠️ No se pudo leer el archivo Excel.'; alerta.style.display = 'block'; success.style.display = 'none'; }
         }
         function cargarNotificaciones() {
-            obtenerNotificaciones('COORDINADOR').then(renderNotificaciones).catch(function(){renderNotificaciones([]);});
+            var sesion = getSesion();
+            var rol = sesion ? (sesion.rol || 'COORDINADOR') : 'COORDINADOR';
+            obtenerNotificaciones(rol).then(renderNotificaciones).catch(function(){renderNotificaciones([]);});
         }
         function renderNotificaciones(datos) {
             notificaciones = Array.isArray(datos) ? datos : [];

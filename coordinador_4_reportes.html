@@ -406,11 +406,19 @@ async function cargarVista() {
         var filtAnio = (selAnio && selAnio.value) || DEFAULT_ANIO;
 
         var sb = await getSupabase();
-        var rP = await sb.from('programas').select('programa_id,nombre');
-        var rC = await sb.from('cohortes').select('cohorte_id,nombre,programa_id');
-        var rCob = await sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento');
-        var rEgr = await sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada');
-
+        var sesion = getSesion();
+        var progIds = sesion ? await obtenerProgramasAsignadosPorDni(sesion.dni) : [];
+        var qP   = sb.from('programas').select('programa_id,nombre');
+        var qC   = sb.from('cohortes').select('cohorte_id,nombre,programa_id');
+        var qCob = sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento');
+        var qEgr = sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada');
+        if (progIds.length) {
+            qP   = qP.in('programa_id', progIds);
+            qC   = qC.in('programa_id', progIds);
+            qCob = qCob.in('programa_id', progIds);
+            qEgr = qEgr.in('programa_id', progIds);
+        }
+        var [rP, rC, rCob, rEgr] = await Promise.all([qP, qC, qCob, qEgr]);
         var programas = rP.data || [];
         var cohortes = rC.data || [];
         var cobros = rCob.data || [];

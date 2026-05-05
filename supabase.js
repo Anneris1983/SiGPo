@@ -157,7 +157,7 @@ function cerrarSesion(e) {
 const RUTAS_POR_ROL = {
     'ESTUDIANTE':    'portal_estudiante_2_dashboard.html',
     'COORDINADOR':   'coordinador_1_dashboard.html',
-    'PROFESOR':      'profesor_1_dashboard.html',
+    'PROFESOR':      'coordinador_1_dashboard.html',
     'SECRETARIA':    'secretaria_1_dashboard.html',
     'COOPERADORA':   'cooperadora_2_Dashboard.html',
     'ADMINISTRADOR': 'administrador_2_dashboard.html'
@@ -699,6 +699,26 @@ async function obtenerProgramasCoordinador(usuarioId) {
         .select('programa_id, programas(nombre, tipo)')
         .eq('coordinador_id', usuarioId);
     return data || [];
+}
+
+/**
+ * Retorna un array de programa_id asignados al usuario con ese dni.
+ * Usado por las páginas de coordinador/profesor para filtrar datos.
+ */
+async function obtenerProgramasAsignadosPorDni(dni) {
+    const sb = await getSupabase();
+    const { data: usuario } = await sb
+        .from('usuarios')
+        .select('usuario_id')
+        .eq('dni', String(dni))
+        .single();
+    if (!usuario) return [];
+    const { data: asignaciones } = await sb
+        .from('coordinadores_programas')
+        .select('programa_id')
+        .eq('coordinador_id', usuario.usuario_id);
+    if (!asignaciones || !asignaciones.length) return [];
+    return [...new Set(asignaciones.map(function(a){ return a.programa_id; }))];
 }
 
 /**

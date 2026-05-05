@@ -524,9 +524,17 @@
             spin(true);
             try {
                 var sb = await getSupabase();
-                var rP = await sb.from('programas').select('programa_id,nombre');
-                var rC = await sb.from('cohortes').select('cohorte_id,nombre,programa_id');
-                var rE = await sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,fecha_pago,fecha_estimada,proveedor,concepto,categoria,nro_comprobante');
+                var sesion = getSesion();
+                var progIds = sesion ? await obtenerProgramasAsignadosPorDni(sesion.dni) : [];
+                var qP = sb.from('programas').select('programa_id,nombre');
+                var qC = sb.from('cohortes').select('cohorte_id,nombre,programa_id');
+                var qE = sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,fecha_pago,fecha_estimada,proveedor,concepto,categoria,nro_comprobante');
+                if (progIds.length) {
+                    qP = qP.in('programa_id', progIds);
+                    qC = qC.in('programa_id', progIds);
+                    qE = qE.in('programa_id', progIds);
+                }
+                var [rP, rC, rE] = await Promise.all([qP, qC, qE]);
 
                 var programas = rP.data || [];
                 var cohortes = rC.data || [];
