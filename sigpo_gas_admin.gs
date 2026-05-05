@@ -55,7 +55,7 @@ function alertarCuotasADefinir() {
   Logger.log('--- Alerta A_DEFINIR: cuotas que vencen exactamente el ' + fechaObj + ' ---');
 
   var cobros = _sbGet(
-    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final' +
+    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,fecha_vencimiento,monto_final' +
     '&estado=eq.A_DEFINIR' +
     '&no_aplica=not.is.true' +
     '&fecha_vencimiento=eq.' + fechaObj

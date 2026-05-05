@@ -70,7 +70,7 @@ function enviarRecordatoriosVencimiento() {
   Logger.log('--- Recordatorios de vencimiento: ' + mesNom + ' ' + anio + ' ---');
 
   var cobros = _sbGet(
-    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
+    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
     '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
     '&estado=not.in.(ABONADA,A_DEFINIR)' +
     '&no_aplica=not.is.true' +
@@ -116,7 +116,7 @@ function enviarReclamosMora() {
   Logger.log('--- Reclamos de mora: ' + mesNom + ' ' + anio + ' ---');
 
   var cobros = _sbGet(
-    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
+    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
     '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
     '&estado=eq.EN_MORA'
   );
@@ -200,7 +200,7 @@ function _sbGet(path) {
 function _cuentasCorrientesLote(dnis, cohorteIds) {
   if (!dnis.length || !cohorteIds.length) return {};
   var todas = _sbGet(
-    'cobros?select=dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
+    'cobros?select=dni,concepto,periodo,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
     '&dni=in.(' + dnis.join(',') + ')' +
     '&cohorte_id=in.(' + cohorteIds.join(',') + ')' +
     '&order=fecha_vencimiento.asc'
