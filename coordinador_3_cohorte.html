@@ -605,7 +605,7 @@ async function cargar() {
         var sb = await getSupabase();
         var [rCoh, rCob, rInsc, rEst, rEgr, rProg, rCfg] = await Promise.all([
             sb.from('cohortes').select('*, programas(nombre,gas_url,email_remitente)').eq('cohorte_id', COHORTE_ID).single(),
-            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', COHORTE_ID),
+            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
             sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico'),
             sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
             sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', COHORTE_ID),
@@ -630,8 +630,8 @@ async function cargar() {
         var conceptosMap = {};
         var columnas = [];
         cobros.forEach(function(c){
-            var key = c.concepto || '';
-            if (key && !conceptosMap[key]) { conceptosMap[key] = true; columnas.push({ concepto_base:key, periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'' }); }
+            var key = (c.concepto || '') + '||' + (c.periodo || '');
+            if (c.concepto && !conceptosMap[key]) { conceptosMap[key] = true; columnas.push({ concepto_base:c.concepto, periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'' }); }
         });
 
         var dniMap = {};
@@ -768,8 +768,8 @@ function derivarColumnas(estudiantes) {
     estudiantes.forEach(est => {
         est.cobros.forEach(c => {
             if (!c) return;
-            const key = c.concepto_base || c.concepto;
-            if (!mapa.has(key)) mapa.set(key, { concepto_base: key, periodo: c.periodo || '', fecha_vencimiento: c.fecha_vencimiento || '' });
+            const key = (c.concepto_base || c.concepto) + '||' + (c.periodo || '');
+            if (!mapa.has(key)) mapa.set(key, { concepto_base: c.concepto_base || c.concepto, periodo: c.periodo || '', fecha_vencimiento: c.fecha_vencimiento || '' });
         });
     });
     return [...mapa.values()].sort((a,b) => String(a.fecha_vencimiento || '9999-12-31').localeCompare(String(b.fecha_vencimiento || '9999-12-31')));
@@ -808,10 +808,10 @@ function renderTabla() {
         est.cobros.forEach(c => { if(c){ totP += Number(c.monto_final || 0); totA += Number(c.monto_abonado || 0); totS += Number(c.saldo_pendiente || 0); }});
 
         const cobrosMap = {};
-        est.cobros.forEach(c => { if (c) cobrosMap[c.concepto_base || c.concepto] = c; });
+        est.cobros.forEach(c => { if (c) cobrosMap[(c.concepto_base || c.concepto) + '||' + (c.periodo || '')] = c; });
 
         const celdas = columnas.map(col => {
-            const c = cobrosMap[col.concepto_base];
+            const c = cobrosMap[col.concepto_base + '||' + (col.periodo || '')];
             if (!c) return `<td data-est="NO_APLICA">no debe<br>abonar</td>`;
             let txt = '';
             if (c.estado === 'ABONADA') txt = fMonto(c.monto_final);
