@@ -604,7 +604,7 @@ async function cargar() {
     try {
         var sb = await getSupabase();
         var [rCoh, rCob, rInsc, rEst, rEgr, rProg, rCfg] = await Promise.all([
-            sb.from('cohortes').select('*, programas(nombre)').eq('cohorte_id', COHORTE_ID).single(),
+            sb.from('cohortes').select('*, programas(nombre,gas_url,email_remitente)').eq('cohorte_id', COHORTE_ID).single(),
             sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', COHORTE_ID),
             sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico'),
             sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
@@ -647,14 +647,14 @@ async function cargar() {
         });
 
         var res = {
-            programa: { nombre: cohorte.programas ? cohorte.programas.nombre : (progData.nombre||''), programa_id: cohorte.programa_id || PROGRAMA_ID, gas_url: progData.gas_url||'', email_remitente: progData.email_remitente||'' },
+            programa: { nombre: cohorte.programas ? cohorte.programas.nombre : (progData.nombre||''), programa_id: cohorte.programa_id || PROGRAMA_ID, gas_url: progData.gas_url || (cohorte.programas ? cohorte.programas.gas_url : '') || '', email_remitente: progData.email_remitente || (cohorte.programas ? cohorte.programas.email_remitente : '') || '' },
             cohorte:  { nombre:cohorte.nombre||'Cohorte', cohorte_id:cohorte.cohorte_id||COHORTE_ID, fecha_inicio:cohorte.fecha_inicio||'', fecha_fin:cohorte.fecha_fin||'', estado:cohorte.estado||'' },
             columnas: columnas,
             estudiantes: Object.values(dniMap)
         };
         V.data = normalizarVista(res);
-        V.data.programa.gas_url        = progData.gas_url || '';
-        V.data.programa.email_remitente = progData.email_remitente || '';
+        V.data.programa.gas_url        = progData.gas_url || (cohorte.programas ? cohorte.programas.gas_url : '') || '';
+        V.data.programa.email_remitente = progData.email_remitente || (cohorte.programas ? cohorte.programas.email_remitente : '') || '';
         V.data.egresos = rEgr.data || [];
         renderHeader();
         renderTabla();
