@@ -1,70 +1,65 @@
 /**
  * ══════════════════════════════════════════════════════════════
- * SiGPo — Automatización de emails
- * Google Apps Script
+ * SiGPo — GAS del COORDINADOR
+ * Google Apps Script — uno por coordinador, en su cuenta Workspace
  *
- * DESPLIEGUE (una sola vez):
- *  1. script.google.com → Nuevo proyecto → pegar este código
- *  2. Ejecutar configurarTriggers() una vez → se crean los 3 triggers automáticamente
- *  3. Implementar → Nueva implementación → Web App
- *     · Ejecutar como: Yo  ·  Acceso: Cualquier persona
- *  4. Copiar la URL y guardarla en Supabase:
- *       UPDATE configuracion SET valor = 'URL_AQUI' WHERE clave = 'gas_url';
+ * DESPLIEGUE (una sola vez por coordinador):
+ *  1. script.google.com desde la cuenta del coordinador → Nuevo proyecto
+ *  2. Pegar este código
+ *  3. Configurar PROGRAMA_IDS y SUPABASE_KEY (service role key)
+ *  4. Ejecutar configurarTriggers() una vez → autorizar permisos
+ *  5. Implementar → Web App · Ejecutar como: Yo · Acceso: Cualquier persona
+ *  6. Copiar URL y guardar en tabla programas → columna gas_url
  *
- * TRIGGERS CONFIGURADOS POR configurarTriggers():
- *  · Diario a las 07:00 → ejecutarTareasDiarias()
- *    - Día 1  → enviarRecordatoriosVencimiento()
- *    - Día 16 → enviarReclamosMora()
- *    - Todos los días → alertarCuotasADefinir()
+ * FUNCIONES AUTOMÁTICAS (salen desde el email del coordinador):
+ *  · Día 1  → Recordatorio de vencimiento de cuota → al estudiante
+ *  · Día 16 → Reclamo de cuotas en mora           → al estudiante
+ *
+ * FUNCIÓN MANUAL:
+ *  · doPost → recibe llamadas del frontend para envío individual
  * ══════════════════════════════════════════════════════════════
  */
 
-var SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
-var SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
-var SECRET       = 'SIGPO_KEY_FCE_2025';
-var NOMBRE_INST  = 'Secretaría de Posgrado — FCE UNCUYO';
+var SUPABASE_URL  = 'https://fdevypdowdhqaxvfiywt.supabase.co';
+var SUPABASE_KEY  = 'REEMPLAZAR_CON_SERVICE_ROLE_KEY'; // ← solo en script.google.com, nunca en el repo
+var SECRET        = 'SIGPO_KEY_FCE_2025';
+var NOMBRE_INST   = 'Secretaría de Posgrado — FCE UNCUYO';
 
 // ══════════════════════════════════════════════════════════════
-// TRIGGER PRINCIPAL — ejecuta las 3 lógicas según el día
+// CONFIGURACIÓN — completar antes de ejecutar
+// Listar los programa_id que gestiona este coordinador.
+// Ejemplo un programa:    var PROGRAMA_IDS = [3];
+// Ejemplo dos programas:  var PROGRAMA_IDS = [3, 7];
+// ══════════════════════════════════════════════════════════════
+var PROGRAMA_IDS = [REEMPLAZAR_CON_ID_DEL_PROGRAMA]; // ← número(s), sin comillas
+
+// ══════════════════════════════════════════════════════════════
+// TRIGGER PRINCIPAL
 // ══════════════════════════════════════════════════════════════
 
 function ejecutarTareasDiarias() {
   var dia = new Date().getDate();
-  Logger.log('=== SiGPo tareas automáticas — día ' + dia + ' ===');
+  Logger.log('=== SiGPo coordinador — día ' + dia + ' — programas: [' + PROGRAMA_IDS.join(',') + '] ===');
   if (dia === 1)  enviarRecordatoriosVencimiento();
   if (dia === 16) enviarReclamosMora();
-  alertarCuotasADefinir();
 }
 
-/**
- * Configura el trigger diario. Ejecutar UNA VEZ manualmente.
- * Borra triggers previos del mismo tipo para evitar duplicados.
- */
 function configurarTriggers() {
   ScriptApp.getProjectTriggers().forEach(function(t) {
-    if (t.getHandlerFunction() === 'ejecutarTareasDiarias') {
-      ScriptApp.deleteTrigger(t);
-    }
+    if (t.getHandlerFunction() === 'ejecutarTareasDiarias') ScriptApp.deleteTrigger(t);
   });
-  ScriptApp.newTrigger('ejecutarTareasDiarias')
-    .timeBased()
-    .everyDays(1)
-    .atHour(7)
-    .create();
-  Logger.log('✅ Trigger diario configurado para las 07:00.');
+  ScriptApp.newTrigger('ejecutarTareasDiarias').timeBased().everyDays(1).atHour(7).create();
+  Logger.log('✅ Trigger diario 07:00 configurado.');
 }
 
 // ══════════════════════════════════════════════════════════════
 // DÍA 1 — RECORDATORIO DE VENCIMIENTO DE CUOTA
-// Envía a cada estudiante que tenga una cuota del mes actual
-// sin abonar, recordando que vence el día 15.
-// Incluye el detalle de esa cuota + cuenta corriente completa.
 // ══════════════════════════════════════════════════════════════
 
 function enviarRecordatoriosVencimiento() {
   var hoy    = new Date();
   var anio   = hoy.getFullYear();
-  var mes    = hoy.getMonth(); // 0-11
+  var mes    = hoy.getMonth();
   var desde  = _primerDiaMes(anio, mes);
   var hasta  = _ultimoDiaMes(anio, mes);
   var mesNom = _mesNombre(mes);
@@ -73,6 +68,7 @@ function enviarRecordatoriosVencimiento() {
 
   var cobros = _sbGet(
     'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
+    '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
     '&estado=not.in.(ABONADA,A_DEFINIR)' +
     '&no_aplica=not.is.true' +
     '&fecha_vencimiento=gte.' + desde +
@@ -82,21 +78,17 @@ function enviarRecordatoriosVencimiento() {
   if (!cobros.length) { Logger.log('Sin cobros pendientes este mes.'); return; }
 
   var ctx      = _cargarContexto(cobros);
-  // 1 sola query trae todas las cuentas corrientes de todos los DNIs afectados
   var ccPorDni = _cuentasCorrientesLote(Object.keys(ctx.porDni), Object.keys(ctx.cohMap));
 
   var enviados = 0;
   Object.keys(ctx.porDni).forEach(function(dni) {
     var usu = ctx.usuMap[dni];
     if (!usu || !usu.email) { Logger.log('Sin email: DNI ' + dni); return; }
-
     var cuotasMes = ctx.porDni[dni];
     var progNom   = _nombrePrograma(cuotasMes[0], ctx);
     var cc        = ccPorDni[dni] || [];
-
     var subject = 'Recordatorio de cuota — ' + progNom + ' — ' + mesNom + ' ' + anio;
     var html    = _htmlRecordatorio(_nombreCompleto(usu), progNom, mesNom, anio, cuotasMes, cc);
-
     if (_enviarMail(usu.email, subject, html)) enviados++;
   });
 
@@ -105,8 +97,6 @@ function enviarRecordatoriosVencimiento() {
 
 // ══════════════════════════════════════════════════════════════
 // DÍA 16 — RECLAMO DE MORA
-// Envía a cada estudiante con al menos una cuota EN_MORA,
-// listando todas sus cuotas en mora y su cuenta corriente completa.
 // ══════════════════════════════════════════════════════════════
 
 function enviarReclamosMora() {
@@ -118,104 +108,29 @@ function enviarReclamosMora() {
 
   var cobros = _sbGet(
     'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
+    '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
     '&estado=eq.EN_MORA'
   );
 
   if (!cobros.length) { Logger.log('No hay cobros en mora.'); return; }
 
   var ctx      = _cargarContexto(cobros);
-  // 1 sola query trae todas las cuentas corrientes de todos los DNIs afectados
   var ccPorDni = _cuentasCorrientesLote(Object.keys(ctx.porDni), Object.keys(ctx.cohMap));
 
   var enviados = 0;
   Object.keys(ctx.porDni).forEach(function(dni) {
     var usu = ctx.usuMap[dni];
     if (!usu || !usu.email) { Logger.log('Sin email: DNI ' + dni); return; }
-
     var cuotasMora = ctx.porDni[dni];
     var progNom    = _nombrePrograma(cuotasMora[0], ctx);
     var cc         = ccPorDni[dni] || [];
     var deuda      = cuotasMora.reduce(function(s,c){ return s + Number(c.saldo_pendiente || c.monto_final || 0); }, 0);
-
     var subject = 'Aviso de cuotas en mora — ' + progNom;
     var html    = _htmlReclamo(_nombreCompleto(usu), progNom, cuotasMora, cc, deuda, mesNom, anio);
-
     if (_enviarMail(usu.email, subject, html)) enviados++;
   });
 
   Logger.log('Reclamos enviados: ' + enviados);
-}
-
-// ══════════════════════════════════════════════════════════════
-// DIARIO — ALERTA CUOTAS A_DEFINIR (45 días antes del vencimiento)
-// Envía a cooperadora / secretaria / administrador cuando detecta
-// cobros con monto A_DEFINIR cuyo vencimiento está a ≤45 días.
-// ══════════════════════════════════════════════════════════════
-
-function alertarCuotasADefinir() {
-  var hoy       = new Date();
-  // El alerta se envía UNA sola vez: el día en que quedan exactamente 45 días para el vencimiento
-  var objetivo  = new Date(hoy.getTime() + 45 * 86400000);
-  var fechaObj  = objetivo.toISOString().split('T')[0];
-
-  Logger.log('--- Alerta A_DEFINIR: cuotas que vencen exactamente el ' + fechaObj + ' ---');
-
-  var cobros = _sbGet(
-    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final' +
-    '&estado=eq.A_DEFINIR' +
-    '&no_aplica=not.is.true' +
-    '&fecha_vencimiento=eq.' + fechaObj
-  );
-
-  if (!cobros.length) { Logger.log('Sin cuotas A_DEFINIR próximas.'); return; }
-
-  // Agrupar por cohorte
-  var porCohorte = {};
-  cobros.forEach(function(c) {
-    if (!porCohorte[c.cohorte_id]) porCohorte[c.cohorte_id] = [];
-    porCohorte[c.cohorte_id].push(c);
-  });
-
-  var cohorteIds = Object.keys(porCohorte);
-  var cohortes   = _sbGet('cohortes?select=cohorte_id,nombre,programa_id&cohorte_id=in.(' + cohorteIds.join(',') + ')');
-  var programas  = _sbGet('programas?select=programa_id,nombre');
-  var cohMap     = _indexar(cohortes,  'cohorte_id');
-  var progMap    = _indexar(programas, 'programa_id');
-
-  // Receptores: cooperadora, secretaria y admin
-  var receptores = _sbGet('usuarios?select=dni,nombre,apellido,email,rol,programa_id&rol=in.(COOPERADORA,SECRETARIA,ADMIN)&activo=eq.true');
-  var recPorProg = {};
-  receptores.forEach(function(r) {
-    var key = String(r.programa_id || 'global');
-    if (!recPorProg[key]) recPorProg[key] = [];
-    recPorProg[key].push(r);
-  });
-
-  var enviados = 0;
-  cohorteIds.forEach(function(cid) {
-    var coh      = cohMap[cid] || {};
-    var prog     = progMap[coh.programa_id] || {};
-    var cuotas   = porCohorte[cid];
-    var nEst     = _uniq(cuotas.map(function(c){ return c.dni; })).length;
-    var fechaVenc = cuotas[0] ? cuotas[0].fecha_vencimiento : '';
-    var dias     = fechaVenc ? Math.round((new Date(fechaVenc) - hoy) / 86400000) : 45;
-
-    var dests = (recPorProg[String(coh.programa_id)] || [])
-      .concat(recPorProg['global'] || [])
-      .filter(function(r){ return r.email; });
-    var emails = _uniq(dests.map(function(r){ return r.email; }));
-
-    if (!emails.length) { Logger.log('Sin destinatarios para cohorte ' + cid); return; }
-
-    var subject = '⚠️ Alerta: cuotas A_DEFINIR — ' + (coh.nombre||cid) + ' — ' + (prog.nombre||'Posgrado');
-    var html    = _htmlADefinir(prog.nombre||'Posgrado', coh.nombre||cid, cuotas, nEst, _fmtFecha(fechaVenc), dias);
-
-    emails.forEach(function(email) {
-      if (_enviarMail(email, subject, html)) enviados++;
-    });
-  });
-
-  Logger.log('Alertas A_DEFINIR enviadas: ' + enviados);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -265,8 +180,6 @@ function _sbGet(path) {
   }
 }
 
-// Trae las cuentas corrientes de TODOS los DNIs y cohortes en una sola query
-// y las devuelve indexadas por DNI. Elimina el patrón N+1.
 function _cuentasCorrientesLote(dnis, cohorteIds) {
   if (!dnis.length || !cohorteIds.length) return {};
   var todas = _sbGet(
@@ -324,17 +237,14 @@ function _fmtFecha(f) {
 
 function _nombrePrograma(cobro, ctx) {
   if (!cobro) return 'Posgrado';
-  var coh = ctx.cohMap[cobro.cohorte_id] || {};
+  var coh  = ctx.cohMap[cobro.cohorte_id] || {};
   var prog = ctx.progMap[cobro.programa_id || coh.programa_id] || {};
   return prog.nombre || 'Posgrado';
 }
 
 function _enviarMail(to, subject, html) {
   try {
-    MailApp.sendEmail(to, subject, html.replace(/<[^>]+>/g,''), {
-      name: NOMBRE_INST,
-      htmlBody: html
-    });
+    MailApp.sendEmail(to, subject, html.replace(/<[^>]+>/g,''), { name: NOMBRE_INST, htmlBody: html });
     Logger.log('✅ → ' + to);
     return true;
   } catch(err) {
@@ -362,7 +272,6 @@ var _CSS = '<style>' +
   'tr.abon td{color:#9ca3af;}' +
   '.aviso{background:#dbeafe;border-left:4px solid #1e3a5f;padding:12px 16px;margin:16px 0;border-radius:0 4px 4px 0;font-size:14px;}' +
   '.alerta{background:#fee2e2;border-left:4px solid #c0392b;padding:12px 16px;margin:16px 0;border-radius:0 4px 4px 0;font-size:14px;}' +
-  '.warn{background:#fef3c7;border-left:4px solid #d4af37;padding:12px 16px;margin:16px 0;border-radius:0 4px 4px 0;font-size:14px;}' +
   '.deuda{font-size:20px;font-weight:700;color:#c0392b;}' +
   'p{font-size:14px;line-height:1.6;}' +
   '</style>';
@@ -377,7 +286,7 @@ function _wrapHtml(contenido) {
 
 function _filasCC(cc) {
   return cc.map(function(c) {
-    var cls  = c.estado === 'EN_MORA' ? 'mora' : (c.estado === 'ABONADA' ? 'abon' : 'pend');
+    var cls   = c.estado === 'EN_MORA' ? 'mora' : (c.estado === 'ABONADA' ? 'abon' : 'pend');
     var saldo = c.estado === 'ABONADA' ? '<em>Abonado</em>' : _fmtPeso(c.saldo_pendiente || c.monto_final);
     return '<tr class="' + cls + '">' +
       '<td>' + (c.concepto||'—') + '</td>' +
@@ -395,10 +304,8 @@ function _htmlRecordatorio(nombre, prog, mesNom, anio, cuotasMes, cc) {
            '<td>15/' + String(new Date().getMonth()+1).padStart(2,'0') + '/' + anio + '</td>' +
            '<td><strong>' + _fmtPeso(c.monto_final) + '</strong></td></tr>';
   }).join('');
-
   var deudaPrev = cc.filter(function(c){ return c.estado === 'EN_MORA'; })
                     .reduce(function(s,c){ return s + Number(c.saldo_pendiente||c.monto_final||0); }, 0);
-
   return _wrapHtml(
     '<p>Estimado/a <strong>' + nombre + '</strong>,</p>' +
     '<div class="aviso">Le recordamos que la/s siguiente/s cuota/s del programa <strong>' + prog + '</strong> ' +
@@ -419,7 +326,6 @@ function _htmlReclamo(nombre, prog, cuotasMora, cc, deuda, mesNom, anio) {
            '<td>' + _fmtPeso(c.monto_final) + '</td>' +
            '<td><strong>' + _fmtPeso(c.saldo_pendiente||c.monto_final) + '</strong></td></tr>';
   }).join('');
-
   return _wrapHtml(
     '<p>Estimado/a <strong>' + nombre + '</strong>,</p>' +
     '<div class="alerta">Le informamos que a la fecha de hoy registra las siguientes cuotas <strong>vencidas e impagas</strong> ' +
@@ -433,32 +339,14 @@ function _htmlReclamo(nombre, prog, cuotasMora, cc, deuda, mesNom, anio) {
   );
 }
 
-function _htmlADefinir(prog, cohorte, cuotas, nEst, fechaVenc, dias) {
-  var filas = cuotas.map(function(c) {
-    return '<tr><td>' + c.dni + '</td><td>' + (c.concepto||'—') + '</td>' +
-           '<td>' + (c.periodo||'—') + '</td><td>' + _fmtFecha(c.fecha_vencimiento) + '</td></tr>';
-  }).join('');
-
-  return _wrapHtml(
-    '<div class="warn"><strong>⚠️ Alerta de gestión — acción requerida</strong><br>' +
-    'Existen <strong>' + nEst + ' estudiante/s</strong> con cuotas cuyo monto está <strong>A DEFINIR</strong> ' +
-    'y cuyo vencimiento es el <strong>' + fechaVenc + '</strong> (en <strong>' + dias + ' días</strong>).<br>' +
-    'Es necesario definir los montos antes de esa fecha.</div>' +
-    '<p><strong>Programa:</strong> ' + prog + '<br><strong>Cohorte / Edición:</strong> ' + cohorte + '</p>' +
-    '<table><tr><th>DNI</th><th>Concepto</th><th>Período</th><th>Vencimiento</th></tr>' + filas + '</table>'
-  );
-}
-
 // ══════════════════════════════════════════════════════════════
 // FUNCIONES DE PRUEBA — ejecutar manualmente desde el editor
 // ══════════════════════════════════════════════════════════════
 
-function testRecordatorio() { enviarRecordatoriosVencimiento(); }
-function testMora()         { enviarReclamosMora(); }
-function testADefinir()     { alertarCuotasADefinir(); }
-
+function testRecordatorio()     { enviarRecordatoriosVencimiento(); }
+function testMora()             { enviarReclamosMora(); }
 function testConexionSupabase() {
   var programas = _sbGet('programas?select=programa_id,nombre&limit=3');
-  Logger.log('Conexión OK — ' + programas.length + ' programas recibidos:');
+  Logger.log('Conexión OK — ' + programas.length + ' programas:');
   programas.forEach(function(p){ Logger.log('  · ' + p.programa_id + ': ' + p.nombre); });
 }

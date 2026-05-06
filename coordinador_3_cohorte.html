@@ -288,7 +288,9 @@
                 <div class="stat-item"><div class="stat-label">Al día</div><div class="stat-value" id="s-aldia">—</div></div>
                 <div class="stat-item"><div class="stat-label">En mora</div><div class="stat-value" id="s-mora" style="color:#ffc107;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
-                <div class="stat-item"><div class="stat-label">Recaudado</div><div class="stat-value" id="s-recaudado">—</div></div>
+                <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado">—</div></div>
+                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Saldo</div><div class="stat-value" id="s-saldo">—</div></div>
             </div>
         </div>
     </div>
@@ -554,6 +556,8 @@
 const QS = new URLSearchParams(location.search);
 const COHORTE_ID  = QS.get('cohorte_id') || QS.get('cohorteId') || '';
 const PROGRAMA_ID = QS.get('programa_id') || QS.get('programaId') || '';
+const GAS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxtDIAY6yhpTJF5OK3k0-VK9GHK4UxputJrW-I_1ihT-ABYEEzpVPGcKwLF9k6nQW6iHw/exec';
+const GAS_SECRET       = 'SIGPO_KEY_FCE_2025';
 
 const PLANTILLAS_DEF = {
     recordatorio: {
@@ -575,7 +579,8 @@ const V = {
     filtro: 'todos',
     descTarget: null,
     notifications: [],
-    plantillas: JSON.parse(JSON.stringify(PLANTILLAS_DEF)),
+    plantillas: (function(){ try { var s=localStorage.getItem('sigpo_plantillas_coord_'+PROGRAMA_ID); return s ? JSON.parse(s) : JSON.parse(JSON.stringify(PLANTILLAS_DEF)); } catch(e){ return JSON.parse(JSON.stringify(PLANTILLAS_DEF)); } })(),
+    config: {},
     importFile: null
 };
 
@@ -598,15 +603,24 @@ async function cargar() {
     spin(true);
     try {
         var sb = await getSupabase();
-        var rCoh = await sb.from('cohortes').select('*, programas(nombre)').eq('cohorte_id', COHORTE_ID).single();
-        var rCob = await sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', COHORTE_ID);
-        var rInsc = await sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico');
-        var rEst = await sb.from('estudiantes').select('id,dni,nombre,apellido,email');
+        var [rCoh, rCob, rInsc, rEst, rEgr, rProg, rCfg] = await Promise.all([
+            sb.from('cohortes').select('*, programas(nombre,gas_url,email_remitente)').eq('cohorte_id', COHORTE_ID).single(),
+            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', COHORTE_ID),
+            sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico'),
+            sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
+            sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', COHORTE_ID),
+            PROGRAMA_ID ? sb.from('programas').select('programa_id,nombre,gas_url,email_remitente').eq('programa_id', PROGRAMA_ID).single() : Promise.resolve({data:null}),
+            sb.from('configuracion').select('clave,valor')
+        ]);
 
         var cohorte = rCoh.data || {};
         var cobros = rCob.data || [];
         var inscripciones = rInsc.data || [];
         var estList = rEst.data || [];
+        var progData = rProg.data || {};
+        var cfgRows = rCfg.data || [];
+        V.config = {};
+        cfgRows.forEach(function(r){ V.config[r.clave] = r.valor; });
 
         var estByDni = {};
         estList.forEach(function(e){ estByDni[String(e.dni)] = e; });
@@ -633,12 +647,15 @@ async function cargar() {
         });
 
         var res = {
-            programa: { nombre: cohorte.programas ? cohorte.programas.nombre : '', programa_id: cohorte.programa_id || PROGRAMA_ID },
+            programa: { nombre: cohorte.programas ? cohorte.programas.nombre : (progData.nombre||''), programa_id: cohorte.programa_id || PROGRAMA_ID, gas_url: progData.gas_url || (cohorte.programas ? cohorte.programas.gas_url : '') || '', email_remitente: progData.email_remitente || (cohorte.programas ? cohorte.programas.email_remitente : '') || '' },
             cohorte:  { nombre:cohorte.nombre||'Cohorte', cohorte_id:cohorte.cohorte_id||COHORTE_ID, fecha_inicio:cohorte.fecha_inicio||'', fecha_fin:cohorte.fecha_fin||'', estado:cohorte.estado||'' },
             columnas: columnas,
             estudiantes: Object.values(dniMap)
         };
         V.data = normalizarVista(res);
+        V.data.programa.gas_url        = progData.gas_url || (cohorte.programas ? cohorte.programas.gas_url : '') || '';
+        V.data.programa.email_remitente = progData.email_remitente || (cohorte.programas ? cohorte.programas.email_remitente : '') || '';
+        V.data.egresos = rEgr.data || [];
         renderHeader();
         renderTabla();
         actualizarStats();
@@ -850,10 +867,17 @@ function actualizarStats() {
     const ests = V.data.estudiantes;
     const cg = e => calcEstadoGeneral(e.cobros);
     const recaud = ests.reduce((s,e)=>s + e.cobros.reduce((ss,c)=>ss+(c?Number(c.monto_abonado||0):0),0), 0);
+    const egrExec = (V.data.egresos || []).filter(e => e.tipo === 'EJECUTADO')
+                                          .reduce((s,e) => s + Number(e.monto_pagado || e.monto_original || 0), 0);
+    const saldo = recaud - egrExec;
     document.getElementById('s-aldia').textContent     = ests.filter(e=>cg(e)==='ABONADA').length;
     document.getElementById('s-mora').textContent      = ests.filter(e=>cg(e)==='EN_MORA').length;
     document.getElementById('s-parcial').textContent   = ests.filter(e=>cg(e)==='PAGO_PARCIAL').length;
     document.getElementById('s-recaudado').textContent = fMillones(recaud);
+    document.getElementById('s-egresos').textContent   = fMillones(egrExec);
+    const sEl = document.getElementById('s-saldo');
+    sEl.textContent = fMillones(saldo);
+    sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
 }
 
 function actualizarFiltros() {
@@ -1119,26 +1143,91 @@ function cargarPlantilla() {
     document.getElementById('c-asunto').value = plant.asunto;
     document.getElementById('c-cuerpo').value = plant.cuerpo;
 }
-async function guardarPlantilla() {
-    const t = document.getElementById('c-tipo').value;
+function guardarPlantilla() {
+    var t = document.getElementById('c-tipo').value;
     V.plantillas[t] = { asunto: document.getElementById('c-asunto').value.trim(), cuerpo: document.getElementById('c-cuerpo').value.trim() };
-    try {
-        if (estaEnAppsScript()) await gs('guardarPlantillaCorreoCoordinador', { tipo:t, ...V.plantillas[t] });
-        toast('Plantilla guardada ✓','ok');
-        cerrar('modal-correo');
-    } catch(e) { toast('Error al guardar la plantilla','err'); }
+    try { localStorage.setItem('sigpo_plantillas_coord_' + PROGRAMA_ID, JSON.stringify(V.plantillas)); } catch(e) {}
+    toast('Plantilla guardada ✓', 'ok');
+    cerrar('modal-correo');
 }
 async function reclamarSel() {
-    const sel = getSel();
-    if (!sel.length) { toast('Seleccioná al menos un estudiante','err'); return; }
+    var sel = getSel();
+    if (!sel.length) { toast('Seleccioná al menos un estudiante', 'err'); return; }
     spin(true);
     try {
-        if (estaEnAppsScript()) await gs('enviarReclamosCoordinador', { dnis:sel, cohorteId:COHORTE_ID, programaId:PROGRAMA_ID, plantilla:V.plantillas.reclamo });
-        else await delay(700);
-        toast(`Reclamo enviado a ${sel.length} estudiante${sel.length>1?'s':''} ✓`, 'ok');
+        var sb      = await getSupabase();
+        var tipo    = document.getElementById('c-tipo') ? document.getElementById('c-tipo').value : 'reclamo';
+        var asunto  = (V.plantillas[tipo] || V.plantillas.reclamo).asunto;
+        var cuerpo  = (V.plantillas[tipo] || V.plantillas.reclamo).cuerpo;
+        var gasUrl  = (V.data.programa.gas_url) || GAS_FALLBACK_URL;
+        var replyTo = V.data.programa.email_remitente || '';
+        var cbu     = V.config.cbu_banco  || '—';
+        var alias   = V.config.alias_banco || '—';
+
+        var emails = [];
+        sel.forEach(function(dni) {
+            var est = V.data.estudiantes.find(function(e){ return String(e.dni) === String(dni); });
+            if (!est || !est.email) return;
+            var cobrosVenc = (est.cobros || []).filter(function(c){ return c.estado === 'EN_MORA' || c.estado === 'PAGO_PARCIAL'; });
+            if (!cobrosVenc.length) cobrosVenc = (est.cobros || []).filter(function(c){ return c.estado !== 'ABONADA' && c.estado !== 'A_DEFINIR'; });
+            var primer = cobrosVenc[0] || {};
+            var totalSaldo = cobrosVenc.reduce(function(s,c){ return s + Number(c.saldo_pendiente||0); }, 0);
+            var vars = {
+                nombre: est.nombre||'', apellido: est.apellido||'', dni: est.dni,
+                cuota:   cobrosVenc.length > 1 ? cobrosVenc.length + ' cuotas' : (primer.concepto||'—'),
+                periodo: cobrosVenc.length > 1 ? 'distintos períodos' : (primer.periodo||'—'),
+                monto:   Number(primer.saldo_pendiente||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}),
+                vencimiento: primer.fecha_vencimiento ? primer.fecha_vencimiento.split('T')[0].split('-').reverse().join('/') : '—',
+                programa: V.data.programa.nombre||'', cbu: cbu, alias: alias
+            };
+            var asuntoFinal = asunto.replace(/\{(\w+)\}/g, function(m,k){ return vars[k]!==undefined?vars[k]:m; });
+            var cuerpoBase  = cuerpo.replace(/\{(\w+)\}/g, function(m,k){ return vars[k]!==undefined?vars[k]:m; });
+            var detalle = cobrosVenc.length ? (
+                '\n\n──────────────────────────────' +
+                '\nCUOTAS VENCIDAS:' +
+                '\n──────────────────────────────' +
+                cobrosVenc.map(function(c){
+                    return '\n  • ' + c.concepto + (c.periodo?' ('+c.periodo+')':'') +
+                           ' — Saldo: $' + Number(c.saldo_pendiente||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}) +
+                           ' — Vence: ' + (c.fecha_vencimiento||'').split('T')[0].split('-').reverse().join('/');
+                }).join('') +
+                '\n──────────────────────────────' +
+                '\nTOTAL VENCIDO: $' + totalSaldo.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}) +
+                '\n\nPara regularizar: CBU: ' + cbu + '  |  Alias: ' + alias
+            ) : '';
+            emails.push({ to: est.email, subject: asuntoFinal, body: cuerpoBase + detalle, dni: est.dni });
+        });
+
+        var ok = 0, err = 0;
+        for (var i = 0; i < emails.length; i++) {
+            var sent = await enviarEmailGas(gasUrl, emails[i].to, emails[i].subject, emails[i].body, replyTo);
+            if (sent) ok++; else err++;
+        }
+
+        var msg = '✓ ' + ok + ' email' + (ok!==1?'s':'') + ' enviado' + (ok!==1?'s':'');
+        if (err) msg += ' ⚠️ ' + err + ' error(es)';
+        toast(msg, err ? 'err' : 'ok');
         deselAll();
-    } catch(e) { toast('Error al enviar reclamos','err'); }
+        cerrar('modal-correo');
+    } catch(e) { console.error(e); toast('Error al enviar reclamos: ' + e.message, 'err'); }
     finally { spin(false); }
+}
+
+async function enviarEmailGas(gasUrl, to, subject, body, replyTo) {
+    try {
+        await fetch(gasUrl, {
+            method:  'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body:    JSON.stringify({ secret: GAS_SECRET, to: to, subject: subject, body: body, replyTo: replyTo || '' }),
+            mode:    'no-cors'
+        });
+        // no-cors: el request llega al GAS y el email se envía,
+        // pero el browser no puede leer la respuesta (respuesta opaca).
+        return true;
+    } catch(err) {
+        console.error('enviarEmailGas excepción:', err);
+        return false;
+    }
 }
 async function exportarExcel() {
     spin(true);
