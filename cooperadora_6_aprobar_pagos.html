@@ -92,6 +92,7 @@
         .badge-pendiente { background: #f0f0f0; color: #666; }
         .badge-nuevo { background: #c0392b; color: white; animation: blink 1.5s infinite; }
         @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 
         .student-totales {
             text-align: right; flex-shrink: 0;
@@ -270,246 +271,35 @@
 
     <h2 class="section-title">Estudiantes</h2>
 
-    <div class="students-list">
-
-        <div class="student-row tiene-pendiente" onclick="abrirDetalle('maria')">
-            <div class="student-avatar">MG</div>
+    <div class="students-list" id="students-list">
+        <!-- skeleton loaders -->
+        <div class="student-row" style="animation:pulse 1.4s ease-in-out infinite;">
+            <div class="student-avatar" style="background:#e5e7eb;"></div>
             <div class="student-main">
-                <div class="student-name">Martínez, Ana Laura <span class="badge badge-nuevo" style="font-size:11px;padding:3px 8px;">NUEVO</span></div>
-                <div class="student-sub">ana.martinez@example.com · DNI: 23456789</div>
+                <div style="height:16px;width:220px;background:#e5e7eb;border-radius:4px;margin-bottom:8px;"></div>
+                <div style="height:12px;width:160px;background:#e5e7eb;border-radius:4px;"></div>
             </div>
-            <div class="student-badges">
-                <span class="badge badge-mora">En mora (C5, C6)</span>
-                <span class="badge badge-pendiente">Comprobante pendiente</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$651.801</div>
-            </div>
-            <div class="arrow">›</div>
+            <div style="height:24px;width:160px;background:#e5e7eb;border-radius:12px;"></div>
+            <div style="height:36px;width:90px;background:#e5e7eb;border-radius:6px;"></div>
         </div>
-
-        <div class="student-row al-dia" onclick="abrirDetalle('roberto')">
-            <div class="student-avatar">GR</div>
+        <div class="student-row" style="animation:pulse 1.4s ease-in-out infinite;animation-delay:.2s;">
+            <div class="student-avatar" style="background:#e5e7eb;"></div>
             <div class="student-main">
-                <div class="student-name">González, Roberto Carlos</div>
-                <div class="student-sub">carlos.lopez@example.com · DNI: 34567890</div>
+                <div style="height:16px;width:200px;background:#e5e7eb;border-radius:4px;margin-bottom:8px;"></div>
+                <div style="height:12px;width:140px;background:#e5e7eb;border-radius:4px;"></div>
             </div>
-            <div class="student-badges">
-                <span class="badge badge-aldia">Al día</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$90.000</div>
-            </div>
-            <div class="arrow">›</div>
+            <div style="height:24px;width:160px;background:#e5e7eb;border-radius:12px;"></div>
+            <div style="height:36px;width:90px;background:#e5e7eb;border-radius:6px;"></div>
         </div>
-
-        <div class="student-row tiene-mora" onclick="abrirDetalle('lucia')">
-            <div class="student-avatar">PL</div>
+        <div class="student-row" style="animation:pulse 1.4s ease-in-out infinite;animation-delay:.4s;">
+            <div class="student-avatar" style="background:#e5e7eb;"></div>
             <div class="student-main">
-                <div class="student-name">Pérez, Lucía Fernanda</div>
-                <div class="student-sub">lucia.gomez@example.com · DNI: 28765432</div>
+                <div style="height:16px;width:180px;background:#e5e7eb;border-radius:4px;margin-bottom:8px;"></div>
+                <div style="height:12px;width:120px;background:#e5e7eb;border-radius:4px;"></div>
             </div>
-            <div class="student-badges">
-                <span class="badge badge-mora">En mora (C6)</span>
-                <span class="badge badge-pendiente">Comprobante pendiente</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$283.000</div>
-            </div>
-            <div class="arrow">›</div>
+            <div style="height:24px;width:160px;background:#e5e7eb;border-radius:12px;"></div>
+            <div style="height:36px;width:90px;background:#e5e7eb;border-radius:6px;"></div>
         </div>
-
-        <div class="student-row al-dia" onclick="abrirDetalle('martin')">
-            <div class="student-avatar">RM</div>
-            <div class="student-main">
-                <div class="student-name">Rodríguez, Martín Alejandro</div>
-                <div class="student-sub">pedro.garcia@example.com · DNI: 30123456</div>
-            </div>
-            <div class="student-badges">
-                <span class="badge badge-aldia">Al día</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$180.000</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
-        <div class="student-row al-dia" onclick="abrirDetalle('carolina')">
-            <div class="student-avatar">FC</div>
-            <div class="student-main">
-                <div class="student-name">Fernández, Carolina</div>
-                <div class="student-sub">maria.rodriguez@example.com · DNI: 27654321</div>
-            </div>
-            <div class="student-badges">
-                <span class="badge badge-aldia">Saldo $0 ✓</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-ok">$0 ✓</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
-        <div class="student-row tiene-mora" onclick="abrirDetalle('diego')">
-            <div class="student-avatar">LD</div>
-            <div class="student-main">
-                <div class="student-name">López, Diego Sebastián</div>
-                <div class="student-sub">jorge.fernandez@example.com · DNI: 25678901</div>
-            </div>
-            <div class="student-badges">
-                <span class="badge badge-mora">En mora (C2–C5)</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$1.315.000</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
-        <div class="student-row tiene-pendiente" onclick="abrirDetalle('belen')">
-            <div class="student-avatar">SM</div>
-            <div class="student-main">
-                <div class="student-name">Sánchez, María Belén <span class="badge badge-nuevo" style="font-size:11px;padding:3px 8px;">NUEVO</span></div>
-                <div class="student-sub">sofia.diaz@example.com · DNI: 32109876</div>
-            </div>
-            <div class="student-badges">
-                <span class="badge badge-parcial">Pago parcial (C3)</span>
-                <span class="badge badge-mora">En mora (C4)</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$280.000</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
-        <div class="student-row al-dia" onclick="abrirDetalle('pablo')">
-            <div class="student-avatar">TP</div>
-            <div class="student-main">
-                <div class="student-name">Torres, Pablo Javier</div>
-                <div class="student-sub">roberto.sanchez@example.com · DNI: 22334455</div>
-            </div>
-            <div class="student-badges">
-                <span class="badge badge-aldia">Al día</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$90.000</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
-        <div class="student-row tiene-mora" onclick="abrirDetalle('silvia')">
-            <div class="student-avatar">RS</div>
-            <div class="student-main">
-                <div class="student-name">Ramírez, Silvia Beatriz</div>
-                <div class="student-sub">valeria.torres@example.com · DNI: 29988776</div>
-            </div>
-            <div class="student-badges">
-                <span class="badge badge-mora">En mora (C4, C5, C6)</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$765.000</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
-        <div class="student-row tiene-pendiente" onclick="abrirDetalle('nicolas')">
-            <div class="student-avatar">VN</div>
-            <div class="student-main">
-                <div class="student-name">Vargas, Nicolás Ezequiel <span class="badge badge-nuevo" style="font-size:11px;padding:3px 8px;">NUEVO</span></div>
-                <div class="student-sub">diego.ramirez@example.com · DNI: 31122334</div>
-            </div>
-            <div class="student-badges">
-                <span class="badge badge-parcial">Pago parcial (C4)</span>
-                <span class="badge badge-mora">En mora (C5)</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$285.000</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
-        <div class="student-row al-dia" onclick="abrirDetalle('claudia')">
-            <div class="student-avatar">HC</div>
-            <div class="student-main">
-                <div class="student-name">Herrera, Claudia Beatriz</div>
-                <div class="student-sub">laura.mendez@example.com · DNI: 24455667</div>
-            </div>
-            <div class="student-badges"><span class="badge badge-aldia">Al día</span></div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$90.000</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
-        <div class="student-row al-dia" onclick="abrirDetalle('juan')">
-            <div class="student-avatar">MJ</div>
-            <div class="student-main">
-                <div class="student-name">Morales, Juan Pablo</div>
-                <div class="student-sub">martin.castro@example.com · DNI: 26778899</div>
-            </div>
-            <div class="student-badges"><span class="badge badge-aldia">Al día</span></div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$90.000</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
-        <div class="student-row tiene-mora" onclick="abrirDetalle('romina')">
-            <div class="student-avatar">CR</div>
-            <div class="student-main">
-                <div class="student-name">Castillo, Romina Andrea</div>
-                <div class="student-sub">camila.romero@example.com · DNI: 23344556</div>
-            </div>
-            <div class="student-badges">
-                <span class="badge badge-mora">En mora (C3, C4, C5)</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$675.000</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
-        <div class="student-row tiene-mora" onclick="abrirDetalle('federico')">
-            <div class="student-avatar">IF</div>
-            <div class="student-main">
-                <div class="student-name">Ibáñez, Federico Hernán</div>
-                <div class="student-sub">nicolas.morales@example.com · DNI: 28899001</div>
-            </div>
-            <div class="student-badges">
-                <span class="badge badge-mora">En mora (C1, C2, C3)</span>
-            </div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$673.000</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
-        <div class="student-row al-dia" onclick="abrirDetalle('valeria')">
-            <div class="student-avatar">QV</div>
-            <div class="student-main">
-                <div class="student-name">Quiroga, Valeria Soledad</div>
-                <div class="student-sub">gabriela.silva@example.com · DNI: 25566778</div>
-            </div>
-            <div class="student-badges"><span class="badge badge-aldia">Al día</span></div>
-            <div class="student-totales">
-                <div class="tot-label">Saldo deuda</div>
-                <div class="tot-deuda">$270.000</div>
-            </div>
-            <div class="arrow">›</div>
-        </div>
-
     </div>
 </div>
 
@@ -583,9 +373,10 @@
         try {
             var sb = await getSupabase();
             var r = await sb.from('cobros')
-                .select('cobro_id, dni, nombre, apellido, programa_id, cohorte_id, concepto, monto_final, saldo_pendiente, estado, comprobante_url, fecha_vencimiento')
+                .select('cobro_id, dni, estudiantes!cobros_dni_fkey(nombre, apellido), programa_id, cohorte_id, concepto, nro_cuota, monto_final, saldo_pendiente, estado, comprobante_url, comprobante_fecha, fecha_vencimiento')
                 .eq('estado', 'PENDIENTE')
-                .order('fecha_vencimiento');
+                .not('comprobante_url', 'is', null)
+                .order('comprobante_fecha', { ascending: false });
             _cobros = r.data || [];
             renderResumen();
             renderLista();
@@ -604,31 +395,33 @@
 
     /* ── RENDER LISTA ── */
     function renderLista() {
-        var lista = document.querySelector('.students-list');
+        var lista = document.getElementById('students-list');
         if (!_cobros.length) {
             lista.innerHTML = '<div style="text-align:center;padding:60px;color:#aaa;font-size:16px;">No hay comprobantes pendientes de aprobación</div>';
             return;
         }
         lista.innerHTML = _cobros.map(function(c) {
-            var nombre = esc((c.apellido||'')+(c.apellido&&c.nombre?', ':'')+( c.nombre||''));
-            var iniciales = ((c.apellido||'').charAt(0)+(c.nombre||'').charAt(0)).toUpperCase() || '?';
-            var saldo = Number(c.saldo_pendiente)||0;
-            var claseRow = saldo > 0 ? 'tiene-pendiente' : 'al-dia';
-            return '<div class="student-row '+claseRow+'" onclick="abrirDetalle(\''+c.cobro_id+'\')" style="cursor:pointer;">'
-                +'<div class="student-avatar">'+iniciales+'</div>'
-                +'<div class="student-main">'
-                  +'<div class="student-name">'+nombre+'</div>'
-                  +'<div class="student-sub">DNI: '+esc(c.dni||'—')+' · '+esc(c.concepto||'—')+'</div>'
-                +'</div>'
-                +'<div class="student-badges">'
-                  +'<span class="badge badge-pendiente">Comprobante pendiente</span>'
-                +'</div>'
-                +'<div class="student-totales">'
-                  +'<div class="tot-label">Saldo pendiente</div>'
-                  +'<div class="tot-deuda">'+fMonto(c.saldo_pendiente)+'</div>'
-                +'</div>'
-                +'<div class="arrow">›</div>'
-                +'</div>';
+            var est = c.estudiantes || {};
+            var apellido = est.apellido || '';
+            var nombre   = est.nombre  || '';
+            var nombreMostrado = esc(apellido + (apellido && nombre ? ', ' : '') + nombre) || '(sin nombre)';
+            var iniciales = ((apellido).charAt(0) + (nombre).charAt(0)).toUpperCase() || '?';
+            var cuotaLabel = c.nro_cuota ? 'Cuota ' + c.nro_cuota : (c.concepto || '—');
+            return '<div class="student-row tiene-pendiente" onclick="abrirDetalle(\'' + c.cobro_id + '\')" style="cursor:pointer;">'
+                + '<div class="student-avatar">' + iniciales + '</div>'
+                + '<div class="student-main">'
+                +   '<div class="student-name">' + nombreMostrado + '</div>'
+                +   '<div class="student-sub">DNI: ' + esc(c.dni || '—') + ' · ' + esc(cuotaLabel) + '</div>'
+                + '</div>'
+                + '<div class="student-badges">'
+                +   '<span class="badge badge-pendiente">Comprobante pendiente</span>'
+                + '</div>'
+                + '<div class="student-totales">'
+                +   '<div class="tot-label">Saldo pendiente</div>'
+                +   '<div class="tot-deuda">' + fMonto(c.saldo_pendiente) + '</div>'
+                + '</div>'
+                + '<div class="arrow">›</div>'
+                + '</div>';
         }).join('');
     }
 
@@ -637,9 +430,13 @@
         _cobroActivo = _cobros.find(function(c){ return String(c.cobro_id)===String(cobroId); });
         if (!_cobroActivo) return;
         var c = _cobroActivo;
-        var nombre = (c.apellido||'')+(c.apellido&&c.nombre?', ':'')+( c.nombre||'');
-        document.getElementById('modal-nombre').textContent = nombre;
-        document.getElementById('modal-sub').textContent = 'DNI: '+(c.dni||'—')+' · '+( c.concepto||'—');
+        var est = c.estudiantes || {};
+        var apellido = est.apellido || '';
+        var nombre = est.nombre || '';
+        var nombreMostrado = apellido + (apellido && nombre ? ', ' : '') + nombre || '(sin nombre)';
+        var cuotaLabel = c.nro_cuota ? 'Cuota ' + c.nro_cuota : (c.concepto || '—');
+        document.getElementById('modal-nombre').textContent = nombreMostrado;
+        document.getElementById('modal-sub').textContent = 'DNI: ' + (c.dni || '—') + ' · ' + cuotaLabel;
         document.getElementById('modal-total-pagar').textContent = fMonto(c.monto_final);
         document.getElementById('modal-total-abonado').textContent = fMonto((Number(c.monto_final)||0)-(Number(c.saldo_pendiente)||0));
         document.getElementById('modal-saldo').textContent = fMonto(c.saldo_pendiente);

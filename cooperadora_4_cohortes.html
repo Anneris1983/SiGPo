@@ -232,6 +232,7 @@
         }
         .saldo-positivo { color: var(--success); font-weight: 700; }
         .saldo-negativo { color: var(--danger); font-weight: 700; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
         .btn-logout { padding: 8px 18px; background: transparent; color: white; border: 2px solid rgba(255,255,255,0.7); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s, border-color 0.2s; opacity: 1; }
         .btn-logout:hover { background: rgba(255,255,255,0.15); border-color: white; }
     </style>
@@ -243,7 +244,7 @@
                 <div class="breadcrumb">
                     <a href="cooperadora_3_programas.html">← Volver a Programas</a>
                 </div>
-                <h1>💼 Especialización en Costos y Gestión Empresarial</h1>
+                <h1 id="header-programa-nombre">💼 Cargando...</h1>
                 <p>Selecciona una cohorte para ver sus estudiantes</p>
             </div>
             <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
@@ -269,223 +270,45 @@
         <h1 class="page-title">Cohortes Disponibles</h1>
         <p class="page-subtitle">5 cohortes • 42 estudiantes totales</p>
 
-        <div class="cohortes-list">
-
-            <!-- COHORTE ACTIVA 2025-2026 -->
-            <div class="cohorte-card active" id="cohorte-1" onclick="irACohorte(1)">
+        <div class="cohortes-list" id="cohortes-list">
+            <!-- skeleton loaders -->
+            <div class="cohorte-card" style="animation:pulse 1.4s ease-in-out infinite;">
                 <div class="cohorte-left">
-                    <div class="cohorte-title">Cohorte 2025-2026</div>
-                    <div class="cohorte-dates">Abril 2025 - Septiembre 2026 • 16 cuotas</div>
-                    <div class="cohorte-stats">
-                        <div class="stat-box">
-                            <div class="stat-label">Estudiantes</div>
-                            <div class="stat-value">15</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Al día</div>
-                            <div class="stat-value success">8</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">En mora</div>
-                            <div class="stat-value danger">5</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Pago parcial</div>
-                            <div class="stat-value warning">2</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Recaudado</div>
-                            <div class="stat-value">$3.2M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Egresos</div>
-                            <div class="stat-value">$2.1M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Saldo</div>
-                            <div class="stat-value saldo-positivo">$1.1M</div>
-                        </div>
+                    <div style="height:22px;width:200px;background:#e5e7eb;border-radius:6px;margin-bottom:10px;"></div>
+                    <div style="height:14px;width:280px;background:#e5e7eb;border-radius:4px;margin-bottom:16px;"></div>
+                    <div style="display:flex;gap:32px;">
+                        <div style="height:40px;width:70px;background:#e5e7eb;border-radius:6px;"></div>
+                        <div style="height:40px;width:70px;background:#e5e7eb;border-radius:6px;"></div>
+                        <div style="height:40px;width:70px;background:#e5e7eb;border-radius:6px;"></div>
+                        <div style="height:40px;width:80px;background:#e5e7eb;border-radius:6px;"></div>
                     </div>
                 </div>
-                <div class="cohorte-right">
-                    <span class="badge active" id="badge-1">Activa</span>
-                    <button class="btn-toggle cerrar" onclick="toggleEstado(1, event)">🔒 Cerrar</button>
-                    <span class="arrow">→</span>
-                </div>
+                <div style="height:32px;width:80px;background:#e5e7eb;border-radius:20px;"></div>
             </div>
-
-            <!-- COHORTE 2024-2025 -->
-            <div class="cohorte-card active" id="cohorte-2" onclick="irACohorte(2)">
+            <div class="cohorte-card" style="animation:pulse 1.4s ease-in-out infinite;animation-delay:.2s;">
                 <div class="cohorte-left">
-                    <div class="cohorte-title">Cohorte 2024-2025</div>
-                    <div class="cohorte-dates">Abril 2024 - Septiembre 2025 • 16 cuotas</div>
-                    <div class="cohorte-stats">
-                        <div class="stat-box">
-                            <div class="stat-label">Estudiantes</div>
-                            <div class="stat-value">12</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Al día</div>
-                            <div class="stat-value success">10</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">En mora</div>
-                            <div class="stat-value danger">2</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Pago parcial</div>
-                            <div class="stat-value warning">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Recaudado</div>
-                            <div class="stat-value">$2.8M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Egresos</div>
-                            <div class="stat-value">$1.9M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Saldo</div>
-                            <div class="stat-value saldo-positivo">$0.9M</div>
-                        </div>
+                    <div style="height:22px;width:180px;background:#e5e7eb;border-radius:6px;margin-bottom:10px;"></div>
+                    <div style="height:14px;width:260px;background:#e5e7eb;border-radius:4px;margin-bottom:16px;"></div>
+                    <div style="display:flex;gap:32px;">
+                        <div style="height:40px;width:70px;background:#e5e7eb;border-radius:6px;"></div>
+                        <div style="height:40px;width:70px;background:#e5e7eb;border-radius:6px;"></div>
+                        <div style="height:40px;width:80px;background:#e5e7eb;border-radius:6px;"></div>
                     </div>
                 </div>
-                <div class="cohorte-right">
-                    <span class="badge active" id="badge-2">Activa</span>
-                    <button class="btn-toggle cerrar" onclick="toggleEstado(2, event)">🔒 Cerrar</button>
-                    <span class="arrow">→</span>
-                </div>
+                <div style="height:32px;width:80px;background:#e5e7eb;border-radius:20px;"></div>
             </div>
-
-            <!-- COHORTE 2023-2024 -->
-            <div class="cohorte-card" id="cohorte-3" onclick="irACohorte(3)">
+            <div class="cohorte-card" style="animation:pulse 1.4s ease-in-out infinite;animation-delay:.4s;">
                 <div class="cohorte-left">
-                    <div class="cohorte-title">Cohorte 2023-2024</div>
-                    <div class="cohorte-dates">Abril 2023 - Septiembre 2024 • 16 cuotas</div>
-                    <div class="cohorte-stats">
-                        <div class="stat-box">
-                            <div class="stat-label">Estudiantes</div>
-                            <div class="stat-value">8</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Al día</div>
-                            <div class="stat-value success">8</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">En mora</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Pago parcial</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Recaudado</div>
-                            <div class="stat-value">$1.9M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Egresos</div>
-                            <div class="stat-value">$1.5M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Saldo</div>
-                            <div class="stat-value saldo-positivo">$0.4M</div>
-                        </div>
+                    <div style="height:22px;width:160px;background:#e5e7eb;border-radius:6px;margin-bottom:10px;"></div>
+                    <div style="height:14px;width:240px;background:#e5e7eb;border-radius:4px;margin-bottom:16px;"></div>
+                    <div style="display:flex;gap:32px;">
+                        <div style="height:40px;width:70px;background:#e5e7eb;border-radius:6px;"></div>
+                        <div style="height:40px;width:70px;background:#e5e7eb;border-radius:6px;"></div>
+                        <div style="height:40px;width:80px;background:#e5e7eb;border-radius:6px;"></div>
                     </div>
                 </div>
-                <div class="cohorte-right">
-                    <span class="badge closed" id="badge-3">Cerrada</span>
-                    <button class="btn-toggle activar" onclick="toggleEstado(3, event)">✅ Activar</button>
-                    <span class="arrow">→</span>
-                </div>
+                <div style="height:32px;width:80px;background:#e5e7eb;border-radius:20px;"></div>
             </div>
-
-            <!-- COHORTE 2022-2023 -->
-            <div class="cohorte-card" id="cohorte-4" onclick="irACohorte(4)">
-                <div class="cohorte-left">
-                    <div class="cohorte-title">Cohorte 2022-2023</div>
-                    <div class="cohorte-dates">Abril 2022 - Septiembre 2023 • 16 cuotas</div>
-                    <div class="cohorte-stats">
-                        <div class="stat-box">
-                            <div class="stat-label">Estudiantes</div>
-                            <div class="stat-value">5</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Completaron</div>
-                            <div class="stat-value success">5</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">En mora</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Pago parcial</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Recaudado</div>
-                            <div class="stat-value">$1.2M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Egresos</div>
-                            <div class="stat-value">$1.0M</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Saldo</div>
-                            <div class="stat-value saldo-positivo">$0.2M</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="cohorte-right">
-                    <span class="badge closed" id="badge-4">Cerrada</span>
-                    <button class="btn-toggle activar" onclick="toggleEstado(4, event)">✅ Activar</button>
-                    <span class="arrow">→</span>
-                </div>
-            </div>
-
-            <!-- COHORTE 2021-2022 -->
-            <div class="cohorte-card" id="cohorte-5" onclick="irACohorte(5)">
-                <div class="cohorte-left">
-                    <div class="cohorte-title">Cohorte 2021-2022</div>
-                    <div class="cohorte-dates">Abril 2021 - Septiembre 2022 • 19 cuotas</div>
-                    <div class="cohorte-stats">
-                        <div class="stat-box">
-                            <div class="stat-label">Estudiantes</div>
-                            <div class="stat-value">2</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Completaron</div>
-                            <div class="stat-value success">2</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">En mora</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Pago parcial</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Recaudado</div>
-                            <div class="stat-value">$480k</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Egresos</div>
-                            <div class="stat-value">$390k</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Saldo</div>
-                            <div class="stat-value saldo-positivo">$90k</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="cohorte-right">
-                    <span class="badge closed" id="badge-5">Cerrada</span>
-                    <button class="btn-toggle activar" onclick="toggleEstado(5, event)">✅ Activar</button>
-                    <span class="arrow">→</span>
-                </div>
-            </div>
-
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -522,11 +345,13 @@ function renderCohortes(data) {
     var cohortes = programa.cohortes || [];
     _cohortes = cohortes;
 
-    document.querySelector('.page-title').textContent = programa.nombre || 'Cohortes Disponibles';
+    var nombreProg = programa.nombre || 'Cohortes';
+    document.getElementById('header-programa-nombre').textContent = '💼 ' + nombreProg;
+    document.querySelector('.page-title').textContent = nombreProg;
     var total = cohortes.reduce(function(s, c) { return s + (c.estudiantes || 0); }, 0);
     document.querySelector('.page-subtitle').textContent = cohortes.length + ' cohortes • ' + total + ' estudiantes totales';
 
-    var lista = document.querySelector('.cohortes-list');
+    var lista = document.getElementById('cohortes-list');
     if (!cohortes.length) {
         lista.innerHTML = '<div style="padding:40px;text-align:center;color:#999;">No hay cohortes registradas para este programa</div>';
         return;

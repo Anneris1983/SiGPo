@@ -487,7 +487,8 @@
         var programa = cobro.programas || {};
         var cohorte = cobro.cohortes || {};
         var estadoLabel = { NO_ABONADA:'No Abonada', PENDIENTE:'Pendiente', ABONADA:'Abonada', PAGO_PARCIAL:'Pago Parcial', EN_MORA:'En Mora', A_DEFINIR:'A Definir' };
-        if (vals[0]) vals[0].textContent = estudiante.nombre || '—';
+        var nombreCompleto = (estudiante.apellido ? estudiante.apellido + ', ' : '') + (estudiante.nombre || '');
+        if (vals[0]) vals[0].textContent = nombreCompleto || '—';
         if (vals[1]) vals[1].textContent = estudiante.dni || '—';
         if (vals[2]) vals[2].textContent = (programa.nombre||'')+( cohorte.nombre ? ' – '+cohorte.nombre : '');
         if (vals[3]) vals[3].textContent = cobro.concepto || ('Cuota '+(cobro.nro_cuota||''));
@@ -505,7 +506,7 @@
         try {
             var sb = await getSupabase();
             var res = await sb.from('cobros')
-                .select('*, estudiantes(nombre,dni), programas(nombre), cohortes(nombre)')
+                .select('*, estudiantes!cobros_dni_fkey(nombre,apellido,dni), programas(nombre), cohortes(nombre)')
                 .eq('cobro_id', _cobroId).single();
             if (res.error) throw res.error;
             _cobroData = res.data;
