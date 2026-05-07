@@ -82,6 +82,7 @@
         
         .import-info { background: #e0f2fe; padding: 16px; border-radius: 8px; margin-top: 12px; }
         .import-info ul { margin-top: 8px; padding-left: 20px; font-size: 13px; color: #075985; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
     </style>
 </head>
 <body>
@@ -194,61 +195,10 @@
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>15/04/2026</td>
-                                <td>Hon. Profesores</td>
-                                <td>Pago Docente - Módulo Finanzas</td>
-                                <td>Esp. en Costos</td>
-                                <td>2024-2025</td>
-                                <td>$180,000</td>
-                                <td>Dr. Carlos Méndez</td>
-                                <td>-</td>
-                                <td><span class="badge badge-proyectado">Proyectado</span></td>
-                                <td>
-                                    <div class="actions-group">
-                                        <button class="btn btn-primary btn-icon" onclick="ejecutarGasto(1)" title="Ejecutar gasto">✓ Ejecutar</button>
-                                        <button class="btn btn-primary btn-icon" onclick="editarGasto(1)" title="Editar">✏️</button>
-                                        <button class="btn btn-danger btn-icon" onclick="eliminarGasto(1)" title="Eliminar">🗑️</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>20/04/2026</td>
-                                <td>Movilidad</td>
-                                <td>Traslados profesores visitantes</td>
-                                <td>Maestría Agronegocios</td>
-                                <td>2025-2026</td>
-                                <td>$90,000</td>
-                                <td>Remisería Mendoza</td>
-                                <td>-</td>
-                                <td><span class="badge badge-proyectado">Proyectado</span></td>
-                                <td>
-                                    <div class="actions-group">
-                                        <button class="btn btn-primary btn-icon" onclick="ejecutarGasto(2)" title="Ejecutar gasto">✓ Ejecutar</button>
-                                        <button class="btn btn-primary btn-icon" onclick="editarGasto(2)" title="Editar">✏️</button>
-                                        <button class="btn btn-danger btn-icon" onclick="eliminarGasto(2)" title="Eliminar">🗑️</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>25/04/2026</td>
-                                <td>Agapé/Break</td>
-                                <td>Coffee break jornada intensiva</td>
-                                <td>Doctorado en Economía</td>
-                                <td>2024-2027</td>
-                                <td>$120,000</td>
-                                <td>Catering Los Andes</td>
-                                <td>-</td>
-                                <td><span class="badge badge-proyectado">Proyectado</span></td>
-                                <td>
-                                    <div class="actions-group">
-                                        <button class="btn btn-primary btn-icon" onclick="ejecutarGasto(3)" title="Ejecutar gasto">✓ Ejecutar</button>
-                                        <button class="btn btn-primary btn-icon" onclick="editarGasto(3)" title="Editar">✏️</button>
-                                        <button class="btn btn-danger btn-icon" onclick="eliminarGasto(3)" title="Eliminar">🗑️</button>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tbody id="tbodyProyectados">
+                            <tr style="animation:pulse 1.4s ease-in-out infinite;"><td colspan="10"><div style="height:14px;background:#e5e7eb;border-radius:4px;margin:6px 0;"></div></td></tr>
+                            <tr style="animation:pulse 1.4s ease-in-out infinite;animation-delay:.2s;"><td colspan="10"><div style="height:14px;background:#e5e7eb;border-radius:4px;margin:6px 0;"></div></td></tr>
+                            <tr style="animation:pulse 1.4s ease-in-out infinite;animation-delay:.4s;"><td colspan="10"><div style="height:14px;background:#e5e7eb;border-radius:4px;margin:6px 0;"></div></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -303,41 +253,9 @@
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>15/03/2026</td>
-                                <td>Hon. Profesores</td>
-                                <td>Pago Docente - Módulo Costos</td>
-                                <td>Esp. en Costos</td>
-                                <td>2024-2025</td>
-                                <td>$450,000</td>
-                                <td>Dr. Juan Pérez</td>
-                                <td>FC-2026-0234</td>
-                                <td><span class="badge badge-ejecutado">Ejecutado</span></td>
-                                <td>
-                                    <div class="actions-group">
-                                        <button class="btn btn-primary btn-icon" onclick="editarGasto(1)" title="Editar">✏️</button>
-                                        <button class="btn btn-danger btn-icon" onclick="eliminarGasto(1)" title="Eliminar">🗑️</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>10/03/2026</td>
-                                <td>Servicios Informáticos</td>
-                                <td>Licencias Zoom - Marzo 2026</td>
-                                <td>Todos los programas</td>
-                                <td>-</td>
-                                <td>$85,000</td>
-                                <td>Zoom Video Communications</td>
-                                <td>INV-2026-0187</td>
-                                <td><span class="badge badge-ejecutado">Ejecutado</span></td>
-                                <td>
-                                    <div class="actions-group">
-                                        <button class="btn btn-primary btn-icon" onclick="editarGasto(2)" title="Editar">✏️</button>
-                                        <button class="btn btn-danger btn-icon" onclick="eliminarGasto(2)" title="Eliminar">🗑️</button>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tbody id="tbodyEjecutados">
+                            <tr style="animation:pulse 1.4s ease-in-out infinite;"><td colspan="10"><div style="height:14px;background:#e5e7eb;border-radius:4px;margin:6px 0;"></div></td></tr>
+                            <tr style="animation:pulse 1.4s ease-in-out infinite;animation-delay:.2s;"><td colspan="10"><div style="height:14px;background:#e5e7eb;border-radius:4px;margin:6px 0;"></div></td></tr>
                         </tbody>
                     </table>
                 </div>
