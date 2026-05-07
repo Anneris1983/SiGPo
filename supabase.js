@@ -702,6 +702,26 @@ async function obtenerProgramasCoordinador(usuarioId) {
 }
 
 /**
+ * Retorna un array de programa_id asignados al usuario con ese dni.
+ * Usado por las páginas de coordinador/profesor para filtrar datos.
+ */
+async function obtenerProgramasAsignadosPorDni(dni) {
+    const sb = await getSupabase();
+    const { data: usuario } = await sb
+        .from('usuarios')
+        .select('usuario_id')
+        .eq('dni', String(dni))
+        .single();
+    if (!usuario) return [];
+    const { data: asignaciones } = await sb
+        .from('coordinadores_programas')
+        .select('programa_id')
+        .eq('coordinador_id', usuario.usuario_id);
+    if (!asignaciones || !asignaciones.length) return [];
+    return [...new Set(asignaciones.map(function(a){ return a.programa_id; }))];
+}
+
+/**
  * Asignar programas a un coordinador (reemplaza los existentes)
  */
 async function asignarProgramasCoordinador(usuarioId, programaIds) {
@@ -752,7 +772,7 @@ async function obtenerDashboardAdmin() {
         sb.from('programas').select('*'),
         sb.from('cohortes').select('*'),
         sb.from('inscripciones').select('estudiante_id,cohorte_id'),
-        sb.from('cobros').select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente'),
+        sb.from('cobros').select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,comprobante_url'),
         sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,monto_pagado,monto_original')
     ]);
 
@@ -829,7 +849,8 @@ async function obtenerDashboardAdmin() {
             var dnisConMoraProg = new Set(
                 cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).map(function(c){ return c.dni; })
             );
-            var cuotasMoraProg = cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
+            var cuotasMoraProg    = cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
+            var pendCooperadora   = cobrosProg.filter(function(c){ return c.estado === 'PENDIENTE' && c.comprobante_url; }).length;
 
             var recaudadoProg = cobrosProg
                 .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
@@ -845,6 +866,7 @@ async function obtenerDashboardAdmin() {
                 id:                p.programa_id,
                 nombre:            p.nombre,
                 tipo:              p.tipo,
+                estado:            p.estado,
                 categoria:         getCategoriaPrograma(p.tipo),
                 labelNomenclatura: getLabelNomenclaturaPlural(p.tipo),
                 estudiantes:       totalEstProg,
@@ -852,6 +874,7 @@ async function obtenerDashboardAdmin() {
                 alDia:             Math.max(0, totalEstProg - enMoraProg),
                 enMora:            enMoraProg,
                 cuotasEnMora:      cuotasMoraProg,
+                pendCooperadora:   pendCooperadora,
                 recaudado:         recaudadoProg,
                 egresos:           egresosPagadosProg,
                 saldo:             recaudadoProg - egresosPagadosProg
