@@ -850,7 +850,7 @@ async function obtenerDashboardAdmin() {
                 cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).map(function(c){ return c.dni; })
             );
             var cuotasMoraProg    = cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
-            var pendCooperadora   = cobrosProg.filter(function(c){ return c.estado === 'PENDIENTE' && c.comprobante_url; }).length;
+            var pendCooperadora   = cobrosProg.filter(function(c){ return c.comprobante_url && c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL'; }).length;
 
             var recaudadoProg = cobrosProg
                 .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
