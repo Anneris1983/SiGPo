@@ -1429,11 +1429,16 @@
             if (estadoOriginal === 'ABONADA' || estadoOriginal === 'PAGADA') estado = 'abonada';
             else if (estadoOriginal === 'PAGO_PARCIAL' || estadoOriginal === 'PARCIAL') estado = 'parcial';
             else if (estadoOriginal === 'VENCIDA' || estadoOriginal === 'MORA' || estadoOriginal === 'EN MORA' || estadoOriginal === 'EN_MORA') estado = 'mora';
-            else if (estadoOriginal === 'PENDIENTE') estado = 'pendiente'; // comprobante subido, esperando revisión
+            else if (estadoOriginal === 'PENDIENTE') estado = 'pendiente';
             else if (estadoOriginal === 'NO_ABONADA' || estadoOriginal === 'NO ABONADA') estado = 'noabonada';
             else if (estadoOriginal === 'A_DEFINIR' || estadoOriginal === 'A DEFINIR' || estadoOriginal === 'NO DEFINIDO') estado = 'adefinir';
             else if (estadoOriginal === 'NODEBE' || estadoOriginal === 'NO_DEBE_ABONAR') estado = 'nodebe';
             else if (cuota.noDebeAbonar) estado = 'nodebe';
+
+            // Si hay comprobante subido pero el estado DB es inconsistente (carga manual), forzar pendiente
+            if (cuota.comprobante_url && estado !== 'abonada' && estado !== 'parcial' && estado !== 'nodebe' && estado !== 'adefinir') {
+                estado = 'pendiente';
+            }
 
             return {
                 cobroId: cuota.cobroId || cuota.id_cobro || '',
