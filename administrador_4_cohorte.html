@@ -367,7 +367,9 @@
                 <div class="stat-item"><div class="stat-label">Al día</div><div class="stat-value" id="s-aldia">—</div></div>
                 <div class="stat-item"><div class="stat-label">En mora</div><div class="stat-value" id="s-mora" style="color:#ffc107;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
-                <div class="stat-item"><div class="stat-label">Recaudado</div><div class="stat-value" id="s-recaudado">—</div></div>
+                <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado">—</div></div>
+                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Saldo</div><div class="stat-value" id="s-saldo">—</div></div>
             </div>
         </div>
     </div>
@@ -892,7 +894,7 @@ var _ecCuotasEditadas = [];
 async function obtenerCohorteDetalle(cohorteId, programaId) {
     const sb = await getSupabase();
 
-    const [progRes, cohRes, cobRes, cfgRes] = await Promise.all([
+    const [progRes, cohRes, cobRes, cfgRes, egrRes] = await Promise.all([
         sb.from('programas')
           .select('programa_id, nombre, tipo, email_remitente, gas_url')
           .eq('programa_id', programaId)
@@ -906,7 +908,8 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
           .eq('cohorte_id', cohorteId)
           .eq('programa_id', programaId)
           .order('fecha_vencimiento'),
-        sb.from('configuracion').select('clave, valor')
+        sb.from('configuracion').select('clave, valor'),
+        sb.from('egresos').select('tipo, monto_pagado, monto_original').eq('cohorte_id', cohorteId)
     ]);
 
     if (progRes.error || cohRes.error) return null;
@@ -990,7 +993,8 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
         programa:    programa,
         cohorte:     cohorte,
         columnas:    columnas,
-        estudiantes: estudiantesEnriquecidos
+        estudiantes: estudiantesEnriquecidos,
+        egresos:     egrRes.data || []
     };
 }
 
@@ -1278,7 +1282,7 @@ function renderTabla() {
         var descuentoInfo = JSON.stringify({dni:est.dni, apellido:est.apellido, nombre:est.nombre, pct:est.descuento_porcentaje, desde:est.descuento_desde||'', hasta:est.descuento_hasta||'', motivo:est.descuento_motivo||''}).replace(/'/g, '&apos;');
         var filaHtml = `
             <td style="text-align:center;"><input type="checkbox" class="chk-e" data-dni="${est.dni}" onchange="onChk()"></td>
-            <td class="cell-name" onclick="irEstudiante(${est.dni})">${escapeHtml(est.apellido + ', ' + est.nombre)}</td>
+            <td class="cell-name" onclick="irEstudiante(${est.dni})">${escapeHtml(est.apellido + ', ' + est.nombre)}<div style="font-size:10px;font-weight:400;color:#888;margin-top:1px;">DNI ${escapeHtml(String(est.dni))}</div></td>
             <td class="cell-desc" style="color:${est.descuento_porcentaje > 0 ? 'var(--success)' : '#aaa'};">
                 <div style="font-weight:700;font-size:13px;">${est.descuento_porcentaje}%</div>
                 ${(function(){
@@ -1331,10 +1335,17 @@ function actualizarStats() {
     var recaud = ests.reduce(function(s, e) {
         return s + e.cobros.reduce(function(ss, c) { return ss + calcMontoAbonado(c); }, 0);
     }, 0);
+    var egrExec = (V.data.egresos || []).filter(function(e){ return e.tipo === 'EJECUTADO'; })
+                                        .reduce(function(s,e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
+    var saldo = recaud - egrExec;
     document.getElementById('s-aldia').textContent   = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'ABONADA'; }).length;
     document.getElementById('s-mora').textContent    = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'EN_MORA'; }).length;
     document.getElementById('s-parcial').textContent = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'PAGO_PARCIAL'; }).length;
     document.getElementById('s-recaudado').textContent = fMillones(recaud);
+    document.getElementById('s-egresos').textContent  = fMillones(egrExec);
+    var sEl = document.getElementById('s-saldo');
+    sEl.textContent = fMillones(saldo);
+    sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
 }
 
 function actualizarFiltros() {
@@ -1501,6 +1512,8 @@ async function guardarDescuento() {
             var c = est.cobros[i];
             var estado = resolverEstadoCobro(c);
             if (['ABONADA','PAGO_PARCIAL','PENDIENTE','EN_MORA'].includes(estado)) continue;
+            // Guarda extra: nunca tocar cuotas vencidas aunque el estado en DB sea NO_ABONADA
+            if (c.fecha_vencimiento && String(c.fecha_vencimiento).split('T')[0] <= hoyStr) continue;
 
             var fCuota = c.fecha_vencimiento ? String(c.fecha_vencimiento).split('T')[0] : null;
             var pctAplicar = 0;
