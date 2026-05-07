@@ -272,9 +272,9 @@
             <div class="section-title">🚦 Semáforo de Liquidez — Escenarios de Flujo de Caja</div>
             <div class="semaforo-container"><canvas id="semaforoChart"></canvas></div>
             <div class="semaforo-legend">
-                <div class="legend-item"><div class="legend-color legend-green"></div><span><strong>🟢 Optimista:</strong> 100% cobranza, Deserción 0%, solo gastos críticos</span></div>
-                <div class="legend-item"><div class="legend-color legend-yellow"></div><span><strong>🟡 Realista:</strong> Cobrabilidad real, Deserción real, todos los gastos</span></div>
-                <div class="legend-item"><div class="legend-color legend-red"></div><span><strong>🔴 Estrés:</strong> Cobrabilidad 70%, Deserción ×2, solo gastos críticos</span></div>
+                <div class="legend-item"><div class="legend-color legend-green"></div><span><strong>🟢 Optimista:</strong> 100% cobranza, 100% gastos pagados</span></div>
+                <div class="legend-item"><div class="legend-color legend-yellow"></div><span><strong>🟡 Realista:</strong> 85% cobranza, 85% gastos ejecutados</span></div>
+                <div class="legend-item"><div class="legend-color legend-red"></div><span><strong>🔴 Estrés:</strong> 70% cobranza, 100% gastos ejecutados</span></div>
             </div>
         </div>
 
@@ -686,9 +686,9 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
     // Base mensual
     var baseM = ingresoProy / 6 || 0;
     var gastoM = egresoProy  / 6 || 0;
-    var verdeData    = mesesLabels.map(function(_,i){ return Math.round((baseM * 1.0 - gastoM * 0.5) * (1 + i*0.03)); });
-    var amarilloData = mesesLabels.map(function(_,i){ return Math.round((baseM * cobrPct - gastoM * 0.85) * (1 + i*0.02)); });
-    var rojoData     = mesesLabels.map(function(_,i){ return Math.round((baseM * 0.70 - gastoM * 1.0) * (1 + i*0.01)); });
+    var verdeData    = mesesLabels.map(function(_,i){ return Math.round((baseM * 1.00 - gastoM * 1.00) * (1 + i*0.03)); });
+    var amarilloData = mesesLabels.map(function(_,i){ return Math.round((baseM * 0.85 - gastoM * 0.85) * (1 + i*0.02)); });
+    var rojoData     = mesesLabels.map(function(_,i){ return Math.round((baseM * 0.70 - gastoM * 1.00) * (1 + i*0.01)); });
 
     // ── SNAPSHOT para IA ──
     _metricas = {
