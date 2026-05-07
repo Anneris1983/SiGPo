@@ -496,6 +496,12 @@
             border: 1px dashed #ddd;
         }
 
+        .cuota-actions-inline { display:flex; gap:3px; margin-top:5px; justify-content:center; flex-wrap:wrap; }
+        .cbtn { border:none; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer; line-height:1.5; font-family:inherit; font-weight:600; }
+        .cbtn-ver { background:#e0e7ff; color:#4338ca; text-decoration:none; display:inline-block; }
+        .cbtn-ok  { background:#d1fae5; color:#065f46; }
+        .cbtn-no  { background:#fee2e2; color:#991b1b; }
+
         .cuota-topline {
             display: block;
             font-size: 12px;
@@ -1258,6 +1264,35 @@
         </div>
     </div>
 
+    <!-- Modal aprobación de comprobante -->
+    <div class="modal-overlay" id="modalAprobacionOverlay" onclick="cerrarSiOverlay(event, 'modalAprobacionOverlay', cerrarAprobacionModal)">
+        <div class="modal small">
+            <div class="modal-header">
+                <div>
+                    <h3>Revisar comprobante</h3>
+                    <p id="aprobModalSub">—</p>
+                </div>
+                <button class="modal-close" type="button" onclick="cerrarAprobacionModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="aprobComprobanteArea" style="margin-bottom:16px;"></div>
+                <div class="modal-section">
+                    <h4>Recibo oficial (requerido para aprobar)</h4>
+                    <input type="file" id="aprobReciboFile" accept="image/*,.pdf" style="width:100%;padding:8px 0;font-family:inherit;">
+                    <p style="font-size:12px;color:#888;margin-top:4px;">Adjuntá el recibo que generás al alumno para confirmar la aprobación.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="footer-info" id="aprobMsgBox"></div>
+                <div class="footer-buttons">
+                    <button class="btn light" type="button" onclick="cerrarAprobacionModal()">Cancelar</button>
+                    <button class="btn danger" type="button" onclick="rechazarCuotaDesdeModal()">✕ Rechazar</button>
+                    <button class="btn success" type="button" id="btnAprobConfirm" onclick="aprobarCuotaDesdeModal()">✔ Aprobar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
@@ -1296,7 +1331,7 @@
                 var sb = await getSupabase();
                 var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
                     sb.from('cohortes').select('*, programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
-                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', cohorteId),
+                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url').eq('cohorte_id', cohorteId),
                     sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico,descuento_motivo').eq('cohorte_id', cohorteId),
                     sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
                     sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', cohorteId)
@@ -1413,7 +1448,8 @@
                 montoAbonado: Number(cuota.montoAbonado || cuota.monto_abonado || 0),
                 texto: cuota.texto || '',
                 estado: estado,
-                aDefinir: Boolean(cuota.aDefinir || cuota.a_definir)
+                aDefinir: Boolean(cuota.aDefinir || cuota.a_definir),
+                comprobanteUrl: cuota.comprobante_url || ''
             };
         }
 
@@ -1574,10 +1610,10 @@
                 sub = 'Vence ' + formatearFechaCorta(cuota.fechaVencimiento);
             } else if (cuota.estado === 'pendiente') {
                 sub = '🕐 En revisión';
-            } else if (cuota.estado === 'noabonada') {
-                sub = cuota.fechaVencimiento ? formatearFechaCorta(cuota.fechaVencimiento) : '';
             } else if (cuota.estado === 'abonada') {
                 sub = 'Saldo $0';
+            } else if (cuota.estado === 'noabonada') {
+                sub = cuota.fechaVencimiento ? formatearFechaCorta(cuota.fechaVencimiento) : '';
             }
 
             const tooltip = [
@@ -1588,10 +1624,22 @@
                 'Monto: ' + formatearMoneda(cuota.montoFinal || cuota.montoBase || 0)
             ].filter(Boolean).join(' · ');
 
+            let btnsHtml = '';
+            if (cuota.estado === 'pendiente') {
+                btnsHtml = '<div class="cuota-actions-inline">';
+                if (cuota.comprobanteUrl) {
+                    btnsHtml += `<a href="${escapeHtml(cuota.comprobanteUrl)}" target="_blank" class="cbtn cbtn-ver" title="Ver comprobante">📎</a>`;
+                }
+                btnsHtml += `<button class="cbtn cbtn-ok" title="Aprobar" onclick="abrirAprobacionModal('${escapeJs(String(cuota.cobroId))}', event)">✔ Aprob.</button>`;
+                btnsHtml += `<button class="cbtn cbtn-no" title="Rechazar" onclick="rechazarCuota('${escapeJs(String(cuota.cobroId))}', event)">✕ Rech.</button>`;
+                btnsHtml += '</div>';
+            }
+
             return `
                 <td class="${clases}" title="${escapeHtml(tooltip)}">
                     <span class="cuota-topline">${escapeHtml(top)}</span>
                     <span class="cuota-subline">${escapeHtml(sub)}</span>
+                    ${btnsHtml}
                 </td>
             `;
         }
@@ -2175,6 +2223,10 @@
 
         function manejarEscape(evento) {
             if (evento.key !== 'Escape') return;
+            if (document.getElementById('modalAprobacionOverlay').classList.contains('active')) {
+                cerrarAprobacionModal();
+                return;
+            }
             if (document.getElementById('modalCuotasOverlay').classList.contains('active')) {
                 cerrarModalCrearCuotas();
                 return;
@@ -2403,91 +2455,102 @@
             return 'id-' + Math.random().toString(36).slice(2, 10);
         }
 
+        /* ── APROBACIÓN DE COMPROBANTES ── */
+        var _aprobacionCobroId = null;
 
-        function obtenerDemoDetalle() {
-            return {
-                programa: {
-                    programa_id: programaId || 1,
-                    nombre_programa: 'Especialización en Costos y Gestión Empresarial',
-                    tipo_programa: 'ESPECIALIZACION',
-                    activo: true
-                },
-                cohorte: {
-                    id_cohorte: cohorteId || 101,
-                    nombre_cohorte: 'Cohorte 2025-2026',
-                    fecha_inicio: '2025-04-01',
-                    fecha_fin: '2026-09-30',
-                    activa: true,
-                    cantidad_cuotas_default: 5
-                },
-                etiquetasDescuento: ['Beca parcial', 'Docente', 'Convenio', 'Pronto pago'],
-                estudiantes: [
-                    {
-                        id_estudiante: 1,
-                        dni: '23456789',
-                        nombre: 'María',
-                        apellido: 'González',
-                        email: 'maria.gonzalez@gmail.com',
-                        descuento_porcentaje: 10,
-                        descuento_fecha_inicio: '2025-04-01',
-                        descuento_etiqueta: 'Convenio',
-                        cuotas: [
-                            { id_cobro: 1, numero_cuota: 0, nombre: 'Inscripción', mes: 'AGO 2025', monto_final: 45000, saldo_pendiente: 0, estado: 'ABONADA', fecha_vencimiento: '2025-08-15' },
-                            { id_cobro: 2, numero_cuota: 1, nombre: 'C1', mes: 'SEP 2025', monto_final: 90000, saldo_pendiente: 0, estado: 'ABONADA', fecha_vencimiento: '2025-09-15' },
-                            { id_cobro: 3, numero_cuota: 2, nombre: 'C2', mes: 'OCT 2025', monto_final: 90000, saldo_pendiente: 0, estado: 'ABONADA', fecha_vencimiento: '2025-10-15' },
-                            { id_cobro: 4, numero_cuota: 3, nombre: 'C3', mes: 'NOV 2025', monto_final: 90000, saldo_pendiente: 25000, estado: 'PARCIAL', fecha_vencimiento: '2025-11-15' },
-                            { id_cobro: 5, numero_cuota: 4, nombre: 'C4', mes: 'DIC 2025', monto_final: 90000, saldo_pendiente: 90000, estado: 'VENCIDA', fecha_vencimiento: '2025-12-15' }
-                        ]
-                    },
-                    {
-                        id_estudiante: 2,
-                        dni: '34567890',
-                        nombre: 'Juan',
-                        apellido: 'Pérez',
-                        email: 'juan.perez@hotmail.com',
-                        descuento_porcentaje: 0,
-                        cuotas: [
-                            { id_cobro: 6, numero_cuota: 0, nombre: 'Inscripción', mes: 'AGO 2025', monto_final: 50000, saldo_pendiente: 0, estado: 'ABONADA', fecha_vencimiento: '2025-08-15' },
-                            { id_cobro: 7, numero_cuota: 1, nombre: 'C1', mes: 'SEP 2025', monto_final: 100000, saldo_pendiente: 0, estado: 'ABONADA', fecha_vencimiento: '2025-09-15' },
-                            { id_cobro: 8, numero_cuota: 2, nombre: 'C2', mes: 'OCT 2025', monto_final: 100000, saldo_pendiente: 0, estado: 'ABONADA', fecha_vencimiento: '2025-10-15' },
-                            { id_cobro: 9, numero_cuota: 3, nombre: 'C3', mes: 'NOV 2025', monto_final: 100000, saldo_pendiente: 0, estado: 'ABONADA', fecha_vencimiento: '2025-11-15' },
-                            { id_cobro: 10, numero_cuota: 4, nombre: 'C4', mes: 'DIC 2025', monto_final: 100000, saldo_pendiente: 0, estado: 'ABONADA', fecha_vencimiento: '2025-12-15' }
-                        ]
-                    },
-                    {
-                        id_estudiante: 3,
-                        dni: '28765432',
-                        nombre: 'Carolina',
-                        apellido: 'Ruiz',
-                        email: 'carolina.ruiz@gmail.com',
-                        descuento_porcentaje: 20,
-                        descuento_fecha_inicio: '2025-04-01',
-                        cuotas: [
-                            { id_cobro: 11, numero_cuota: 0, nombre: 'Inscripción', mes: 'AGO 2025', monto_final: 40000, saldo_pendiente: 0, estado: 'ABONADA', fecha_vencimiento: '2025-08-15' },
-                            { id_cobro: 12, numero_cuota: 1, nombre: 'C1', mes: 'SEP 2025', monto_final: 80000, saldo_pendiente: 0, estado: 'ABONADA', fecha_vencimiento: '2025-09-15' },
-                            { id_cobro: 13, numero_cuota: 2, nombre: 'C2', mes: 'OCT 2025', monto_final: 80000, saldo_pendiente: 0, estado: 'ABONADA', fecha_vencimiento: '2025-10-15' },
-                            { id_cobro: 14, numero_cuota: 3, nombre: 'C3', mes: 'NOV 2025', monto_final: 80000, saldo_pendiente: 80000, estado: 'PENDIENTE', fecha_vencimiento: '2025-11-15', comprobante_url: 'transferencia_nov.pdf' },
-                            { id_cobro: 15, numero_cuota: 4, nombre: 'C4', mes: 'DIC 2025', monto_final: 80000, saldo_pendiente: 80000, estado: 'NO_ABONADA', fecha_vencimiento: '2025-12-15' }
-                        ]
-                    },
-                    {
-                        id_estudiante: 4,
-                        dni: '30123456',
-                        nombre: 'Ana',
-                        apellido: 'Martínez',
-                        email: 'ana.martinez@fce.uncu.edu.ar',
-                        no_debe_abonar: true,
-                        descuento_porcentaje: 100,
-                        cuotas: [
-                            { numero_cuota: 0, estado: 'NODEBE' },
-                            { numero_cuota: 1, estado: 'NODEBE' },
-                            { numero_cuota: 2, estado: 'NODEBE' },
-                            { numero_cuota: 3, estado: 'NODEBE' },
-                            { numero_cuota: 4, estado: 'NODEBE' }
-                        ]
+        function abrirAprobacionModal(cobroId, evt) {
+            if (evt) evt.stopPropagation();
+            _aprobacionCobroId = cobroId;
+
+            // Find cobro data to populate modal
+            var cuota = null;
+            var estudiante = null;
+            vistaData.estudiantes.forEach(function(est) {
+                est.cuotas.forEach(function(c) {
+                    if (String(c.cobroId) === String(cobroId)) {
+                        cuota = c;
+                        estudiante = est;
                     }
-                ]
-            };
+                });
+            });
+
+            var sub = estudiante ? (estudiante.nombreCompleto + ' · ' + (cuota.nombre || 'Cuota') + ' · ' + formatearMoneda(cuota.montoFinal || 0)) : cobroId;
+            document.getElementById('aprobModalSub').textContent = sub;
+
+            var compArea = document.getElementById('aprobComprobanteArea');
+            if (cuota && cuota.comprobanteUrl) {
+                var esImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(cuota.comprobanteUrl);
+                if (esImg) {
+                    compArea.innerHTML = '<img src="' + escapeHtml(cuota.comprobanteUrl) + '" style="max-width:100%;border-radius:8px;border:1px solid #e0e0e0;" alt="Comprobante">';
+                } else {
+                    compArea.innerHTML = '<div style="padding:12px;background:#f0f4ff;border-radius:8px;display:flex;align-items:center;gap:10px;">'
+                        + '<span style="font-size:24px;">📄</span>'
+                        + '<div><div style="font-weight:700;font-size:13px;">Comprobante adjunto</div>'
+                        + '<a href="' + escapeHtml(cuota.comprobanteUrl) + '" target="_blank" style="font-size:12px;color:#4338ca;">👁️ Ver comprobante</a></div></div>';
+                }
+            } else {
+                compArea.innerHTML = '<div style="padding:10px 0;color:#aaa;font-size:13px;">Sin comprobante adjunto</div>';
+            }
+
+            document.getElementById('aprobReciboFile').value = '';
+            document.getElementById('aprobMsgBox').textContent = '';
+            abrirOverlay('modalAprobacionOverlay');
+        }
+
+        function cerrarAprobacionModal() {
+            _aprobacionCobroId = null;
+            cerrarOverlay('modalAprobacionOverlay');
+        }
+
+        async function aprobarCuotaDesdeModal() {
+            if (!_aprobacionCobroId) return;
+            var file = document.getElementById('aprobReciboFile').files[0];
+            if (!file) {
+                document.getElementById('aprobMsgBox').textContent = '⚠️ Debés adjuntar el recibo oficial antes de aprobar.';
+                return;
+            }
+            var btn = document.getElementById('btnAprobConfirm');
+            btn.disabled = true;
+            btn.textContent = 'Procesando…';
+            document.getElementById('aprobMsgBox').textContent = '';
+            try {
+                var res = await aprobarPago(_aprobacionCobroId, 'COMPLETO', null, file);
+                if (!res || !res.ok) {
+                    document.getElementById('aprobMsgBox').textContent = '✕ ' + (res && res.mensaje ? res.mensaje : 'Error al aprobar.');
+                    btn.disabled = false;
+                    btn.textContent = '✔ Aprobar';
+                    return;
+                }
+                cerrarAprobacionModal();
+                await cargarDetalleCohorte();
+            } catch(e) {
+                document.getElementById('aprobMsgBox').textContent = '✕ Error: ' + (e.message || e);
+                btn.disabled = false;
+                btn.textContent = '✔ Aprobar';
+            }
+        }
+
+        async function rechazarCuotaDesdeModal() {
+            if (!_aprobacionCobroId) return;
+            if (!confirm('¿Rechazar este comprobante? El cobro volverá a estado pendiente de pago.')) return;
+            try {
+                await rechazarPago(_aprobacionCobroId);
+                cerrarAprobacionModal();
+                await cargarDetalleCohorte();
+            } catch(e) {
+                alert('Error al rechazar: ' + (e.message || e));
+            }
+        }
+
+        async function rechazarCuota(cobroId, evt) {
+            if (evt) evt.stopPropagation();
+            if (!confirm('¿Rechazar el comprobante de este cobro? El estado volverá a pendiente de pago.')) return;
+            try {
+                await rechazarPago(cobroId);
+                await cargarDetalleCohorte();
+            } catch(e) {
+                alert('Error al rechazar: ' + (e.message || e));
+            }
         }
     </script>
 </body>
