@@ -772,7 +772,7 @@ async function obtenerDashboardAdmin() {
         sb.from('programas').select('*'),
         sb.from('cohortes').select('*'),
         sb.from('inscripciones').select('estudiante_id,cohorte_id'),
-        sb.from('cobros').select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente'),
+        sb.from('cobros').select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,comprobante_url'),
         sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,monto_pagado,monto_original')
     ]);
 
@@ -849,7 +849,8 @@ async function obtenerDashboardAdmin() {
             var dnisConMoraProg = new Set(
                 cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).map(function(c){ return c.dni; })
             );
-            var cuotasMoraProg = cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
+            var cuotasMoraProg    = cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
+            var pendCooperadora   = cobrosProg.filter(function(c){ return c.estado === 'PENDIENTE' && c.comprobante_url; }).length;
 
             var recaudadoProg = cobrosProg
                 .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
@@ -865,6 +866,7 @@ async function obtenerDashboardAdmin() {
                 id:                p.programa_id,
                 nombre:            p.nombre,
                 tipo:              p.tipo,
+                estado:            p.estado,
                 categoria:         getCategoriaPrograma(p.tipo),
                 labelNomenclatura: getLabelNomenclaturaPlural(p.tipo),
                 estudiantes:       totalEstProg,
@@ -872,6 +874,7 @@ async function obtenerDashboardAdmin() {
                 alDia:             Math.max(0, totalEstProg - enMoraProg),
                 enMora:            enMoraProg,
                 cuotasEnMora:      cuotasMoraProg,
+                pendCooperadora:   pendCooperadora,
                 recaudado:         recaudadoProg,
                 egresos:           egresosPagadosProg,
                 saldo:             recaudadoProg - egresosPagadosProg
