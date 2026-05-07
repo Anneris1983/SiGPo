@@ -242,7 +242,7 @@
             <div class="ia-chip" onclick="iaChip(this)">¿El margen de maniobra es saludable?</div>
             <div class="ia-chip" onclick="iaChip(this)">¿Qué índice es el más crítico?</div>
             <div class="ia-chip" onclick="iaChip(this)">¿Vale la pena virtualizar?</div>
-            <div class="ia-chip" onclick="iaChip(this)">¿Qué riesgo tiene la tasa de churn actual?</div>
+            <div class="ia-chip" onclick="iaChip(this)">¿Qué riesgo tiene la tasa de deserción actual?</div>
             <div class="ia-chip" onclick="iaChip(this)">Explicame el semáforo de liquidez</div>
             <div class="ia-chip" onclick="iaChip(this)">¿Cuánto impacta el aging de egresos?</div>
             <div class="ia-chip" onclick="iaChip(this)">Dame un resumen ejecutivo del reporte</div>
@@ -272,9 +272,9 @@
             <div class="section-title">🚦 Semáforo de Liquidez — Escenarios de Flujo de Caja</div>
             <div class="semaforo-container"><canvas id="semaforoChart"></canvas></div>
             <div class="semaforo-legend">
-                <div class="legend-item"><div class="legend-color legend-green"></div><span><strong>🟢 Optimista:</strong> 100% cobranza, Churn 0%, solo gastos críticos</span></div>
-                <div class="legend-item"><div class="legend-color legend-yellow"></div><span><strong>🟡 Realista:</strong> Cobrabilidad real, Churn real, todos los gastos</span></div>
-                <div class="legend-item"><div class="legend-color legend-red"></div><span><strong>🔴 Estrés:</strong> Cobrabilidad 70%, Churn ×2, solo gastos críticos</span></div>
+                <div class="legend-item"><div class="legend-color legend-green"></div><span><strong>🟢 Optimista:</strong> 100% cobranza, Deserción 0%, solo gastos críticos</span></div>
+                <div class="legend-item"><div class="legend-color legend-yellow"></div><span><strong>🟡 Realista:</strong> Cobrabilidad real, Deserción real, todos los gastos</span></div>
+                <div class="legend-item"><div class="legend-color legend-red"></div><span><strong>🔴 Estrés:</strong> Cobrabilidad 70%, Deserción ×2, solo gastos críticos</span></div>
             </div>
         </div>
 
@@ -395,13 +395,13 @@
             </div>
         </div>
 
-        <!-- CHURN -->
+        <!-- DESERCIÓN -->
         <div class="section">
-            <div class="section-title">📉 Tasa de Deserción (Churn) e Ingreso Realista</div>
+            <div class="section-title">📉 Tasa de Deserción e Ingreso Realista</div>
             <div class="churn-card">
                 <div class="churn-stat">
                     <div class="churn-stat-value" style="color:var(--danger);" id="churn-pct">—</div>
-                    <div class="churn-stat-label">Tasa de Churn (Deserción)</div>
+                    <div class="churn-stat-label">Tasa de Deserción</div>
                     <div class="churn-stat-trend" id="churn-detalle" style="color:#666;font-size:13px;margin-top:8px;line-height:1.6;"></div>
                 </div>
                 <div class="churn-stat">
@@ -580,7 +580,7 @@ async function aplicarFiltros() {
     var rEgr = await qEgr;
     _egresosData = rEgr.data || [];
 
-    // ── Inscripciones para churn ──────────────────────────
+    // ── Inscripciones para deserción ──────────────────────────
     var qInsc = sb.from('inscripciones')
         .select('id,cohorte_id,estado_academico');
     if (cohId)  qInsc = qInsc.eq('cohorte_id', cohId);
@@ -668,7 +668,7 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
     var pctMora       = ingresoProy > 0 ? (montoMora / ingresoProy * 100) : null;
     var cobrabilidad  = ingresoProy > 0 ? (ingresoEjec / ingresoProy * 100) : null;
 
-    // ── CHURN ──
+    // ── DESERCIÓN ──
     var totalInsc = inscripciones.length;
     var bajas     = inscripciones.filter(function(i){return i.estado_academico==='BAJA';}).length;
     var activos   = totalInsc - bajas;
@@ -777,7 +777,7 @@ function setIndice(n, val, bar, color, badge) {
     badgeEl.className   = 'indice-badge badge-'+(color==='green'?'bueno':color==='yellow'?'alerta':'critico');
 }
 
-/* ── RENDER: CHURN ── */
+/* ── RENDER: DESERCIÓN ── */
 function renderChurn(churnPct, bajas, totalInsc, activos, ingProy, ingresoRealista, cobrPct) {
     document.getElementById('churn-pct').textContent = churnPct.toFixed(1)+'%';
     var alerta = churnPct > 5 ? '⚠️ Supera el 5% ideal. Investigar causas.' : '✅ Dentro del rango aceptable.';
@@ -789,7 +789,7 @@ function renderChurn(churnPct, bajas, totalInsc, activos, ingProy, ingresoRealis
     document.getElementById('ingreso-realista').textContent = fPeso(ingresoRealista);
     document.getElementById('churn-formula-desc').innerHTML =
         '<strong>Fórmula:</strong><br>' +
-        'Ing. Proy. × (1 − Churn) × Cobrabilidad<br>' +
+        'Ing. Proy. × (1 − Deserción) × Cobrabilidad<br>' +
         '= ' + fPeso(ingProy) + ' × ' + (1 - churnPct/100).toFixed(3) + ' × ' + (cobrPct*100).toFixed(1) + '% = <strong>' + fPeso(ingresoRealista) + '</strong><br><br>' +
         '<strong>vs Proyección Original:</strong> ' + fPeso(ingProy) + '<br>' +
         '<strong>Diferencia:</strong> −' + fPeso(ingProy - ingresoRealista) + '<br>' +
@@ -999,7 +999,7 @@ function exportarCSV() {
         ['Tasa de Mora',         m.pctMora !== null ? m.pctMora.toFixed(1)+'%' : 'Sin datos'],
         ['Cobrabilidad Real',    m.cobrabilidad !== null ? m.cobrabilidad.toFixed(1)+'%' : 'Sin datos'],
         ['---','---'],
-        ['Churn (Deserción)',    m.churnPct.toFixed(1)+'%'],
+        ['Deserción',    m.churnPct.toFixed(1)+'%'],
         ['Bajas',                m.bajas],
         ['Total Inscriptos',     m.activos],
         ['Ingreso Realista',     m.ingresoRealista],
@@ -1043,8 +1043,8 @@ function iaObtenerContexto() {
         + '• Ahorro Virtualización: ' + (m.pctAjust!==null&&m.pctAjust!==undefined?m.pctAjust.toFixed(1)+'%':'Sin egresos') + '\n'
         + '• Tasa de Mora: ' + (m.pctMora!==null&&m.pctMora!==undefined?m.pctMora.toFixed(1)+'%':'—') + '\n'
         + '• Cobrabilidad Real: ' + (m.cobrabilidad!==null&&m.cobrabilidad!==undefined?m.cobrabilidad.toFixed(1)+'%':'—') + '\n\n'
-        + '=== CHURN ===\n'
-        + '• Tasa de Churn: ' + (m.churnPct||0).toFixed(1) + '% (' + (m.bajas||0) + ' bajas de ' + (m.activos||0) + ' inscriptos)\n'
+        + '=== DESERCIÓN ===\n'
+        + '• Tasa de Deserción: ' + (m.churnPct||0).toFixed(1) + '% (' + (m.bajas||0) + ' bajas de ' + (m.activos||0) + ' inscriptos)\n'
         + '• Ingreso Realista: ' + fPeso(m.ingresoRealista||0) + '\n\n'
         + '=== EGRESOS ===\n'
         + '• Proyectados: ' + fPeso(m.egresoProy||0) + '\n'
