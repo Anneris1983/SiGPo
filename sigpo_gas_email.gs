@@ -54,15 +54,12 @@ function configurarTriggers() {
 
 // ══════════════════════════════════════════════════════════════
 // DÍA 1 — RECORDATORIO DE VENCIMIENTO DE CUOTA
-// Envía a cada estudiante que tenga una cuota del mes actual
-// sin abonar, recordando que vence el día 15.
-// Incluye el detalle de esa cuota + cuenta corriente completa.
 // ══════════════════════════════════════════════════════════════
 
 function enviarRecordatoriosVencimiento() {
   var hoy    = new Date();
   var anio   = hoy.getFullYear();
-  var mes    = hoy.getMonth(); // 0-11
+  var mes    = hoy.getMonth();
   var desde  = _primerDiaMes(anio, mes);
   var hasta  = _ultimoDiaMes(anio, mes);
   var mesNom = _mesNombre(mes);
@@ -70,7 +67,7 @@ function enviarRecordatoriosVencimiento() {
   Logger.log('--- Recordatorios de vencimiento: ' + mesNom + ' ' + anio + ' ---');
 
   var cobros = _sbGet(
-    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
+    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
     '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
     '&estado=not.in.(ABONADA,A_DEFINIR)' +
     '&no_aplica=not.is.true' +
@@ -81,21 +78,17 @@ function enviarRecordatoriosVencimiento() {
   if (!cobros.length) { Logger.log('Sin cobros pendientes este mes.'); return; }
 
   var ctx      = _cargarContexto(cobros);
-  // 1 sola query trae todas las cuentas corrientes de todos los DNIs afectados
   var ccPorDni = _cuentasCorrientesLote(Object.keys(ctx.porDni), Object.keys(ctx.cohMap));
 
   var enviados = 0;
   Object.keys(ctx.porDni).forEach(function(dni) {
     var usu = ctx.usuMap[dni];
     if (!usu || !usu.email) { Logger.log('Sin email: DNI ' + dni); return; }
-
     var cuotasMes = ctx.porDni[dni];
     var progNom   = _nombrePrograma(cuotasMes[0], ctx);
     var cc        = ccPorDni[dni] || [];
-
     var subject = 'Recordatorio de cuota — ' + progNom + ' — ' + mesNom + ' ' + anio;
     var html    = _htmlRecordatorio(_nombreCompleto(usu), progNom, mesNom, anio, cuotasMes, cc);
-
     if (_enviarMail(usu.email, subject, html)) enviados++;
   });
 
@@ -104,8 +97,6 @@ function enviarRecordatoriosVencimiento() {
 
 // ══════════════════════════════════════════════════════════════
 // DÍA 16 — RECLAMO DE MORA
-// Envía a cada estudiante con al menos una cuota EN_MORA,
-// listando todas sus cuotas en mora y su cuenta corriente completa.
 // ══════════════════════════════════════════════════════════════
 
 function enviarReclamosMora() {
@@ -116,7 +107,7 @@ function enviarReclamosMora() {
   Logger.log('--- Reclamos de mora: ' + mesNom + ' ' + anio + ' ---');
 
   var cobros = _sbGet(
-    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
+    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
     '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
     '&estado=eq.EN_MORA'
   );
@@ -124,22 +115,18 @@ function enviarReclamosMora() {
   if (!cobros.length) { Logger.log('No hay cobros en mora.'); return; }
 
   var ctx      = _cargarContexto(cobros);
-  // 1 sola query trae todas las cuentas corrientes de todos los DNIs afectados
   var ccPorDni = _cuentasCorrientesLote(Object.keys(ctx.porDni), Object.keys(ctx.cohMap));
 
   var enviados = 0;
   Object.keys(ctx.porDni).forEach(function(dni) {
     var usu = ctx.usuMap[dni];
     if (!usu || !usu.email) { Logger.log('Sin email: DNI ' + dni); return; }
-
     var cuotasMora = ctx.porDni[dni];
     var progNom    = _nombrePrograma(cuotasMora[0], ctx);
     var cc         = ccPorDni[dni] || [];
     var deuda      = cuotasMora.reduce(function(s,c){ return s + Number(c.saldo_pendiente || c.monto_final || 0); }, 0);
-
     var subject = 'Aviso de cuotas en mora — ' + progNom;
     var html    = _htmlReclamo(_nombreCompleto(usu), progNom, cuotasMora, cc, deuda, mesNom, anio);
-
     if (_enviarMail(usu.email, subject, html)) enviados++;
   });
 
@@ -195,8 +182,6 @@ function _sbGet(path) {
   }
 }
 
-// Trae las cuentas corrientes de TODOS los DNIs y cohortes en una sola query
-// y las devuelve indexadas por DNI. Elimina el patrón N+1.
 function _cuentasCorrientesLote(dnis, cohorteIds) {
   if (!dnis.length || !cohorteIds.length) return {};
   var todas = _sbGet(
@@ -254,17 +239,14 @@ function _fmtFecha(f) {
 
 function _nombrePrograma(cobro, ctx) {
   if (!cobro) return 'Posgrado';
-  var coh = ctx.cohMap[cobro.cohorte_id] || {};
+  var coh  = ctx.cohMap[cobro.cohorte_id] || {};
   var prog = ctx.progMap[cobro.programa_id || coh.programa_id] || {};
   return prog.nombre || 'Posgrado';
 }
 
 function _enviarMail(to, subject, html) {
   try {
-    MailApp.sendEmail(to, subject, html.replace(/<[^>]+>/g,''), {
-      name: NOMBRE_INST,
-      htmlBody: html
-    });
+    MailApp.sendEmail(to, subject, html.replace(/<[^>]+>/g,''), { name: NOMBRE_INST, htmlBody: html });
     Logger.log('✅ → ' + to);
     return true;
   } catch(err) {
@@ -292,7 +274,6 @@ var _CSS = '<style>' +
   'tr.abon td{color:#9ca3af;}' +
   '.aviso{background:#dbeafe;border-left:4px solid #1e3a5f;padding:12px 16px;margin:16px 0;border-radius:0 4px 4px 0;font-size:14px;}' +
   '.alerta{background:#fee2e2;border-left:4px solid #c0392b;padding:12px 16px;margin:16px 0;border-radius:0 4px 4px 0;font-size:14px;}' +
-  '.warn{background:#fef3c7;border-left:4px solid #d4af37;padding:12px 16px;margin:16px 0;border-radius:0 4px 4px 0;font-size:14px;}' +
   '.deuda{font-size:20px;font-weight:700;color:#c0392b;}' +
   'p{font-size:14px;line-height:1.6;}' +
   '</style>';
@@ -307,7 +288,7 @@ function _wrapHtml(contenido) {
 
 function _filasCC(cc) {
   return cc.map(function(c) {
-    var cls  = c.estado === 'EN_MORA' ? 'mora' : (c.estado === 'ABONADA' ? 'abon' : 'pend');
+    var cls   = c.estado === 'EN_MORA' ? 'mora' : (c.estado === 'ABONADA' ? 'abon' : 'pend');
     var saldo = c.estado === 'ABONADA' ? '<em>Abonado</em>' : _fmtPeso(c.saldo_pendiente || c.monto_final);
     return '<tr class="' + cls + '">' +
       '<td>' + (c.concepto||'—') + '</td>' +
@@ -325,10 +306,8 @@ function _htmlRecordatorio(nombre, prog, mesNom, anio, cuotasMes, cc) {
            '<td>15/' + String(new Date().getMonth()+1).padStart(2,'0') + '/' + anio + '</td>' +
            '<td><strong>' + _fmtPeso(c.monto_final) + '</strong></td></tr>';
   }).join('');
-
   var deudaPrev = cc.filter(function(c){ return c.estado === 'EN_MORA'; })
                     .reduce(function(s,c){ return s + Number(c.saldo_pendiente||c.monto_final||0); }, 0);
-
   return _wrapHtml(
     '<p>Estimado/a <strong>' + nombre + '</strong>,</p>' +
     '<div class="aviso">Le recordamos que la/s siguiente/s cuota/s del programa <strong>' + prog + '</strong> ' +
@@ -349,7 +328,6 @@ function _htmlReclamo(nombre, prog, cuotasMora, cc, deuda, mesNom, anio) {
            '<td>' + _fmtPeso(c.monto_final) + '</td>' +
            '<td><strong>' + _fmtPeso(c.saldo_pendiente||c.monto_final) + '</strong></td></tr>';
   }).join('');
-
   return _wrapHtml(
     '<p>Estimado/a <strong>' + nombre + '</strong>,</p>' +
     '<div class="alerta">Le informamos que a la fecha de hoy registra las siguientes cuotas <strong>vencidas e impagas</strong> ' +
@@ -367,11 +345,10 @@ function _htmlReclamo(nombre, prog, cuotasMora, cc, deuda, mesNom, anio) {
 // FUNCIONES DE PRUEBA — ejecutar manualmente desde el editor
 // ══════════════════════════════════════════════════════════════
 
-function testRecordatorio() { enviarRecordatoriosVencimiento(); }
-function testMora()         { enviarReclamosMora(); }
-
+function testRecordatorio()     { enviarRecordatoriosVencimiento(); }
+function testMora()             { enviarReclamosMora(); }
 function testConexionSupabase() {
   var programas = _sbGet('programas?select=programa_id,nombre&limit=3');
-  Logger.log('Conexión OK — ' + programas.length + ' programas recibidos:');
+  Logger.log('Conexión OK — ' + programas.length + ' programas:');
   programas.forEach(function(p){ Logger.log('  · ' + p.programa_id + ': ' + p.nombre); });
 }
