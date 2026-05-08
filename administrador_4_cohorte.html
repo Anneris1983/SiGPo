@@ -1068,7 +1068,7 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
             if (!c.fecha_vencimiento) continue;
             if (c.fecha_vencimiento >= hoyStr) continue;
             if (c.recibo_url && String(c.recibo_url).trim() !== '') continue;
-            if (['ABONADA', 'PAGO_PARCIAL', 'NO_APLICA'].includes(String(c.estado))) continue;
+            if (['ABONADA', 'PAGO_PARCIAL', 'NO_APLICA', 'PENDIENTE'].includes(String(c.estado))) continue;
             if (c.no_aplica === true) continue;
 
             var fVenc    = new Date(c.fecha_vencimiento + 'T00:00:00');
