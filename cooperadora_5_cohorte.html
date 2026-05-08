@@ -1293,6 +1293,28 @@
         </div>
     </div>
 
+    <!-- Modal ver comprobante -->
+    <div class="modal-overlay" id="modalVerDocOverlay" onclick="cerrarSiOverlay(event, 'modalVerDocOverlay', cerrarVerDoc)">
+        <div class="modal small">
+            <div class="modal-header">
+                <div>
+                    <h3 id="verDocTitulo">📎 Comprobante</h3>
+                    <p id="verDocSub">—</p>
+                </div>
+                <button class="modal-close" type="button" onclick="cerrarVerDoc()">×</button>
+            </div>
+            <div class="modal-body" style="text-align:center;">
+                <div id="verDocContenido"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="footer-buttons">
+                    <a id="verDocDescargar" href="#" target="_blank" class="btn success" style="text-decoration:none;">⬇ Descargar</a>
+                    <button class="btn light" type="button" onclick="cerrarVerDoc()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
@@ -2228,6 +2250,10 @@
 
         function manejarEscape(evento) {
             if (evento.key !== 'Escape') return;
+            if (document.getElementById('modalVerDocOverlay').classList.contains('active')) {
+                cerrarVerDoc();
+                return;
+            }
             if (document.getElementById('modalAprobacionOverlay').classList.contains('active')) {
                 cerrarAprobacionModal();
                 return;
@@ -2468,16 +2494,31 @@
             return 'id-' + Math.random().toString(36).slice(2, 10);
         }
 
-        /* ── COMPROBANTES ── */
+        /* ── VER COMPROBANTE EN MODAL ── */
         async function verComprobante(comprobanteUrl, evt) {
             if (evt) evt.stopPropagation();
             try {
                 var url = await obtenerUrlFirmadaComprobante(comprobanteUrl);
                 if (!url) { alert('No se pudo obtener el link del comprobante.'); return; }
-                window.open(url, '_blank');
+                document.getElementById('verDocTitulo').textContent = '📎 Comprobante';
+                document.getElementById('verDocSub').textContent = '';
+                document.getElementById('verDocDescargar').href = url;
+                var cont = document.getElementById('verDocContenido');
+                if (/\.pdf$/i.test(comprobanteUrl)) {
+                    cont.innerHTML = '<iframe src="' + url + '" style="width:100%;height:480px;border:none;border-radius:8px;"></iframe>';
+                } else {
+                    cont.innerHTML = '<img src="' + url + '" style="max-width:100%;max-height:480px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15);">'
+                        + '<p style="margin-top:8px;"><a href="' + url + '" target="_blank" style="font-size:13px;color:#4338ca;">Abrir en nueva pestaña →</a></p>';
+                }
+                abrirOverlay('modalVerDocOverlay');
             } catch(e) {
                 alert('Error al abrir el comprobante: ' + (e.message || e));
             }
+        }
+
+        function cerrarVerDoc() {
+            document.getElementById('verDocContenido').innerHTML = '';
+            cerrarOverlay('modalVerDocOverlay');
         }
 
         /* ── APROBACIÓN DE COMPROBANTES ── */
