@@ -1633,7 +1633,7 @@
             if (cuota.estado === 'pendiente') {
                 btnsHtml = '<div class="cuota-actions-inline">';
                 if (cuota.comprobanteUrl) {
-                    btnsHtml += `<a href="${escapeHtml(cuota.comprobanteUrl)}" target="_blank" class="cbtn cbtn-ver" title="Ver comprobante">📎</a>`;
+                    btnsHtml += `<button class="cbtn cbtn-ver" title="Ver comprobante" onclick="verComprobante('${escapeJs(cuota.comprobanteUrl)}', event)">📎 Ver</button>`;
                 }
                 btnsHtml += `<button class="cbtn cbtn-ok" title="Aprobar" onclick="abrirAprobacionModal('${escapeJs(String(cuota.cobroId))}', event)">✔ Aprob.</button>`;
                 btnsHtml += `<button class="cbtn cbtn-no" title="Rechazar" onclick="rechazarCuota('${escapeJs(String(cuota.cobroId))}', event)">✕ Rech.</button>`;
@@ -2468,6 +2468,18 @@
             return 'id-' + Math.random().toString(36).slice(2, 10);
         }
 
+        /* ── COMPROBANTES ── */
+        async function verComprobante(comprobanteUrl, evt) {
+            if (evt) evt.stopPropagation();
+            try {
+                var url = await obtenerUrlFirmadaComprobante(comprobanteUrl);
+                if (!url) { alert('No se pudo obtener el link del comprobante.'); return; }
+                window.open(url, '_blank');
+            } catch(e) {
+                alert('Error al abrir el comprobante: ' + (e.message || e));
+            }
+        }
+
         /* ── APROBACIÓN DE COMPROBANTES ── */
         var _aprobacionCobroId = null;
 
@@ -2492,15 +2504,10 @@
 
             var compArea = document.getElementById('aprobComprobanteArea');
             if (cuota && cuota.comprobanteUrl) {
-                var esImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(cuota.comprobanteUrl);
-                if (esImg) {
-                    compArea.innerHTML = '<img src="' + escapeHtml(cuota.comprobanteUrl) + '" style="max-width:100%;border-radius:8px;border:1px solid #e0e0e0;" alt="Comprobante">';
-                } else {
-                    compArea.innerHTML = '<div style="padding:12px;background:#f0f4ff;border-radius:8px;display:flex;align-items:center;gap:10px;">'
-                        + '<span style="font-size:24px;">📄</span>'
-                        + '<div><div style="font-weight:700;font-size:13px;">Comprobante adjunto</div>'
-                        + '<a href="' + escapeHtml(cuota.comprobanteUrl) + '" target="_blank" style="font-size:12px;color:#4338ca;">👁️ Ver comprobante</a></div></div>';
-                }
+                compArea.innerHTML = '<div style="padding:12px;background:#f0f4ff;border-radius:8px;display:flex;align-items:center;gap:10px;">'
+                    + '<span style="font-size:24px;">📄</span>'
+                    + '<div><div style="font-weight:700;font-size:13px;">Comprobante adjunto</div>'
+                    + '<button onclick="verComprobante(\'' + escapeJs(cuota.comprobanteUrl) + '\')" style="font-size:12px;color:#4338ca;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;">👁️ Ver comprobante</button></div></div>';
             } else {
                 compArea.innerHTML = '<div style="padding:10px 0;color:#aaa;font-size:13px;">Sin comprobante adjunto</div>';
             }

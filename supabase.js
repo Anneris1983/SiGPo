@@ -969,6 +969,17 @@ var _gasFunctions = {
         var r = await sb.from('cobros').select('comprobante_url').eq('cobro_id', cobroId).single();
         return r.data ? r.data.comprobante_url : null;
     },
+    obtenerUrlFirmadaComprobante: async function(comprobanteUrl) {
+        if (!comprobanteUrl) return null;
+        // Extraer la ruta dentro del bucket desde la URL almacenada
+        var match = String(comprobanteUrl).match(/\/object\/(?:public|sign)\/comprobantes\/(.+)/);
+        if (!match) return comprobanteUrl; // URL no reconocida, devolver tal cual
+        var filePath = match[1];
+        var sb = await getSupabase();
+        var { data, error } = await sb.storage.from('comprobantes').createSignedUrl(filePath, 3600);
+        if (error || !data) return null;
+        return data.signedUrl;
+    },
 
     // Configuración
     obtenerConfiguracion:    obtenerConfiguracion,
