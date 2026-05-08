@@ -222,9 +222,9 @@
 <div class="header">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div>
-            <div class="breadcrumb"><a href="cooperadora_5_cohorte.html">← Volver a Cohorte</a></div>
+            <div class="breadcrumb"><a id="breadcrumb-volver" href="cooperadora_5_cohorte.html">← Volver a Cohorte</a></div>
             <h1>✅ Aprobar Pagos</h1>
-            <p>Especialización en Costos y Gestión Empresarial · Cohorte 2025-2026</p>
+            <p>Comprobantes pendientes de revisión</p>
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
             <div class="notif-wrapper" style="position:relative;">
@@ -361,9 +361,21 @@
     }
 
     /* ── INIT ── */
+    var _params = new URLSearchParams(location.search);
+    var _cohorteId  = _params.get('cohorteId')  || _params.get('cohorte_id')  || '';
+    var _programaId = _params.get('programaId') || _params.get('programa_id') || '';
+
     document.addEventListener('DOMContentLoaded', async function() {
         var sesion = getSesion();
         if (!sesion) { window.location.href = 'portal_login.html'; return; }
+
+        // Actualizar breadcrumb con parámetros de vuelta
+        var volverUrl = 'cooperadora_5_cohorte.html';
+        if (_cohorteId || _programaId) {
+            volverUrl += '?cohorteId=' + encodeURIComponent(_cohorteId) + '&programaId=' + encodeURIComponent(_programaId);
+        }
+        document.getElementById('breadcrumb-volver').href = volverUrl;
+
         obtenerNotificaciones(sesion.rol).then(renderNotificaciones);
         await cargarCobros();
     });
