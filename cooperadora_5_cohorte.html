@@ -1359,7 +1359,7 @@
                     }
                     var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
                     var estadoRaw = c.no_aplica ? 'NODEBE' : (c.estado||'NO_ABONADA');
-                    dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR' });
+                    dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'' });
                 });
 
                 var maxCuota = cobros.reduce(function(m,c){return Math.max(m,Number(c.nro_cuota||0));},0);
@@ -2378,16 +2378,24 @@
             });
         }
 
+        function _parseFechaLocal(valor) {
+            // Parsear YYYY-MM-DD como fecha local para evitar corrimiento de timezone
+            var s = String(valor).split('T')[0];
+            var p = s.split('-');
+            if (p.length === 3) return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+            return new Date(valor);
+        }
+
         function formatearFechaLarga(valor) {
             if (!valor) return '—';
-            const fecha = new Date(valor);
+            const fecha = _parseFechaLocal(valor);
             if (isNaN(fecha.getTime())) return String(valor);
             return fecha.toLocaleDateString('es-AR');
         }
 
         function formatearFechaCorta(valor) {
             if (!valor) return '';
-            const fecha = new Date(valor);
+            const fecha = _parseFechaLocal(valor);
             if (isNaN(fecha.getTime())) return String(valor);
             return fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
         }
