@@ -1512,7 +1512,7 @@
             // Financial stats
             var estudiantes = vistaData.estudiantes;
             var ingresos = estudiantes.reduce(function(s, est) {
-                return s + est.cuotas.filter(function(c){ return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL'; })
+                return s + est.cuotas.filter(function(c){ return c.estado==='abonada'||c.estado==='parcial'; })
                                      .reduce(function(ss,c){ return ss + c.montoAbonado; }, 0);
             }, 0);
             var egrExec = (vistaData.egresos || []).filter(function(e){ return e.tipo==='EJECUTADO'; })
