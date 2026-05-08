@@ -548,6 +548,17 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
     return { ok: true };
 }
 
+async function obtenerUrlFirmadaComprobante(comprobanteUrl) {
+    if (!comprobanteUrl) return null;
+    var match = String(comprobanteUrl).match(/\/object\/(?:public|sign)\/comprobantes\/(.+)/);
+    if (!match) return comprobanteUrl;
+    var filePath = match[1];
+    var sb = await getSupabase();
+    var result = await sb.storage.from('comprobantes').createSignedUrl(filePath, 3600);
+    if (result.error || !result.data) return null;
+    return result.data.signedUrl;
+}
+
 async function rechazarPago(cobroId) {
     const sb = await getSupabase();
 
