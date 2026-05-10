@@ -400,10 +400,6 @@
     <!-- BARRA SELECCIÓN -->
     <div class="selection-bar" id="sel-bar">
         <span id="sel-txt">0 seleccionados</span>
-        <div style="display:flex;gap:8px;">
-            <button class="btn btn-primary" onclick="reclamarSel()">📧 Enviar reclamo</button>
-            <button class="btn btn-outline" onclick="deselAll()">✕ Cancelar</button>
-        </div>
     </div>
 
     <!-- TABLA -->
@@ -827,6 +823,9 @@ function resolverEstadoCobro(c) {
     // ABONADA: recibo cargado + saldo = 0 (Regla 2)
     if (tieneRecibo && saldo !== null && saldo <= 0) return 'ABONADA';
 
+    // EN_MORA sobre saldo parcial: recibo parcial vencido, saldo en mora, sin nuevo comprobante
+    if (estadoDb === 'EN_MORA' && tieneRecibo && saldo !== null && saldo > 0 && montoAbonado > 0 && !tieneComp) return 'EN_MORA';
+
     // PAGO_PARCIAL: recibo parcial, saldo > 0 (Regla 3)
     if (tieneRecibo && saldo !== null && saldo > 0 && montoAbonado > 0) return 'PAGO_PARCIAL';
 
@@ -844,7 +843,7 @@ function calcEstadoPostRechazo(c) {
     if (!tieneMontoDefinido(c)) return 'A_DEFINIR';
     var montoAbonado = calcMontoAbonado(c);
     var saldo = redondear2(c.saldo_pendiente || 0);
-    if (montoAbonado > 0 && saldo > 0) return 'PAGO_PARCIAL';
+    if (montoAbonado > 0 && saldo > 0) return vencioCuota(c) ? 'EN_MORA' : 'PAGO_PARCIAL';
     if (vencioCuota(c) && montoAbonado <= 0) return 'EN_MORA';
     return 'NO_ABONADA';
 }
@@ -1063,13 +1062,36 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
         for (var ic = 0; ic < est.cobros.length; ic++) {
             var c = est.cobros[ic];
 
-            // Solo cobros con monto definido, vencidos, sin recibo de pago aprobado
+            // Solo cobros con monto definido, vencidos
             if (!tieneMontoDefinido(c)) continue;
             if (!c.fecha_vencimiento) continue;
             if (c.fecha_vencimiento >= hoyStr) continue;
-            if (c.recibo_url && String(c.recibo_url).trim() !== '') continue;
-            if (['ABONADA', 'PAGO_PARCIAL', 'NO_APLICA', 'PENDIENTE'].includes(String(c.estado))) continue;
             if (c.no_aplica === true) continue;
+            if (['ABONADA', 'NO_APLICA', 'PENDIENTE'].includes(String(c.estado))) continue;
+
+            var tieneReciboCobro = !!(c.recibo_url && String(c.recibo_url).trim() !== '');
+            var saldoCobro       = redondear2(Number(c.saldo_pendiente) || 0);
+
+            // PAGO_PARCIAL vencida: mora sobre saldo_pendiente, preserva monto_final ya aprobado
+            if (String(c.estado) === 'PAGO_PARCIAL' && tieneReciboCobro && saldoCobro > 0) {
+                var fVencP      = new Date(c.fecha_vencimiento + 'T00:00:00');
+                var mesesP      = Math.floor((fHoy - fVencP) / 86400000) / 30;
+                var nuevoSaldoP = Math.round(saldoCobro * Math.pow(1 + moraPct, mesesP) * 100) / 100;
+                if (Math.abs(nuevoSaldoP - saldoCobro) > 0.01 || String(c.estado) !== 'EN_MORA') {
+                    var fechaMoraP = c.fecha_mora || new Date(fVencP.getTime() + 86400000).toISOString().split('T')[0];
+                    var resP = await sb.from('cobros').update({
+                        estado:          'EN_MORA',
+                        saldo_pendiente: nuevoSaldoP,
+                        meses_mora:      Math.floor(mesesP),
+                        fecha_mora:      fechaMoraP
+                    }).eq('cobro_id', c.cobro_id);
+                    if (resP.error) console.error('mora parcial update error cobro', c.cobro_id, resP.error);
+                }
+                continue;
+            }
+
+            // Para el resto: saltar cuotas con recibo (ABONADA ya excluida arriba)
+            if (tieneReciboCobro) continue;
 
             var fVenc    = new Date(c.fecha_vencimiento + 'T00:00:00');
             var diasMora = Math.floor((fHoy - fVenc) / 86400000);
