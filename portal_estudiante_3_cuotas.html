@@ -420,6 +420,51 @@ function toast(msg, tipo) {
 function hoy() { return new Date().toISOString().split('T')[0]; }
 
 // ════════════════════════════════════════════════════
+// FILTROS DESDE DASHBOARD
+// ════════════════════════════════════════════════════
+function aplicarFiltrosDesdeURL() {
+    var params = new URLSearchParams(window.location.search);
+    var programa = params.get('programa');
+    var cohorte = params.get('cohorte');
+
+    if (!programa && !cohorte) {
+        return false;
+    }
+
+    if (programa) {
+        var progId = parseInt(programa);
+        var selPrograma = document.getElementById('selPrograma');
+
+        if (selPrograma) {
+            selPrograma.value = String(progId);
+        }
+
+        poblarCohortes(progId);
+    }
+
+    if (cohorte) {
+        var cohId = parseInt(cohorte);
+        var selCohorte = document.getElementById('selCohorte');
+
+        if (selCohorte) {
+            selCohorte.value = String(cohId);
+        }
+
+        var cobroCohorte = COBROS.find(function(c) {
+            return c.coh_id === cohId;
+        });
+
+        if (!programa && cobroCohorte && cobroCohorte.prog_id) {
+            document.getElementById('selPrograma').value = String(cobroCohorte.prog_id);
+            poblarCohortes(cobroCohorte.prog_id);
+            document.getElementById('selCohorte').value = String(cohId);
+        }
+    }
+
+    return true;
+}
+
+// ════════════════════════════════════════════════════
 // INIT — carga datos desde Supabase
 // ════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async function() {
@@ -500,7 +545,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // 4. Poblar selects y renderizar
         poblarSelects();
-        autoSeleccionarUrgente();
+
+        var tieneFiltrosURL = aplicarFiltrosDesdeURL();
+
+        if (!tieneFiltrosURL) {
+            autoSeleccionarUrgente();
+        }
+
         render();
 
         // 5. Notificaciones
