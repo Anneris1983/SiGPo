@@ -764,45 +764,45 @@
                     </button>
                     <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                         <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                            <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
-                            <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                            <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">&#x1F514; Notificaciones</h3>
+                            <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como le&#237;das</button>
                         </div>
-                        <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                        <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando&hellip;</div></div>
                     </div>
                 </div>
-                <a href="portal_login.html" class="logout-btn" onclick="return cerrarSesion(event)" style="text-decoration:none;">Cerrar Sesión</a>
+                <a href="portal_login.html" class="logout-btn" onclick="return cerrarSesion(event)" style="text-decoration:none;">Cerrar Sesi&#243;n</a>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <!-- ESTADÍSTICAS -->
+        <!-- ESTAD&#205;STICAS -->
         <div class="stats-grid">
             <div class="stat-card warning">
                 <div class="stat-label">Comprobantes pendientes</div>
-                <div class="stat-value warning" id="stat-pendientes">—</div>
+                <div class="stat-value warning" id="stat-pendientes">&mdash;</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Total recaudado</div>
-                <div class="stat-value" id="stat-recaudado">—</div>
+                <div class="stat-value" id="stat-recaudado">&mdash;</div>
             </div>
             <div class="stat-card danger">
                 <div class="stat-label">Estudiantes en mora</div>
-                <div class="stat-value danger" id="stat-mora">—</div>
+                <div class="stat-value danger" id="stat-mora">&mdash;</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Programas activos</div>
-                <div class="stat-value" id="stat-programas">—</div>
+                <div class="stat-value" id="stat-programas">&mdash;</div>
             </div>
         </div>
 
-        <!-- ACCESOS RÁPIDOS -->
+        <!-- ACCESOS R&#193;PIDOS -->
         <div class="quick-actions">
             <a href="cooperadora_7_Gestion_gastos.html" class="btn-action">
-                💸 Gestión de Gastos y Egresos
+                &#x1F4B8; Gesti&#243;n de Gastos y Egresos
             </a>
             <a href="cooperadora_3_programas.html" class="btn-action">
-                🎓 Programas/Cursos Posgrados
+                &#x1F393; Programas/Cursos Posgrados
             </a>
             </a>
         </div>
@@ -811,17 +811,17 @@
         <div class="tabs">
             <button class="tab active">
                 Nuevos Comprobantes
-                <span class="badge" id="tab-badge-pendientes">—</span>
+                <span class="badge" id="tab-badge-pendientes">&mdash;</span>
             </button>
 
         </div>
 
-        <!-- SECCIÓN COMPROBANTES -->
+        <!-- SECCI&#211;N COMPROBANTES -->
         <div>
-        <h2 class="section-title">🆕 Comprobantes Nuevos - Requieren Aprobación</h2>
+        <h2 class="section-title">&#x1F195; Comprobantes Nuevos - Requieren Aprobaci&#243;n</h2>
 
         <div id="comprobantes-lista">
-        <!-- Contenido dinámico -->
+        <!-- Contenido din&#225;mico -->
         </div>
 
         </div> <!-- /section-comprobantes -->
@@ -833,37 +833,37 @@
         <div class="modal">
             <div class="modal-header">
                 <div>
-                    <h2 id="modalNombre">—</h2>
-                    <p id="modalInfo">—</p>
+                    <h2 id="modalNombre">&mdash;</h2>
+                    <p id="modalInfo">&mdash;</p>
                 </div>
-                <button class="modal-close" onclick="cerrarModal()">✕</button>
+                <button class="modal-close" onclick="cerrarModal()">&#x2715;</button>
             </div>
 
             <div class="modal-datos">
                 <div class="modal-dato">
                     <div class="modal-dato-label">Cuota</div>
-                    <div class="modal-dato-value" id="modalCuota">—</div>
+                    <div class="modal-dato-value" id="modalCuota">&mdash;</div>
                 </div>
                 <div class="modal-dato">
                     <div class="modal-dato-label">Monto</div>
-                    <div class="modal-dato-value monto" id="modalMonto">—</div>
+                    <div class="modal-dato-value monto" id="modalMonto">&mdash;</div>
                 </div>
                 <div class="modal-dato">
                     <div class="modal-dato-label">Vencimiento</div>
-                    <div class="modal-dato-value" id="modalVencimiento">—</div>
+                    <div class="modal-dato-value" id="modalVencimiento">&mdash;</div>
                 </div>
                 <div class="modal-dato">
                     <div class="modal-dato-label">Estado</div>
-                    <div class="modal-dato-value" id="modalEstado">—</div>
+                    <div class="modal-dato-value" id="modalEstado">&mdash;</div>
                 </div>
             </div>
 
             <div class="modal-visor">
-                <div class="modal-visor-label">📎 Comprobante adjunto</div>
+                <div class="modal-visor-label">&#x1F4CE; Comprobante adjunto</div>
                 <div class="visor-frame" id="visorFrame">
                     <div class="visor-placeholder">
-                        <div class="icon">📄</div>
-                        <p class="filename" id="visorFilename">—</p>
+                        <div class="icon">&#x1F4C4;</div>
+                        <p class="filename" id="visorFilename">&mdash;</p>
                         <p>Cargando vista previa...</p>
                     </div>
                 </div>
@@ -871,7 +871,7 @@
 
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="cerrarModal()">Cerrar</button>
-                <a id="btnDescargar" href="#" download class="btn btn-success" style="text-decoration:none;">⬇️ Descargar</a>
+                <a id="btnDescargar" href="#" download class="btn btn-success" style="text-decoration:none;">&#x2B07;&#xFE0F; Descargar</a>
             </div>
         </div>
     </div>
@@ -881,10 +881,10 @@
         <div class="modal modal-aprobar">
             <div class="modal-header">
                 <div>
-                    <h2>✅ Aprobar Comprobante de Pago</h2>
-                    <p id="ap-header-info">Revisión y registro del pago</p>
+                    <h2>&#x2705; Aprobar Comprobante de Pago</h2>
+                    <p id="ap-header-info">Revisi&#243;n y registro del pago</p>
                 </div>
-                <button class="modal-close" onclick="cerrarModalAprobar()">✕</button>
+                <button class="modal-close" onclick="cerrarModalAprobar()">&#x2715;</button>
             </div>
 
             <div class="modal-visor" style="padding:24px 28px;">
@@ -893,57 +893,57 @@
                     <div class="aprobar-info-grid">
                         <div class="aprobar-info-item">
                             <div class="aprobar-info-label">Estudiante</div>
-                            <div class="aprobar-info-value" id="ap-nombre">—</div>
+                            <div class="aprobar-info-value" id="ap-nombre">&mdash;</div>
                         </div>
                         <div class="aprobar-info-item">
                             <div class="aprobar-info-label">DNI</div>
-                            <div class="aprobar-info-value" id="ap-dni">—</div>
+                            <div class="aprobar-info-value" id="ap-dni">&mdash;</div>
                         </div>
                         <div class="aprobar-info-item">
                             <div class="aprobar-info-label">Programa / Cohorte</div>
-                            <div class="aprobar-info-value" id="ap-programa">—</div>
+                            <div class="aprobar-info-value" id="ap-programa">&mdash;</div>
                         </div>
                         <div class="aprobar-info-item">
                             <div class="aprobar-info-label">Cuota</div>
-                            <div class="aprobar-info-value" id="ap-cuota">—</div>
+                            <div class="aprobar-info-value" id="ap-cuota">&mdash;</div>
                         </div>
                         <div class="aprobar-info-item">
                             <div class="aprobar-info-label">Monto Total</div>
-                            <div class="aprobar-info-value highlight" id="ap-monto">—</div>
+                            <div class="aprobar-info-value highlight" id="ap-monto">&mdash;</div>
                         </div>
                         <div class="aprobar-info-item">
                             <div class="aprobar-info-label">Estado Actual</div>
-                            <div class="aprobar-info-value" id="ap-estado">—</div>
+                            <div class="aprobar-info-value" id="ap-estado">&mdash;</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Comprobante adjunto existente -->
                 <div class="comprobante-preview-bar">
-                    <div class="file-icon-lg">📄</div>
+                    <div class="file-icon-lg">&#x1F4C4;</div>
                     <div style="flex:1;">
-                        <div style="font-weight:700;font-size:14px;margin-bottom:3px;" id="ap-file-name">—</div>
-                        <div style="font-size:12px;color:#888;" id="ap-file-meta">—</div>
+                        <div style="font-weight:700;font-size:14px;margin-bottom:3px;" id="ap-file-name">&mdash;</div>
+                        <div style="font-size:12px;color:#888;" id="ap-file-meta">&mdash;</div>
                     </div>
-                    <button class="view-file-btn" id="ap-ver-btn">👁️ Ver Comprobante</button>
+                    <button class="view-file-btn" id="ap-ver-btn">&#x1F441;&#xFE0F; Ver Comprobante</button>
                 </div>
 
-                <div class="ap-section-title">¿Cómo registrar este pago?</div>
+                <div class="ap-section-title">&#xBF;C&#243;mo registrar este pago?</div>
 
                 <!-- Opciones de pago -->
                 <div class="payment-options">
                     <div class="radio-option selected" id="ap-full-option" onclick="selectPaymentType('full')">
                         <input type="radio" name="ap-payment-type" id="ap-full-payment" checked>
                         <div class="radio-content">
-                            <div class="radio-title">💯 Pago Completo</div>
-                            <div class="radio-description" id="ap-desc-full">El estudiante pagó el monto total de la cuota</div>
+                            <div class="radio-title">&#x1F4AF; Pago Completo</div>
+                            <div class="radio-description" id="ap-desc-full">El estudiante pag&#243; el monto total de la cuota</div>
                         </div>
                     </div>
                     <div class="radio-option" id="ap-partial-option" onclick="selectPaymentType('partial')">
                         <input type="radio" name="ap-payment-type" id="ap-partial-payment">
                         <div class="radio-content">
-                            <div class="radio-title">📊 Pago Parcial</div>
-                            <div class="radio-description">El estudiante pagó solo una parte del monto total</div>
+                            <div class="radio-title">&#x1F4CA; Pago Parcial</div>
+                            <div class="radio-description">El estudiante pag&#243; solo una parte del monto total</div>
                         </div>
                     </div>
                 </div>
@@ -951,57 +951,57 @@
                 <!-- Input pago parcial -->
                 <div class="partial-input-section" id="ap-partial-input-section">
                     <div class="ap-input-group">
-                        <label for="ap-monto-abonado">💰 Monto Abonado</label>
+                        <label for="ap-monto-abonado">&#x1F4B0; Monto Abonado</label>
                         <input type="number" id="ap-monto-abonado" placeholder="Ejemplo: 70000" step="0.01" oninput="calculateRemaining()">
                     </div>
                     <div class="calc-box">
-                        <div class="calc-row"><span>Monto total de la cuota:</span><strong id="ap-calc-total">—</strong></div>
+                        <div class="calc-row"><span>Monto total de la cuota:</span><strong id="ap-calc-total">&mdash;</strong></div>
                         <div class="calc-row"><span>Monto abonado:</span><strong id="ap-calc-paid">$0,00</strong></div>
-                        <div class="calc-row total"><span>Saldo pendiente:</span><strong id="ap-calc-remaining">—</strong></div>
+                        <div class="calc-row total"><span>Saldo pendiente:</span><strong id="ap-calc-remaining">&mdash;</strong></div>
                     </div>
                     <div class="ap-alert-box">
-                        <strong>⚠️ Importante:</strong>
-                        El saldo pendiente podrá entrar en mora si no se paga antes del día 16 del próximo mes.
+                        <strong>&#x26A0;&#xFE0F; Importante:</strong>
+                        El saldo pendiente podr&#225; entrar en mora si no se paga antes del d&#237;a 16 del pr&#243;ximo mes.
                     </div>
                 </div>
 
                 <!-- Subir recibo -->
-                <div class="ap-section-title" style="margin-top:22px;">📄 Subir Recibo Oficial (OBLIGATORIO)</div>
+                <div class="ap-section-title" style="margin-top:22px;">&#x1F4C4; Subir Recibo Oficial (OBLIGATORIO)</div>
                 <div class="upload-box-ap" id="ap-upload-box-wrapper">
                     <input type="file" id="ap-recibo-file" accept=".pdf" style="display:none;" onchange="handleFileUpload(event)">
                     <label for="ap-recibo-file" class="upload-label-ap">
-                        <div class="upload-icon-lg">📎</div>
+                        <div class="upload-icon-lg">&#x1F4CE;</div>
                         <div class="upload-text-ap">
                             <strong>Click para seleccionar archivo PDF</strong>
-                            <p>Solo archivos PDF • Máximo 10 MB</p>
+                            <p>Solo archivos PDF &bull; M&#225;ximo 10 MB</p>
                         </div>
                     </label>
                 </div>
                 <div class="file-uploaded-box" id="ap-file-uploaded" style="display:none;">
-                    <div class="file-icon-sm">✅</div>
+                    <div class="file-icon-sm">&#x2705;</div>
                     <div class="file-info-up">
                         <div class="file-name-up" id="ap-file-name-uploaded"></div>
                         <div class="file-size-up" id="ap-file-size"></div>
                     </div>
-                    <button class="btn-remove-file" onclick="removeFile()">❌ Cambiar</button>
+                    <button class="btn-remove-file" onclick="removeFile()">&#x274C; Cambiar</button>
                 </div>
-                <div class="warning-no-file" id="ap-warning-no-file">⚠️ No podrás aprobar sin subir el recibo oficial</div>
+                <div class="warning-no-file" id="ap-warning-no-file">&#x26A0;&#xFE0F; No podr&#225;s aprobar sin subir el recibo oficial</div>
 
-                <!-- Sección de rechazo -->
+                <!-- Secci&#243;n de rechazo -->
                 <div class="rechazo-section" id="ap-rechazo-section">
-                    <div class="ap-section-title" style="color:var(--danger);border-bottom-color:var(--danger);margin-top:16px;">❌ Motivo de Rechazo</div>
+                    <div class="ap-section-title" style="color:var(--danger);border-bottom-color:var(--danger);margin-top:16px;">&#x274C; Motivo de Rechazo</div>
                     <textarea id="ap-rechazo-motivo" placeholder="Ingrese el motivo del rechazo (opcional)..."></textarea>
                 </div>
             </div>
 
             <div class="modal-footer" id="ap-footer-normal">
                 <button class="btn btn-outline" onclick="cerrarModalAprobar()">Cancelar</button>
-                <button class="btn btn-danger" onclick="mostrarSeccionRechazo()">❌ Rechazar</button>
-                <button class="btn btn-success" id="ap-btn-aprobar" disabled style="opacity:0.5;cursor:not-allowed;" onclick="aprobarCobro()">✅ Aprobar y Registrar</button>
+                <button class="btn btn-danger" onclick="mostrarSeccionRechazo()">&#x274C; Rechazar</button>
+                <button class="btn btn-success" id="ap-btn-aprobar" disabled style="opacity:0.5;cursor:not-allowed;" onclick="aprobarCobro()">&#x2705; Aprobar y Registrar</button>
             </div>
             <div class="modal-footer" id="ap-footer-rechazo" style="display:none;">
-                <button class="btn btn-outline" onclick="cancelarRechazo()">← Volver</button>
-                <button class="btn btn-danger" onclick="confirmarRechazo()">❌ Confirmar Rechazo</button>
+                <button class="btn btn-outline" onclick="cancelarRechazo()">&#x2190; Volver</button>
+                <button class="btn btn-danger" onclick="confirmarRechazo()">&#x274C; Confirmar Rechazo</button>
             </div>
         </div>
     </div>
@@ -1009,14 +1009,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-    /* ══ HELPERS ══ */
+    /* &#x2550;&#x2550; HELPERS &#x2550;&#x2550; */
     function fMillones(n) {
         var num = parseFloat(n || 0);
         if (isNaN(num)) return '$0,00';
         return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
     }
 
-    /* ══ MODAL ══ */
+    /* &#x2550;&#x2550; MODAL &#x2550;&#x2550; */
     function abrirModal(datos) {
         document.getElementById('modalNombre').textContent = datos.nombre;
         document.getElementById('modalInfo').textContent = datos.info;
@@ -1041,9 +1041,9 @@
         if (['jpg', 'jpeg', 'png', 'gif', 'webp'].indexOf(ext) >= 0) {
             visorFrame.innerHTML = '<img src="' + url + '" alt="Comprobante" style="max-width:100%;max-height:420px;object-fit:contain;display:block;" />';
         } else if (ext === 'pdf') {
-            visorFrame.innerHTML = '<div class="visor-placeholder"><div class="icon">📎</div><p class="filename">' + filename + '</p><p>Vista previa de PDF disponible al descargar.</p></div>';
+            visorFrame.innerHTML = '<div class="visor-placeholder"><div class="icon">&#x1F4CE;</div><p class="filename">' + filename + '</p><p>Vista previa de PDF disponible al descargar.</p></div>';
         } else {
-            visorFrame.innerHTML = '<div class="visor-placeholder"><div class="icon">📄</div><p class="filename">' + filename + '</p><p>Descargue el archivo para verlo.</p></div>';
+            visorFrame.innerHTML = '<div class="visor-placeholder"><div class="icon">&#x1F4C4;</div><p class="filename">' + filename + '</p><p>Descargue el archivo para verlo.</p></div>';
         }
 
         document.getElementById('modalOverlay').classList.add('active');
@@ -1063,7 +1063,7 @@
         if (e.key === 'Escape') { cerrarModal(); cerrarModalAprobar(); }
     });
 
-    /* ══ MODAL APROBAR ══ */
+    /* &#x2550;&#x2550; MODAL APROBAR &#x2550;&#x2550; */
     var _cobroId = null;
     var _cobroData = null;
 
@@ -1147,20 +1147,20 @@
         var cohorte = cobro.cohortes || {};
         var estadoLabel = { NO_ABONADA:'No Abonada', PENDIENTE:'Pendiente', ABONADA:'Abonada', PAGO_PARCIAL:'Pago Parcial', EN_MORA:'En Mora', A_DEFINIR:'A Definir' };
         var nombreCompleto = (estudiante.apellido ? estudiante.apellido + ', ' : '') + (estudiante.nombre || '');
-        document.getElementById('ap-nombre').textContent = nombreCompleto || '—';
-        document.getElementById('ap-dni').textContent = estudiante.dni || '—';
-        document.getElementById('ap-programa').textContent = (programa.nombre || '') + (cohorte.nombre ? ' – ' + cohorte.nombre : '');
+        document.getElementById('ap-nombre').textContent = nombreCompleto || '&#x2014;';
+        document.getElementById('ap-dni').textContent = estudiante.dni || '&#x2014;';
+        document.getElementById('ap-programa').textContent = (programa.nombre || '') + (cohorte.nombre ? ' &#x2013; ' + cohorte.nombre : '');
         document.getElementById('ap-cuota').textContent = cobro.concepto || ('Cuota ' + (cobro.nro_cuota || ''));
         var total = cobro.monto_final || cobro.monto || 0;
         document.getElementById('ap-monto').textContent = fmt(total);
         var estadoEl = document.getElementById('ap-estado');
-        estadoEl.textContent = estadoLabel[cobro.estado] || cobro.estado || '—';
+        estadoEl.textContent = estadoLabel[cobro.estado] || cobro.estado || '&#x2014;';
         estadoEl.style.color = cobro.estado === 'EN_MORA' ? 'var(--danger)' : (cobro.estado === 'PENDIENTE' ? 'var(--warning)' : '');
         document.getElementById('ap-calc-total').textContent = fmt(total);
         document.getElementById('ap-calc-remaining').textContent = fmt(total);
         document.getElementById('ap-desc-full').textContent = 'El estudiante pagó el monto total de la cuota (' + fmt(total) + ')';
         var url = cobro.comprobante_url || '';
-        var fname = url ? url.split('/').pop().split('?')[0] : '—';
+        var fname = url ? url.split('/').pop().split('?')[0] : '&#x2014;';
         document.getElementById('ap-file-name').textContent = fname;
         document.getElementById('ap-file-meta').textContent = cobro.comprobante_fecha ? 'Subido: ' + fFecha(cobro.comprobante_fecha) : (cobro.updated_at ? 'Subido: ' + fFecha(cobro.updated_at) : '');
         document.getElementById('ap-ver-btn').onclick = function() { if (url) window.open(url, '_blank'); };
@@ -1197,7 +1197,7 @@
         } catch(e) {
             console.error('Error aprobando pago:', e);
             alert('Error al aprobar el pago: ' + (e.message || e));
-            btn.disabled = false; btn.innerHTML = '✅ Aprobar y Registrar';
+            btn.disabled = false; btn.innerHTML = '&#x2705; Aprobar y Registrar';
             btn.style.opacity = '1'; btn.style.cursor = 'pointer';
         }
     }
@@ -1235,7 +1235,7 @@
         } catch(e) {
             console.error('Error rechazando cobro:', e);
             alert('Error al rechazar: ' + (e.message || e));
-            if (btn) { btn.disabled = false; btn.textContent = '❌ Confirmar Rechazo'; }
+            if (btn) { btn.disabled = false; btn.textContent = '&#x274C; Confirmar Rechazo'; }
         }
     }
 
@@ -1253,11 +1253,11 @@
         });
     }
 
-    /* ══ RENDER COMPROBANTES ══ */
+    /* &#x2550;&#x2550; RENDER COMPROBANTES &#x2550;&#x2550; */
     function renderComprobantes(cobros) {
         var lista = document.getElementById('comprobantes-lista');
         if (!cobros || cobros.length === 0) {
-            lista.innerHTML = '<div class="empty-state"><div class="icon">✅</div><h3>No hay comprobantes pendientes de revision</h3></div>';
+            lista.innerHTML = '<div class="empty-state"><div class="icon">&#x2705;</div><h3>No hay comprobantes pendientes de revision</h3></div>';
             document.getElementById('stat-pendientes').textContent = '0';
             document.getElementById('tab-badge-pendientes').textContent = '0';
             return;
@@ -1268,10 +1268,10 @@
 
         lista.innerHTML = cobros.map(function(c) {
             var estudiante = c.estudiantes || {};
-            var nombre = ((estudiante.apellido || c.apellido || '') + ', ' + (estudiante.nombre || c.nombre || '')).trim().replace(/^,\s*|,\s*$/, '');
-            if (!nombre || nombre === ', ') nombre = c.dni || '—';
-            var dni = estudiante.dni || c.dni || '—';
-            var programa = c.programas ? c.programas.nombre : (c.programa_nombre || '—');
+            var nombre = ((estudiante.apellido || c.apellido || '') + ', ' + (estudiante.nombre || c.nombre || '')).trim().replace(/^,\s*|,\s*$/g, '');
+            if (!nombre || nombre === ', ') nombre = c.dni || '&#x2014;';
+            var dni = estudiante.dni || c.dni || '&#x2014;';
+            var programa = c.programas ? c.programas.nombre : (c.programa_nombre || '&#x2014;');
             var monto = fMillones(c.monto_final || c.monto_cuota || 0);
             var vencimiento = fFecha(c.fecha_vencimiento);
             var tiempo = tiempoRelativo(c.comprobante_fecha || c.updated_at || c.created_at);
@@ -1279,10 +1279,10 @@
             var enMora = c.estado === 'EN_MORA';
             var archivoUrl = c.comprobante_url || '';
             var archivoNombre = archivoUrl ? archivoUrl.split('/').pop() : 'comprobante';
-            var cuotaLabel = c.nro_cuota ? 'Cuota ' + c.nro_cuota : (c.concepto || '—');
+            var cuotaLabel = c.nro_cuota ? 'Cuota ' + c.nro_cuota : (c.concepto || '&#x2014;');
             var estadoLabel = enMora ? 'En Mora' : 'Al dia';
-            var nombreEsc = nombre.replace(/'/g, "\\'" );
-            var programaEsc = programa.replace(/'/g, "\\'" );
+            var nombreEsc = nombre.replace(/'/g, "\\'");
+            var programaEsc = programa.replace(/'/g, "\\'");
             var modalCall = "abrirModal({nombre:'" + nombreEsc + "',info:'DNI: " + dni + " - " + programaEsc + "',cuota:'" + cuotaLabel + "',monto:'" + monto + "',vencimiento:'" + vencimiento + "',estado:'" + estadoLabel + "',archivo:'" + archivoNombre + "',url:'" + archivoUrl + "'})";
 
             return '<div class="comprobante-card' + (esReciente ? ' new' : '') + '">'
@@ -1291,7 +1291,7 @@
                 +     '<h3>' + nombre + (esReciente ? ' <span class="new-badge">NUEVO</span>' : '') + '</h3>'
                 +     '<p>DNI: ' + dni + ' - ' + programa + '</p>'
                 +   '</div>'
-                +   '<div class="time-badge' + (esReciente ? ' recent' : '') + '">⏱️ ' + tiempo + '</div>'
+                +   '<div class="time-badge' + (esReciente ? ' recent' : '') + '">&#x23F1;&#xFE0F; ' + tiempo + '</div>'
                 + '</div>'
                 + '<div class="cuota-info"><div class="cuota-grid">'
                 +   '<div class="cuota-item"><div class="cuota-label">Cuota</div><div class="cuota-value">' + cuotaLabel + '</div></div>'
@@ -1301,20 +1301,20 @@
                 + '</div></div>'
                 + '<div class="files-section">'
                 +   '<div class="file-preview" onclick="' + modalCall + '">'
-                +     '<div class="file-icon">📎</div>'
+                +     '<div class="file-icon">&#x1F4CE;</div>'
                 +     '<div class="file-details"><div class="file-name">' + archivoNombre + '</div><div class="file-meta">Subido: ' + fFecha(c.comprobante_fecha || c.updated_at || c.created_at) + '</div></div>'
                 +   '</div>'
                 + '</div>'
                 + '<div class="actions">'
-                +   '<button class="btn btn-outline" onclick="' + modalCall + '">🔍 Ver Comprobante</button>'
-                +   '<button class="btn btn-success" onclick="abrirModalAprobar(\'' + c.cobro_id + \'\')" >✅ Aprobar</button>'
-                +   '<button class="btn btn-danger" onclick="abrirModalAprobar(\'' + c.cobro_id + \'\');setTimeout(mostrarSeccionRechazo,400)">❌ Rechazar</button>'
+                +   '<button class="btn btn-outline" onclick="' + modalCall + '">&#x1F50D; Ver Comprobante</button>'
+                +   '<button class="btn btn-success" onclick="abrirModalAprobar(&apos;' + c.cobro_id + '&apos;)">&#x2705; Aprobar</button>'
+                +   '<button class="btn btn-danger" onclick="abrirModalAprobar(&apos;' + c.cobro_id + '&apos;);setTimeout(mostrarSeccionRechazo,400)">&#x274C; Rechazar</button>'
                 + '</div>'
                 + '</div>';
         }).join('');
     }
 
-    /* ══ INIT ══ */
+    /* &#x2550;&#x2550; INIT &#x2550;&#x2550; */
     document.addEventListener('DOMContentLoaded', function() {
         var sesion = getSesion();
         if (!sesion) { navegar('portal_login.html'); return; }
@@ -1338,8 +1338,8 @@
 
             /* Stats */
             document.getElementById('stat-recaudado').textContent = fMillones(dash.recaudado);
-            document.getElementById('stat-mora').textContent = dash.enMora !== undefined ? dash.enMora : '—';
-            document.getElementById('stat-programas').textContent = dash.totalProgramas !== undefined ? dash.totalProgramas : '—';
+            document.getElementById('stat-mora').textContent = dash.enMora !== undefined ? dash.enMora : '&#x2014;';
+            document.getElementById('stat-programas').textContent = dash.totalProgramas !== undefined ? dash.totalProgramas : '&#x2014;';
 
             /* Comprobantes */
             renderComprobantes(cobros);
