@@ -36,9 +36,36 @@
         .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .section-title { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 20px; }
 
-        .carrera-card { border: 2px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 16px; transition: border-color 0.2s; }
+        .carrera-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
         .carrera-card:last-child { margin-bottom: 0; }
+        .carrera-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+        }
         .carrera-card.con-mora { border-color: #fecaca; background: #fff8f8; }
+        .carrera-card.con-mora:hover { border-color: var(--danger); }
+        .carrera-card::after {
+            content: 'Ver cuotas →';
+            position: absolute;
+            right: 20px;
+            bottom: 14px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .carrera-card:hover::after { opacity: 1; }
+
         .carrera-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; gap: 12px; }
         .carrera-nombre { font-weight: 700; color: var(--primary); font-size: 16px; }
         .carrera-cohorte { font-size: 12px; color: #888; font-weight: 500; margin-top: 3px; }
@@ -51,7 +78,7 @@
         .progress-fill { height: 100%; background: var(--success); transition: width 0.5s; }
         .progress-fill.mora { background: var(--danger); }
 
-        .carrera-meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: #555; }
+        .carrera-meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: #555; padding-right: 90px; }
         .carrera-meta span strong { color: #1e3a5f; }
 
         .cuota-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; gap: 12px; }
@@ -82,6 +109,8 @@
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .nav-links { gap: 8px; }
             .container { padding: 0 16px; }
+            .carrera-meta { padding-right: 0; }
+            .carrera-card::after { display: none; }
         }
     </style>
 </head>
@@ -253,6 +282,25 @@
         return '<span class="cuota-estado est-proxima">' + estado.replace('_', ' ') + '</span>';
     }
 
+    function irACuotasCarrera(programaId, cohorteId) {
+        var url = 'portal_estudiante_3_cuotas.html';
+        var params = [];
+
+        if (programaId) {
+            params.push('programa=' + encodeURIComponent(programaId));
+        }
+
+        if (cohorteId) {
+            params.push('cohorte=' + encodeURIComponent(cohorteId));
+        }
+
+        if (params.length) {
+            url += '?' + params.join('&');
+        }
+
+        window.location.href = url;
+    }
+
     async function cargar() {
         var sesion = await requireAuth();
 
@@ -412,8 +460,11 @@
 
                     var labelCoh = (getCategoriaPrograma(prog.tipo) === 'Programa') ? 'Cohorte' : 'Edición';
 
+                    var programaId = coh.programa_id || '';
+                    var cohorteId = insc.cohorte_id || '';
+
                     carrerasHtml +=
-                        '<div class="carrera-card' + (moraCoh > 0 ? ' con-mora' : '') + '">' +
+                        '<div class="carrera-card' + (moraCoh > 0 ? ' con-mora' : '') + '" role="button" tabindex="0" onclick="irACuotasCarrera(\'' + programaId + '\', \'' + cohorteId + '\')" onkeydown="if(event.key === \'Enter\' || event.key === \' \'){ event.preventDefault(); irACuotasCarrera(\'' + programaId + '\', \'' + cohorteId + '\'); }">' +
                             '<div class="carrera-header">' +
                                 '<div>' +
                                     '<div class="carrera-nombre">' +
