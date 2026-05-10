@@ -1193,7 +1193,8 @@ async function reclamarSel() {
                 }).join('') +
                 '\n──────────────────────────────' +
                 '\nTOTAL VENCIDO: $' + totalSaldo.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}) +
-                '\n\nPara regularizar: CBU: ' + cbu + '  |  Alias: ' + alias
+                '\n\nPara regularizar: CBU: ' + cbu + '  |  Alias: ' + alias +
+                '\n\nSubí tu comprobante en el portal: https://anneris1983.github.io/SiGPo/portal_login.html'
             ) : '';
             emails.push({ to: est.email, subject: asuntoFinal, body: cuerpoBase + detalle, dni: est.dni });
         });

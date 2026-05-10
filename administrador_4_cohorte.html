@@ -1975,7 +1975,9 @@ async function enviarNotificaciones() {
                     + '\n──────────────────────────────'
                     + '\nTOTAL VENCIDO: $' + Number(totalSaldo).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2})
                     + '\n\nPara regularizar su situación, realice la transferencia a:'
-                    + '\nCBU: ' + cbuVal + '  |  Alias: ' + aliasVal;
+                    + '\nCBU: ' + cbuVal + '  |  Alias: ' + aliasVal
+                    + '\n\nUna vez realizado el pago, ingresá al portal para subir el comprobante:'
+                    + '\nhttps://anneris1983.github.io/SiGPo/portal_login.html';
 
                 // Marcar cobros vencidos como reclamados/recordados
                 cobrosDetalle.forEach(function(c) {
