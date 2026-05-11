@@ -1009,14 +1009,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-    /* &#x2550;&#x2550; HELPERS &#x2550;&#x2550; */
+    /* == HELPERS == */
     function fMillones(n) {
         var num = parseFloat(n || 0);
         if (isNaN(num)) return '$0,00';
         return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
     }
 
-    /* &#x2550;&#x2550; MODAL &#x2550;&#x2550; */
+    /* == MODAL == */
     function abrirModal(datos) {
         document.getElementById('modalNombre').textContent = datos.nombre;
         document.getElementById('modalInfo').textContent = datos.info;
@@ -1041,7 +1041,7 @@
         if (['jpg', 'jpeg', 'png', 'gif', 'webp'].indexOf(ext) >= 0) {
             visorFrame.innerHTML = '<img src="' + url + '" alt="Comprobante" style="max-width:100%;max-height:420px;object-fit:contain;display:block;" />';
         } else if (ext === 'pdf') {
-            visorFrame.innerHTML = '<div class="visor-placeholder"><div class="icon">&#x1F4CE;</div><p class="filename">' + filename + '</p><p>Vista previa de PDF disponible al descargar.</p></div>';
+            visorFrame.innerHTML = '<iframe src="' + url + '" style="width:100%;height:420px;border:none;display:block;"></iframe>';
         } else {
             visorFrame.innerHTML = '<div class="visor-placeholder"><div class="icon">&#x1F4C4;</div><p class="filename">' + filename + '</p><p>Descargue el archivo para verlo.</p></div>';
         }
@@ -1063,7 +1063,7 @@
         if (e.key === 'Escape') { cerrarModal(); cerrarModalAprobar(); }
     });
 
-    /* &#x2550;&#x2550; MODAL APROBAR &#x2550;&#x2550; */
+    /* == MODAL APROBAR == */
     var _cobroId = null;
     var _cobroData = null;
 
@@ -1147,20 +1147,20 @@
         var cohorte = cobro.cohortes || {};
         var estadoLabel = { NO_ABONADA:'No Abonada', PENDIENTE:'Pendiente', ABONADA:'Abonada', PAGO_PARCIAL:'Pago Parcial', EN_MORA:'En Mora', A_DEFINIR:'A Definir' };
         var nombreCompleto = (estudiante.apellido ? estudiante.apellido + ', ' : '') + (estudiante.nombre || '');
-        document.getElementById('ap-nombre').textContent = nombreCompleto || '&#x2014;';
-        document.getElementById('ap-dni').textContent = estudiante.dni || '&#x2014;';
-        document.getElementById('ap-programa').textContent = (programa.nombre || '') + (cohorte.nombre ? ' &#x2013; ' + cohorte.nombre : '');
+        document.getElementById('ap-nombre').textContent = nombreCompleto || '—';
+        document.getElementById('ap-dni').textContent = estudiante.dni || '—';
+        document.getElementById('ap-programa').textContent = (programa.nombre || '') + (cohorte.nombre ? ' – ' + cohorte.nombre : '');
         document.getElementById('ap-cuota').textContent = cobro.concepto || ('Cuota ' + (cobro.nro_cuota || ''));
         var total = cobro.monto_final || cobro.monto || 0;
         document.getElementById('ap-monto').textContent = fmt(total);
         var estadoEl = document.getElementById('ap-estado');
-        estadoEl.textContent = estadoLabel[cobro.estado] || cobro.estado || '&#x2014;';
+        estadoEl.textContent = estadoLabel[cobro.estado] || cobro.estado || '—';
         estadoEl.style.color = cobro.estado === 'EN_MORA' ? 'var(--danger)' : (cobro.estado === 'PENDIENTE' ? 'var(--warning)' : '');
         document.getElementById('ap-calc-total').textContent = fmt(total);
         document.getElementById('ap-calc-remaining').textContent = fmt(total);
         document.getElementById('ap-desc-full').textContent = 'El estudiante pagó el monto total de la cuota (' + fmt(total) + ')';
         var url = cobro.comprobante_url || '';
-        var fname = url ? url.split('/').pop().split('?')[0] : '&#x2014;';
+        var fname = url ? url.split('/').pop().split('?')[0] : '—';
         document.getElementById('ap-file-name').textContent = fname;
         document.getElementById('ap-file-meta').textContent = cobro.comprobante_fecha ? 'Subido: ' + fFecha(cobro.comprobante_fecha) : (cobro.updated_at ? 'Subido: ' + fFecha(cobro.updated_at) : '');
         document.getElementById('ap-ver-btn').onclick = function() { if (url) window.open(url, '_blank'); };
@@ -1253,7 +1253,7 @@
         });
     }
 
-    /* &#x2550;&#x2550; RENDER COMPROBANTES &#x2550;&#x2550; */
+    /* == RENDER COMPROBANTES == */
     function renderComprobantes(cobros) {
         var lista = document.getElementById('comprobantes-lista');
         if (!cobros || cobros.length === 0) {
@@ -1269,9 +1269,9 @@
         lista.innerHTML = cobros.map(function(c) {
             var estudiante = c.estudiantes || {};
             var nombre = ((estudiante.apellido || c.apellido || '') + ', ' + (estudiante.nombre || c.nombre || '')).trim().replace(/^,\s*|,\s*$/g, '');
-            if (!nombre || nombre === ', ') nombre = c.dni || '&#x2014;';
-            var dni = estudiante.dni || c.dni || '&#x2014;';
-            var programa = c.programas ? c.programas.nombre : (c.programa_nombre || '&#x2014;');
+            if (!nombre || nombre === ', ') nombre = c.dni || '—';
+            var dni = estudiante.dni || c.dni || '—';
+            var programa = c.programas ? c.programas.nombre : (c.programa_nombre || '—');
             var monto = fMillones(c.monto_final || c.monto_cuota || 0);
             var vencimiento = fFecha(c.fecha_vencimiento);
             var tiempo = tiempoRelativo(c.comprobante_fecha || c.updated_at || c.created_at);
@@ -1279,10 +1279,10 @@
             var enMora = c.estado === 'EN_MORA';
             var archivoUrl = c.comprobante_url || '';
             var archivoNombre = archivoUrl ? archivoUrl.split('/').pop() : 'comprobante';
-            var cuotaLabel = c.nro_cuota ? 'Cuota ' + c.nro_cuota : (c.concepto || '&#x2014;');
+            var cuotaLabel = c.nro_cuota ? 'Cuota ' + c.nro_cuota : (c.concepto || '—');
             var estadoLabel = enMora ? 'En Mora' : 'Al dia';
-            var nombreEsc = nombre.replace(/'/g, "\\'");
-            var programaEsc = programa.replace(/'/g, "\\'");
+            var nombreEsc = nombre.replace(/'/g, "\\'")
+            var programaEsc = programa.replace(/'/g, "\\'")
             var modalCall = "abrirModal({nombre:'" + nombreEsc + "',info:'DNI: " + dni + " - " + programaEsc + "',cuota:'" + cuotaLabel + "',monto:'" + monto + "',vencimiento:'" + vencimiento + "',estado:'" + estadoLabel + "',archivo:'" + archivoNombre + "',url:'" + archivoUrl + "'})";
 
             return '<div class="comprobante-card' + (esReciente ? ' new' : '') + '">'
@@ -1314,7 +1314,7 @@
         }).join('');
     }
 
-    /* &#x2550;&#x2550; INIT &#x2550;&#x2550; */
+    /* == INIT == */
     document.addEventListener('DOMContentLoaded', function() {
         var sesion = getSesion();
         if (!sesion) { navegar('portal_login.html'); return; }
@@ -1338,8 +1338,8 @@
 
             /* Stats */
             document.getElementById('stat-recaudado').textContent = fMillones(dash.recaudado);
-            document.getElementById('stat-mora').textContent = dash.enMora !== undefined ? dash.enMora : '&#x2014;';
-            document.getElementById('stat-programas').textContent = dash.totalProgramas !== undefined ? dash.totalProgramas : '&#x2014;';
+            document.getElementById('stat-mora').textContent = dash.enMora !== undefined ? dash.enMora : '—';
+            document.getElementById('stat-programas').textContent = dash.totalProgramas !== undefined ? dash.totalProgramas : '—';
 
             /* Comprobantes */
             renderComprobantes(cobros);
