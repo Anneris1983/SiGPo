@@ -7,12 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #1e3a5f; --accent: #d4af37; }
+        :root { --primary: #8B1A10; --accent: #C52E1D; }
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
 
         /* HEADER */
         .header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            background: linear-gradient(135deg, #8B1A10 0%, #C52E1D 100%);
             color: white; padding: 20px 40px;
             display: flex; align-items: flex-start; justify-content: space-between;
         }
@@ -41,14 +41,14 @@
         }
         .stat-card {
             background: white; border-radius: 12px; padding: 16px 24px;
-            flex: 1; min-width: 160px; border-top: 4px solid #1e3a5f;
+            flex: 1; min-width: 160px; border-top: 4px solid #8B1A10;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .stat-card.pago   { border-top-color: #388e3c; }
         .stat-card.mora   { border-top-color: #f57c00; }
         .stat-card.plan   { border-top-color: #1976d2; }
         .stat-card.insc   { border-top-color: #7b1fa2; }
-        .stat-num  { font-size: 28px; font-weight: 700; color: #1e3a5f; font-family: 'Crimson Pro', serif; }
+        .stat-num  { font-size: 28px; font-weight: 700; color: #8B1A10; font-family: 'Crimson Pro', serif; }
         .stat-label { font-size: 12px; color: #888; margin-top: 2px; }
 
         /* TABS */
@@ -63,8 +63,8 @@
             border-bottom: 3px solid transparent; margin-bottom: -2px;
             transition: color 0.2s, border-color 0.2s;
         }
-        .tab-btn.active { color: #1e3a5f; border-bottom-color: #1e3a5f; }
-        .tab-btn:hover:not(.active) { color: #1e3a5f; }
+        .tab-btn.active { color: #8B1A10; border-bottom-color: #8B1A10; }
+        .tab-btn:hover:not(.active) { color: #8B1A10; }
 
         /* FILTERS */
         .filters {
@@ -78,7 +78,7 @@
             padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px;
             font-size: 14px; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s;
         }
-        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: #1e3a5f; }
+        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: #8B1A10; }
         .input-icon-wrap { position: relative; display: flex; align-items: center; }
         .input-icon-wrap svg { position: absolute; left: 10px; color: #aaa; pointer-events: none; flex-shrink: 0; }
         .input-icon-wrap input { padding-left: 32px !important; }
@@ -143,7 +143,7 @@
         .spinner {
             width: 40px; height: 40px;
             border: 4px solid #e0e0e0;
-            border-top-color: #1e3a5f;
+            border-top-color: #8B1A10;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -159,8 +159,8 @@
             background: white; cursor: pointer; font-size: 13px; font-weight: 600;
             color: #555; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
         }
-        .page-btn:hover { background: #f0f4ff; border-color: #1e3a5f; color: #1e3a5f; }
-        .page-btn.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
+        .page-btn:hover { background: #f0f4ff; border-color: #8B1A10; color: #8B1A10; }
+        .page-btn.active { background: #8B1A10; color: white; border-color: #8B1A10; }
         .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .page-info { font-size: 13px; color: #888; }
 
@@ -180,15 +180,15 @@
         <div class="notif-wrapper">
             <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#C52E1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#C52E1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #8B1A10;line-height:1;">0</span>
             </button>
             <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                 <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                    <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
-                    <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                    <h3 style="font-size:15px;font-weight:700;color:#8B1A10;">🔔 Notificaciones</h3>
+                    <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C52E1D;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
                 </div>
                 <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
             </div>

@@ -8,8 +8,8 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --primary: #1e3a5f;
-            --accent: #d4af37;
+            --primary: #8B1A10;
+            --accent: #C52E1D;
             --success: #2d7a4f;
             --danger: #c0392b;
             --warning: #e67e22;
@@ -18,7 +18,7 @@
         body { font-family: 'DM Sans', sans-serif; background: var(--bg); }
 
         .header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            background: linear-gradient(135deg, #8B1A10 0%, #C52E1D 100%);
             color: white; padding: 20px 40px;
         }
         .breadcrumb { font-size: 14px; margin-bottom: 10px; opacity: 0.9; }
@@ -73,7 +73,7 @@
 
         .student-avatar {
             width: 48px; height: 48px; border-radius: 50%;
-            background: linear-gradient(135deg, #1e3a5f, #2d5a87);
+            background: linear-gradient(135deg, #8B1A10, #C52E1D);
             color: white; display: flex; align-items: center; justify-content: center;
             font-size: 18px; font-weight: 700; flex-shrink: 0;
         }
@@ -120,7 +120,7 @@
         }
 
         .modal-header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            background: linear-gradient(135deg, #8B1A10 0%, #C52E1D 100%);
             color: white; padding: 24px 28px;
             display: flex; justify-content: space-between; align-items: flex-start;
         }
@@ -229,13 +229,13 @@
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
             <div class="notif-wrapper" style="position:relative;">
                 <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#C52E1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#C52E1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #8B1A10;line-height:1;">0</span>
                 </button>
                 <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                     <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
-                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                        <h3 style="font-size:15px;font-weight:700;color:#8B1A10;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C52E1D;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
                     </div>
                     <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
                 </div>
@@ -476,7 +476,7 @@
 
         /* Pago parcial input */
         var parcialHtml = '<div style="margin-top:16px;padding:14px;background:#f0f8ff;border-radius:8px;border:1px solid #cce5ff;">'
-            +'<div style="font-size:13px;font-weight:600;color:#1e3a5f;margin-bottom:8px;">Monto parcial a aprobar:</div>'
+            +'<div style="font-size:13px;font-weight:600;color:#8B1A10;margin-bottom:8px;">Monto parcial a aprobar:</div>'
             +'<div style="display:flex;gap:8px;align-items:center;">'
             +'<input type="number" id="monto-parcial" placeholder="Ingresá el monto" min="1" max="'+Number(c.monto_final)+'" step="100" style="flex:1;padding:9px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:\'DM Sans\',sans-serif;">'
             +'<button class="btn" style="background:#e67e22;color:white;white-space:nowrap;" onclick="accionParcial()">📊 Aprobar Parcial</button>'
