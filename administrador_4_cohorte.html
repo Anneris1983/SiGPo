@@ -1927,14 +1927,16 @@ async function enviarNotificaciones() {
             // Variables para interpolar: si hay múltiples vencidas, reflejarlo en la intro
             var primerCobro = cobrosDetalle[0] || null;
             var nVencidas   = cobrosDetalle.length;
+            var totalVencido = cobrosDetalle.reduce(function(s, c) { return s + (Number(c.saldo_pendiente) || 0); }, 0);
+            var montoStr     = Number(totalVencido).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
             var varsBase = {
                 nombre:      est.nombre,
                 apellido:    est.apellido,
                 dni:         est.dni,
                 cuota:       nVencidas > 1 ? (nVencidas + ' cuotas') : (primerCobro ? primerCobro.concepto : '—'),
                 periodo:     nVencidas > 1 ? 'distintos períodos'    : (primerCobro ? (primerCobro.periodo || '—') : '—'),
-                monto:       primerCobro ? Number(primerCobro.saldo_pendiente || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '0',
-                vencimiento: primerCobro ? fFecha(primerCobro.fecha_vencimiento) : '—',
+                monto:       montoStr,
+                vencimiento: nVencidas > 1 ? 'distintas fechas' : (primerCobro ? fFecha(primerCobro.fecha_vencimiento) : '—'),
                 programa:    V.data.programa.nombre,
                 cbu:         cbuVal,
                 alias:       aliasVal
@@ -1943,7 +1945,15 @@ async function enviarNotificaciones() {
             var asuntoFinal = interpolarPlantilla(asunto, varsBase);
 
             // ── Construir el cuerpo: intro de la plantilla + tabla de detalle ──
-            var introTexto = interpolarPlantilla(cuerpo, varsBase);
+            var introTexto;
+            if (nVencidas > 1) {
+                // Plural: gramática correcta, no depende de la plantilla singular
+                introTexto = tipo === 'recordatorio'
+                    ? 'Estimado/a ' + est.nombre + ' ' + est.apellido + ',\n\nLe recordamos que las siguientes ' + nVencidas + ' cuotas del programa "' + V.data.programa.nombre + '" se encuentran pendientes de pago.\n\nTotal: $' + montoStr + '\nCBU: ' + cbuVal + ' | Alias: ' + aliasVal + '\n\nSecretaría de Posgrado - FCE UNCUYO'
+                    : 'Estimado/a ' + est.nombre + ' ' + est.apellido + ',\n\nLe informamos que las siguientes ' + nVencidas + ' cuotas del programa "' + V.data.programa.nombre + '" se encuentran VENCIDAS.\n\nSaldo pendiente: $' + montoStr + '\nCBU: ' + cbuVal + ' | Alias: ' + aliasVal + '\n\nLe solicitamos regularizar su situación a la brevedad.\n\nSecretaría de Posgrado - FCE UNCUYO';
+            } else {
+                introTexto = interpolarPlantilla(cuerpo, varsBase);
+            }
 
             var cuerpoFinal;
             if (cobrosDetalle.length === 0) {
@@ -1975,7 +1985,9 @@ async function enviarNotificaciones() {
                     + '\n──────────────────────────────'
                     + '\nTOTAL VENCIDO: $' + Number(totalSaldo).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2})
                     + '\n\nPara regularizar su situación, realice la transferencia a:'
-                    + '\nCBU: ' + cbuVal + '  |  Alias: ' + aliasVal;
+                    + '\nCBU: ' + cbuVal + '  |  Alias: ' + aliasVal
+                    + '\n\nUna vez realizado el pago, ingresá al portal para subir el comprobante:'
+                    + '\nhttps://anneris1983.github.io/SiGPo/portal_login.html';
 
                 // Marcar cobros vencidos como reclamados/recordados
                 cobrosDetalle.forEach(function(c) {

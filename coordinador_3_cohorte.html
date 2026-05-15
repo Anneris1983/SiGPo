@@ -1171,17 +1171,24 @@ async function reclamarSel() {
             var cobrosVenc = (est.cobros || []).filter(function(c){ return c.estado === 'EN_MORA' || c.estado === 'PAGO_PARCIAL'; });
             if (!cobrosVenc.length) cobrosVenc = (est.cobros || []).filter(function(c){ return c.estado !== 'ABONADA' && c.estado !== 'A_DEFINIR'; });
             var primer = cobrosVenc[0] || {};
+            var nVenc   = cobrosVenc.length;
             var totalSaldo = cobrosVenc.reduce(function(s,c){ return s + Number(c.saldo_pendiente||0); }, 0);
+            var montoStr   = Number(totalSaldo).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
             var vars = {
                 nombre: est.nombre||'', apellido: est.apellido||'', dni: est.dni,
-                cuota:   cobrosVenc.length > 1 ? cobrosVenc.length + ' cuotas' : (primer.concepto||'—'),
-                periodo: cobrosVenc.length > 1 ? 'distintos períodos' : (primer.periodo||'—'),
-                monto:   Number(primer.saldo_pendiente||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}),
-                vencimiento: primer.fecha_vencimiento ? primer.fecha_vencimiento.split('T')[0].split('-').reverse().join('/') : '—',
+                cuota:   nVenc > 1 ? nVenc + ' cuotas' : (primer.concepto||'—'),
+                periodo: nVenc > 1 ? 'distintos períodos' : (primer.periodo||'—'),
+                monto:   montoStr,
+                vencimiento: nVenc > 1 ? 'distintas fechas' : (primer.fecha_vencimiento ? primer.fecha_vencimiento.split('T')[0].split('-').reverse().join('/') : '—'),
                 programa: V.data.programa.nombre||'', cbu: cbu, alias: alias
             };
             var asuntoFinal = asunto.replace(/\{(\w+)\}/g, function(m,k){ return vars[k]!==undefined?vars[k]:m; });
-            var cuerpoBase  = cuerpo.replace(/\{(\w+)\}/g, function(m,k){ return vars[k]!==undefined?vars[k]:m; });
+            var cuerpoBase;
+            if (nVenc > 1) {
+                cuerpoBase = 'Estimado/a ' + (est.nombre||'') + ' ' + (est.apellido||'') + ',\n\nLe informamos que las siguientes ' + nVenc + ' cuotas del programa "' + (V.data.programa.nombre||'') + '" se encuentran VENCIDAS.\n\nSaldo pendiente: $' + montoStr + '\nCBU: ' + cbu + ' | Alias: ' + alias + '\n\nLe solicitamos regularizar su situación a la brevedad.\n\nSecretaría de Posgrado - FCE UNCUYO';
+            } else {
+                cuerpoBase = cuerpo.replace(/\{(\w+)\}/g, function(m,k){ return vars[k]!==undefined?vars[k]:m; });
+            }
             var detalle = cobrosVenc.length ? (
                 '\n\n──────────────────────────────' +
                 '\nCUOTAS VENCIDAS:' +
@@ -1193,7 +1200,8 @@ async function reclamarSel() {
                 }).join('') +
                 '\n──────────────────────────────' +
                 '\nTOTAL VENCIDO: $' + totalSaldo.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}) +
-                '\n\nPara regularizar: CBU: ' + cbu + '  |  Alias: ' + alias
+                '\n\nPara regularizar: CBU: ' + cbu + '  |  Alias: ' + alias +
+                '\n\nSubí tu comprobante en el portal: https://anneris1983.github.io/SiGPo/portal_login.html'
             ) : '';
             emails.push({ to: est.email, subject: asuntoFinal, body: cuerpoBase + detalle, dni: est.dni });
         });

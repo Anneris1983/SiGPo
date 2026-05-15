@@ -36,9 +36,36 @@
         .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .section-title { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 20px; }
 
-        .carrera-card { border: 2px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 16px; transition: border-color 0.2s; }
+        .carrera-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
         .carrera-card:last-child { margin-bottom: 0; }
+        .carrera-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+        }
         .carrera-card.con-mora { border-color: #fecaca; background: #fff8f8; }
+        .carrera-card.con-mora:hover { border-color: var(--danger); }
+        .carrera-card::after {
+            content: 'Ver cuotas →';
+            position: absolute;
+            right: 20px;
+            bottom: 14px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .carrera-card:hover::after { opacity: 1; }
+
         .carrera-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; gap: 12px; }
         .carrera-nombre { font-weight: 700; color: var(--primary); font-size: 16px; }
         .carrera-cohorte { font-size: 12px; color: #888; font-weight: 500; margin-top: 3px; }
@@ -51,7 +78,7 @@
         .progress-fill { height: 100%; background: var(--success); transition: width 0.5s; }
         .progress-fill.mora { background: var(--danger); }
 
-        .carrera-meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: #555; }
+        .carrera-meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: #555; padding-right: 90px; }
         .carrera-meta span strong { color: #1e3a5f; }
 
         .cuota-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; gap: 12px; }
@@ -61,9 +88,12 @@
         .cuota-right { text-align: right; flex-shrink: 0; }
         .cuota-monto { font-size: 18px; font-weight: 700; color: var(--primary); }
         .cuota-estado { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; margin-top: 4px; text-transform: uppercase; }
-        .est-mora     { background: #fee2e2; color: #991b1b; }
-        .est-pendiente{ background: #fef3c7; color: #92400e; }
-        .est-proxima  { background: #dbeafe; color: #1e40af; }
+
+        .est-mora      { background: #fee2e2; color: #991b1b; }
+        .est-pendiente { background: #fef3c7; color: #92400e; }
+        .est-proxima   { background: #dbeafe; color: #1e40af; }
+        .est-noabonada { background: #e0e7ff; color: #3730a3; }
+        .est-adefinir  { background: #f3f4f6; color: #6b7280; }
 
         .banco-box { background: #f8f8f8; padding: 16px; border-radius: 8px; font-size: 14px; line-height: 2; }
         .banco-box strong { color: #1e3a5f; }
@@ -74,10 +104,13 @@
         .empty-msg { text-align: center; color: #9ca3af; font-size: 14px; padding: 32px 0; }
 
         .notif-wrapper { position: relative; display: inline-flex; }
+
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .nav-links { gap: 8px; }
             .container { padding: 0 16px; }
+            .carrera-meta { padding-right: 0; }
+            .carrera-card::after { display: none; }
         }
     </style>
 </head>
@@ -87,24 +120,33 @@
             <img src="assets/logo_fce.png" alt="FCE UNCUYO" onerror="this.style.display='none'">
             <span>Portal de Estudiantes</span>
         </div>
+
         <div class="nav-links">
             <a href="portal_estudiante_2_dashboard.html" class="nav-link active">🏠 Dashboard</a>
             <a href="portal_estudiante_3_cuotas.html" class="nav-link">💳 Mis Cuotas</a>
             <a href="portal_estudiante_4_facturacion.html" class="nav-link">📄 Facturación</a>
             <a href="portal_estudiante_5_historial.html" class="nav-link">📊 Historial</a>
+
             <div class="notif-wrapper">
                 <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:6px 8px;border-radius:6px;">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                     <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
                 </button>
+
                 <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                     <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
                         <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
                         <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
                     </div>
-                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                    <div id="notif-list">
+                        <div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div>
+                    </div>
                 </div>
             </div>
+
             <a href="portal_login.html" class="nav-link" onclick="return cerrarSesion(event)">🚪 Salir</a>
         </div>
     </div>
@@ -119,6 +161,7 @@
             <span style="font-size:24px;">⚠️</span>
             <div id="alerta-mora-txt"></div>
         </div>
+
         <div id="alerta-aldia" class="alert alert-success" style="display:none;">
             <span style="font-size:24px;">✅</span>
             <div><strong>Estás al día con tus pagos.</strong> ¡Gracias!</div>
@@ -130,16 +173,19 @@
                 <div class="stat-value" id="stat-carreras">—</div>
                 <div class="stat-label">Carreras Activas</div>
             </div>
+
             <div class="stat-card">
                 <div class="stat-icon">💳</div>
                 <div class="stat-value" id="stat-abonadas">—</div>
                 <div class="stat-label">Cuotas Abonadas</div>
             </div>
+
             <div class="stat-card">
                 <div class="stat-icon">⚠️</div>
                 <div class="stat-value" id="stat-mora">—</div>
                 <div class="stat-label">En Mora</div>
             </div>
+
             <div class="stat-card">
                 <div class="stat-icon">📅</div>
                 <div class="stat-value" id="stat-proximo" style="font-size:20px;">—</div>
@@ -149,12 +195,16 @@
 
         <div class="section">
             <div class="section-title">📚 Mis Carreras</div>
-            <div id="carreras-lista"><div class="empty-msg">Cargando…</div></div>
+            <div id="carreras-lista">
+                <div class="empty-msg">Cargando…</div>
+            </div>
         </div>
 
         <div class="section">
             <div class="section-title">📅 Próximos Vencimientos</div>
-            <div id="proximos-lista"><div class="empty-msg">Cargando…</div></div>
+            <div id="proximos-lista">
+                <div class="empty-msg">Cargando…</div>
+            </div>
         </div>
 
         <div class="section">
@@ -170,100 +220,207 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="supabase.js"></script>
+
     <script>
-    // ── helpers ──────────────────────────────────────────────────
     function fM(n) {
         if (n === null || n === undefined) return '–';
-        return '$' + Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return '$' + Number(n).toLocaleString('es-AR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
     }
+
     function fFechaCorta(iso) {
         if (!iso) return '—';
         var p = String(iso).split('T')[0].split('-');
         var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
         return parseInt(p[2]) + ' ' + meses[parseInt(p[1]) - 1];
     }
+
     function estadoCobro(c) {
         if (c.no_aplica) return 'NO_APLICA';
-        if (c.monto_final === null || c.monto_final === undefined || c.monto_final === '') return 'A_DEFINIR';
+
         var e = (c.estado || '').toUpperCase();
+
+        if (e === 'NO_APLICA') return 'NO_APLICA';
+        if (e === 'A_DEFINIR') return 'A_DEFINIR';
+
+        if (c.monto_final === null || c.monto_final === undefined || c.monto_final === '') {
+            return 'A_DEFINIR';
+        }
+
         if (e === 'ABONADA') return 'ABONADA';
         if (e === 'PAGO_PARCIAL') return 'PAGO_PARCIAL';
         if (e === 'PENDIENTE') return 'PENDIENTE';
         if (e === 'EN_MORA') return 'EN_MORA';
+        if (e === 'NO_ABONADA') return 'NO_ABONADA';
+
         return 'NO_ABONADA';
     }
 
-    // ── carga principal ───────────────────────────────────────────
+    function badgeCuota(estado, esHoy) {
+        if (esHoy) {
+            return '<span class="cuota-estado est-mora">HOY</span>';
+        }
+
+        if (estado === 'NO_ABONADA') {
+            return '<span class="cuota-estado est-noabonada">NO ABONADA</span>';
+        }
+
+        if (estado === 'PENDIENTE') {
+            return '<span class="cuota-estado est-pendiente">PENDIENTE DE APROBACIÓN</span>';
+        }
+
+        if (estado === 'A_DEFINIR') {
+            return '<span class="cuota-estado est-adefinir">A DEFINIR</span>';
+        }
+
+        if (estado === 'NO_APLICA') {
+            return '<span class="cuota-estado est-adefinir">NO APLICA</span>';
+        }
+
+        return '<span class="cuota-estado est-proxima">' + estado.replace('_', ' ') + '</span>';
+    }
+
+    function irACuotasCarrera(programaId, cohorteId) {
+        var url = 'portal_estudiante_3_cuotas.html';
+        var params = [];
+
+        if (programaId) {
+            params.push('programa=' + encodeURIComponent(programaId));
+        }
+
+        if (cohorteId) {
+            params.push('cohorte=' + encodeURIComponent(cohorteId));
+        }
+
+        if (params.length) {
+            url += '?' + params.join('&');
+        }
+
+        window.location.href = url;
+    }
+
     async function cargar() {
         var sesion = await requireAuth();
+
         if (!sesion || sesion.rol !== 'ESTUDIANTE') {
-            window.location.href = 'portal_login.html'; return;
+            window.location.href = 'portal_login.html';
+            return;
         }
+
         var dni = sesion.dni;
 
-        // Saludo
-        document.getElementById('hdr-saludo').textContent = '👋 Hola, ' + (sesion.nombre || 'Estudiante');
+        document.getElementById('hdr-saludo').textContent =
+            '👋 Hola, ' + (sesion.nombre || 'Estudiante');
 
         try {
             var sb = await getSupabase();
 
-            // Paso 1: obtener ID del estudiante
-            var estRes = await sb.from('estudiantes').select('id, apellido, nombre, dni').eq('dni', String(dni)).single();
-            var estId = estRes.data ? estRes.data.id : null;
-            if (!estId) { document.getElementById('carreras-lista').innerHTML = '<div class="empty-msg">No se encontró el perfil del estudiante.</div>'; return; }
+            var estRes = await sb
+                .from('estudiantes')
+                .select('id, apellido, nombre, dni')
+                .eq('dni', String(dni))
+                .single();
 
-            // Paso 2: queries paralelas
+            var estId = estRes.data ? estRes.data.id : null;
+
+            if (!estId) {
+                document.getElementById('carreras-lista').innerHTML =
+                    '<div class="empty-msg">No se encontró el perfil del estudiante.</div>';
+                return;
+            }
+
             var results = await Promise.all([
                 sb.from('inscripciones')
                     .select('cohorte_id, estado_academico, descuento_porcentaje, cohortes(cohorte_id, nombre, programa_id, programas(nombre, tipo))')
                     .eq('estudiante_id', estId),
+
                 sb.from('cobros')
                     .select('cobro_id, concepto, periodo, fecha_vencimiento, monto_final, saldo_pendiente, estado, no_aplica, cohorte_id, programa_id')
                     .eq('dni', String(dni))
                     .order('fecha_vencimiento'),
+
                 obtenerConfiguracion()
             ]);
-            var inscripciones = results[0].data || [];
-            var cobros        = results[1].data || [];
-            var cfg           = results[2]      || {};
 
-            // ── Stats ────────────────────────────────────────────
-            var activas   = inscripciones.filter(function(i) { return i.estado_academico === 'ACTIVO'; }).length;
-            var abonadas  = cobros.filter(function(c) { return estadoCobro(c) === 'ABONADA'; }).length;
-            var enMora    = cobros.filter(function(c) { return estadoCobro(c) === 'EN_MORA'; }).length;
-            var hoyStr    = new Date().toISOString().split('T')[0];
-            var proximas  = cobros.filter(function(c) {
-                return ['NO_ABONADA','A_DEFINIR'].includes(estadoCobro(c)) && c.fecha_vencimiento && c.fecha_vencimiento >= hoyStr;
-            }).sort(function(a,b){ return a.fecha_vencimiento.localeCompare(b.fecha_vencimiento); });
+            var inscripciones = results[0].data || [];
+            var cobros = results[1].data || [];
+            var cfg = results[2] || {};
+
+            var activas = inscripciones.filter(function(i) {
+                return i.estado_academico === 'ACTIVO';
+            }).length;
+
+            var abonadas = cobros.filter(function(c) {
+                return estadoCobro(c) === 'ABONADA';
+            }).length;
+
+            var enMora = cobros.filter(function(c) {
+                return estadoCobro(c) === 'EN_MORA';
+            }).length;
+
+            var hoyStr = new Date().toISOString().split('T')[0];
+
+            var proximas = cobros.filter(function(c) {
+                var estado = estadoCobro(c);
+
+                return ['NO_ABONADA', 'A_DEFINIR'].includes(estado)
+                    && c.fecha_vencimiento
+                    && c.fecha_vencimiento >= hoyStr;
+            }).sort(function(a, b) {
+                return a.fecha_vencimiento.localeCompare(b.fecha_vencimiento);
+            });
 
             document.getElementById('stat-carreras').textContent = activas;
             document.getElementById('stat-abonadas').textContent = abonadas;
+
             var elMora = document.getElementById('stat-mora');
             elMora.textContent = enMora;
-            if (enMora > 0) elMora.classList.add('danger');
-            document.getElementById('stat-proximo').textContent = proximas.length ? fFechaCorta(proximas[0].fecha_vencimiento) : '—';
 
-            // ── Alerta mora ──────────────────────────────────────
+            if (enMora > 0) {
+                elMora.classList.add('danger');
+            } else {
+                elMora.classList.remove('danger');
+            }
+
+            document.getElementById('stat-proximo').textContent =
+                proximas.length ? fFechaCorta(proximas[0].fecha_vencimiento) : '—';
+
             if (enMora > 0) {
                 var deudaMora = cobros
-                    .filter(function(c){ return estadoCobro(c) === 'EN_MORA'; })
-                    .reduce(function(s,c){ return s + (Number(c.saldo_pendiente) || 0); }, 0);
+                    .filter(function(c) {
+                        return estadoCobro(c) === 'EN_MORA';
+                    })
+                    .reduce(function(s, c) {
+                        return s + (Number(c.saldo_pendiente) || 0);
+                    }, 0);
+
                 document.getElementById('alerta-mora-txt').innerHTML =
-                    '<strong>Tenés ' + enMora + ' cuota' + (enMora > 1 ? 's' : '') + ' vencida' + (enMora > 1 ? 's' : '') + '</strong><br>' +
-                    'Total en mora: ' + fM(deudaMora) + '. Regularizá tu situación para mantener tu acceso.';
+                    '<strong>Tenés ' + enMora + ' cuota' + (enMora > 1 ? 's' : '') +
+                    ' vencida' + (enMora > 1 ? 's' : '') + '</strong><br>' +
+                    'Total en mora: ' + fM(deudaMora) +
+                    '. Regularizá tu situación para mantener tu acceso.';
+
                 document.getElementById('alerta-mora').style.display = 'flex';
+                document.getElementById('alerta-aldia').style.display = 'none';
             } else if (cobros.length > 0) {
+                document.getElementById('alerta-mora').style.display = 'none';
                 document.getElementById('alerta-aldia').style.display = 'flex';
             }
 
-            // ── Carreras ─────────────────────────────────────────
             var cobrosMap = {};
+
             cobros.forEach(function(c) {
-                if (!cobrosMap[c.cohorte_id]) cobrosMap[c.cohorte_id] = [];
+                if (!cobrosMap[c.cohorte_id]) {
+                    cobrosMap[c.cohorte_id] = [];
+                }
+
                 cobrosMap[c.cohorte_id].push(c);
             });
 
             var carrerasHtml = '';
+
             if (!inscripciones.length) {
                 carrerasHtml = '<div class="empty-msg">No tenés carreras inscriptas.</div>';
             } else {
@@ -271,12 +428,28 @@
                     var coh = insc.cohortes || {};
                     var prog = coh.programas || {};
                     var cobrosCoh = cobrosMap[insc.cohorte_id] || [];
-                    var conMonto = cobrosCoh.filter(function(c){ return c.monto_final !== null && c.monto_final !== undefined && !c.no_aplica; });
-                    var abonadasCoh = conMonto.filter(function(c){ return estadoCobro(c) === 'ABONADA'; }).length;
-                    var moraCoh = conMonto.filter(function(c){ return estadoCobro(c) === 'EN_MORA'; }).length;
+
+                    var conMonto = cobrosCoh.filter(function(c) {
+                        return c.monto_final !== null
+                            && c.monto_final !== undefined
+                            && !c.no_aplica;
+                    });
+
+                    var abonadasCoh = conMonto.filter(function(c) {
+                        return estadoCobro(c) === 'ABONADA';
+                    }).length;
+
+                    var moraCoh = conMonto.filter(function(c) {
+                        return estadoCobro(c) === 'EN_MORA';
+                    }).length;
+
                     var totalCoh = conMonto.length;
                     var pct = totalCoh > 0 ? Math.round(abonadasCoh / totalCoh * 100) : 0;
-                    var deudaCoh = cobrosCoh.reduce(function(s,c){ return s + (Number(c.saldo_pendiente)||0); }, 0);
+
+                    var deudaCoh = cobrosCoh.reduce(function(s, c) {
+                        return s + (Number(c.saldo_pendiente) || 0);
+                    }, 0);
+
                     var esBaja = insc.estado_academico === 'BAJA';
 
                     var badge = esBaja
@@ -287,78 +460,110 @@
 
                     var labelCoh = (getCategoriaPrograma(prog.tipo) === 'Programa') ? 'Cohorte' : 'Edición';
 
+                    var programaId = coh.programa_id || '';
+                    var cohorteId = insc.cohorte_id || '';
+
                     carrerasHtml +=
-                        '<div class="carrera-card' + (moraCoh > 0 ? ' con-mora' : '') + '">' +
-                        '<div class="carrera-header">' +
-                            '<div>' +
-                                '<div class="carrera-nombre">' + (getIconoTipo(prog.tipo) || '📚') + ' ' + (prog.nombre || '—') + '</div>' +
-                                '<div class="carrera-cohorte">' + labelCoh + ': ' + (coh.nombre || '—') + '</div>' +
+                        '<div class="carrera-card' + (moraCoh > 0 ? ' con-mora' : '') + '" role="button" tabindex="0" onclick="irACuotasCarrera(\'' + programaId + '\', \'' + cohorteId + '\')" onkeydown="if(event.key === \'Enter\' || event.key === \' \'){ event.preventDefault(); irACuotasCarrera(\'' + programaId + '\', \'' + cohorteId + '\'); }">' +
+                            '<div class="carrera-header">' +
+                                '<div>' +
+                                    '<div class="carrera-nombre">' +
+                                        (getIconoTipo(prog.tipo) || '📚') + ' ' + (prog.nombre || '—') +
+                                    '</div>' +
+                                    '<div class="carrera-cohorte">' +
+                                        labelCoh + ': ' + (coh.nombre || '—') +
+                                    '</div>' +
+                                '</div>' +
+                                badge +
                             '</div>' +
-                            badge +
-                        '</div>' +
-                        '<div style="margin-bottom:12px;">' +
-                            '<div style="display:flex;justify-content:space-between;font-size:13px;color:#666;margin-bottom:4px;">' +
-                                '<span>Cuotas abonadas</span><span>' + pct + '%</span>' +
+
+                            '<div style="margin-bottom:12px;">' +
+                                '<div style="display:flex;justify-content:space-between;font-size:13px;color:#666;margin-bottom:4px;">' +
+                                    '<span>Cuotas abonadas</span><span>' + pct + '%</span>' +
+                                '</div>' +
+                                '<div class="progress-bar">' +
+                                    '<div class="progress-fill' + (moraCoh > 0 ? ' mora' : '') + '" style="width:' + pct + '%;"></div>' +
+                                '</div>' +
                             '</div>' +
-                            '<div class="progress-bar"><div class="progress-fill' + (moraCoh > 0 ? ' mora' : '') + '" style="width:' + pct + '%;"></div></div>' +
-                        '</div>' +
-                        '<div class="carrera-meta">' +
-                            '<span><strong>Abonadas:</strong> ' + abonadasCoh + '/' + totalCoh + '</span>' +
-                            (moraCoh > 0 ? '<span style="color:var(--danger);"><strong>En mora:</strong> ' + moraCoh + '</span>' : '') +
-                            (deudaCoh > 0 ? '<span><strong>Saldo pendiente:</strong> ' + fM(deudaCoh) + '</span>' : '') +
-                            (insc.descuento_porcentaje > 0 ? '<span style="color:var(--success);"><strong>Descuento:</strong> ' + insc.descuento_porcentaje + '%</span>' : '') +
-                        '</div>' +
+
+                            '<div class="carrera-meta">' +
+                                '<span><strong>Abonadas:</strong> ' + abonadasCoh + '/' + totalCoh + '</span>' +
+                                (moraCoh > 0
+                                    ? '<span style="color:var(--danger);"><strong>En mora:</strong> ' + moraCoh + '</span>'
+                                    : '') +
+                                (deudaCoh > 0
+                                    ? '<span><strong>Saldo pendiente:</strong> ' + fM(deudaCoh) + '</span>'
+                                    : '') +
+                                (insc.descuento_porcentaje > 0
+                                    ? '<span style="color:var(--success);"><strong>Descuento:</strong> ' + insc.descuento_porcentaje + '%</span>'
+                                    : '') +
+                            '</div>' +
                         '</div>';
                 });
             }
+
             document.getElementById('carreras-lista').innerHTML = carrerasHtml;
 
-            // ── Próximos vencimientos (próximas 3) ───────────────
             var proxHtml = '';
+
             if (!proximas.length) {
                 proxHtml = '<div class="empty-msg">No hay cuotas próximas a vencer.</div>';
             } else {
                 proximas.slice(0, 5).forEach(function(c) {
                     var estado = estadoCobro(c);
-                    var esHoy  = c.fecha_vencimiento === hoyStr;
-                    var esBadge = esHoy
-                        ? '<span class="cuota-estado est-mora">HOY</span>'
-                        : '<span class="cuota-estado est-proxima">Pendiente</span>';
-                    // Buscar nombre del programa
-                    var inscCoh = inscripciones.find(function(i){ return i.cohorte_id === c.cohorte_id; });
-                    var progNombre = inscCoh && inscCoh.cohortes && inscCoh.cohortes.programas ? inscCoh.cohortes.programas.nombre : '—';
+                    var esHoy = c.fecha_vencimiento === hoyStr;
+                    var esBadge = badgeCuota(estado, esHoy);
+
+                    var inscCoh = inscripciones.find(function(i) {
+                        return i.cohorte_id === c.cohorte_id;
+                    });
+
+                    var progNombre = inscCoh && inscCoh.cohortes && inscCoh.cohortes.programas
+                        ? inscCoh.cohortes.programas.nombre
+                        : '—';
+
                     proxHtml +=
                         '<div class="cuota-item">' +
-                        '<div class="cuota-info">' +
-                            '<strong>' + c.concepto + (c.periodo ? ' — ' + c.periodo : '') + '</strong>' +
-                            '<small>' + progNombre + ' · Vence: ' + fFecha(c.fecha_vencimiento) + '</small>' +
-                        '</div>' +
-                        '<div class="cuota-right">' +
-                            '<div class="cuota-monto">' + fM(c.monto_final) + '</div>' +
-                            esBadge +
-                        '</div>' +
+                            '<div class="cuota-info">' +
+                                '<strong>' + c.concepto + (c.periodo ? ' — ' + c.periodo : '') + '</strong>' +
+                                '<small>' + progNombre + ' · Vence: ' + fFecha(c.fecha_vencimiento) + '</small>' +
+                            '</div>' +
+                            '<div class="cuota-right">' +
+                                '<div class="cuota-monto">' + fM(c.monto_final) + '</div>' +
+                                esBadge +
+                            '</div>' +
                         '</div>';
                 });
             }
+
             document.getElementById('proximos-lista').innerHTML = proxHtml;
 
-            // ── También mostrar cuotas EN MORA arriba de próximas ─
             var morasHtml = '';
-            cobros.filter(function(c){ return estadoCobro(c) === 'EN_MORA'; }).forEach(function(c) {
-                var inscCoh = inscripciones.find(function(i){ return i.cohorte_id === c.cohorte_id; });
-                var progNombre = inscCoh && inscCoh.cohortes && inscCoh.cohortes.programas ? inscCoh.cohortes.programas.nombre : '—';
+
+            cobros.filter(function(c) {
+                return estadoCobro(c) === 'EN_MORA';
+            }).forEach(function(c) {
+                var inscCoh = inscripciones.find(function(i) {
+                    return i.cohorte_id === c.cohorte_id;
+                });
+
+                var progNombre = inscCoh && inscCoh.cohortes && inscCoh.cohortes.programas
+                    ? inscCoh.cohortes.programas.nombre
+                    : '—';
+
                 morasHtml +=
                     '<div class="cuota-item">' +
-                    '<div class="cuota-info">' +
-                        '<strong>' + c.concepto + (c.periodo ? ' — ' + c.periodo : '') + '</strong>' +
-                        '<small>' + progNombre + ' · Venció: ' + fFecha(c.fecha_vencimiento) + '</small>' +
-                    '</div>' +
-                    '<div class="cuota-right">' +
-                        '<div class="cuota-monto" style="color:var(--danger);">' + fM(c.saldo_pendiente) + '</div>' +
-                        '<span class="cuota-estado est-mora">EN MORA</span>' +
-                    '</div>' +
+                        '<div class="cuota-info">' +
+                            '<strong>' + c.concepto + (c.periodo ? ' — ' + c.periodo : '') + '</strong>' +
+                            '<small>' + progNombre + ' · Venció: ' + fFecha(c.fecha_vencimiento) + '</small>' +
+                        '</div>' +
+                        '<div class="cuota-right">' +
+                            '<div class="cuota-monto" style="color:var(--danger);">' + fM(c.saldo_pendiente) + '</div>' +
+                            '<span class="cuota-estado est-mora">EN MORA</span>' +
+                        '</div>' +
                     '</div>';
             });
+
             if (morasHtml) {
                 document.getElementById('proximos-lista').innerHTML =
                     '<div style="font-size:12px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Vencidas</div>' +
@@ -368,26 +573,29 @@
                         : '');
             }
 
-            // ── Datos bancarios ──────────────────────────────────
-            var cbu     = cfg.cbu_banco     || '—';
-            var alias   = cfg.alias_banco   || '—';
+            var cbu = cfg.cbu_banco || '—';
+            var alias = cfg.alias_banco || '—';
             var titular = cfg.titular_banco || '';
-            var email   = cfg.email_banco   || '';
+            var email = cfg.email_banco || '';
+
             document.getElementById('datos-bancarios').innerHTML =
                 '<div><strong>CBU:</strong> ' + cbu + '</div>' +
                 '<div><strong>Alias:</strong> ' + alias + '</div>' +
                 (titular ? '<div><strong>Titular:</strong> ' + titular + '</div>' : '') +
-                (email   ? '<div><strong>Email:</strong> ' + email + '</div>' : '');
+                (email ? '<div><strong>Email:</strong> ' + email + '</div>' : '');
 
         } catch(e) {
             console.error(e);
-            document.getElementById('carreras-lista').innerHTML = '<div class="empty-msg">Error al cargar datos. Recargá la página.</div>';
+            document.getElementById('carreras-lista').innerHTML =
+                '<div class="empty-msg">Error al cargar datos. Recargá la página.</div>';
         }
     }
 
     function marcarTodasLeidas() {
         marcarTodasNotificacionesLeidas();
-        _notifs.forEach(function(n){ n.leida = true; });
+        _notifs.forEach(function(n) {
+            n.leida = true;
+        });
         renderNotificaciones(_notifs);
     }
 
