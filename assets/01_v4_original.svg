@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="800" viewBox="0 0 2400 800">
+  <rect width="2400" height="800" fill="#ffffff"/>
+
+  <!-- Círculos concéntricos minimalistas (versión 4 original) -->
+  <circle cx="360" cy="400" r="280" fill="none" stroke="#e8dfc8" stroke-width="4"/>
+  <circle cx="360" cy="400" r="200" fill="none" stroke="#C49A2B" stroke-width="10"/>
+  <circle cx="360" cy="400" r="120" fill="none" stroke="#7B2229" stroke-width="38"
+          stroke-dasharray="545 195"/>
+  <circle cx="360" cy="400" r="48" fill="#7B2229"/>
+  <circle cx="360" cy="400" r="18" fill="#ffffff"/>
+
+  <!-- Separador vertical -->
+  <rect x="710" y="100" width="3" height="580" fill="#C49A2B"/>
+
+  <!-- Institución -->
+  <text x="790" y="210" font-family="Arial,Helvetica,sans-serif" font-size="32" font-weight="700" fill="#C49A2B" letter-spacing="6">UNIVERSIDAD NACIONAL DE CUYO</text>
+  <text x="790" y="268" font-family="Arial,Helvetica,sans-serif" font-size="26" font-weight="400" fill="#999999" letter-spacing="4">FACULTAD DE CIENCIAS ECONÓMICAS</text>
+
+  <!-- Línea dorada -->
+  <rect x="790" y="305" width="1520" height="3" fill="#C49A2B"/>
+
+  <!-- Nombre principal -->
+  <text x="790" y="430" font-family="Arial,Helvetica,sans-serif" font-size="88" font-weight="700" fill="#7B2229" letter-spacing="2">SECRETARÍA DE POSGRADO</text>
+
+  <!-- Subtítulo -->
+  <text x="790" y="520" font-family="Arial,Helvetica,sans-serif" font-size="42" font-weight="400" fill="#7B2229" letter-spacing="3">INVESTIGACIÓN E INTERNACIONALIZACIÓN</text>
+
+  <!-- Barra decorativa -->
+  <rect x="790" y="565" width="220" height="7" fill="#C49A2B" rx="3"/>
+</svg>
