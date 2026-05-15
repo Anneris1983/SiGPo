@@ -7,9 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #5C0F14; --accent: #8B1520; --success: #2d7a4f; --danger: #dc2626; --warning: #f59e0b; --bg: #f8f6f1; }
+        :root { --primary: #5C1018; --accent: #C49A2A; --success: #2d7a4f; --danger: #dc2626; --warning: #f59e0b; --bg: #f8f6f1; }
         body { font-family: 'DM Sans', sans-serif; background: var(--bg); }
-        .header { background: linear-gradient(135deg, #5C0F14 0%, #8B1520 100%); color: white; padding: 20px 40px; }
+        .header { background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%); color: white; padding: 20px 40px; }
         .breadcrumb { font-size: 14px; margin-bottom: 12px; }
         .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
         .header h1 { font-family: 'Crimson Pro', serif; font-size: 24px; }
@@ -21,7 +21,7 @@
         .spinner { width: 42px; height: 42px; border: 4px solid #e0e0e0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-        .toast { background: #5C0F14; color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.2); animation: tin 0.28s ease; max-width: 340px; }
+        .toast { background: #5C1018; color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.2); animation: tin 0.28s ease; max-width: 340px; }
         .toast.ok { background: var(--success); }
         .toast.err { background: var(--danger); }
         @keyframes tin { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform: translateY(0); } }
@@ -47,7 +47,7 @@
         .filter-select { padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 13px; font-weight: 600; background: white; cursor: pointer; font-family: 'DM Sans', sans-serif; }
         .btn { padding: 10px 18px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 5px; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: #8B1520; }
+        .btn-primary:hover { background: #8C1A28; }
         .btn-success { background: var(--success); color: white; }
         .btn-success:hover { background: #246441; }
         .btn-danger { background: var(--danger); color: white; }
@@ -71,7 +71,7 @@
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
         .modal-content { background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25); animation: mIn 0.22s ease; }
-        .modal-header { padding: 20px 24px; border-bottom: 2px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg,#5C0F14,#8B1520); border-radius: 12px 12px 0 0; }
+        .modal-header { padding: 20px 24px; border-bottom: 2px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg,#5C1018,#8C1A28); border-radius: 12px 12px 0 0; }
         .modal-title { font-size: 18px; font-weight: 700; color: white; font-family: 'Crimson Pro', serif; }
         .modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 8px; font-size: 18px; cursor: pointer; line-height: 1; }
         .modal-close:hover { background: rgba(255,255,255,0.35); }
@@ -89,7 +89,7 @@
 </head>
 <body>
 
-<div class="spinner-overlay" id="spinner"><div class="spinner"></div><span style="color:#5C0F14;font-weight:600;font-size:14px;">Cargando...</span></div>
+<div class="spinner-overlay" id="spinner"><div class="spinner"></div><span style="color:#5C1018;font-weight:600;font-size:14px;">Cargando...</span></div>
 <div class="toast-wrap" id="toasts"></div>
 
 <div class="header">
@@ -102,13 +102,13 @@
         <div style="display:flex;align-items:center;gap:12px;">
             <div class="notif-wrapper">
                 <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#8B1520" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#8B1520" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C0F14;line-height:1;">0</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#8C1A28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#8C1A28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
                 </button>
                 <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                     <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                        <h3 style="font-size:15px;font-weight:700;color:#5C0F14;">🔔 Notificaciones</h3>
-                        <button onclick="marcarTodasNotificacionesLeidas()" style="font-size:12px;color:#8B1520;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                        <h3 style="font-size:15px;font-weight:700;color:#5C1018;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasNotificacionesLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
                     </div>
                     <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
                 </div>
@@ -377,7 +377,7 @@ function renderTabla(tipo) {
             +'<td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+esc(e.concepto||'')+'">'+esc(e.concepto||'—')+'</td>'
             +'<td style="font-size:12px;">'+esc(getNomProg(e.programa_id))+'</td>'
             +'<td style="font-size:12px;">'+esc(e.cohorte_id?getNomCoh(e.cohorte_id):'—')+'</td>'
-            +'<td style="font-weight:700;color:#5C0F14;">'+monto+'</td>'
+            +'<td style="font-weight:700;color:#5C1018;">'+monto+'</td>'
             +'<td style="font-size:12px;">'+esc(e.proveedor||'—')+'</td>'
             +'<td style="font-size:12px;">'+esc(e.nro_comprobante||'—')+'</td>'
             +'<td>'+badgeEstado(e.estado)+'</td>'

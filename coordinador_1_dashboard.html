@@ -7,9 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary:#5C0F14; --primary-2:#8B1520; --accent:#8B1520; --bg:#f8f6f1; --success:#2d7a4f; --warning:#e67e22; --danger:#c0392b; --info:#4338ca; --muted:#6b7280; --line:#e5e7eb; }
+        :root { --primary:#5C1018; --primary-2:#8C1A28; --accent:#8C1A28; --bg:#f8f6f1; --success:#2d7a4f; --warning:#e67e22; --danger:#c0392b; --info:#4338ca; --muted:#6b7280; --line:#e5e7eb; }
         body { font-family:'DM Sans',sans-serif; background:var(--bg); color:#2c2c2c; }
-        .header { background:linear-gradient(135deg,#5C0F14 0%,#8B1520 100%); color:white; padding:20px 40px; box-shadow:0 4px 20px rgba(0,0,0,0.1); position:sticky; top:0; z-index:100; }
+        .header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:20px 40px; box-shadow:0 4px 20px rgba(0,0,0,0.1); position:sticky; top:0; z-index:100; }
         .header-content { max-width:1400px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
         .header-left h1 { font-family:'Crimson Pro',serif; font-size:24px; margin-bottom:4px; }
         .header-left p { opacity:0.9; font-size:14px; }
@@ -21,12 +21,12 @@
         .notif-badge { position:absolute; top:-4px; right:-4px; background:#ef4444; color:white; border-radius:50%; min-width:18px; height:18px; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; padding:0 4px; }
         .notif-panel { display:none; position:absolute; right:0; top:48px; width:320px; background:white; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.15); z-index:500; overflow:hidden; color:#2c2c2c; border:1px solid #e5e7eb; }
         .notif-panel.open { display:block; }
-        .notif-head { padding:14px 16px; border-bottom:1px solid #f0f0f0; font-weight:700; color:#5C0F14; font-size:14px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
-        .notif-head button { background:none; border:none; color:#8B1520; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .notif-head { padding:14px 16px; border-bottom:1px solid #f0f0f0; font-weight:700; color:#5C1018; font-size:14px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
+        .notif-head button { background:none; border:none; color:#8C1A28; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
         .notif-item { padding:12px 16px; border-bottom:1px solid #f5f5f5; font-size:13px; cursor:pointer; background:white; }
         .notif-item.unread { background:#fff9ec; }
         .notif-item:last-child { border-bottom:none; }
-        .notif-item strong { display:block; color:#5C0F14; margin-bottom:2px; }
+        .notif-item strong { display:block; color:#5C1018; margin-bottom:2px; }
         .notif-item small { color:#888; font-size:12px; margin-top:2px; display:block; }
         .container { max-width:1400px; margin:40px auto; padding:0 40px; }
         .program-header { background:white; padding:32px; border-radius:12px; margin-bottom:32px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
@@ -50,7 +50,7 @@
         .quick-actions { display:flex; flex-direction:column; gap:12px; }
         .action-btn { padding:16px; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; transition:all 0.25s ease; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:12px; text-align:left; }
         .action-btn.primary { background:var(--primary); color:white; }
-        .action-btn.primary:hover { background:#8B1520; transform:translateY(-2px); }
+        .action-btn.primary:hover { background:#8C1A28; transform:translateY(-2px); }
         .action-btn.secondary { background:#e0e0e0; color:#2c2c2c; }
         .action-btn.secondary:hover { background:#d0d0d0; }
         .action-icon { font-size:24px; } .action-text { flex:1; }
@@ -63,13 +63,13 @@
         .tabs-bar { display:flex; gap:8px; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid #e0e0e0; flex-wrap:wrap; }
         .tab-btn { padding:8px 16px; border:2px solid #e0e0e0; border-radius:8px; background:white; font-size:14px; font-weight:600; color:#666; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.25s ease; }
         .tab-btn.active { border-color:var(--primary); background:var(--primary); color:white; }
-        .tab-btn.gold { border-color:#8B1520; color:#8B1520; } .tab-btn.gold:hover { background:#fff9e6; }
+        .tab-btn.gold { border-color:#8C1A28; color:#8C1A28; } .tab-btn.gold:hover { background:#fff9e6; }
         .empty-state { text-align:center; padding:36px 18px; color:#9ca3af; border:2px dashed #e7dfd2; border-radius:12px; background:#fffdfa; }
         .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px; }
         .modal-overlay.open { display:flex; }
         .modal-box { background:white; border-radius:16px; padding:32px; max-width:520px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,0.2); max-height:92vh; overflow-y:auto; }
         .modal-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px; }
-        .modal-top h2 { font-family:'Crimson Pro',serif; font-size:22px; color:#5C0F14; }
+        .modal-top h2 { font-family:'Crimson Pro',serif; font-size:22px; color:#5C1018; }
         .modal-top button { background:none; border:none; font-size:24px; cursor:pointer; color:#999; line-height:1; }
         .modal-desc { font-size:13px; color:#888; margin-bottom:20px; line-height:1.5; }
         .field { margin-bottom:16px; }
@@ -77,7 +77,7 @@
         .field input,.field textarea { width:100%; padding:10px 14px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:'DM Sans',sans-serif; box-sizing:border-box; }
         .field textarea { resize:vertical; min-height:88px; line-height:1.5; }
         .drop-zone { border:2px dashed #d1d5db; border-radius:10px; padding:20px; text-align:center; cursor:pointer; background:#fafafa; transition:all 0.2s; }
-        .drop-zone:hover,.drop-zone.dragover { border-color:#5C0F14; background:#eff6ff; }
+        .drop-zone:hover,.drop-zone.dragover { border-color:#5C1018; background:#eff6ff; }
         .file-preview { display:none; margin-top:8px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; align-items:center; gap:10px; }
         .file-preview.open { display:flex; }
         .file-preview button { background:none; border:none; cursor:pointer; color:#aaa; font-size:18px; }
@@ -88,7 +88,7 @@
         .alert-box.success { background:#d1fae5; border:1px solid #6ee7b7; color:#065f46; font-weight:600; }
         .modal-actions { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
         .btn-modal { padding:10px 22px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; border:none; }
-        .btn-cancel { border:2px solid #d1d5db; background:white; color:#374151; } .btn-send { background:#5C0F14; color:white; }
+        .btn-cancel { border:2px solid #d1d5db; background:white; color:#374151; } .btn-send { background:#5C1018; color:white; }
         .loading-block { text-align:center; padding:28px 16px; color:#9ca3af; }
         @media (max-width:1100px) { .stats-grid { grid-template-columns:repeat(2,1fr); } .content-grid { grid-template-columns:1fr; } }
         @media (max-width:760px) { .header,.container { padding-left:18px; padding-right:18px; } .stats-grid { grid-template-columns:1fr; } .header-content { align-items:flex-start; } }
@@ -168,12 +168,12 @@
                 <label>📎 Listado de estudiantes (Excel) <span style="color:#ef4444;">*</span></label>
                 <div id="sol-drop" class="drop-zone" onclick="document.getElementById('sol-archivo').click()" ondragover="onDragSolicitud(event)" ondragleave="offDragSolicitud(event)" ondrop="onDropSolicitud(event)">
                     <div style="font-size:28px;margin-bottom:6px;">📊</div>
-                    <div style="font-size:13px;color:#666;">Arrastrá o <span style="color:#5C0F14;font-weight:600;">hacé clic</span> para seleccionar el archivo</div>
+                    <div style="font-size:13px;color:#666;">Arrastrá o <span style="color:#5C1018;font-weight:600;">hacé clic</span> para seleccionar el archivo</div>
                     <div style="font-size:11px;color:#aaa;margin-top:4px;">Solo .xlsx o .xls</div>
                 </div>
                 <input id="sol-archivo" type="file" accept=".xlsx,.xls" style="display:none;" onchange="mostrarArchivo(this)">
                 <div id="sol-archivo-preview" class="file-preview"><span style="font-size:18px;">📄</span><span id="sol-archivo-nombre" style="font-size:13px;color:#065f46;font-weight:600;flex:1;"></span><button type="button" onclick="quitarArchivo()">×</button></div>
-                <div class="excel-structure"><strong style="display:block;margin-bottom:4px;color:#5C0F14;">📋 Estructura requerida del Excel:</strong><span class="excel-chip">A: Apellido</span><span class="excel-chip">B: Nombre</span><span class="excel-chip">C: DNI</span><span class="excel-chip">D: Correo Electrónico</span></div>
+                <div class="excel-structure"><strong style="display:block;margin-bottom:4px;color:#5C1018;">📋 Estructura requerida del Excel:</strong><span class="excel-chip">A: Apellido</span><span class="excel-chip">B: Nombre</span><span class="excel-chip">C: DNI</span><span class="excel-chip">D: Correo Electrónico</span></div>
             </div>
             <div id="sol-alert" class="alert-box error"></div>
             <div id="sol-success" class="alert-box success">✅ Solicitud enviada correctamente al administrador del sistema.</div>
