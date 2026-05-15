@@ -24,28 +24,13 @@
             background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%);
             padding: 36px 32px 28px; text-align: center; color: white;
         }
-        .login-logo {
-            width: 96px;
-            height: 96px;
-            background: white;
-            border-radius: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 16px;
-            border: 2px solid rgba(255,255,255,0.45);
-            box-shadow: 0 8px 22px rgba(0,0,0,0.12);
-            padding: 10px;
-        }
-        .login-logo img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+        .login-brand-img {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
             display: block;
+            margin: 0 auto;
         }
-        .login-header h1 { font-family: 'Crimson Pro', serif; font-size: 26px; margin-bottom: 6px; }
-        .login-header p { font-size: 14px; opacity: 0.85; }
-        .login-header .subtitulo { font-size: 12px; opacity: 0.65; margin-top: 4px; }
 
         /* ── FORM ── */
         .login-body { padding: 32px; }
@@ -119,12 +104,7 @@
     <div class="login-card">
         <!-- HEADER -->
         <div class="login-header">
-            <div class="login-logo">
-                <img src="assets/logo_fce.png" alt="FCE UNCUYO" onerror="this.style.display='none'; this.parentElement.textContent='FCE';">
-            </div>
-            <h1>SiGPo</h1>
-            <p>Sistema de Gestión de Pagos para Posgrado</p>
-            <div class="subtitulo">Facultad de Ciencias Económicas — UNCUYO</div>
+            <img class="login-brand-img" src="assets/01_v4_original.svg" alt="SiGPo - Sistema de Gestión de Pagos para Posgrado">
         </div>
 
         <!-- FORM -->
