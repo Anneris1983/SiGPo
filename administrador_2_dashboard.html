@@ -7,57 +7,32 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #1e3a5f;
-            --accent: #d4af37;
-            --bg: #f8f6f1;
-            --success: #2d7a4f;
-            --warning: #e67e22;
-            --danger: #c0392b;
-        }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); }
-        .header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
-            color: white; padding: 20px 40px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            position: sticky; top: 0; z-index: 100;
-        }
+        :root { --primary: #5C1018; --accent: #C49A2A; --bg: #f8f6f1; --success: #2d7a4f; --warning: #e67e22; --danger: #c0392b; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); font-size: 14px; }
+        .header { background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%); color: white; padding: 20px 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
         .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
         .header-left h1 { font-family: 'Crimson Pro', serif; font-size: 28px; margin-bottom: 4px; }
         .header-left p { opacity: 0.9; font-size: 14px; }
         .header-right { display: flex; gap: 12px; align-items: center; }
-        .header-btn {
-            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
-            color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px;
-            cursor: pointer; transition: all 0.3s; text-decoration: none;
-            font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 6px;
-        }
+        .header-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s; text-decoration: none; font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 6px; }
         .header-btn:hover { background: rgba(255,255,255,0.28); }
         .notif-wrapper { position: relative; }
         .notif-bell { background: none; border: none; cursor: pointer; position: relative; padding: 8px; border-radius: 8px; transition: background 0.2s; }
         .notif-bell:hover { background: rgba(255,255,255,0.15); }
-        .notif-bell svg { display: block; }
-        .notif-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid #1e3a5f; line-height: 1; }
+        .notif-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid #5C1018; line-height: 1; }
         .notif-badge:empty, .notif-badge[data-count="0"] { display: none; }
         .notif-dropdown { display: none; position: absolute; top: calc(100% + 10px); right: 0; width: 380px; max-height: 460px; overflow-y: auto; background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.18); z-index: 999; border: 1px solid #e5e7eb; }
         .notif-dropdown.open { display: block; }
         .notif-dropdown-header { padding: 16px 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
         .notif-dropdown-header h3 { font-size: 15px; font-weight: 700; color: var(--primary); }
         .notif-mark-all { font-size: 12px; color: var(--accent); cursor: pointer; background: none; border: none; font-weight: 600; font-family: 'DM Sans', sans-serif; }
-        .notif-mark-all:hover { text-decoration: underline; }
         .notif-item { display: flex; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background 0.15s; }
         .notif-item:hover { background: #f9fafb; }
         .notif-item.unread { background: #fffbeb; }
-        .notif-item.unread:hover { background: #fef3c7; }
         .notif-icon-circle { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-        .notif-icon-circle.pago { background: #dcfce7; }
-        .notif-icon-circle.mora { background: #fee2e2; }
-        .notif-icon-circle.solicitud { background: #dbeafe; }
-        .notif-icon-circle.reclamo { background: #fef3c7; }
-        .notif-icon-circle.alerta { background: #fce7f3; }
+        .notif-icon-circle.pago { background: #dcfce7; } .notif-icon-circle.mora { background: #fee2e2; } .notif-icon-circle.solicitud { background: #dbeafe; } .notif-icon-circle.reclamo { background: #fef3c7; } .notif-icon-circle.alerta { background: #fce7f3; }
         .notif-text { flex: 1; min-width: 0; }
         .notif-text p { font-size: 13px; color: #374151; line-height: 1.4; }
-        .notif-text p strong { color: var(--primary); }
         .notif-time { font-size: 11px; color: #9ca3af; margin-top: 3px; }
         .notif-empty { padding: 32px 20px; text-align: center; color: #9ca3af; font-size: 14px; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; }
@@ -68,7 +43,7 @@
         .modal-row .label { width: 100px; font-size: 13px; color: #666; font-weight: 600; padding-top: 2px; }
         .modal-row .value { flex: 1; font-size: 14px; color: var(--primary); font-weight: 500; }
         .modal-close { margin-top: 20px; width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; }
-        .modal-close:hover { background: #2d5a87; }
+        .modal-close:hover { background: #8C1A28; }
         .container { max-width: 1400px; margin: 40px auto; padding: 0 40px; }
         .page-title { font-family: 'Crimson Pro', serif; font-size: 32px; color: var(--primary); margin-bottom: 8px; }
         .page-subtitle { color: #666; margin-bottom: 32px; }
@@ -76,10 +51,7 @@
         @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
         @media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
         .stat-card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-left: 4px solid var(--accent); display: flex; flex-direction: column; justify-content: space-between; }
-        .stat-card.success { border-left-color: var(--success); }
-        .stat-card.warning { border-left-color: var(--warning); }
-        .stat-card.danger { border-left-color: var(--danger); }
-        .stat-card.primary { border-left-color: var(--primary); }
+        .stat-card.success { border-left-color: var(--success); } .stat-card.warning { border-left-color: var(--warning); } .stat-card.danger { border-left-color: var(--danger); } .stat-card.primary { border-left-color: var(--primary); }
         .stat-label { font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; min-height: 32px; display: flex; align-items: flex-start; }
         .stat-value { font-size: 32px; font-weight: 700; color: var(--primary); }
         .section-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
@@ -96,7 +68,7 @@
         @media (max-width: 600px) { .programs-grid { grid-template-columns: 1fr; } }
         .program-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; }
         .program-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
-        .program-icon { width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary) 0%, #2d5a87 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 16px; }
+        .program-icon { width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary) 0%, #8C1A28 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 16px; }
         .program-name { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 12px; }
         .program-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px; color: #666; }
         .program-stat { display: flex; justify-content: space-between; }
@@ -116,10 +88,7 @@
             <button class="header-btn" onclick="abrirPerfil()">👤 <span id="btn-admin-name">Admin</span></button>
             <div class="notif-wrapper">
                 <button class="notif-bell" onclick="toggleNotifLocal()" title="Notificaciones" aria-label="Notificaciones">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
                     <span class="notif-badge" id="notif-badge">0</span>
                 </button>
                 <div class="notif-dropdown" id="notif-dropdown">
@@ -127,9 +96,7 @@
                         <h3>🔔 Notificaciones</h3>
                         <button class="notif-mark-all" onclick="marcarTodasLeidasLocal()">Marcar todas como leídas</button>
                     </div>
-                    <div id="notif-list">
-                        <div class="notif-empty">Cargando notificaciones…</div>
-                    </div>
+                    <div id="notif-list"><div class="notif-empty">Cargando notificaciones…</div></div>
                 </div>
             </div>
             <a href="portal_login.html" class="header-btn" onclick="return cerrarSesion(event)">
@@ -155,36 +122,12 @@
 <div class="container">
     <h2 class="section-title">⚡ Acciones de Administración</h2>
     <div class="quick-actions-grid">
-        <div class="action-card" onclick="navegar('administrador_10_gestion_programas_cohortes.html')">
-            <div class="action-icon">📚</div>
-            <div class="action-title">Programas/Cursos</div>
-            <div class="action-desc">Gestionar Programas y Cursos</div>
-        </div>
-        <div class="action-card" onclick="navegar('administrador_11_usuarios.html')">
-            <div class="action-icon">👥</div>
-            <div class="action-title">Usuarios</div>
-            <div class="action-desc">Gestionar usuarios y roles</div>
-        </div>
-        <div class="action-card" onclick="navegar('administrador_12_Gestion_gastos.html')">
-            <div class="action-icon">💸</div>
-            <div class="action-title">Gestión de Gastos y Egresos</div>
-            <div class="action-desc">Control financiero y cashflow</div>
-        </div>
-        <div class="action-card" onclick="navegar('administrador_5_configuracion.html')">
-            <div class="action-icon">⚙️</div>
-            <div class="action-title">Configuración</div>
-            <div class="action-desc">Parámetros del sistema</div>
-        </div>
-        <div class="action-card" onclick="navegar('administrador_6_logs.html')">
-            <div class="action-icon">📋</div>
-            <div class="action-title">Logs</div>
-            <div class="action-desc">Auditoría y trazabilidad</div>
-        </div>
-        <div class="action-card" onclick="navegar('administrador_7_reportes_globales.html')">
-            <div class="action-icon">📊</div>
-            <div class="action-title">Reportes Globales</div>
-            <div class="action-desc">Estadísticas de todos los programas</div>
-        </div>
+        <div class="action-card" onclick="navegar('administrador_10_gestion_programas_cohortes.html')"><div class="action-icon">📚</div><div class="action-title">Programas/Cursos</div><div class="action-desc">Gestionar Programas y Cursos</div></div>
+        <div class="action-card" onclick="navegar('administrador_11_usuarios.html')"><div class="action-icon">👥</div><div class="action-title">Usuarios</div><div class="action-desc">Gestionar usuarios y roles</div></div>
+        <div class="action-card" onclick="navegar('administrador_12_Gestion_gastos.html')"><div class="action-icon">💸</div><div class="action-title">Gestión de Gastos y Egresos</div><div class="action-desc">Control financiero y cashflow</div></div>
+        <div class="action-card" onclick="navegar('administrador_5_configuracion.html')"><div class="action-icon">⚙️</div><div class="action-title">Configuración</div><div class="action-desc">Parámetros del sistema</div></div>
+        <div class="action-card" onclick="navegar('administrador_6_logs.html')"><div class="action-icon">📋</div><div class="action-title">Logs</div><div class="action-desc">Auditoría y trazabilidad</div></div>
+        <div class="action-card" onclick="navegar('administrador_7_reportes_globales.html')"><div class="action-icon">📊</div><div class="action-title">Reportes Globales</div><div class="action-desc">Estadísticas de todos los programas</div></div>
     </div>
 
     <h1 class="page-title" style="margin-top: 40px;">Dashboard Global</h1>
@@ -211,9 +154,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-/* ══════════════════════════════════════════════
-   PERFIL
-   ══════════════════════════════════════════════ */
 function abrirPerfil() {
     document.getElementById('modal-perfil').classList.add('open');
     obtenerPerfilUsuario().then(function(data) {
@@ -225,91 +165,37 @@ function abrirPerfil() {
         document.getElementById('perfil-rol').textContent       = data.rol || 'Administrador';
     });
 }
+function cerrarPerfil() { document.getElementById('modal-perfil').classList.remove('open'); }
+document.getElementById('modal-perfil').addEventListener('click', function(e) { if (e.target === this) cerrarPerfil(); });
 
-function cerrarPerfil() {
-    document.getElementById('modal-perfil').classList.remove('open');
-}
-
-document.getElementById('modal-perfil').addEventListener('click', function(e) {
-    if (e.target === this) cerrarPerfil();
-});
-
-/* ══════════════════════════════════════════════
-   CAMPANA DE NOTIFICACIONES
-   ══════════════════════════════════════════════ */
 var notificaciones = [];
-
-function toggleNotifLocal() {
-    var dd = document.getElementById('notif-dropdown');
-    dd.classList.toggle('open');
-}
-
-document.addEventListener('click', function(e) {
-    var wrapper = document.querySelector('.notif-wrapper');
-    if (wrapper && !wrapper.contains(e.target)) {
-        document.getElementById('notif-dropdown').classList.remove('open');
-    }
-});
-
+function toggleNotifLocal() { document.getElementById('notif-dropdown').classList.toggle('open'); }
+document.addEventListener('click', function(e) { var wrapper = document.querySelector('.notif-wrapper'); if (wrapper && !wrapper.contains(e.target)) document.getElementById('notif-dropdown').classList.remove('open'); });
 function renderNotificacionesLocal(datos) {
     notificaciones = datos || [];
     var sinLeer = notificaciones.filter(function(n) { return !n.leida; }).length;
-    var badge = document.getElementById('notif-badge');
-    badge.textContent = sinLeer;
-    badge.setAttribute('data-count', sinLeer);
-
+    var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.setAttribute('data-count', sinLeer);
     var lista = document.getElementById('notif-list');
-    if (notificaciones.length === 0) {
-        lista.innerHTML = '<div class="notif-empty">No hay notificaciones</div>';
-        return;
-    }
-
+    if (notificaciones.length === 0) { lista.innerHTML = '<div class="notif-empty">No hay notificaciones</div>'; return; }
     var iconos = { pago: '💰', mora: '🔴', solicitud: '📋', reclamo: '⚠️', alerta: '🚨' };
-
     lista.innerHTML = notificaciones.map(function(n) {
-        return '<div class="notif-item ' + (n.leida ? '' : 'unread') + '" onclick="leerNotifLocal(\'' + n.id + '\')">'
+        return '<div class="notif-item ' + (n.leida ? '' : 'unread') + '" onclick="leerNotifLocal(\''+n.id+'\')">'
             + '<div class="notif-icon-circle ' + (n.tipo || 'alerta') + '">' + (iconos[n.tipo] || '🔔') + '</div>'
-            + '<div class="notif-text">'
-            + '<p>' + n.mensaje + '</p>'
-            + '<div class="notif-time">' + (n.tiempo || '') + '</div>'
-            + '</div></div>';
+            + '<div class="notif-text"><p>' + n.mensaje + '</p><div class="notif-time">' + (n.tiempo || '') + '</div></div></div>';
     }).join('');
 }
+function leerNotifLocal(id) { notificaciones.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificacionesLocal(notificaciones); marcarNotificacionLeida(id); }
+function marcarTodasLeidasLocal() { notificaciones.forEach(function(n) { n.leida = true; }); renderNotificacionesLocal(notificaciones); marcarTodasNotificacionesLeidas(); }
+function cargarNotificaciones() { obtenerNotificaciones('ADMINISTRADOR').then(function(datos) { renderNotificacionesLocal(datos); }); }
 
-function leerNotifLocal(id) {
-    notificaciones.forEach(function(n) { if (n.id === id) n.leida = true; });
-    renderNotificacionesLocal(notificaciones);
-    marcarNotificacionLeida(id);
-}
-
-function marcarTodasLeidasLocal() {
-    notificaciones.forEach(function(n) { n.leida = true; });
-    renderNotificacionesLocal(notificaciones);
-    marcarTodasNotificacionesLeidas();
-}
-
-function cargarNotificaciones() {
-    obtenerNotificaciones('ADMINISTRADOR').then(function(datos) {
-        renderNotificacionesLocal(datos);
-    });
-}
-
-/* ══════════════════════════════════════════════
-   FORMATEO DE MONTOS
-   ══════════════════════════════════════════════ */
 function fMillones(valor) {
     if (valor === null || valor === undefined) return '$0,00';
-    var num = parseFloat(valor);
-    if (isNaN(num)) return '$0,00';
+    var num = parseFloat(valor); if (isNaN(num)) return '$0,00';
     return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
-/* ══════════════════════════════════════════════
-   RENDERIZAR DASHBOARD
-   ══════════════════════════════════════════════ */
 function renderDashboard(data) {
     if (!data) return;
-
     document.getElementById('stat-programas').textContent   = data.totalProgramasPosgrado || 0;
     document.getElementById('stat-cursos').textContent      = data.totalCursos || 0;
     document.getElementById('stat-estudiantes').textContent = data.estudiantesActivos || 0;
@@ -319,84 +205,48 @@ function renderDashboard(data) {
     if (cuotasEl) cuotasEl.textContent = data.cuotasEnMora ? data.cuotasEnMora + ' cuotas en mora' : '';
     document.getElementById('stat-recaudado').textContent   = fMillones(data.recaudado);
     document.getElementById('stat-egresos').textContent     = fMillones(data.egresos);
-    var saldoEl = document.getElementById('stat-saldo');
-    saldoEl.textContent = fMillones(data.saldo);
-    saldoEl.style.color = (data.saldo || 0) < 0 ? 'var(--danger)' : '';
-
-    if (data.nombreAdmin) {
-        document.getElementById('btn-admin-name').textContent = data.nombreAdmin;
-    }
-
+    var saldoEl = document.getElementById('stat-saldo'); saldoEl.textContent = fMillones(data.saldo); saldoEl.style.color = (data.saldo || 0) < 0 ? 'var(--danger)' : '';
+    if (data.nombreAdmin) document.getElementById('btn-admin-name').textContent = data.nombreAdmin;
     var todos = data.programas || [];
     var listaPosgrado = todos.filter(function(p) { return p.categoria === 'Programa'; });
     var listaCursos   = todos.filter(function(p) { return p.categoria === 'Curso'; });
-
-    document.getElementById('programs-title').textContent =
-        '🎓 Programas de Posgrado (' + listaPosgrado.length + ')';
-    document.getElementById('cursos-title').textContent =
-        '📖 Cursos (' + listaCursos.length + ')';
-
-    // Ocultar sección cursos si no hay
+    document.getElementById('programs-title').textContent = '🎓 Programas de Posgrado (' + listaPosgrado.length + ')';
+    document.getElementById('cursos-title').textContent   = '📖 Cursos (' + listaCursos.length + ')';
     document.getElementById('cursos-title').style.display = listaCursos.length ? '' : 'none';
     document.getElementById('cursos-grid').style.display  = listaCursos.length ? '' : 'none';
-
     document.getElementById('programs-grid').innerHTML = listaPosgrado.map(renderTarjeta).join('');
     document.getElementById('cursos-grid').innerHTML   = listaCursos.map(renderTarjeta).join('');
 }
 
 function renderTarjeta(p) {
     var icono = getIconoTipo(p.tipo);
-    var label = p.labelNomenclatura || 'Cohortes';
     var colorAlDia = '#2d7a4f';
     if (p.estudiantes > 0 && (p.alDia / p.estudiantes) < 0.7) colorAlDia = '#e67e22';
     if (p.estudiantes > 0 && (p.alDia / p.estudiantes) < 0.5) colorAlDia = '#c0392b';
     var colorSaldo = (p.saldo || 0) >= 0 ? '#2d7a4f' : '#c0392b';
-
     return '<div class="program-card" onclick="navegar(\'administrador_3_Programas_de_posgrado.html?id=' + p.id + '\')">'
         + '<div class="program-icon">' + icono + '</div>'
         + '<div class="program-name">' + p.nombre + '</div>'
         + '<div class="program-stats">'
         + '<div class="program-stat"><span>Estudiantes:</span><strong>' + (p.estudiantes || 0) + '</strong></div>'
-        + '<div class="program-stat"><span>' + label + ':</span><strong>' + (p.cohortes || 0) + '</strong></div>'
+        + '<div class="program-stat"><span>Cohortes:</span><strong>' + (p.cohortes || 0) + '</strong></div>'
         + '<div class="program-stat"><span>Al día:</span><strong style="color:' + colorAlDia + ';">' + (p.alDia || 0) + '</strong></div>'
-        + '<div class="program-stat"><span>En mora:</span><strong style="color:#c0392b;">' + (p.enMora || 0) + (p.cuotasEnMora ? ' est. (' + p.cuotasEnMora + ' cuotas)' : '') + '</strong></div>'
+        + '<div class="program-stat"><span>En mora:</span><strong style="color:#c0392b;">' + (p.enMora || 0) + '</strong></div>'
         + '<div class="program-stat"><span>Recaudado:</span><strong>' + fMillones(p.recaudado) + '</strong></div>'
         + '<div class="program-stat"><span>Egresos:</span><strong style="color:#e67e22;">' + fMillones(p.egresos) + '</strong></div>'
         + '<div class="program-stat"><span>Saldo:</span><strong style="color:' + colorSaldo + ';">' + fMillones(p.saldo) + '</strong></div>'
         + '</div></div>';
 }
 
-/* ══════════════════════════════════════════════
-   CARGAR DASHBOARD DESDE SUPABASE
-   ══════════════════════════════════════════════ */
 function cargarDashboard() {
-    obtenerDashboardAdmin().then(function(data) {
-        if (data) {
-            renderDashboard(data);
-        }
-    }).catch(function(err) {
-        console.error('Error cargando dashboard:', err);
-        var banner = document.createElement('div');
-        banner.style.cssText = 'background:#fee2e2;border:1px solid #dc2626;color:#991b1b;padding:12px 20px;border-radius:8px;margin:16px;font-size:14px;';
-        banner.innerHTML = '<strong>Error al cargar el dashboard:</strong> ' + (err.message || String(err));
-        document.querySelector('.container') && document.querySelector('.container').prepend(banner);
-        ['stat-programas','stat-cursos','stat-estudiantes','stat-aldia','stat-mora','stat-recaudado','stat-egresos','stat-saldo']
-            .forEach(function(id){ var el = document.getElementById(id); if (el) el.textContent = 'Error'; });
-    });
+    obtenerDashboardAdmin().then(function(data) { if (data) renderDashboard(data); })
+        .catch(function(err) { console.error('Error cargando dashboard:', err); ['stat-programas','stat-cursos','stat-estudiantes','stat-aldia','stat-mora','stat-recaudado','stat-egresos','stat-saldo'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='Error'; }); });
 }
 
-/* ══════════════════════════════════════════════
-   INICIALIZAR
-   ══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function() {
     var sesion = getSesion();
-    if (!sesion) {
-        window.location.href = 'portal_login.html';
-        return;
-    }
-
+    if (!sesion) { window.location.href = 'portal_login.html'; return; }
     document.getElementById('btn-admin-name').textContent = sesion.nombre || 'Admin';
-
     cargarDashboard();
     cargarNotificaciones();
 });
