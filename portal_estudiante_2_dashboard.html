@@ -7,8 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
-        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+        :root { --primary: #5C1018; --accent: #C49A2A; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
 
         .navbar { background: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .nav-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--primary); }
@@ -79,11 +79,11 @@
         .progress-fill.mora { background: var(--danger); }
 
         .carrera-meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: #555; padding-right: 90px; }
-        .carrera-meta span strong { color: #1e3a5f; }
+        .carrera-meta span strong { color: #5C1018; }
 
         .cuota-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; gap: 12px; }
         .cuota-item:last-child { border-bottom: none; }
-        .cuota-info strong { font-size: 14px; color: #1e3a5f; }
+        .cuota-info strong { font-size: 14px; color: #5C1018; }
         .cuota-info small { display: block; font-size: 12px; color: #888; margin-top: 2px; }
         .cuota-right { text-align: right; flex-shrink: 0; }
         .cuota-monto { font-size: 18px; font-weight: 700; color: var(--primary); }
@@ -96,7 +96,7 @@
         .est-adefinir  { background: #f3f4f6; color: #6b7280; }
 
         .banco-box { background: #f8f8f8; padding: 16px; border-radius: 8px; font-size: 14px; line-height: 2; }
-        .banco-box strong { color: #1e3a5f; }
+        .banco-box strong { color: #5C1018; }
 
         .skeleton { background: #e5e7eb; border-radius: 6px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
@@ -129,17 +129,14 @@
 
             <div class="notif-wrapper">
                 <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:6px 8px;border-radius:6px;">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
                     <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
                 </button>
 
                 <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                     <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
-                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                        <h3 style="font-size:15px;font-weight:700;color:#5C1018;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
                     </div>
                     <div id="notif-list">
                         <div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div>
@@ -464,41 +461,41 @@
                     var cohorteId = insc.cohorte_id || '';
 
                     carrerasHtml +=
-                        '<div class="carrera-card' + (moraCoh > 0 ? ' con-mora' : '') + '" role="button" tabindex="0" onclick="irACuotasCarrera(\'' + programaId + '\', \'' + cohorteId + '\')" onkeydown="if(event.key === \'Enter\' || event.key === \' \'){ event.preventDefault(); irACuotasCarrera(\'' + programaId + '\', \'' + cohorteId + '\'); }">' +
-                            '<div class="carrera-header">' +
-                                '<div>' +
-                                    '<div class="carrera-nombre">' +
-                                        (getIconoTipo(prog.tipo) || '📚') + ' ' + (prog.nombre || '—') +
-                                    '</div>' +
-                                    '<div class="carrera-cohorte">' +
-                                        labelCoh + ': ' + (coh.nombre || '—') +
-                                    '</div>' +
-                                '</div>' +
-                                badge +
-                            '</div>' +
+                        '<div class="carrera-card' + (moraCoh > 0 ? ' con-mora' : '') + '" role="button" tabindex="0" onclick="irACuotasCarrera(\'' + programaId + '\', \'' + cohorteId + '\')" onkeydown="if(event.key === \'Enter\' || event.key === \' \'){ event.preventDefault(); irACuotasCarrera(\'' + programaId + '\', \'' + cohorteId + '\'); }">'
+                            + '<div class="carrera-header">'
+                                + '<div>'
+                                    + '<div class="carrera-nombre">'
+                                        + (getIconoTipo(prog.tipo) || '📚') + ' ' + (prog.nombre || '—')
+                                    + '</div>'
+                                    + '<div class="carrera-cohorte">'
+                                        + labelCoh + ': ' + (coh.nombre || '—')
+                                    + '</div>'
+                                + '</div>'
+                                + badge
+                            + '</div>'
 
-                            '<div style="margin-bottom:12px;">' +
-                                '<div style="display:flex;justify-content:space-between;font-size:13px;color:#666;margin-bottom:4px;">' +
-                                    '<span>Cuotas abonadas</span><span>' + pct + '%</span>' +
-                                '</div>' +
-                                '<div class="progress-bar">' +
-                                    '<div class="progress-fill' + (moraCoh > 0 ? ' mora' : '') + '" style="width:' + pct + '%;"></div>' +
-                                '</div>' +
-                            '</div>' +
+                            + '<div style="margin-bottom:12px;">'
+                                + '<div style="display:flex;justify-content:space-between;font-size:13px;color:#666;margin-bottom:4px;">'
+                                    + '<span>Cuotas abonadas</span><span>' + pct + '%</span>'
+                                + '</div>'
+                                + '<div class="progress-bar">'
+                                    + '<div class="progress-fill' + (moraCoh > 0 ? ' mora' : '') + '" style="width:' + pct + '%;"></div>'
+                                + '</div>'
+                            + '</div>'
 
-                            '<div class="carrera-meta">' +
-                                '<span><strong>Abonadas:</strong> ' + abonadasCoh + '/' + totalCoh + '</span>' +
-                                (moraCoh > 0
+                            + '<div class="carrera-meta">'
+                                + '<span><strong>Abonadas:</strong> ' + abonadasCoh + '/' + totalCoh + '</span>'
+                                + (moraCoh > 0
                                     ? '<span style="color:var(--danger);"><strong>En mora:</strong> ' + moraCoh + '</span>'
-                                    : '') +
-                                (deudaCoh > 0
+                                    : '')
+                                + (deudaCoh > 0
                                     ? '<span><strong>Saldo pendiente:</strong> ' + fM(deudaCoh) + '</span>'
-                                    : '') +
-                                (insc.descuento_porcentaje > 0
+                                    : '')
+                                + (insc.descuento_porcentaje > 0
                                     ? '<span style="color:var(--success);"><strong>Descuento:</strong> ' + insc.descuento_porcentaje + '%</span>'
-                                    : '') +
-                            '</div>' +
-                        '</div>';
+                                    : '')
+                            + '</div>'
+                        + '</div>';
                 });
             }
 
@@ -523,16 +520,16 @@
                         : '—';
 
                     proxHtml +=
-                        '<div class="cuota-item">' +
-                            '<div class="cuota-info">' +
-                                '<strong>' + c.concepto + (c.periodo ? ' — ' + c.periodo : '') + '</strong>' +
-                                '<small>' + progNombre + ' · Vence: ' + fFecha(c.fecha_vencimiento) + '</small>' +
-                            '</div>' +
-                            '<div class="cuota-right">' +
-                                '<div class="cuota-monto">' + fM(c.monto_final) + '</div>' +
-                                esBadge +
-                            '</div>' +
-                        '</div>';
+                        '<div class="cuota-item">'
+                            + '<div class="cuota-info">'
+                                + '<strong>' + c.concepto + (c.periodo ? ' — ' + c.periodo : '') + '</strong>'
+                                + '<small>' + progNombre + ' · Vence: ' + fFecha(c.fecha_vencimiento) + '</small>'
+                            + '</div>'
+                            + '<div class="cuota-right">'
+                                + '<div class="cuota-monto">' + fM(c.monto_final) + '</div>'
+                                + esBadge
+                            + '</div>'
+                        + '</div>';
                 });
             }
 
@@ -552,23 +549,23 @@
                     : '—';
 
                 morasHtml +=
-                    '<div class="cuota-item">' +
-                        '<div class="cuota-info">' +
-                            '<strong>' + c.concepto + (c.periodo ? ' — ' + c.periodo : '') + '</strong>' +
-                            '<small>' + progNombre + ' · Venció: ' + fFecha(c.fecha_vencimiento) + '</small>' +
-                        '</div>' +
-                        '<div class="cuota-right">' +
-                            '<div class="cuota-monto" style="color:var(--danger);">' + fM(c.saldo_pendiente) + '</div>' +
-                            '<span class="cuota-estado est-mora">EN MORA</span>' +
-                        '</div>' +
-                    '</div>';
+                    '<div class="cuota-item">'
+                        + '<div class="cuota-info">'
+                            + '<strong>' + c.concepto + (c.periodo ? ' — ' + c.periodo : '') + '</strong>'
+                            + '<small>' + progNombre + ' · Venció: ' + fFecha(c.fecha_vencimiento) + '</small>'
+                        + '</div>'
+                        + '<div class="cuota-right">'
+                            + '<div class="cuota-monto" style="color:var(--danger);">' + fM(c.saldo_pendiente) + '</div>'
+                            + '<span class="cuota-estado est-mora">EN MORA</span>'
+                        + '</div>'
+                    + '</div>';
             });
 
             if (morasHtml) {
                 document.getElementById('proximos-lista').innerHTML =
-                    '<div style="font-size:12px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Vencidas</div>' +
-                    morasHtml +
-                    (proxHtml && proxHtml.indexOf('empty-msg') < 0
+                    '<div style="font-size:12px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Vencidas</div>'
+                    + morasHtml
+                    + (proxHtml && proxHtml.indexOf('empty-msg') < 0
                         ? '<div style="font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 4px;">Próximas</div>' + proxHtml
                         : '');
             }
@@ -579,10 +576,10 @@
             var email = cfg.email_banco || '';
 
             document.getElementById('datos-bancarios').innerHTML =
-                '<div><strong>CBU:</strong> ' + cbu + '</div>' +
-                '<div><strong>Alias:</strong> ' + alias + '</div>' +
-                (titular ? '<div><strong>Titular:</strong> ' + titular + '</div>' : '') +
-                (email ? '<div><strong>Email:</strong> ' + email + '</div>' : '');
+                '<div><strong>CBU:</strong> ' + cbu + '</div>'
+                + '<div><strong>Alias:</strong> ' + alias + '</div>'
+                + (titular ? '<div><strong>Titular:</strong> ' + titular + '</div>' : '')
+                + (email ? '<div><strong>Email:</strong> ' + email + '</div>' : '');
 
         } catch(e) {
             console.error(e);
