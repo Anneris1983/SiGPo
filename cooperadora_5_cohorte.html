@@ -528,9 +528,10 @@
 
         .cuota-actions-inline { display:flex; gap:3px; margin-top:5px; justify-content:center; flex-wrap:wrap; }
         .cbtn { border:none; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer; line-height:1.5; font-family:inherit; font-weight:600; }
-        .cbtn-ver { background:#e0e7ff; color:#4338ca; text-decoration:none; display:inline-block; }
-        .cbtn-ok  { background:#d1fae5; color:#065f46; }
-        .cbtn-no  { background:#fee2e2; color:#991b1b; }
+        .cbtn-ver    { background:#e0e7ff; color:#4338ca; text-decoration:none; display:inline-block; }
+        .cbtn-recibo { background:#fef3c7; color:#92400e; text-decoration:none; display:inline-block; }
+        .cbtn-ok     { background:#d1fae5; color:#065f46; }
+        .cbtn-no     { background:#fee2e2; color:#991b1b; }
 
 
         .td-tot-pagar {
@@ -1370,7 +1371,7 @@
                 var sb = await getSupabase();
                 var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
                     sb.from('cohortes').select('*, programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
-                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url').eq('cohorte_id', cohorteId),
+                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId),
                     sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico,descuento_motivo').eq('cohorte_id', cohorteId),
                     sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
                     sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', cohorteId)
@@ -1398,7 +1399,7 @@
                     }
                     var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
                     var estadoRaw = c.no_aplica ? 'NODEBE' : (c.estado||'NO_ABONADA');
-                    dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'' });
+                    dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'', recibo_url:c.recibo_url||'' });
                 });
 
                 var maxCuota = cobros.reduce(function(m,c){return Math.max(m,Number(c.nro_cuota||0));},0);
@@ -1493,7 +1494,8 @@
                 texto: cuota.texto || '',
                 estado: estado,
                 aDefinir: Boolean(cuota.aDefinir || cuota.a_definir),
-                comprobanteUrl: cuota.comprobante_url || ''
+                comprobanteUrl: cuota.comprobante_url || '',
+                reciboUrl: cuota.recibo_url || ''
             };
         }
 
@@ -1669,14 +1671,28 @@
             ].filter(Boolean).join(' · ');
 
             let btnsHtml = '';
+            const tieneComprobante = !!cuota.comprobanteUrl;
+            const tieneRecibo     = !!cuota.reciboUrl;
+
             if (cuota.estado === 'pendiente') {
                 btnsHtml = '<div class="cuota-actions-inline">';
-                if (cuota.comprobanteUrl) {
-                    btnsHtml += `<button class="cbtn cbtn-ver" title="Ver comprobante" onclick="verComprobante('${escapeJs(cuota.comprobanteUrl)}', event)">📎 Ver</button>`;
+                if (tieneComprobante) {
+                    btnsHtml += `<button class="cbtn cbtn-ver" title="Ver comprobante del alumno" onclick="verComprobante('${escapeJs(cuota.comprobanteUrl)}', event)">📄 Comp.</button>`;
                 }
                 btnsHtml += `<button class="cbtn cbtn-ok" title="Aprobar" onclick="abrirAprobacionModal('${escapeJs(String(cuota.cobroId))}', event)">✔ Aprob.</button>`;
                 btnsHtml += `<button class="cbtn cbtn-no" title="Rechazar" onclick="rechazarCuota('${escapeJs(String(cuota.cobroId))}', event)">✕ Rech.</button>`;
                 btnsHtml += '</div>';
+            } else if (cuota.estado === 'abonada' || cuota.estado === 'parcial') {
+                if (tieneComprobante || tieneRecibo) {
+                    btnsHtml = '<div class="cuota-actions-inline">';
+                    if (tieneComprobante) {
+                        btnsHtml += `<button class="cbtn cbtn-ver" title="Ver comprobante del alumno" onclick="verComprobante('${escapeJs(cuota.comprobanteUrl)}', event)">📄 Comp.</button>`;
+                    }
+                    if (tieneRecibo) {
+                        btnsHtml += `<button class="cbtn cbtn-recibo" title="Ver recibo/factura de cooperadora" onclick="verComprobante('${escapeJs(cuota.reciboUrl)}', event)">🧾 Recibo</button>`;
+                    }
+                    btnsHtml += '</div>';
+                }
             }
 
             const badgeLabels = {
