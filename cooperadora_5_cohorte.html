@@ -42,10 +42,10 @@
         .header-content {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 12px 28px;
+            padding: 18px 28px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             gap: 18px;
         }
 
@@ -205,78 +205,65 @@
         }
 
         .summary-card {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
-            color: var(--white);
-            border-radius: 20px;
-            padding: 22px 24px;
+            background: var(--white);
+            border-radius: 14px;
+            padding: 20px 24px;
             box-shadow: var(--shadow);
             display: flex;
             justify-content: space-between;
+            align-items: center;
             gap: 18px;
             flex-wrap: wrap;
             margin-bottom: 18px;
-        }
-
-        .summary-title h2 {
-            font-family: 'Crimson Pro', serif;
-            font-size: 32px;
-            line-height: 1.1;
-            margin-bottom: 6px;
-        }
-
-        .summary-title p {
-            font-size: 14px;
-            line-height: 1.5;
-            opacity: 0.92;
+            border: 1px solid var(--line);
         }
 
         .summary-badges {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            margin-top: 12px;
         }
 
         .badge {
             display: inline-flex;
             align-items: center;
-            padding: 6px 11px;
+            padding: 6px 14px;
             border-radius: 999px;
             font-size: 12px;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
-        .badge.type { background: rgba(255,255,255,0.15); color: var(--white); }
-        .badge.active { background: #ecfdf3; color: var(--success); }
+        .badge.type { background: #f3f4f6; color: #374151; }
+        .badge.active { background: #d1fae5; color: var(--success); }
         .badge.closed { background: #f3f4f6; color: #6b7280; }
 
         .summary-stats {
             display: flex;
-            gap: 12px;
+            gap: 28px;
             flex-wrap: wrap;
-            align-items: stretch;
+            align-items: center;
         }
 
         .summary-stat {
-            min-width: 130px;
-            background: rgba(255,255,255,0.14);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 16px;
-            padding: 14px 14px;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
 
         .summary-stat .label {
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            opacity: 0.88;
-            margin-bottom: 6px;
+            color: var(--muted);
+            margin-bottom: 4px;
         }
 
         .summary-stat .value {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
+            color: var(--text);
             line-height: 1.1;
         }
 
@@ -1063,6 +1050,8 @@
         <div class="header-content">
             <div class="header-left">
                 <div class="breadcrumb"><a href="#" onclick="volverACohortes(event)">← Volver a Cohortes</a></div>
+                <h1 id="headerCohorte">Cargando...</h1>
+                <p id="headerPrograma" style="font-size:14px;opacity:0.92;margin-top:4px;"></p>
             </div>
 
             <div class="header-right">
@@ -1093,13 +1082,9 @@
 
     <main class="page">
         <section class="summary-card">
-            <div class="summary-title">
-                <h2 id="summaryCohorte">Cohorte 2025-2026</h2>
-                <p id="summaryPrograma">Especialización en Costos y Gestión Empresarial</p>
-                <div class="summary-badges">
-                    <span class="badge type" id="summaryTipo">Especialización</span>
-                    <span class="badge active" id="summaryEstado">Activa</span>
-                </div>
+            <div class="summary-badges">
+                <span class="badge type" id="summaryTipo">Especialización</span>
+                <span class="badge active" id="summaryEstado">Activa</span>
             </div>
 
             <div class="summary-stats">
@@ -1109,15 +1094,15 @@
                 </div>
                 <div class="summary-stat">
                     <div class="label">Al día</div>
-                    <div class="value" id="statAlDia">0</div>
+                    <div class="value" style="color:var(--success)" id="statAlDia">0</div>
                 </div>
                 <div class="summary-stat">
                     <div class="label">Mora</div>
-                    <div class="value" id="statMora">0</div>
+                    <div class="value" style="color:var(--danger)" id="statMora">0</div>
                 </div>
                 <div class="summary-stat">
                     <div class="label">Parcial</div>
-                    <div class="value" id="statParcial">0</div>
+                    <div class="value" style="color:var(--warning)" id="statParcial">0</div>
                 </div>
                 <div class="summary-stat">
                     <div class="label">Ingresos</div>
@@ -1125,7 +1110,7 @@
                 </div>
                 <div class="summary-stat">
                     <div class="label">Egresos</div>
-                    <div class="value" id="statEgresos" style="color:#e67e22;">—</div>
+                    <div class="value" style="color:var(--warning)" id="statEgresos">—</div>
                 </div>
                 <div class="summary-stat">
                     <div class="label">Saldo</div>
@@ -1505,8 +1490,8 @@
 
         function renderEncabezado() {
             document.title = 'SiGPo - ' + vistaData.cohorte.nombre;
-            document.getElementById('summaryCohorte').textContent = vistaData.cohorte.nombre;
-            document.getElementById('summaryPrograma').textContent = vistaData.programa.nombre + ' · ' + formatearRangoFechas(vistaData.cohorte.fechaInicio, vistaData.cohorte.fechaFin);
+            document.getElementById('headerCohorte').textContent = vistaData.cohorte.nombre;
+            document.getElementById('headerPrograma').textContent = vistaData.programa.nombre + ' · ' + formatearRangoFechas(vistaData.cohorte.fechaInicio, vistaData.cohorte.fechaFin);
             document.getElementById('summaryTipo').textContent = formatearTipo(vistaData.programa.tipo);
 
             const badgeEstado = document.getElementById('summaryEstado');
