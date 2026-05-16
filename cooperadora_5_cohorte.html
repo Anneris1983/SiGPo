@@ -2624,34 +2624,4 @@
                 cerrarAprobacionModal();
                 await cargarDetalleCohorte();
             } catch(e) {
-                document.getElementById('aprobMsgBox').textContent = '✕ Error: ' + (e.message || e);
-                btn.disabled = false;
-                btn.textContent = '✔ Aprobar';
-            }
-        }
-
-        async function rechazarCuotaDesdeModal() {
-            if (!_aprobacionCobroId) return;
-            if (!confirm('¿Rechazar este comprobante? El cobro volverá a estado pendiente de pago.')) return;
-            try {
-                await rechazarPago(_aprobacionCobroId);
-                cerrarAprobacionModal();
-                await cargarDetalleCohorte();
-            } catch(e) {
-                alert('Error al rechazar: ' + (e.message || e));
-            }
-        }
-
-        async function rechazarCuota(cobroId, evt) {
-            if (evt) evt.stopPropagation();
-            if (!confirm('¿Rechazar el comprobante de este cobro? El estado volverá a pendiente de pago.')) return;
-            try {
-                await rechazarPago(cobroId);
-                await cargarDetalleCohorte();
-            } catch(e) {
-                alert('Error al rechazar: ' + (e.message || e));
-            }
-        }
-    </script>
-</body>
-</html>
+                document.getE
