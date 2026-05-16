@@ -42,10 +42,10 @@
         .header-content {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 18px 28px;
+            padding: 12px 28px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
             gap: 18px;
         }
 
@@ -1063,8 +1063,6 @@
         <div class="header-content">
             <div class="header-left">
                 <div class="breadcrumb"><a href="#" onclick="volverACohortes(event)">← Volver a Cohortes</a></div>
-                <h1 id="headerCohorte">Detalle de cohorte</h1>
-                <p id="headerPrograma">Programa seleccionado</p>
             </div>
 
             <div class="header-right">
@@ -1507,8 +1505,6 @@
 
         function renderEncabezado() {
             document.title = 'SiGPo - ' + vistaData.cohorte.nombre;
-            document.getElementById('headerCohorte').textContent = vistaData.cohorte.nombre;
-            document.getElementById('headerPrograma').textContent = vistaData.programa.nombre;
             document.getElementById('summaryCohorte').textContent = vistaData.cohorte.nombre;
             document.getElementById('summaryPrograma').textContent = vistaData.programa.nombre + ' · ' + formatearRangoFechas(vistaData.cohorte.fechaInicio, vistaData.cohorte.fechaFin);
             document.getElementById('summaryTipo').textContent = formatearTipo(vistaData.programa.tipo);
