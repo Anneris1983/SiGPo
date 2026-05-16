@@ -7,8 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
-        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+        :root { --primary: #5C1018; --accent: #C49A2A; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
 
         .navbar { background: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .nav-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--primary); }
@@ -159,13 +159,13 @@
             <!-- Campana -->
             <div class="notif-wrapper" style="position:relative;display:inline-flex;">
                 <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:6px 8px;border-radius:6px;transition:background 0.2s;">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
                     <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
                 </button>
                 <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                     <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                        <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
-                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                        <h3 style="font-size:15px;font-weight:700;color:#5C1018;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
                     </div>
                     <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
                 </div>
@@ -284,17 +284,14 @@
     </div>
 
     <div id="spin-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,0.75);z-index:9000;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
-        <div style="width:38px;height:38px;border:4px solid #e0e0e0;border-top-color:#1e3a5f;border-radius:50%;animation:_sp 0.8s linear infinite;"></div>
-        <span style="color:#1e3a5f;font-weight:600;">Cargando...</span>
+        <div style="width:38px;height:38px;border:4px solid #e0e0e0;border-top-color:#5C1018;border-radius:50%;animation:_sp 0.8s linear infinite;"></div>
+        <span style="color:#5C1018;font-weight:600;">Cargando...</span>
     </div>
     <style>@keyframes _sp{to{transform:rotate(360deg);}}</style>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="supabase.js"></script>
     <script>
-    /* ══════════════════════════════════════════════════
-       HISTORIAL — datos reales desde Supabase
-    ══════════════════════════════════════════════════ */
     var _cobros    = [];
     var _programas = {};
     var _cohortes  = {};
@@ -344,30 +341,18 @@
 
     function getCobrosFiltradosBase() {
         var arr = _cobros.slice();
-
         if (_fPrograma !== 'todos') {
-            arr = arr.filter(function(c) {
-                return String(c.programa_id) === String(_fPrograma);
-            });
+            arr = arr.filter(function(c) { return String(c.programa_id) === String(_fPrograma); });
         }
-
         if (_fTipo !== 'todos') {
-            arr = arr.filter(function(c) {
-                return resolveEst(c) === _fTipo;
-            });
+            arr = arr.filter(function(c) { return resolveEst(c) === _fTipo; });
         }
-
         return arr;
     }
 
-    /* ── INIT ── */
     document.addEventListener('DOMContentLoaded', async function() {
         var sesion = getSesion();
-        if (!sesion) {
-            window.location.href = 'portal_login.html';
-            return;
-        }
-
+        if (!sesion) { window.location.href = 'portal_login.html'; return; }
         obtenerNotificaciones('ESTUDIANTE').then(renderNotificaciones);
         await cargar(sesion);
     });
@@ -376,395 +361,180 @@
         spin(true);
         try {
             var sb = await getSupabase();
-
             var cobRes = await sb.from('cobros')
                 .select('cobro_id,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,programa_id,cohorte_id')
                 .eq('dni', sesion.dni)
                 .order('fecha_vencimiento', { ascending: false });
-
             if (cobRes.error) throw cobRes.error;
-
-            _cobros = (cobRes.data || []).filter(function(c) {
-                return c.no_aplica !== true;
-            });
-
+            _cobros = (cobRes.data || []).filter(function(c) { return c.no_aplica !== true; });
             var pRes = await sb.from('programas').select('programa_id,nombre');
             var cRes = await sb.from('cohortes').select('cohorte_id,nombre');
-
-            (pRes.data || []).forEach(function(p) {
-                _programas[p.programa_id] = p.nombre;
-            });
-
-            (cRes.data || []).forEach(function(c) {
-                _cohortes[c.cohorte_id] = c.nombre;
-            });
-
+            (pRes.data || []).forEach(function(p) { _programas[p.programa_id] = p.nombre; });
+            (cRes.data || []).forEach(function(c) { _cohortes[c.cohorte_id] = c.nombre; });
             poblarFiltroPrograma();
             renderStats();
             renderDistrib();
             renderTimeline();
             renderChart();
             renderTabla();
-
-        } catch(e) {
-            console.error('Error historial:', e);
-        } finally {
-            spin(false);
-        }
+        } catch(e) { console.error('Error historial:', e); }
+        finally { spin(false); }
     }
 
-    /* ── FILTRO PROGRAMA ── */
     function poblarFiltroPrograma() {
         var progs = {};
-
-        _cobros.forEach(function(c) {
-            if (c.programa_id) {
-                progs[c.programa_id] = _programas[c.programa_id] || ('Programa ' + c.programa_id);
-            }
-        });
-
+        _cobros.forEach(function(c) { if (c.programa_id) progs[c.programa_id] = _programas[c.programa_id] || ('Programa ' + c.programa_id); });
         var sel = document.getElementById('filtroPrograma');
         sel.innerHTML = '<option value="todos">Todos los programas</option>' +
-            Object.keys(progs).map(function(id) {
-                return '<option value="' + id + '">' + progs[id] + '</option>';
-            }).join('');
+            Object.keys(progs).map(function(id) { return '<option value="' + id + '">' + progs[id] + '</option>'; }).join('');
     }
 
-    function filtrarPrograma(v) {
-        _fPrograma = String(v);
-        _pag = 1;
-
-        renderStats();
-        renderDistrib();
-        renderTimeline();
-        renderChart();
-        renderTabla();
-    }
-
+    function filtrarPrograma(v) { _fPrograma = String(v); _pag = 1; renderStats(); renderDistrib(); renderTimeline(); renderChart(); renderTabla(); }
     function seleccionarProgramaDesdeCard(pid) {
-        _fPrograma = String(pid);
-        _pag = 1;
-
+        _fPrograma = String(pid); _pag = 1;
         var sel = document.getElementById('filtroPrograma');
-        if (sel) {
-            sel.value = String(pid);
-        }
-
-        renderStats();
-        renderDistrib();
-        renderTimeline();
-        renderChart();
-        renderTabla();
-
+        if (sel) sel.value = String(pid);
+        renderStats(); renderDistrib(); renderTimeline(); renderChart(); renderTabla();
         var tabla = document.getElementById('tablaHistorial');
-        if (tabla) {
-            tabla.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        if (tabla) tabla.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-
-    function filtrarTipo(v) {
-        _fTipo = String(v);
-        _pag = 1;
-
-        renderStats();
-        renderDistrib();
-        renderTimeline();
-        renderChart();
-        renderTabla();
-    }
-
+    function filtrarTipo(v) { _fTipo = String(v); _pag = 1; renderStats(); renderDistrib(); renderTimeline(); renderChart(); renderTabla(); }
     function cambiarPagina(d) {
         var tot = Math.max(1, Math.ceil(_filtrados.length / POR_PAGINA));
         _pag = Math.max(1, Math.min(_pag + d, tot));
         renderTabla();
     }
 
-    /* ── STATS ── */
     function renderStats() {
         var base = getCobrosFiltradosBase();
-
-        var abonadas = base.filter(function(c) {
-            return resolveEst(c) === 'ABONADA';
-        });
-
-        var mora = base.filter(function(c) {
-            return resolveEst(c) === 'EN_MORA';
-        });
-
-        var totalAbon = base.reduce(function(s, c) {
-            return s + calcAbonado(c);
-        }, 0);
-
-        var totalPend = base.reduce(function(s, c) {
-            return s + (Number(c.saldo_pendiente) || 0);
-        }, 0);
-
-        var nProgs = Object.keys(base.reduce(function(m, c) {
-            if (c.programa_id) m[c.programa_id] = 1;
-            return m;
-        }, {})).length;
-
+        var abonadas = base.filter(function(c) { return resolveEst(c) === 'ABONADA'; });
+        var mora = base.filter(function(c) { return resolveEst(c) === 'EN_MORA'; });
+        var totalAbon = base.reduce(function(s, c) { return s + calcAbonado(c); }, 0);
+        var totalPend = base.reduce(function(s, c) { return s + (Number(c.saldo_pendiente) || 0); }, 0);
+        var nProgs = Object.keys(base.reduce(function(m, c) { if (c.programa_id) m[c.programa_id] = 1; return m; }, {})).length;
         document.getElementById('stat-abonado').textContent = fM(totalAbon);
-        document.getElementById('stat-abonado-sub').textContent = _fPrograma === 'todos'
-            ? 'En ' + nProgs + ' programa(s)'
-            : 'Programa seleccionado';
-
+        document.getElementById('stat-abonado-sub').textContent = _fPrograma === 'todos' ? 'En ' + nProgs + ' programa(s)' : 'Programa seleccionado';
         document.getElementById('stat-pendiente').textContent = fM(totalPend);
-        document.getElementById('stat-pendiente-sub').textContent = totalPend > 0
-            ? '↑ Saldo a regularizar'
-            : '✅ Sin deuda pendiente';
-
+        document.getElementById('stat-pendiente-sub').textContent = totalPend > 0 ? '↑ Saldo a regularizar' : '✅ Sin deuda pendiente';
         document.getElementById('stat-cuotas').textContent = abonadas.length + '/' + base.length;
         document.getElementById('stat-cuotas-sub').textContent = 'cuotas completadas';
-
         document.getElementById('stat-mora').textContent = mora.length;
-        document.getElementById('stat-mora-sub').textContent = mora.length > 0
-            ? mora.length + ' cuota(s) vencida(s)'
-            : '✅ Sin cuotas en mora';
-
-        document.getElementById('stat-mora-sub').style.color = mora.length > 0
-            ? 'var(--danger)'
-            : 'var(--success)';
+        document.getElementById('stat-mora-sub').textContent = mora.length > 0 ? mora.length + ' cuota(s) vencida(s)' : '✅ Sin cuotas en mora';
+        document.getElementById('stat-mora-sub').style.color = mora.length > 0 ? 'var(--danger)' : 'var(--success)';
     }
 
-    /* ── DISTRIBUCIÓN ── */
     function renderDistrib() {
         var pp = {};
-
         _cobros.forEach(function(c) {
             var pid = c.programa_id || 0;
-
-            if (!pp[pid]) {
-                pp[pid] = {
-                    nombre: _programas[pid] || 'Sin programa',
-                    abonado: 0,
-                    pendiente: 0,
-                    total: 0,
-                    abonadas: 0
-                };
-            }
-
+            if (!pp[pid]) pp[pid] = { nombre: _programas[pid] || 'Sin programa', abonado: 0, pendiente: 0, total: 0, abonadas: 0 };
             pp[pid].total++;
             pp[pid].abonado += calcAbonado(c);
             pp[pid].pendiente += Number(c.saldo_pendiente) || 0;
-
-            if (resolveEst(c) === 'ABONADA') {
-                pp[pid].abonadas++;
-            }
+            if (resolveEst(c) === 'ABONADA') pp[pid].abonadas++;
         });
-
         var keys = Object.keys(pp);
-
-        if (!keys.length) {
-            document.getElementById('distribGrid').innerHTML =
-                '<div style="grid-column:1/-1;text-align:center;color:#aaa;padding:24px;">Sin datos</div>';
-            return;
-        }
-
+        if (!keys.length) { document.getElementById('distribGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#aaa;padding:24px;">Sin datos</div>'; return; }
         document.getElementById('distribGrid').innerHTML = keys.map(function(pid, i) {
-            var p = pp[pid];
-            var pct = p.total > 0 ? Math.round(p.abonadas / p.total * 100) : 0;
-            var col = PROG_COLORS[i % PROG_COLORS.length];
-            var activa = String(pid) === String(_fPrograma);
-
-            return '<div class="distrib-card' + (activa ? ' active' : '') + '" onclick="seleccionarProgramaDesdeCard(\'' + pid + '\')" title="Ver historial solo de este programa">' +
-                '<div class="distrib-nombre">' + p.nombre + '</div>' +
-                '<div class="distrib-row"><span class="distrib-label">Pagado</span><span class="distrib-valor" style="color:var(--success)">' + fM(p.abonado) + '</span></div>' +
-                '<div class="distrib-row"><span class="distrib-label">Pendiente</span><span class="distrib-valor" style="color:' + (p.pendiente > 0 ? 'var(--danger)' : 'var(--success)') + '">' + fM(p.pendiente) + '</span></div>' +
-                '<div class="distrib-row"><span class="distrib-label">Progreso</span><span class="distrib-valor">' + p.abonadas + '/' + p.total + (p.abonadas === p.total ? ' ✅' : '') + '</span></div>' +
-                '<div class="distrib-progress"><div class="distrib-progress-fill" style="width:' + pct + '%;background:' + col + ';"></div></div>' +
-                '</div>';
+            var p = pp[pid], pct = p.total > 0 ? Math.round(p.abonadas / p.total * 100) : 0;
+            var col = PROG_COLORS[i % PROG_COLORS.length], activa = String(pid) === String(_fPrograma);
+            return '<div class="distrib-card' + (activa ? ' active' : '') + '" onclick="seleccionarProgramaDesdeCard(\'' + pid + '\')" title="Ver historial solo de este programa">'
+                + '<div class="distrib-nombre">' + p.nombre + '</div>'
+                + '<div class="distrib-row"><span class="distrib-label">Pagado</span><span class="distrib-valor" style="color:var(--success)">' + fM(p.abonado) + '</span></div>'
+                + '<div class="distrib-row"><span class="distrib-label">Pendiente</span><span class="distrib-valor" style="color:' + (p.pendiente > 0 ? 'var(--danger)' : 'var(--success)') + '">' + fM(p.pendiente) + '</span></div>'
+                + '<div class="distrib-row"><span class="distrib-label">Progreso</span><span class="distrib-valor">' + p.abonadas + '/' + p.total + (p.abonadas === p.total ? ' ✅' : '') + '</span></div>'
+                + '<div class="distrib-progress"><div class="distrib-progress-fill" style="width:' + pct + '%;background:' + col + ';"></div></div>'
+                + '</div>';
         }).join('');
     }
 
-    /* ── TIMELINE ── */
     function renderTimeline() {
         var recientes = getCobrosFiltradosBase().filter(function(c) {
             return ['ABONADA', 'PAGO_PARCIAL', 'PENDIENTE', 'EN_MORA'].includes(resolveEst(c));
         }).slice(0, 6);
-
-        if (!recientes.length) {
-            document.getElementById('timeline').innerHTML =
-                '<div style="color:#aaa;text-align:center;padding:24px;">Sin actividad reciente para este filtro</div>';
-            return;
-        }
-
+        if (!recientes.length) { document.getElementById('timeline').innerHTML = '<div style="color:#aaa;text-align:center;padding:24px;">Sin actividad reciente para este filtro</div>'; return; }
         document.getElementById('timeline').innerHTML = recientes.map(function(c) {
             var s = resolveEst(c);
             var dot = s === 'ABONADA' ? 'dot-success' : s === 'EN_MORA' ? 'dot-danger' : s === 'PENDIENTE' ? 'dot-info' : 'dot-warning';
             var ico = s === 'ABONADA' ? '✅' : s === 'EN_MORA' ? '⚠️' : s === 'PENDIENTE' ? '📎' : '🔵';
             var etq = s === 'ABONADA' ? 'Pago aprobado' : s === 'EN_MORA' ? 'En mora' : s === 'PENDIENTE' ? 'En revisión' : 'Pago parcial';
-            var prog = _programas[c.programa_id] || '';
-            var abon = calcAbonado(c);
-
-            return '<div class="timeline-item">' +
-                '<div class="timeline-dot ' + dot + '"></div>' +
-                '<div class="timeline-content">' +
-                '<div class="timeline-header">' +
-                '<div class="timeline-titulo">' + ico + ' ' + etq + ' — ' + c.concepto + (c.periodo ? ' (' + c.periodo + ')' : '') + '</div>' +
-                '<div class="timeline-fecha">Vence: ' + fFecha(c.fecha_vencimiento) + '</div>' +
-                '</div>' +
-                '<div class="timeline-desc">' + prog + (c.cohorte_id ? ' · ' + (_cohortes[c.cohorte_id] || '') : '') + '</div>' +
-                '<div class="timeline-monto ' + (abon > 0 ? 'monto-pos' : '') + '">' +
-                    (abon > 0 ? '+' + fM(abon) + ' abonado' : (Number(c.saldo_pendiente) > 0 ? 'Saldo: ' + fM(c.saldo_pendiente) : '')) +
-                '</div></div></div>';
+            var prog = _programas[c.programa_id] || '', abon = calcAbonado(c);
+            return '<div class="timeline-item"><div class="timeline-dot ' + dot + '"></div><div class="timeline-content">'
+                + '<div class="timeline-header"><div class="timeline-titulo">' + ico + ' ' + etq + ' — ' + c.concepto + (c.periodo ? ' (' + c.periodo + ')' : '') + '</div>'
+                + '<div class="timeline-fecha">Vence: ' + fFecha(c.fecha_vencimiento) + '</div></div>'
+                + '<div class="timeline-desc">' + prog + (c.cohorte_id ? ' · ' + (_cohortes[c.cohorte_id] || '') : '') + '</div>'
+                + '<div class="timeline-monto ' + (abon > 0 ? 'monto-pos' : '') + '">' + (abon > 0 ? '+' + fM(abon) + ' abonado' : (Number(c.saldo_pendiente) > 0 ? 'Saldo: ' + fM(c.saldo_pendiente) : '')) + '</div></div></div>';
         }).join('');
     }
 
-    /* ── GRÁFICO ── */
     function renderChart() {
-        var base = getCobrosFiltradosBase();
-
-        var ahora = new Date();
-        var meses = [];
-
+        var base = getCobrosFiltradosBase(), ahora = new Date(), meses = [];
         for (var i = 11; i >= 0; i--) {
             var d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
-            meses.push({
-                key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
-                label: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][d.getMonth()]
-            });
+            meses.push({ key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), label: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][d.getMonth()] });
         }
-
-        var vals = meses.map(function(m) {
-            return base.reduce(function(s, c) {
-                if (!c.fecha_vencimiento) return s;
-                return c.fecha_vencimiento.substring(0, 7) === m.key ? s + calcAbonado(c) : s;
-            }, 0);
-        });
-
-        var moraMeses = meses.map(function(m) {
-            return base.some(function(c) {
-                return resolveEst(c) === 'EN_MORA' && c.fecha_vencimiento && c.fecha_vencimiento.substring(0, 7) === m.key;
-            });
-        });
-
+        var vals = meses.map(function(m) { return base.reduce(function(s, c) { if (!c.fecha_vencimiento) return s; return c.fecha_vencimiento.substring(0, 7) === m.key ? s + calcAbonado(c) : s; }, 0); });
+        var moraMeses = meses.map(function(m) { return base.some(function(c) { return resolveEst(c) === 'EN_MORA' && c.fecha_vencimiento && c.fecha_vencimiento.substring(0, 7) === m.key; }); });
         var maxVal = Math.max.apply(null, vals.concat([1]));
-        var chart = document.getElementById('barChart');
-        var labels = document.getElementById('barLabels');
-
+        var chart = document.getElementById('barChart'), labels = document.getElementById('barLabels');
         chart.innerHTML = '';
-
         meses.forEach(function(m, i) {
             var h = Math.max(Math.round(vals[i] / maxVal * 110), 4);
             var col = moraMeses[i] ? 'var(--danger)' : vals[i] === 0 ? '#e0e0e0' : 'var(--primary)';
             var vs = vals[i] > 0 ? (vals[i] >= 1000 ? '$' + Math.round(vals[i] / 1000) + 'k' : '$' + vals[i]) : '—';
-
-            chart.innerHTML += '<div class="bar-col">' +
-                '<div class="bar-val" style="font-size:10px;color:' + (vals[i] > 0 ? 'var(--primary)' : '#ccc') + '">' + vs + '</div>' +
-                '<div class="bar" style="height:' + h + 'px;background:' + col + ';" title="' + m.label + ': ' + fM(vals[i]) + '"></div>' +
-                '<div class="bar-label">' + m.label + '</div></div>';
+            chart.innerHTML += '<div class="bar-col"><div class="bar-val" style="font-size:10px;color:' + (vals[i] > 0 ? 'var(--primary)' : '#ccc') + '">' + vs + '</div><div class="bar" style="height:' + h + 'px;background:' + col + ';" title="' + m.label + ': ' + fM(vals[i]) + '"></div><div class="bar-label">' + m.label + '</div></div>';
         });
-
-        labels.innerHTML =
-            '<span style="font-size:12px;color:#666;"><span style="display:inline-block;width:10px;height:10px;background:var(--primary);border-radius:2px;margin-right:4px;"></span>Pagado<span style="display:inline-block;width:10px;height:10px;background:var(--danger);border-radius:2px;margin-left:12px;margin-right:4px;"></span>Con mora</span>';
+        labels.innerHTML = '<span style="font-size:12px;color:#666;"><span style="display:inline-block;width:10px;height:10px;background:var(--primary);border-radius:2px;margin-right:4px;"></span>Pagado<span style="display:inline-block;width:10px;height:10px;background:var(--danger);border-radius:2px;margin-left:12px;margin-right:4px;"></span>Con mora</span>';
     }
 
-    /* ── TABLA ── */
     function renderTabla() {
         _filtrados = getCobrosFiltradosBase();
-
-        var total = _filtrados.length;
-        var totalPags = Math.max(1, Math.ceil(total / POR_PAGINA));
-
-        if (_pag > totalPags) {
-            _pag = totalPags;
-        }
-
-        var desde = (_pag - 1) * POR_PAGINA;
-        var hasta = Math.min(desde + POR_PAGINA, total);
+        var total = _filtrados.length, totalPags = Math.max(1, Math.ceil(total / POR_PAGINA));
+        if (_pag > totalPags) _pag = totalPags;
+        var desde = (_pag - 1) * POR_PAGINA, hasta = Math.min(desde + POR_PAGINA, total);
         var pag = _filtrados.slice(desde, hasta);
-
         document.getElementById('tablaHistorial').innerHTML = pag.length
             ? pag.map(function(c) {
-                var s = resolveEst(c);
-                var mp = ESTADO_MAP[s] || ['estado-pendiente', s];
-                var orig = Number(c.monto_original) || 0;
-                var fin = Number(c.monto_final) || 0;
-                var sal = Number(c.saldo_pendiente) || 0;
-                var desc = Number(c.descuento_porcentaje) || 0;
+                var s = resolveEst(c), mp = ESTADO_MAP[s] || ['estado-pendiente', s];
+                var orig = Number(c.monto_original) || 0, fin = Number(c.monto_final) || 0;
+                var sal = Number(c.saldo_pendiente) || 0, desc = Number(c.descuento_porcentaje) || 0;
                 var pn = _programas[c.programa_id] || '—';
-
-                return '<tr>' +
-                    '<td>' + fFecha(c.fecha_vencimiento) + '</td>' +
-                    '<td style="font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + pn + '">' + pn + '</td>' +
-                    '<td>' + c.concepto + (c.periodo ? ' <span style="color:#aaa;font-size:11px;">(' + c.periodo + ')</span>' : '') + '</td>' +
-                    '<td>' + (desc > 0 ? '<span style="text-decoration:line-through;color:#bbb;font-size:12px;">' + fM(orig) + '</span>' : fM(orig)) + '</td>' +
-                    '<td>' + (desc > 0 ? '<span style="color:var(--success);font-weight:600;">-' + desc + '%</span>' : '—') + '</td>' +
-                    '<td style="font-weight:700;">' + fM(fin) + '</td>' +
-                    '<td style="font-weight:700;color:' + (sal > 0 ? 'var(--danger)' : 'var(--success)') + ';">' + fM(sal) + '</td>' +
-                    '<td><span class="estado-badge ' + mp[0] + '">' + mp[1] + '</span></td>' +
-                    '</tr>';
+                return '<tr>'
+                    + '<td>' + fFecha(c.fecha_vencimiento) + '</td>'
+                    + '<td style="font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + pn + '">' + pn + '</td>'
+                    + '<td>' + c.concepto + (c.periodo ? ' <span style="color:#aaa;font-size:11px;">(' + c.periodo + ')</span>' : '') + '</td>'
+                    + '<td>' + (desc > 0 ? '<span style="text-decoration:line-through;color:#bbb;font-size:12px;">' + fM(orig) + '</span>' : fM(orig)) + '</td>'
+                    + '<td>' + (desc > 0 ? '<span style="color:var(--success);font-weight:600;">-' + desc + '%</span>' : '—') + '</td>'
+                    + '<td style="font-weight:700;">' + fM(fin) + '</td>'
+                    + '<td style="font-weight:700;color:' + (sal > 0 ? 'var(--danger)' : 'var(--success)') + ';">' + fM(sal) + '</td>'
+                    + '<td><span class="estado-badge ' + mp[0] + '">' + mp[1] + '</span></td></tr>';
             }).join('')
             : '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:24px;">Sin resultados para este filtro</td></tr>';
-
-        document.getElementById('pagInfo').innerHTML = total > 0
-            ? '<strong>' + (desde + 1) + '–' + hasta + '</strong> de <strong>' + total + '</strong>'
-            : '0 resultados';
-
+        document.getElementById('pagInfo').innerHTML = total > 0 ? '<strong>' + (desde + 1) + '–' + hasta + '</strong> de <strong>' + total + '</strong>' : '0 resultados';
         document.getElementById('pagNum').textContent = 'Página ' + _pag + ' de ' + totalPags;
         document.getElementById('btnAnterior').disabled = _pag === 1;
         document.getElementById('btnSiguiente').disabled = _pag >= totalPags;
     }
 
-    /* ── EXPORTAR ── */
     function exportar() {
         function _exp() {
             var cab = ['Vencimiento','Programa','Cohorte','Concepto','Período','Monto Original','Descuento %','Monto Final','Saldo','Estado'];
-
             var rows = getCobrosFiltradosBase().map(function(c) {
-                return [
-                    fFecha(c.fecha_vencimiento),
-                    _programas[c.programa_id] || '',
-                    _cohortes[c.cohorte_id] || '',
-                    c.concepto || '',
-                    c.periodo || '',
-                    c.monto_original || 0,
-                    c.descuento_porcentaje || 0,
-                    c.monto_final || 0,
-                    c.saldo_pendiente || 0,
-                    resolveEst(c)
-                ];
+                return [fFecha(c.fecha_vencimiento),_programas[c.programa_id]||'',_cohortes[c.cohorte_id]||'',c.concepto||'',c.periodo||'',c.monto_original||0,c.descuento_porcentaje||0,c.monto_final||0,c.saldo_pendiente||0,resolveEst(c)];
             });
-
             var ws = XLSX.utils.aoa_to_sheet([cab].concat(rows));
             var wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Historial');
             XLSX.writeFile(wb, 'historial_pagos_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
-
-        if (!window.XLSX) {
-            var s = document.createElement('script');
-            s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-            s.onload = _exp;
-            document.head.appendChild(s);
-        } else {
-            _exp();
-        }
+        if (!window.XLSX) { var s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'; s.onload = _exp; document.head.appendChild(s); }
+        else _exp();
     }
 
-    /* ── CAMPANA ── */
-    function toggleNotif() {
-        var dd = document.getElementById('notif-dropdown');
-        dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-    }
-
-    document.addEventListener('click', function(e) {
-        var w = document.querySelector('.notif-wrapper');
-        if (w && !w.contains(e.target)) {
-            var dd = document.getElementById('notif-dropdown');
-            if (dd) dd.style.display = 'none';
-        }
-    });
-
-    function leerNotif(id) {
-        marcarNotificacionLeida(id);
-    }
-
-    function marcarTodasLeidas() {
-        marcarTodasNotificacionesLeidas();
-    }
-
+    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
+    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+    function leerNotif(id) { marcarNotificacionLeida(id); }
+    function marcarTodasLeidas() { marcarTodasNotificacionesLeidas(); }
     </script>
 </body>
 </html>
