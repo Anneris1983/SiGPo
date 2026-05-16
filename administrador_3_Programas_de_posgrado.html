@@ -7,77 +7,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #1e3a5f; --accent: #d4af37; --bg: #f8f6f1;
-            --success: #2d7a4f; --warning: #e67e22; --danger: #c0392b;
-        }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); }
-        .header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
-            color: white; padding: 20px 40px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
+        :root { --primary: #5C1018; --accent: #C49A2A; --bg: #f8f6f1; --success: #2d7a4f; --warning: #e67e22; --danger: #c0392b; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); font-size: 14px; }
+        .header { background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%); color: white; padding: 20px 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
         .header-left { flex: 1; }
         .breadcrumb { font-size: 14px; margin-bottom: 12px; }
-        .breadcrumb a {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 8px 16px; background: rgba(255,255,255,0.15);
-            border: 1.5px solid rgba(255,255,255,0.38);
-            color: #fff; border-radius: 8px; font-size: 13px; font-weight: 600;
-            text-decoration: none; font-family: 'DM Sans', sans-serif; transition: background .2s;
-        }
+        .breadcrumb a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.38); color: #fff; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; font-family: 'DM Sans', sans-serif; transition: background .2s; }
         .breadcrumb a:hover { background: rgba(255,255,255,0.28); }
         .header h1 { font-family: 'Crimson Pro', serif; font-size: 28px; margin-bottom: 4px; }
         .header p { opacity: 0.9; font-size: 14px; }
         .header-right { display: flex; gap: 12px; align-items: center; flex-shrink: 0; }
-        .header-btn {
-            display: inline-flex; align-items: center; gap: 7px;
-            padding: 10px 20px; background: rgba(255,255,255,0.15);
-            border: 1.5px solid rgba(255,255,255,0.38); color: #fff;
-            border-radius: 8px; font-size: 14px; font-weight: 600;
-            cursor: pointer; text-decoration: none; font-family: 'DM Sans', sans-serif;
-            transition: background .2s;
-        }
+        .header-btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.38); color: #fff; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: 'DM Sans', sans-serif; transition: background .2s; }
         .header-btn:hover { background: rgba(255,255,255,0.28); }
         .notif-wrapper { position: relative; }
         .notif-bell { background: none; border: none; cursor: pointer; position: relative; padding: 8px; border-radius: 8px; transition: background 0.2s; }
         .notif-bell:hover { background: rgba(255,255,255,0.15); }
-        .notif-bell svg { display: block; }
-        .notif-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid #1e3a5f; line-height: 1; }
+        .notif-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid #5C1018; line-height: 1; }
         .notif-badge:empty, .notif-badge[data-count="0"] { display: none; }
         .notif-dropdown { display: none; position: absolute; top: calc(100% + 10px); right: 0; width: 380px; max-height: 460px; overflow-y: auto; background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.18); z-index: 999; border: 1px solid #e5e7eb; }
         .notif-dropdown.open { display: block; }
         .notif-dropdown-header { padding: 16px 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
         .notif-dropdown-header h3 { font-size: 15px; font-weight: 700; color: var(--primary); }
         .notif-mark-all { font-size: 12px; color: var(--accent); cursor: pointer; background: none; border: none; font-weight: 600; font-family: 'DM Sans', sans-serif; }
-        .notif-mark-all:hover { text-decoration: underline; }
-        .notif-item { display: flex; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background 0.15s; }
-        .notif-item:hover { background: #f9fafb; }
+        .notif-item { display: flex; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
         .notif-item.unread { background: #fffbeb; }
-        .notif-item.unread:hover { background: #fef3c7; }
-        .notif-icon-circle { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-        .notif-icon-circle.pago { background: #dcfce7; }
-        .notif-icon-circle.mora { background: #fee2e2; }
-        .notif-icon-circle.solicitud { background: #dbeafe; }
-        .notif-icon-circle.reclamo { background: #fef3c7; }
-        .notif-icon-circle.alerta { background: #fce7f3; }
-        .notif-text { flex: 1; min-width: 0; }
         .notif-text p { font-size: 13px; color: #374151; line-height: 1.4; }
-        .notif-text p strong { color: var(--primary); }
         .notif-time { font-size: 11px; color: #9ca3af; margin-top: 3px; }
         .notif-empty { padding: 32px 20px; text-align: center; color: #9ca3af; font-size: 14px; }
         .container { max-width: 1200px; margin: 40px auto; padding: 0 40px; }
         .page-title { font-family: 'Crimson Pro', serif; font-size: 32px; color: var(--primary); margin-bottom: 12px; }
         .page-subtitle { color: #666; font-size: 16px; margin-bottom: 32px; }
         .cohortes-list { display: flex; flex-direction: column; gap: 20px; }
-        .cohorte-card {
-            background: white; border-radius: 12px; padding: 28px;
-            cursor: pointer; transition: all 0.3s ease;
-            border: 2px solid transparent;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        .cohorte-card { background: white; border-radius: 12px; padding: 28px; cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; box-shadow: 0 2px 12px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
         .cohorte-card:hover { border-color: var(--accent); transform: translateX(8px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
         .cohorte-card.active { border-color: var(--accent); background: linear-gradient(90deg, #fff9e6 0%, white 30%); }
         .cohorte-left { flex: 1; }
@@ -96,20 +58,11 @@
         .badge.closed { background: #e8e8e8; color: #666; }
         .arrow { font-size: 28px; color: var(--accent); transition: transform 0.3s ease; }
         .cohorte-card:hover .arrow { transform: translateX(8px); }
-        .btn-toggle {
-            padding: 8px 16px; border-radius: 20px; font-size: 13px;
-            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-            border: 2px solid; cursor: pointer; transition: all 0.3s ease;
-            font-family: 'DM Sans', sans-serif;
-        }
+        .btn-toggle { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border: 2px solid; cursor: pointer; transition: all 0.3s ease; font-family: 'DM Sans', sans-serif; }
         .btn-toggle.cerrar { background: white; border-color: var(--danger); color: var(--danger); }
         .btn-toggle.cerrar:hover { background: var(--danger); color: white; }
         .btn-toggle.activar { background: white; border-color: var(--success); color: var(--success); }
         .btn-toggle.activar:hover { background: var(--success); color: white; }
-        .saldo-positivo { color: var(--success); font-weight: 700; }
-        .saldo-negativo { color: var(--danger); font-weight: 700; }
-        .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 2.5px solid #e0e0e0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
         .loading-center { text-align: center; padding: 60px; color: #999; }
     </style>
 </head>
@@ -127,10 +80,7 @@
         <div class="header-right">
             <div class="notif-wrapper">
                 <button class="notif-bell" onclick="toggleNotifLocal()" title="Notificaciones" aria-label="Notificaciones">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
                     <span class="notif-badge" id="notif-badge">0</span>
                 </button>
                 <div class="notif-dropdown" id="notif-dropdown">
@@ -138,9 +88,7 @@
                         <h3>🔔 Notificaciones</h3>
                         <button class="notif-mark-all" onclick="marcarTodasLeidasLocal()">Marcar todas como leídas</button>
                     </div>
-                    <div id="notif-list">
-                        <div class="notif-empty">Cargando notificaciones…</div>
-                    </div>
+                    <div id="notif-list"><div class="notif-empty">Cargando notificaciones…</div></div>
                 </div>
             </div>
             <a href="portal_login.html" class="header-btn" onclick="return cerrarSesion(event)">
@@ -155,16 +103,13 @@
     <h1 class="page-title" id="page-title">Cohortes Disponibles</h1>
     <p class="page-subtitle" id="page-subtitle">Cargando…</p>
     <div class="cohortes-list" id="cohortes-list">
-        <div class="loading-center"><span class="loading-spinner"></span> Cargando cohortes…</div>
+        <div class="loading-center">Cargando cohortes…</div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-/* ══════════════════════════════════════════════
-   UTILIDADES
-   ══════════════════════════════════════════════ */
 function fMillones(valor) {
     if (valor === null || valor === undefined) return '$0,00';
     var num = parseFloat(valor);
@@ -172,124 +117,59 @@ function fMillones(valor) {
     return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
-function getParam(name) {
-    var url = new URL(window.location.href);
-    return url.searchParams.get(name);
-}
+function getParam(name) { return new URL(window.location.href).searchParams.get(name); }
 
-/* ══════════════════════════════════════════════
-   NAVEGACIÓN A COHORTE
-   ══════════════════════════════════════════════ */
 function irACohorte(cohorteId, event) {
     if (event) event.stopPropagation();
     navegar('administrador_4_cohorte.html?cohorte_id=' + cohorteId + '&programa_id=' + (getParam('id') || ''));
 }
 
-/* ══════════════════════════════════════════════
-   CAMPANA DE NOTIFICACIONES
-   ══════════════════════════════════════════════ */
 var notificaciones = [];
 
-function toggleNotifLocal() {
-    document.getElementById('notif-dropdown').classList.toggle('open');
-}
-
-document.addEventListener('click', function(e) {
-    var wrapper = document.querySelector('.notif-wrapper');
-    if (wrapper && !wrapper.contains(e.target)) {
-        document.getElementById('notif-dropdown').classList.remove('open');
-    }
-});
+function toggleNotifLocal() { document.getElementById('notif-dropdown').classList.toggle('open'); }
+document.addEventListener('click', function(e) { var wrapper = document.querySelector('.notif-wrapper'); if (wrapper && !wrapper.contains(e.target)) document.getElementById('notif-dropdown').classList.remove('open'); });
 
 function renderNotificacionesLocal(datos) {
     notificaciones = datos || [];
     var sinLeer = notificaciones.filter(function(n) { return !n.leida; }).length;
     var badge = document.getElementById('notif-badge');
-    badge.textContent = sinLeer;
-    badge.setAttribute('data-count', sinLeer);
-
+    badge.textContent = sinLeer; badge.setAttribute('data-count', sinLeer);
     var lista = document.getElementById('notif-list');
-    if (notificaciones.length === 0) {
-        lista.innerHTML = '<div class="notif-empty">No hay notificaciones</div>';
-        return;
-    }
+    if (notificaciones.length === 0) { lista.innerHTML = '<div class="notif-empty">No hay notificaciones</div>'; return; }
     var iconos = { pago: '💰', mora: '🔴', solicitud: '📋', reclamo: '⚠️', alerta: '🚨' };
     lista.innerHTML = notificaciones.map(function(n) {
-        return '<div class="notif-item ' + (n.leida ? '' : 'unread') + '" onclick="leerNotifLocal(\'' + n.id + '\')">'
-            + '<div class="notif-icon-circle ' + (n.tipo || 'alerta') + '">' + (iconos[n.tipo] || '🔔') + '</div>'
-            + '<div class="notif-text"><p>' + n.mensaje + '</p>'
-            + '<div class="notif-time">' + (n.tiempo || '') + '</div></div></div>';
+        return '<div class="notif-item ' + (n.leida ? '' : 'unread') + '" onclick="leerNotifLocal(\''+n.id+'\')">'
+            + '<div class="notif-text"><p>' + n.mensaje + '</p><div class="notif-time">' + (n.tiempo || '') + '</div></div></div>';
     }).join('');
 }
 
-function leerNotifLocal(id) {
-    notificaciones.forEach(function(n) { if (n.id === id) n.leida = true; });
-    renderNotificacionesLocal(notificaciones);
-    marcarNotificacionLeida(id);
-}
+function leerNotifLocal(id) { notificaciones.forEach(function(n) { if (n.id===id) n.leida=true; }); renderNotificacionesLocal(notificaciones); marcarNotificacionLeida(id); }
+function marcarTodasLeidasLocal() { notificaciones.forEach(function(n) { n.leida=true; }); renderNotificacionesLocal(notificaciones); marcarTodasNotificacionesLeidas(); }
 
-function marcarTodasLeidasLocal() {
-    notificaciones.forEach(function(n) { n.leida = true; });
-    renderNotificacionesLocal(notificaciones);
-    marcarTodasNotificacionesLeidas();
-}
-
-function cargarNotificaciones() {
-    obtenerNotificaciones('ADMINISTRADOR').then(function(datos) {
-        renderNotificacionesLocal(datos);
-    });
-}
-
-/* ══════════════════════════════════════════════
-   TOGGLE ESTADO COHORTE (Activar / Cerrar)
-   ══════════════════════════════════════════════ */
 function toggleEstado(cohorteId, nuevoEstado, event) {
     if (event) event.stopPropagation();
     var accion = nuevoEstado === 'ACTIVO' ? 'activar' : 'cerrar';
     if (!confirm('¿Querés ' + accion + ' esta cohorte?')) return;
-
     getSupabase().then(function(sb) {
-        sb.from('cohortes').update({ estado: nuevoEstado }).eq('cohorte_id', cohorteId).then(function() {
-            cargarPrograma();
-        });
+        sb.from('cohortes').update({ estado: nuevoEstado }).eq('cohorte_id', cohorteId).then(function() { cargarPrograma(); });
     });
 }
 
-/* ══════════════════════════════════════════════
-   RENDERIZAR COHORTES
-   ══════════════════════════════════════════════ */
 function renderPrograma(data) {
-    if (!data) {
-        document.getElementById('cohortes-list').innerHTML = '<div class="loading-center">No se encontró el programa</div>';
-        return;
-    }
-
+    if (!data) { document.getElementById('cohortes-list').innerHTML = '<div class="loading-center">No se encontró el programa</div>'; return; }
     var icono = getIconoTipo(data.tipo);
     document.getElementById('header-titulo').textContent = icono + ' ' + (data.nombre || 'Programa');
-
     var cohortes = data.cohortes || [];
     var totalEstudiantes = cohortes.reduce(function(s, c) { return s + (c.estudiantes || 0); }, 0);
     var labelPlural = getLabelNomenclaturaPlural(data.tipo);
     document.getElementById('page-subtitle').textContent = cohortes.length + ' ' + labelPlural.toLowerCase() + ' • ' + totalEstudiantes + ' estudiantes totales';
-
     var lista = document.getElementById('cohortes-list');
-    if (cohortes.length === 0) {
-        lista.innerHTML = '<div class="loading-center">No hay cohortes registradas para este programa</div>';
-        return;
-    }
-
+    if (cohortes.length === 0) { lista.innerHTML = '<div class="loading-center">No hay cohortes registradas para este programa</div>'; return; }
     lista.innerHTML = cohortes.map(function(c) {
         var esActiva = c.estado === 'ACTIVO';
-        var claseCard = 'cohorte-card' + (esActiva ? ' active' : '');
-        var claseBadge = esActiva ? 'badge active' : 'badge closed';
-        var textoBadge = esActiva ? 'Activa' : 'Cerrada';
-        var claseBtn = esActiva ? 'btn-toggle cerrar' : 'btn-toggle activar';
-        var textoBtn = esActiva ? '🔒 Cerrar' : '✅ Activar';
         var nuevoEstado = esActiva ? 'CERRADO' : 'ACTIVO';
         var saldo = (c.recaudado || 0) - (c.egresos || 0);
-        var claseSaldo = saldo >= 0 ? 'saldo-positivo' : 'saldo-negativo';
-
-        return '<div class="' + claseCard + '" id="cohorte-' + c.id + '" onclick="irACohorte(' + c.id + ', event)">'
+        return '<div class="cohorte-card' + (esActiva ? ' active' : '') + '" id="cohorte-' + c.id + '" onclick="irACohorte(' + c.id + ', event)">'
             + '<div class="cohorte-left">'
             + '<div class="cohorte-title">' + (c.nombre || 'Cohorte') + '</div>'
             + '<div class="cohorte-dates">' + (c.fechaInicio || '') + ' – ' + (c.fechaFin || '') + '</div>'
@@ -299,46 +179,28 @@ function renderPrograma(data) {
             + '<div class="stat-box"><div class="stat-label">En mora</div><div class="stat-value' + ((c.enMora || 0) > 0 ? ' danger' : '') + '">' + (c.enMora || 0) + '</div></div>'
             + '<div class="stat-box"><div class="stat-label">Recaudado</div><div class="stat-value">' + fMillones(c.recaudado) + '</div></div>'
             + '<div class="stat-box"><div class="stat-label">Egresos</div><div class="stat-value warning">' + fMillones(c.egresos) + '</div></div>'
-            + '<div class="stat-box"><div class="stat-label">Saldo</div><div class="stat-value ' + ((c.saldo || 0) >= 0 ? 'success' : 'danger') + '">' + fMillones(c.saldo) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">Saldo</div><div class="stat-value ' + (saldo >= 0 ? 'success' : 'danger') + '">' + fMillones(saldo) + '</div></div>'
             + '</div></div>'
             + '<div class="cohorte-right">'
-            + '<span class="' + claseBadge + '">' + textoBadge + '</span>'
-            + '<button class="' + claseBtn + '" onclick="toggleEstado(' + c.id + ', \'' + nuevoEstado + '\', event)">' + textoBtn + '</button>'
+            + '<span class="badge ' + (esActiva ? 'active' : 'closed') + '">' + (esActiva ? 'Activa' : 'Cerrada') + '</span>'
+            + '<button class="btn-toggle ' + (esActiva ? 'cerrar' : 'activar') + '" onclick="toggleEstado(' + c.id + ', \'' + nuevoEstado + '\', event)">' + (esActiva ? '🔒 Cerrar' : '✅ Activar') + '</button>'
             + '<span class="arrow">→</span>'
             + '</div></div>';
     }).join('');
 }
 
-/* ══════════════════════════════════════════════
-   CARGAR DATOS DESDE SUPABASE
-   ══════════════════════════════════════════════ */
 function cargarPrograma() {
     var programaId = getParam('id');
-    if (!programaId) {
-        document.getElementById('cohortes-list').innerHTML = '<div class="loading-center">No se especificó un programa</div>';
-        return;
-    }
-
-    obtenerDetallePrograma(programaId).then(function(data) {
-        renderPrograma(data);
-    }).catch(function(err) {
-        console.error('Error cargando programa:', err);
-        document.getElementById('cohortes-list').innerHTML = '<div class="loading-center">Error al cargar el programa</div>';
-    });
+    if (!programaId) { document.getElementById('cohortes-list').innerHTML = '<div class="loading-center">No se especificó un programa</div>'; return; }
+    obtenerDetallePrograma(programaId).then(function(data) { renderPrograma(data); })
+        .catch(function(err) { console.error('Error:', err); document.getElementById('cohortes-list').innerHTML = '<div class="loading-center">Error al cargar el programa</div>'; });
 }
 
-/* ══════════════════════════════════════════════
-   INICIALIZAR
-   ══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function() {
     var sesion = getSesion();
-    if (!sesion) {
-        window.location.href = 'portal_login.html';
-        return;
-    }
-
+    if (!sesion) { window.location.href = 'portal_login.html'; return; }
     cargarPrograma();
-    cargarNotificaciones();
+    obtenerNotificaciones('ADMINISTRADOR').then(function(datos) { renderNotificacionesLocal(datos); });
 });
 </script>
 </body>
