@@ -7,10 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #1e3a5f; --accent: #d4af37; --success: #2d7a4f; --danger: #dc2626; }
-        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+        :root { --primary: #5C1018; --accent: #C49A2A; --success: #2d7a4f; --danger: #dc2626; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
 
-        .header { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 20px 40px; }
+        .header { background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%); color: white; padding: 20px 40px; }
         .header-content { display: flex; justify-content: space-between; align-items: flex-start; }
         .breadcrumb { font-size: 14px; margin-bottom: 12px; }
         .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
@@ -123,13 +123,13 @@
         <div style="display:flex;align-items:center;gap:12px;">
             <div class="notif-wrapper">
                 <button onclick="toggleNotif()" style="background:none;border:none;cursor:pointer;padding:8px;border-radius:8px;position:relative;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;border:2px solid #1e3a5f;">0</span>
+                    <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
+                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;border:2px solid #5C1018;">0</span>
                 </button>
                 <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:360px;max-height:440px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                     <div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                        <h3 style="font-size:14px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
-                        <button onclick="marcarTodasNotificacionesLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;">Marcar leídas</button>
+                        <h3 style="font-size:14px;font-weight:700;color:#5C1018;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasNotificacionesLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;">Marcar leídas</button>
                     </div>
                     <div id="notif-list"><div style="padding:32px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div></div>
                 </div>
@@ -214,11 +214,14 @@
                 <input type="text" id="prog-nombre" placeholder="Ej: Maestría en Dirección de Negocios">
             </div>
             <div class="mfield">
-                <label>Coordinador(es)</label>
-                <select id="prog-coords" multiple style="min-height:90px;">
-                    <option disabled>Cargando...</option>
-                </select>
-                <div class="mhint">Mantené Ctrl/Cmd para seleccionar varios</div>
+                <label>Email de coordinación *</label>
+                <input type="email" id="prog-email" placeholder="Ej: costosygestion@fce.uncu.edu.ar">
+                <div class="mhint">Este correo será el remitente de los avisos automáticos del programa</div>
+            </div>
+            <div class="mfield">
+                <label>URL del GAS (Google Apps Script)</label>
+                <input type="text" id="prog-gas" placeholder="https://script.google.com/macros/s/...">
+                <div class="mhint">URL de implementación del script de envío automático</div>
             </div>
             <!-- Campo descripcion no disponible en esta versión -->
         </div>
@@ -426,17 +429,15 @@ async function abrirModalPrograma(id) {
     document.getElementById('prog-id').value = id || '';
     document.getElementById('prog-tipo').value = 'MAESTRIA';
     document.getElementById('prog-nombre').value = '';
-    await cargarCoordsSelect([]);
+    document.getElementById('prog-email').value = '';
+    document.getElementById('prog-gas').value = '';
     if (id) {
         var p = _programas.find(function(x){return x.programa_id===id;});
         if (p) {
             document.getElementById('prog-tipo').value = p.tipo||'MAESTRIA';
             document.getElementById('prog-nombre').value = p.nombre||'';
-            // Coordinadores asignados
-            var sb = await getSupabase();
-            var {data:asign} = await sb.from('coordinadores_programas').select('coordinador_id').eq('programa_id',id);
-            var selIds = (asign||[]).map(function(a){return a.coordinador_id;});
-            await cargarCoordsSelect(selIds);
+            document.getElementById('prog-email').value = p.email_remitente||'';
+            document.getElementById('prog-gas').value = p.gas_url||'';
         }
     }
     abrirModal('modal-prog');
@@ -444,30 +445,19 @@ async function abrirModalPrograma(id) {
 
 async function editarPrograma(id) { await abrirModalPrograma(id); }
 
-async function cargarCoordsSelect(selIds) {
-    var sb = await getSupabase();
-    var {data} = await sb.from('usuarios').select('usuario_id,nombre_completo').eq('rol','COORDINADOR').eq('activo',true).order('nombre_completo');
-    var sel = document.getElementById('prog-coords');
-    if (!data||!data.length) {
-        sel.innerHTML = '<option value="" disabled>No hay coordinadores registrados</option>';
-        return;
-    }
-    sel.innerHTML = data.map(function(u){
-        return '<option value="'+u.usuario_id+'"'+(selIds.indexOf(u.usuario_id)>=0?' selected':'')+'>'+esc(u.nombre_completo)+'</option>';
-    }).join('');
-}
 
 async function guardarPrograma() {
     var id     = document.getElementById('prog-id').value;
     var tipo   = document.getElementById('prog-tipo').value;
     var nombre = document.getElementById('prog-nombre').value.trim();
+    var email  = document.getElementById('prog-email').value.trim();
+    var gasUrl = document.getElementById('prog-gas').value.trim();
     if (!nombre) { toast('El nombre es obligatorio','err'); return; }
-    var coordIds = Array.from(document.getElementById('prog-coords').selectedOptions)
-        .map(function(o){return parseInt(o.value);}).filter(Boolean);
+    if (!email)  { toast('El email de coordinación es obligatorio','err'); return; }
     spin(true);
     try {
         var sb = await getSupabase();
-        var datos = {tipo:tipo, nombre:nombre};
+        var datos = {tipo:tipo, nombre:nombre, email_remitente:email, gas_url:gasUrl||null};
         var progId;
         if (id) {
             progId = parseInt(id);
@@ -479,11 +469,6 @@ async function guardarPrograma() {
             if (e2) throw e2;
             progId = nuevo.programa_id;
             toast('Programa creado ✓','ok');
-        }
-        // Coordinadores
-        await sb.from('coordinadores_programas').delete().eq('programa_id',progId);
-        if (coordIds.length) {
-            await sb.from('coordinadores_programas').insert(coordIds.map(function(cid){return {programa_id:progId,coordinador_id:cid};}));
         }
         cerrarModal('modal-prog');
         await cargarProgramas();

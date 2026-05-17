@@ -18,12 +18,12 @@
         .btn-logout { padding: 8px 18px; background: transparent; color: white; border: 2px solid rgba(255,255,255,0.7); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s, border-color 0.2s; }
         .btn-logout:hover { background: rgba(255,255,255,0.15); border-color: white; }
         
-        .container { max-width: 1400px; margin: 40px auto; padding: 0 40px; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 24px; }
         
         .programs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
         
         .program-card { 
-            background: white; border-radius: 12px; padding: 24px; 
+            background: white; border-radius: 12px; padding: 14px; 
             box-shadow: 0 2px 12px rgba(0,0,0,0.06); 
             cursor: pointer; transition: all 0.3s;
             border: 2px solid transparent;
@@ -42,7 +42,7 @@
             font-size: 28px; 
         }
         
-        .program-name { font-size: 18px; font-weight: 700; color: var(--primary); }
+        .program-name { font-size: 14px; font-weight: 700; color: var(--primary); }
         .program-type { font-size: 13px; color: #666; margin-top: 4px; text-transform: uppercase; }
         
         .program-stats { 
@@ -112,113 +112,181 @@
                 <div class="program-header"><div class="program-icon">⏳</div><div><div class="program-name" style="background:#e0e0e0;height:18px;border-radius:4px;width:180px;"></div><div class="program-type" style="background:#f0f0f0;height:12px;border-radius:4px;width:100px;margin-top:6px;"></div></div></div>
                 <div class="program-stats"><div class="stat"><div class="stat-value" style="background:#e0e0e0;height:28px;border-radius:4px;"></div></div><div class="stat"><div class="stat-value" style="background:#e0e0e0;height:28px;border-radius:4px;"></div></div><div class="stat"><div class="stat-value" style="background:#e0e0e0;height:28px;border-radius:4px;"></div></div></div>
             </div>
+            <div class="program-card" style="pointer-events:none;opacity:0.35;animation:pulse 1.2s infinite 0.2s;">
+                <div class="program-header"><div class="program-icon">⏳</div><div><div class="program-name" style="background:#e0e0e0;height:18px;border-radius:4px;width:160px;"></div><div class="program-type" style="background:#f0f0f0;height:12px;border-radius:4px;width:90px;margin-top:6px;"></div></div></div>
+                <div class="program-stats"><div class="stat"><div class="stat-value" style="background:#e0e0e0;height:28px;border-radius:4px;"></div></div><div class="stat"><div class="stat-value" style="background:#e0e0e0;height:28px;border-radius:4px;"></div></div><div class="stat"><div class="stat-value" style="background:#e0e0e0;height:28px;border-radius:4px;"></div></div></div>
+            </div>
+            <div class="program-card" style="pointer-events:none;opacity:0.2;animation:pulse 1.2s infinite 0.4s;">
+                <div class="program-header"><div class="program-icon">⏳</div><div><div class="program-name" style="background:#e0e0e0;height:18px;border-radius:4px;width:200px;"></div><div class="program-type" style="background:#f0f0f0;height:12px;border-radius:4px;width:80px;margin-top:6px;"></div></div></div>
+                <div class="program-stats"><div class="stat"><div class="stat-value" style="background:#e0e0e0;height:28px;border-radius:4px;"></div></div><div class="stat"><div class="stat-value" style="background:#e0e0e0;height:28px;border-radius:4px;"></div></div><div class="stat"><div class="stat-value" style="background:#e0e0e0;height:28px;border-radius:4px;"></div></div></div>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
-    function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+    /* ══ HELPERS ══ */
+    function fMillones(n) {
+        var num = parseFloat(n || 0);
+        if (isNaN(num)) return '$0,00';
+        return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    }
+
+    /* ══ ESTADO GLOBAL ══ */
     var _programas = [];
     var _filtroActivo = 'todos';
 
+    /* ══ ICONO POR TIPO ══ */
     function iconoTipo(tipo) {
         var t = (tipo || '').toUpperCase();
-        var iconos = { 'DOCTORADO':'🎓','MAESTRIA':'📊','ESPECIALIZACION':'💼','DIPLOMADO':'🏅','DIPLOMATURA':'📜','CURSO':'📖','MICRO_MAESTRIA':'🔬' };
+        var iconos = {
+            'DOCTORADO':      '🎓',
+            'MAESTRIA':       '📊',
+            'ESPECIALIZACION':'💼',
+            'DIPLOMADO':      '🏅',
+            'DIPLOMATURA':    '📜',
+            'CURSO':          '📖',
+            'MICRO_MAESTRIA': '🔬'
+        };
         return iconos[t] || '📚';
     }
 
+    /* ══ LABEL TIPO ══ */
+    function labelTipo(tipo) {
+        var t = (tipo || '').toUpperCase();
+        var labels = {
+            'DOCTORADO':      'Doctorado',
+            'MAESTRIA':       'Maestria',
+            'ESPECIALIZACION':'Especializacion',
+            'DIPLOMADO':      'Diplomado',
+            'DIPLOMATURA':    'Diplomatura',
+            'CURSO':          'Curso',
+            'MICRO_MAESTRIA': 'Micro Maestria'
+        };
+        return labels[t] || tipo || '—';
+    }
+
+    /* ══ ETIQUETA COHORTES/EDICIONES ══ */
+    function labelCohorte(tipo, cantidad) {
+        var TIPOS_PROGRAMA = ['DOCTORADO', 'MAESTRIA', 'ESPECIALIZACION'];
+        var t = (tipo || '').toUpperCase();
+        var esPrograma = TIPOS_PROGRAMA.indexOf(t) >= 0;
+        if (cantidad === 1) return esPrograma ? 'Cohorte' : 'Edicion';
+        return esPrograma ? 'Cohortes' : 'Ediciones';
+    }
+
+    /* ══ FORMATO MONEDA ══ */
+    function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+    /* ══ RENDER PROGRAMAS ══ */
     function renderProgramas(programas) {
         var grid = document.getElementById('programsGrid');
         if (!programas || programas.length === 0) {
             grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#666;">No hay programas disponibles.</div>';
             return;
         }
+
         grid.innerHTML = programas.map(function(p) {
-            var saldoColor = (p.saldo || 0) >= 0 ? '#10b981' : '#ef4444';
-            var pendColor  = (p.pendCooperadora || 0) > 0 ? '#f59e0b' : '#10b981';
-            return '<div class="program-card" data-tipo="' + (p.tipo||'').toLowerCase() + '" onclick="navegar(\'cooperadora_4_cohortes.html?programa=' + p.id + '\')">'
-                + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">'
-                + '<div class="program-icon">' + iconoTipo(p.tipo) + '</div>'
-                + '</div>'
-                + '<div class="program-name" style="margin-bottom:12px;">' + (p.nombre || '—') + '</div>'
-                + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:13px;color:#555;margin-bottom:12px;">'
-                + '<div>Estudiantes: <strong>' + (p.estudiantes || 0) + '</strong></div>'
-                + '<div>Cohortes: <strong>' + (p.cohortes || 0) + '</strong></div>'
-                + '<div style="color:#ef4444;">En mora: <strong>' + (p.enMora || 0) + '</strong></div>'
-                + '<div style="color:' + pendColor + ';">Pend. cooperadora: <strong>' + (p.pendCooperadora || 0) + '</strong></div>'
-                + '</div>'
-                + '<div style="border-top:1px solid #f0f0f0;padding-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:12px;">'
-                + '<div><div style="color:#888;margin-bottom:2px;">Recaudado</div><div style="font-weight:700;color:#5C1018;">' + fM(p.recaudado) + '</div></div>'
-                + '<div><div style="color:#888;margin-bottom:2px;">Egresos</div><div style="font-weight:700;color:#f59e0b;">' + fM(p.egresos) + '</div></div>'
-                + '<div><div style="color:#888;margin-bottom:2px;">Saldo</div><div style="font-weight:700;color:' + saldoColor + ';">' + fM(p.saldo) + '</div></div>'
-                + '</div></div>';
+            var tipo        = (p.tipo || '').toLowerCase().replace('_', '');
+            var estadoLabel = (p.estado || '').toLowerCase() === 'activo' ? 'Activo' : (p.estado || '—');
+            var estadoColor = (p.estado || '').toUpperCase() === 'ACTIVO' ? '#10b981' : '#9ca3af';
+            var saldoColor  = (p.saldo || 0) >= 0 ? '#10b981' : '#ef4444';
+            var pendColor   = (p.pendCooperadora || 0) > 0 ? '#f59e0b' : '#10b981';
+
+            return '<div class="program-card" data-tipo="' + tipo + '" onclick="navegar(\'cooperadora_4_cohortes.html?programa=' + p.id + '\')">'
+                +   '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">'
+                +     '<div class="program-icon">' + iconoTipo(p.tipo) + '</div>'
+                +     '<span style="display:inline-flex;align-items:center;gap:5px;background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">'
+                +       '<span style="width:7px;height:7px;border-radius:50%;background:' + estadoColor + ';display:inline-block;"></span>' + estadoLabel
+                +     '</span>'
+                +   '</div>'
+                +   '<div class="program-name" style="margin-bottom:12px;">' + (p.nombre || '—') + '</div>'
+                +   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:13px;color:#555;margin-bottom:12px;">'
+                +     '<div>Estudiantes: <strong>' + (p.estudiantes || 0) + '</strong></div>'
+                +     '<div>Cohortes: <strong>' + (p.cohortes || 0) + '</strong></div>'
+                +     '<div style="color:#ef4444;">En mora: <strong>' + (p.enMora || 0) + '</strong></div>'
+                +     '<div style="color:' + pendColor + ';">Pend. cooperadora: <strong>' + (p.pendCooperadora || 0) + '</strong></div>'
+                +   '</div>'
+                +   '<div style="border-top:1px solid #f0f0f0;padding-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:12px;">'
+                +     '<div><div style="color:#888;margin-bottom:2px;">Recaudado</div><div style="font-weight:700;color:#5C1018;">' + fM(p.recaudado) + '</div></div>'
+                +     '<div><div style="color:#888;margin-bottom:2px;">Egresos</div><div style="font-weight:700;color:#f59e0b;">' + fM(p.egresos) + '</div></div>'
+                +     '<div><div style="color:#888;margin-bottom:2px;">Saldo</div><div style="font-weight:700;color:' + saldoColor + ';">' + fM(p.saldo) + '</div></div>'
+                +   '</div>'
+                + '</div>';
         }).join('');
     }
 
+    /* ══ ACTUALIZAR BOTONES FILTRO ══ */
     function actualizarBotonesFiltro() {
-        var tipos = { todos:0, doctorado:0, maestria:0, especializacion:0, micro_maestria:0, diplomatura:0, diplomado:0, curso:0 };
+        var tipos = { todos: 0, doctorado: 0, maestria: 0, especializacion: 0, micro_maestria: 0, diplomatura: 0, diplomado: 0, curso: 0 };
         tipos.todos = _programas.length;
-        _programas.forEach(function(p) { var t=(p.tipo||'').toLowerCase(); if(tipos[t]!==undefined) tipos[t]++; });
+        _programas.forEach(function(p) {
+            var t = (p.tipo || '').toLowerCase();
+            if (tipos[t] !== undefined) tipos[t]++;
+        });
+
+        /* Actualizar texto de botones de filtro */
         var btns = document.querySelectorAll('.filter-btn');
         btns.forEach(function(btn) {
             var onclick = btn.getAttribute('onclick') || '';
             var match = onclick.match(/filtrar\('([^']+)'\)/);
             if (!match) return;
             var key = match[1];
-            if (key==='todos') { btn.textContent='Todos ('+tipos.todos+')'; return; }
-            if (key==='doctorado') { btn.textContent='Doctorados ('+(tipos.doctorado||0)+')'; return; }
-            if (key==='maestria') { btn.textContent='Maestrías ('+(tipos.maestria||0)+')'; return; }
-            if (key==='especializacion') { btn.textContent='Especializaciones ('+(tipos.especializacion||0)+')'; return; }
-            if (key==='micro') { btn.textContent='Micro Maestrías ('+(tipos.micro_maestria||0)+')'; return; }
-            if (key==='diplomatura') { btn.textContent='Diplomaturas/Diplomados ('+(( tipos.diplomatura||0)+(tipos.diplomado||0)+(tipos.curso||0))+')'; return; }
+            if (key === 'todos') { btn.textContent = 'Todos (' + tipos.todos + ')'; return; }
+            if (key === 'doctorado') { btn.textContent = 'Doctorados (' + (tipos.doctorado || 0) + ')'; return; }
+            if (key === 'maestria') { btn.textContent = 'Maestrias (' + (tipos.maestria || 0) + ')'; return; }
+            if (key === 'especializacion') { btn.textContent = 'Especializaciones (' + (tipos.especializacion || 0) + ')'; return; }
+            if (key === 'micro') { btn.textContent = 'Micro Maestrias (' + ((tipos.micro_maestria || 0)) + ')'; return; }
+            if (key === 'diplomatura') { btn.textContent = 'Diplomaturas (' + ((tipos.diplomatura || 0) + (tipos.diplomado || 0) + (tipos.curso || 0)) + ')'; return; }
         });
     }
 
+    /* ══ FILTRAR ══ */
     function filtrar(tipo) {
         _filtroActivo = tipo;
+
         var buttons = document.querySelectorAll('.filter-btn');
         buttons.forEach(function(btn) { btn.classList.remove('active'); });
         if (event && event.target) event.target.classList.add('active');
+
         var tipoMap = {
-            'doctorado':['DOCTORADO'],'maestria':['MAESTRIA'],'especializacion':['ESPECIALIZACION'],
-            'micro':['MICRO_MAESTRIA'],'diplomatura':['DIPLOMADO','DIPLOMATURA','CURSO']
+            'doctorado':      ['DOCTORADO'],
+            'maestria':       ['MAESTRIA'],
+            'especializacion':['ESPECIALIZACION'],
+            'micro':          ['MICRO_MAESTRIA'],
+            'diplomatura':    ['DIPLOMADO', 'DIPLOMATURA', 'CURSO']
         };
-        var filtrados = tipo==='todos' ? _programas : _programas.filter(function(p){
-            var lista=tipoMap[tipo]||[]; return lista.indexOf((p.tipo||'').toUpperCase())>=0;
-        });
+
+        var filtrados = tipo === 'todos'
+            ? _programas
+            : _programas.filter(function(p) {
+                var lista = tipoMap[tipo] || [];
+                return lista.indexOf((p.tipo || '').toUpperCase()) >= 0;
+            });
+
         renderProgramas(filtrados);
     }
 
-    var _notifs=[];
-    function toggleNotif(){var dd=document.getElementById('notif-dropdown');dd.style.display=dd.style.display==='block'?'none':'block';}
-    document.addEventListener('click',function(e){var w=document.querySelector('.notif-wrapper');if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';}});
-    function renderNotificaciones(datos){
-        _notifs=datos||[];
-        var sinLeer=_notifs.filter(function(n){return !n.leida;}).length;
-        var badge=document.getElementById('notif-badge');badge.textContent=sinLeer;badge.style.display=sinLeer>0?'flex':'none';
-        var lista=document.getElementById('notif-list');
-        if(!_notifs.length){lista.innerHTML='<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>';return;}
-        lista.innerHTML=_notifs.map(function(n){return '<div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="leerNotif(\''+n.id+'\')">' +
-            '<p style="font-size:13px;color:#374151;">'+n.mensaje+'</p></div>';}).join('');
-    }
-    function leerNotif(id){_notifs.forEach(function(n){if(n.id===id)n.leida=true;});renderNotificaciones(_notifs);}
-    function marcarTodasLeidas(){_notifs.forEach(function(n){n.leida=true;});renderNotificaciones(_notifs);}
-
+    /* ══ INIT ══ */
     document.addEventListener('DOMContentLoaded', function() {
         var sesion = getSesion();
         if (!sesion) { navegar('portal_login.html'); return; }
+
         Promise.all([
             obtenerDashboardAdmin(),
             obtenerNotificaciones('COOPERADORA')
         ]).then(function(resultados) {
             var dash = resultados[0] || {};
             var notifs = resultados[1] || [];
+
             _programas = dash.programas || [];
             actualizarBotonesFiltro();
             renderProgramas(_programas);
             renderNotificaciones(notifs);
-        }).catch(function(err) { console.error('Error cargando programas:', err); });
+        }).catch(function(err) {
+            console.error('Error cargando programas:', err);
+        });
     });
 </script>
 </body>

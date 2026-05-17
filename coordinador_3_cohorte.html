@@ -8,18 +8,18 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --primary: #1e3a5f;
-            --accent:  #d4af37;
+            --primary: #5C1018;
+            --accent:  #8C1A28;
             --success: #2d7a4f;
             --danger:  #c0392b;
             --warning: #e67e22;
             --bg:      #f8f6f1;
         }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 20px; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 20px; font-size: 14px; }
 
         /* ── HEADER ── */
         .page-header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%);
             color: white; padding: 22px 28px; border-radius: 12px 12px 0 0;
             display: flex; justify-content: space-between; align-items: center; gap: 20px;
         }
@@ -61,7 +61,7 @@
             display: inline-flex; align-items: center; gap: 5px;
         }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: #2d5a87; }
+        .btn-primary:hover { background: #8C1A28; }
         .btn-success { background: var(--success); color: white; }
         .btn-success:hover { background: #246441; }
         .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
@@ -109,7 +109,7 @@
         .cell-name  { font-weight: 700; color: var(--primary); padding-left: 10px; white-space: nowrap; cursor: pointer; }
         .cell-name:hover { text-decoration: underline; }
         .cell-desc  { text-align: center; font-weight: 600; }
-        .cell-email { font-size: 11px; color: #2d5a87; padding-left: 8px; }
+        .cell-email { font-size: 11px; color: #8C1A28; padding-left: 8px; }
 
         td[data-est="ABONADA"]      { background: #d4edda; color: #1e7e44; text-align:center; font-weight:600; }
         td[data-est="PAGO_PARCIAL"] { background: #fff3cd; color: #856404; text-align:center; font-weight:600; font-size:10px; }
@@ -124,7 +124,7 @@
         .ley-adefinir  { background:#f3f4f6; border:1px solid #d1d5db; }
 
 
-        .cell-tot-pagar   { background:#eef2ff; color:#1e3a5f; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+        .cell-tot-pagar   { background:#eef2ff; color:#5C1018; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
         .cell-tot-abonado { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
         .cell-saldo-pos   { background:#f8d7da; color:#c0392b; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
         .cell-saldo-cero  { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
@@ -169,7 +169,7 @@
         .modal-overlay.show { display:flex; }
         .modal-box { background:white; border-radius:16px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden; animation:mIn 0.22s ease; }
         @keyframes mIn { from{opacity:0;transform:scale(0.94) translateY(-8px);} to{opacity:1;transform:scale(1) translateY(0);} }
-        .modal-hdr { background:linear-gradient(135deg,#1e3a5f 0%,#2d5a87 100%); color:white; padding:18px 22px; display:flex; justify-content:space-between; align-items:flex-start; }
+        .modal-hdr { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:18px 22px; display:flex; justify-content:space-between; align-items:flex-start; }
         .modal-hdr h2 { font-family:'Crimson Pro',serif; font-size:20px; margin-bottom:2px; }
         .modal-hdr p  { font-size:12px; opacity:0.85; }
         .modal-close { background:rgba(255,255,255,0.2); border:none; color:white; width:30px; height:30px; border-radius:8px; font-size:18px; cursor:pointer; flex-shrink:0; transition:background 0.2s; line-height:1; }
@@ -208,7 +208,7 @@
 
         /* Toast */
         .toast-wrap { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
-        .toast { background:#1e3a5f; color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,0.2); animation:tin 0.28s ease; max-width:340px; }
+        .toast { background:#5C1018; color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,0.2); animation:tin 0.28s ease; max-width:340px; }
         .toast.ok  { background:var(--success); }
         .toast.err { background:var(--danger); }
         @keyframes tin { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
@@ -253,7 +253,7 @@
 </head>
 <body>
 
-<div class="spinner-overlay" id="spinner"><div class="spinner"></div><span style="color:#1e3a5f;font-weight:600;font-size:14px;">Cargando...</span></div>
+<div class="spinner-overlay" id="spinner"><div class="spinner"></div><span style="color:#5C1018;font-weight:600;font-size:14px;">Cargando...</span></div>
 <div class="toast-wrap" id="toasts"></div>
 
 <div id="app">
@@ -273,9 +273,9 @@
                         <span id="notif-badge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;border-radius:50%;min-width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;">0</span>
                     </button>
                     <div id="notif-panel" style="display:none;position:absolute;right:0;top:48px;width:320px;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:500;overflow:hidden;">
-                        <div style="padding:14px 16px;border-bottom:1px solid #f0f0f0;font-weight:700;color:#1e3a5f;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;">
+                        <div style="padding:14px 16px;border-bottom:1px solid #f0f0f0;font-weight:700;color:#5C1018;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;">
                             <span>🔔 Notificaciones</span>
-                            <button type="button" onclick="marcarTodasLeidas()" style="background:none;border:none;color:#d4af37;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                            <button type="button" onclick="marcarTodasLeidas()" style="background:none;border:none;color:#8C1A28;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
                         </div>
                         <div id="notif-list">
                             <div style="padding:24px 16px;text-align:center;color:#9ca3af;font-size:13px;">Cargando notificaciones…</div>
@@ -351,7 +351,7 @@
 <!-- ═══ MODAL: CREAR PLAN DE CUOTAS ═══ -->
 <div class="modal-overlay" id="modal-cuota">
     <div class="modal-box" style="max-width:640px;">
-        <div class="modal-hdr" style="background:linear-gradient(135deg,#1e3a5f 0%,#2d5a87 100%);">
+        <div class="modal-hdr" style="background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%);">
             <div>
                 <h2>➕ Crear Plan de Cuotas</h2>
                 <p id="cuota-sub">Especialización en Costos y Gestión Empresarial · Cohorte 2025–2026</p>
@@ -391,7 +391,7 @@
                         <div>
                             <div style="font-weight:700;font-size:13px;color:var(--primary);">Estudiantes específicos</div>
                             <div id="plan-desc-especificos" style="font-size:11px;color:#666;margin-top:2px;">Seleccioná manualmente a quiénes aplicar este plan.</div>
-                            <div id="plan-sel-nombres" style="display:none;margin-top:8px;font-size:11px;color:#2d5a87;font-weight:600;line-height:1.6;"></div>
+                            <div id="plan-sel-nombres" style="display:none;margin-top:8px;font-size:11px;color:#8C1A28;font-weight:600;line-height:1.6;"></div>
                         </div>
                     </label>
                 </div>
@@ -527,7 +527,7 @@
                     <div id="imp-prev" class="imp-preview">
                         <span style="font-size:18px;">📄</span>
                         <div style="flex:1;">
-                            <div id="imp-fn" style="font-size:13px;font-weight:700;color:#1e3a5f;"></div>
+                            <div id="imp-fn" style="font-size:13px;font-weight:700;color:#5C1018;"></div>
                             <div id="imp-fs" style="font-size:12px;color:#777;"></div>
                         </div>
                     </div>
@@ -1050,7 +1050,7 @@ function planDestChange() {
             });
             selNombres.style.display = 'block';
             selNombres.innerHTML = nombres.map(n => `• ${escapeHtml(n)}`).join('<br>');
-            selNombres.style.color = '#2d5a87';
+            selNombres.style.color = '#8C1A28';
         }
         selNombres.style.display = 'none';
     }
@@ -1310,7 +1310,7 @@ function renderNotificaciones() {
     }
     cont.innerHTML = V.notifications.map((n, i) => `
         <div class="notif-item ${n.leida ? '' : 'unread'}" onclick="leerNotif(${i})">
-            <div style="font-weight:600;color:#1e3a5f;">${escapeHtml(n.titulo || 'Notificación')}</div>
+            <div style="font-weight:600;color:#5C1018;">${escapeHtml(n.titulo || 'Notificación')}</div>
             <div style="margin-top:2px;">${escapeHtml(n.mensaje || '')}</div>
             <small>${escapeHtml(n.tiempo || '')}</small>
         </div>

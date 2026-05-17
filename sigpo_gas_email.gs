@@ -151,9 +151,19 @@ function doPost(e) {
     var body    = String(data.body    || '').trim();
     var replyTo = String(data.replyTo || '').trim();
     if (!to || !subject || !body) throw new Error('Faltan campos: to, subject, body');
+
+    // Validate recipient is a registered active user (prevents open mail relay)
+    var tos = to.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+    if (!tos.length) throw new Error('Destinatario inválido');
+    var registrados = _sbGet(
+      'usuarios?select=email&email=in.(' + tos.join(',') + ')&estado_usuario=eq.ACTIVO'
+    ).map(function(u) { return u.email.toLowerCase(); });
+    var tosValidos = tos.filter(function(t) { return registrados.indexOf(t.toLowerCase()) !== -1; });
+    if (!tosValidos.length) throw new Error('Ningún destinatario válido en el sistema');
+
     var opts = { name: NOMBRE_INST, htmlBody: body.replace(/\n/g, '<br>') };
     if (replyTo) opts.replyTo = replyTo;
-    MailApp.sendEmail(to, subject, body, opts);
+    MailApp.sendEmail(tosValidos.join(','), subject, body, opts);
     output.setContent(JSON.stringify({ ok: true }));
   } catch(err) {
     output.setContent(JSON.stringify({ ok: false, error: err.message }));

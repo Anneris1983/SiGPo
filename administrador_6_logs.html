@@ -7,12 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #1e3a5f; --accent: #d4af37; }
-        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; }
+        :root { --primary: #5C1018; --accent: #C49A2A; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
 
         /* HEADER */
         .header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%);
             color: white; padding: 20px 40px;
             display: flex; align-items: flex-start; justify-content: space-between;
         }
@@ -33,7 +33,7 @@
         .btn-logout:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.6); }
 
         /* LAYOUT */
-        .container { max-width: 1400px; margin: 40px auto; padding: 0 40px; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 24px; }
 
         /* STATS */
         .stats-row {
@@ -41,14 +41,14 @@
         }
         .stat-card {
             background: white; border-radius: 12px; padding: 16px 24px;
-            flex: 1; min-width: 160px; border-top: 4px solid #1e3a5f;
+            flex: 1; min-width: 160px; border-top: 4px solid #5C1018;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .stat-card.pago   { border-top-color: #388e3c; }
         .stat-card.mora   { border-top-color: #f57c00; }
         .stat-card.plan   { border-top-color: #1976d2; }
         .stat-card.insc   { border-top-color: #7b1fa2; }
-        .stat-num  { font-size: 28px; font-weight: 700; color: #1e3a5f; font-family: 'Crimson Pro', serif; }
+        .stat-num  { font-size: 28px; font-weight: 700; color: #5C1018; font-family: 'Crimson Pro', serif; }
         .stat-label { font-size: 12px; color: #888; margin-top: 2px; }
 
         /* TABS */
@@ -63,8 +63,8 @@
             border-bottom: 3px solid transparent; margin-bottom: -2px;
             transition: color 0.2s, border-color 0.2s;
         }
-        .tab-btn.active { color: #1e3a5f; border-bottom-color: #1e3a5f; }
-        .tab-btn:hover:not(.active) { color: #1e3a5f; }
+        .tab-btn.active { color: #5C1018; border-bottom-color: #5C1018; }
+        .tab-btn:hover:not(.active) { color: #5C1018; }
 
         /* FILTERS */
         .filters {
@@ -78,7 +78,7 @@
             padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px;
             font-size: 14px; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s;
         }
-        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: #1e3a5f; }
+        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: #5C1018; }
         .input-icon-wrap { position: relative; display: flex; align-items: center; }
         .input-icon-wrap svg { position: absolute; left: 10px; color: #aaa; pointer-events: none; flex-shrink: 0; }
         .input-icon-wrap input { padding-left: 32px !important; }
@@ -143,7 +143,7 @@
         .spinner {
             width: 40px; height: 40px;
             border: 4px solid #e0e0e0;
-            border-top-color: #1e3a5f;
+            border-top-color: #5C1018;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -159,8 +159,8 @@
             background: white; cursor: pointer; font-size: 13px; font-weight: 600;
             color: #555; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
         }
-        .page-btn:hover { background: #f0f4ff; border-color: #1e3a5f; color: #1e3a5f; }
-        .page-btn.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
+        .page-btn:hover { background: #f0f4ff; border-color: #5C1018; color: #5C1018; }
+        .page-btn.active { background: #5C1018; color: white; border-color: #5C1018; }
         .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .page-info { font-size: 13px; color: #888; }
 
@@ -179,16 +179,13 @@
     <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;">
         <div class="notif-wrapper">
             <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #1e3a5f;line-height:1;">0</span>
+                <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
+                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
             </button>
             <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                 <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                    <h3 style="font-size:15px;font-weight:700;color:#1e3a5f;">🔔 Notificaciones</h3>
-                    <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#d4af37;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                    <h3 style="font-size:15px;font-weight:700;color:#5C1018;">🔔 Notificaciones</h3>
+                    <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
                 </div>
                 <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
             </div>
@@ -320,6 +317,9 @@ var _paginaActual = 1;
    INIT
 ══════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async function () {
+    var _ses = await requireAuth();
+    if (!_ses || _ses.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
+
     // Fechas por defecto: últimos 90 días
     var hoy   = new Date();
     var hace90 = new Date(hoy); hace90.setDate(hoy.getDate() - 90);

@@ -5,6 +5,16 @@
  * ══════════════════════════════════════════════════════════════
  */
 
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 const SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
 
@@ -115,6 +125,24 @@ async function requireAuth() {
         window.location.href = 'portal_login.html';
         return null;
     }
+    // Verify role from DB using the authenticated JWT (not localStorage)
+    const { data: usuario, error } = await sb
+        .from('usuarios')
+        .select('rol, nombre_completo, apellido, nombre, dni, email, programa_id')
+        .eq('auth_user_id', session.user.id)
+        .maybeSingle();
+    if (error || !usuario) {
+        window.location.href = 'portal_login.html';
+        return null;
+    }
+    // Sync localStorage with server-verified data
+    localStorage.setItem('sigpo_rol',         usuario.rol);
+    localStorage.setItem('sigpo_nombre',      usuario.nombre_completo || '');
+    localStorage.setItem('sigpo_apellido',    usuario.apellido || '');
+    localStorage.setItem('sigpo_nombre2',     usuario.nombre  || '');
+    localStorage.setItem('sigpo_dni',         usuario.dni);
+    localStorage.setItem('sigpo_email',       usuario.email);
+    localStorage.setItem('sigpo_programa_id', String(usuario.programa_id || ''));
     return getSesion();
 }
 
@@ -297,9 +325,9 @@ function renderNotificaciones(datos) {
     var iconos = { pago: '💰', mora: '🔴', solicitud: '📋', reclamo: '⚠️', alerta: '🚨', cuota: '📅' };
     var colores = { pago: '#dcfce7', mora: '#fee2e2', solicitud: '#dbeafe', reclamo: '#fef3c7', alerta: '#fce7f3', cuota: '#dbeafe' };
     lista.innerHTML = _notifs.map(function (n) {
-        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + escapeHtml(n.id) + '\')">'
             + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo] || '#f3f4f6') + ';">' + (iconos[n.tipo] || '🔔') + '</div>'
-            + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo || '') + '</div></div></div>';
+            + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + escapeHtml(n.mensaje) + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + escapeHtml(n.tiempo) + '</div></div></div>';
     }).join('');
 }
 
@@ -307,6 +335,12 @@ function leerNotif(id) {
     _notifs.forEach(function (n) { if (n.id === id) n.leida = true; });
     renderNotificaciones(_notifs);
     marcarNotificacionLeida(id);
+}
+
+function marcarTodasLeidas() {
+    _notifs.forEach(function (n) { n.leida = true; });
+    renderNotificaciones(_notifs);
+    marcarTodasNotificacionesLeidas();
 }
 
 document.addEventListener('click', function (e) {
