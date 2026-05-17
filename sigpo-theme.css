@@ -448,3 +448,261 @@ tbody tr:hover         { background: var(--surface-alt) !important; }
 /* ── DIVIDER ────────────────────────────────────────────────── */
 hr,
 .divider { border: none !important; border-top: 1px solid var(--border-light) !important; margin: 18px 0 !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+ * WHITE TOP-NAVIGATION OVERRIDE
+ * Converts all dark gradient .header used as top nav to white.
+ * Uses body > .header to target only top-level nav headers,
+ * leaving .header page-title sections inside .container intact.
+ * ═══════════════════════════════════════════════════════════════ */
+
+body > .header {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 200 !important;
+  padding: 0 32px !important;
+  min-height: 58px !important;
+  margin-bottom: 0 !important;
+}
+
+/* inner wrapper — flex row, full height */
+body > .header .header-content,
+body > .header .header-top {
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  height: 58px !important;
+  gap: 16px !important;
+  width: 100% !important;
+}
+
+/* left side: logo + title inline */
+body > .header .header-left,
+body > .header .header-top-left {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+/* logo pill wrapper — strip white card on white bg */
+body > .header .header-left > div:first-child,
+body > .header .header-top-left > div:first-child {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+body > .header .header-left > div:first-child img,
+body > .header .header-top-left > div:first-child img {
+  height: 44px !important;
+  width: auto !important;
+  display: block !important;
+}
+
+/* page title in the navbar */
+body > .header h1,
+body > .header .header-left h1,
+body > .header .header-top-left h1 {
+  font-family: 'Crimson Pro', serif !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--primary) !important;
+  margin: 0 !important;
+  letter-spacing: -.01em !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* hide subtitle in compact navbar */
+body > .header p,
+body > .header .header-left p,
+body > .header .header-top-left p {
+  display: none !important;
+}
+
+/* breadcrumb back-link: display inline, dark style */
+body > .header .breadcrumb {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+body > .header .breadcrumb a,
+body > .header .btn-cashflow {
+  color: var(--text-secondary) !important;
+  font-size: 12px !important;
+  text-decoration: none !important;
+  padding: 4px 8px !important;
+  border-radius: var(--radius-xs) !important;
+  border: 1px solid var(--border) !important;
+  white-space: nowrap !important;
+  background: transparent !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+body > .header .breadcrumb a:hover,
+body > .header .btn-cashflow:hover {
+  background: var(--accent-pale) !important;
+  color: var(--primary) !important;
+  border-color: var(--accent) !important;
+}
+
+/* right side buttons container */
+body > .header .header-right,
+body > .header .header-top-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+/* header action buttons — convert from white-on-transparent to outlined */
+body > .header .header-btn,
+body > .header .btn-back,
+body > .header .logout-btn,
+body > .header .btn-logout,
+body > .header a.header-btn,
+body > .header a.btn-logout {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  padding: 6px 13px !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 13px !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: background .15s, border-color .15s, color .15s !important;
+  white-space: nowrap !important;
+}
+body > .header .header-btn:hover,
+body > .header .btn-back:hover,
+body > .header .logout-btn:hover,
+body > .header .btn-logout:hover,
+body > .header a.header-btn:hover,
+body > .header a.btn-logout:hover {
+  background: var(--accent-pale) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+/* notif bell hover on white bg */
+body > .header .notif-bell,
+body > .header .notif-btn,
+body > .header button[onclick*="toggleNotif"] {
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 8px !important;
+  border-radius: var(--radius-sm) !important;
+  transition: background .15s !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+body > .header .notif-bell:hover,
+body > .header .notif-btn:hover,
+body > .header button[onclick*="toggleNotif"]:hover {
+  background: var(--accent-pale) !important;
+}
+
+/* fix badge border (was dark for dark bg) */
+body > .header .notif-badge,
+body > .header #notif-badge {
+  border-color: white !important;
+}
+
+/* inline-styled white-transparent buttons inside any converted header */
+body > .header button[style*="rgba(255,255,255"],
+#app > .page-header button[style*="rgba(255,255,255"],
+body > .header a[style*="rgba(255,255,255"] {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* ── #app > .page-header (Secretaria_4_Tabla, coordinador_3_cohorte) ── */
+#app > .page-header {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 200 !important;
+  padding: 0 32px !important;
+  min-height: 58px !important;
+  margin-bottom: 0 !important;
+}
+#app > .page-header .header-left {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+#app > .page-header .header-left > div:first-child {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+  flex-shrink: 0 !important;
+}
+#app > .page-header .header-left > div:first-child img {
+  height: 44px !important;
+  width: auto !important;
+}
+#app > .page-header h1 {
+  font-family: 'Crimson Pro', serif !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--primary) !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+#app > .page-header p { display: none !important; }
+#app > .page-header .notif-badge,
+#app > .page-header #notif-badge { border-color: white !important; }
+
+/* ── CATCH-ALL: inline white styles on legacy headers ──────── */
+
+/* logo pill wrappers (rgba white bg) — make transparent */
+body > .header div[style*="rgba(255,255,255"],
+#app > .page-header div[style*="rgba(255,255,255"] {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* white-colored links/text inside converted headers */
+body > .header a[style*="color:white"],
+body > .header a[style*="color: white"],
+body > .header a[style*="color:#fff"],
+body > .header a[style*="color: #fff"],
+#app > .page-header a[style*="color:white"],
+#app > .page-header a[style*="color:#fff"] {
+  color: var(--text-secondary) !important;
+  text-decoration: none !important;
+}
+body > .header a[style*="color:white"]:hover,
+body > .header a[style*="color:#fff"]:hover,
+#app > .page-header a[style*="color:white"]:hover {
+  color: var(--primary) !important;
+}
