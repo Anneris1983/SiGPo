@@ -214,11 +214,14 @@
                 <input type="text" id="prog-nombre" placeholder="Ej: Maestría en Dirección de Negocios">
             </div>
             <div class="mfield">
-                <label>Coordinador(es)</label>
-                <select id="prog-coords" multiple style="min-height:90px;">
-                    <option disabled>Cargando...</option>
-                </select>
-                <div class="mhint">Mantené Ctrl/Cmd para seleccionar varios</div>
+                <label>Email de coordinación *</label>
+                <input type="email" id="prog-email" placeholder="Ej: costosygestion@fce.uncu.edu.ar">
+                <div class="mhint">Este correo será el remitente de los avisos automáticos del programa</div>
+            </div>
+            <div class="mfield">
+                <label>URL del GAS (Google Apps Script)</label>
+                <input type="text" id="prog-gas" placeholder="https://script.google.com/macros/s/...">
+                <div class="mhint">URL de implementación del script de envío automático</div>
             </div>
             <!-- Campo descripcion no disponible en esta versión -->
         </div>
@@ -426,17 +429,15 @@ async function abrirModalPrograma(id) {
     document.getElementById('prog-id').value = id || '';
     document.getElementById('prog-tipo').value = 'MAESTRIA';
     document.getElementById('prog-nombre').value = '';
-    await cargarCoordsSelect([]);
+    document.getElementById('prog-email').value = '';
+    document.getElementById('prog-gas').value = '';
     if (id) {
         var p = _programas.find(function(x){return x.programa_id===id;});
         if (p) {
             document.getElementById('prog-tipo').value = p.tipo||'MAESTRIA';
             document.getElementById('prog-nombre').value = p.nombre||'';
-            // Coordinadores asignados
-            var sb = await getSupabase();
-            var {data:asign} = await sb.from('coordinadores_programas').select('coordinador_id').eq('programa_id',id);
-            var selIds = (asign||[]).map(function(a){return a.coordinador_id;});
-            await cargarCoordsSelect(selIds);
+            document.getElementById('prog-email').value = p.email_remitente||'';
+            document.getElementById('prog-gas').value = p.gas_url||'';
         }
     }
     abrirModal('modal-prog');
@@ -444,30 +445,19 @@ async function abrirModalPrograma(id) {
 
 async function editarPrograma(id) { await abrirModalPrograma(id); }
 
-async function cargarCoordsSelect(selIds) {
-    var sb = await getSupabase();
-    var {data} = await sb.from('usuarios').select('usuario_id,nombre_completo').eq('rol','COORDINADOR').eq('activo',true).order('nombre_completo');
-    var sel = document.getElementById('prog-coords');
-    if (!data||!data.length) {
-        sel.innerHTML = '<option value="" disabled>No hay coordinadores registrados</option>';
-        return;
-    }
-    sel.innerHTML = data.map(function(u){
-        return '<option value="'+u.usuario_id+'"'+(selIds.indexOf(u.usuario_id)>=0?' selected':'')+'>'+esc(u.nombre_completo)+'</option>';
-    }).join('');
-}
 
 async function guardarPrograma() {
     var id     = document.getElementById('prog-id').value;
     var tipo   = document.getElementById('prog-tipo').value;
     var nombre = document.getElementById('prog-nombre').value.trim();
+    var email  = document.getElementById('prog-email').value.trim();
+    var gasUrl = document.getElementById('prog-gas').value.trim();
     if (!nombre) { toast('El nombre es obligatorio','err'); return; }
-    var coordIds = Array.from(document.getElementById('prog-coords').selectedOptions)
-        .map(function(o){return parseInt(o.value);}).filter(Boolean);
+    if (!email)  { toast('El email de coordinación es obligatorio','err'); return; }
     spin(true);
     try {
         var sb = await getSupabase();
-        var datos = {tipo:tipo, nombre:nombre};
+        var datos = {tipo:tipo, nombre:nombre, email_remitente:email, gas_url:gasUrl||null};
         var progId;
         if (id) {
             progId = parseInt(id);
@@ -479,11 +469,6 @@ async function guardarPrograma() {
             if (e2) throw e2;
             progId = nuevo.programa_id;
             toast('Programa creado ✓','ok');
-        }
-        // Coordinadores
-        await sb.from('coordinadores_programas').delete().eq('programa_id',progId);
-        if (coordIds.length) {
-            await sb.from('coordinadores_programas').insert(coordIds.map(function(cid){return {programa_id:progId,coordinador_id:cid};}));
         }
         cerrarModal('modal-prog');
         await cargarProgramas();
