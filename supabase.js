@@ -125,6 +125,24 @@ async function requireAuth() {
         window.location.href = 'portal_login.html';
         return null;
     }
+    // Verify role from DB using the authenticated JWT (not localStorage)
+    const { data: usuario, error } = await sb
+        .from('usuarios')
+        .select('rol, nombre_completo, apellido, nombre, dni, email, programa_id')
+        .eq('auth_user_id', session.user.id)
+        .maybeSingle();
+    if (error || !usuario) {
+        window.location.href = 'portal_login.html';
+        return null;
+    }
+    // Sync localStorage with server-verified data
+    localStorage.setItem('sigpo_rol',         usuario.rol);
+    localStorage.setItem('sigpo_nombre',      usuario.nombre_completo || '');
+    localStorage.setItem('sigpo_apellido',    usuario.apellido || '');
+    localStorage.setItem('sigpo_nombre2',     usuario.nombre  || '');
+    localStorage.setItem('sigpo_dni',         usuario.dni);
+    localStorage.setItem('sigpo_email',       usuario.email);
+    localStorage.setItem('sigpo_programa_id', String(usuario.programa_id || ''));
     return getSesion();
 }
 
