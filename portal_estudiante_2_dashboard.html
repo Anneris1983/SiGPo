@@ -66,6 +66,22 @@
         }
         .carrera-card:hover::after { opacity: 1; }
 
+        .btn-baja {
+            margin-top: 14px;
+            padding: 7px 16px;
+            border-radius: 6px;
+            border: 1.5px solid #dc2626;
+            background: white;
+            color: #dc2626;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        .btn-baja:hover:not(:disabled) { background: #fee2e2; }
+        .btn-baja:disabled { border-color: #9ca3af; color: #9ca3af; cursor: not-allowed; background: #f9fafb; }
+
         .carrera-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; gap: 12px; }
         .carrera-nombre { font-weight: 700; color: var(--primary); font-size: 16px; }
         .carrera-cohorte { font-size: 12px; color: #888; font-weight: 500; margin-top: 3px; }
@@ -219,6 +235,13 @@
     <script src="supabase.js"></script>
 
     <script>
+    var _sesion = null;
+    var _estudiante = null;
+    var _inscripciones = [];
+    var _cobrosMap = {};
+    var GAS_SECRET = 'SIGPO_KEY_FCE_2025';
+    var GAS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxtDIAY6yhpTJF5OK3k0-VK9GHK4UxputJrW-I_1ihT-ABYEEzpVPGcKwLF9k6nQW6iHw/exec';
+
     function fM(n) {
         if (n === null || n === undefined) return '–';
         return '$' + Number(n).toLocaleString('es-AR', {
@@ -299,13 +322,14 @@
     }
 
     async function cargar() {
-        var sesion = await requireAuth();
+        _sesion = await requireAuth();
 
-        if (!sesion || sesion.rol !== 'ESTUDIANTE') {
+        if (!_sesion || _sesion.rol !== 'ESTUDIANTE') {
             window.location.href = 'portal_login.html';
             return;
         }
 
+        var sesion = _sesion;
         var dni = sesion.dni;
 
         document.getElementById('hdr-saludo').textContent =
@@ -320,6 +344,7 @@
                 .eq('dni', String(dni))
                 .single();
 
+            _estudiante = estRes.data || null;
             var estId = estRes.data ? estRes.data.id : null;
 
             if (!estId) {
@@ -330,7 +355,7 @@
 
             var results = await Promise.all([
                 sb.from('inscripciones')
-                    .select('cohorte_id, estado_academico, descuento_porcentaje, cohortes(cohorte_id, nombre, programa_id, programas(nombre, tipo))')
+                    .select('cohorte_id, estado_academico, descuento_porcentaje, cohortes(cohorte_id, nombre, programa_id, programas(nombre, tipo, email_remitente, gas_url))')
                     .eq('estudiante_id', estId),
 
                 sb.from('cobros')
@@ -344,6 +369,7 @@
             var inscripciones = results[0].data || [];
             var cobros = results[1].data || [];
             var cfg = results[2] || {};
+            _inscripciones = inscripciones;
 
             var activas = inscripciones.filter(function(i) {
                 return i.estado_academico === 'ACTIVO';
@@ -407,14 +433,11 @@
             }
 
             var cobrosMap = {};
-
             cobros.forEach(function(c) {
-                if (!cobrosMap[c.cohorte_id]) {
-                    cobrosMap[c.cohorte_id] = [];
-                }
-
+                if (!cobrosMap[c.cohorte_id]) cobrosMap[c.cohorte_id] = [];
                 cobrosMap[c.cohorte_id].push(c);
             });
+            _cobrosMap = cobrosMap;
 
             var carrerasHtml = '';
 
@@ -494,6 +517,9 @@
                                 (insc.descuento_porcentaje > 0
                                     ? '<span style="color:var(--success);"><strong>Descuento:</strong> ' + insc.descuento_porcentaje + '%</span>'
                                     : '') +
+                            '</div>' +
+                            '<div style="margin-top:12px;">' +
+                                '<button class="btn-baja" id="btn-baja-' + cohorteId + '" onclick="event.stopPropagation(); solicitarBaja(\'' + programaId + '\', \'' + cohorteId + '\', this)">Solicitar baja</button>' +
                             '</div>' +
                         '</div>';
                 });
@@ -590,13 +616,135 @@
 
     function marcarTodasLeidas() {
         marcarTodasNotificacionesLeidas();
-        _notifs.forEach(function(n) {
-            n.leida = true;
-        });
+        _notifs.forEach(function(n) { n.leida = true; });
         renderNotificaciones(_notifs);
     }
 
+    async function enviarEmailGas(gasUrl, to, subject, body) {
+        try {
+            var res = await fetch(gasUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ secret: GAS_SECRET, to: to, subject: subject, body: body }),
+                mode: 'cors'
+            });
+            var json = await res.json();
+            return json.ok === true;
+        } catch(err) {
+            console.error('Error enviando email a', to, err);
+            return false;
+        }
+    }
+
+    async function solicitarBaja(programaId, cohorteId, btn) {
+        if (!confirm('¿Confirmar solicitud de baja? Se enviará un correo a la Secretaría de Posgrado.')) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Enviando…';
+
+        try {
+            var insc = _inscripciones.find(function(i) { return String(i.cohorte_id) === String(cohorteId); });
+            if (!insc) throw new Error('Inscripción no encontrada');
+
+            var coh  = insc.cohortes || {};
+            var prog = coh.programas || {};
+            var gasUrl = prog.gas_url || GAS_FALLBACK_URL;
+
+            var cobros = _cobrosMap[cohorteId] || [];
+
+            // Obtener emails de cooperadora y coordinadores del programa
+            var sb = await getSupabase();
+            var { data: receptores } = await sb
+                .from('usuarios')
+                .select('nombre, apellido, email, rol')
+                .in('rol', ['COOPERADORA', 'COORDINADOR'])
+                .eq('estado_usuario', 'ACTIVO');
+
+            var emailEst = _sesion && _sesion.email ? _sesion.email : '';
+
+            // Armar detalle de cuotas
+            var _ESTADOS = {
+                ABONADA: 'Abonada', EN_MORA: 'En mora', PENDIENTE: 'Pend. aprobación',
+                PAGO_PARCIAL: 'Pago parcial', NO_ABONADA: 'No abonada',
+                A_DEFINIR: 'A definir', NO_APLICA: 'No aplica'
+            };
+            var filasCuotas = cobros.filter(function(c) { return !c.no_aplica; }).map(function(c) {
+                var est = _ESTADOS[c.estado] || c.estado || '—';
+                var color = c.estado === 'EN_MORA' ? '#fee2e2' : c.estado === 'ABONADA' ? '#d1fae5' : '#fff';
+                return '<tr style="background:' + color + ';">' +
+                    '<td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;">' + (c.concepto || '—') + '</td>' +
+                    '<td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;">' + (c.periodo || '—') + '</td>' +
+                    '<td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;">' + (c.fecha_vencimiento ? c.fecha_vencimiento.split('T')[0] : '—') + '</td>' +
+                    '<td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:right;">' + fM(c.monto_final) + '</td>' +
+                    '<td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:right;">' + fM(c.saldo_pendiente) + '</td>' +
+                    '<td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;font-weight:700;">' + est + '</td>' +
+                    '</tr>';
+            }).join('');
+
+            var apellido = _estudiante ? _estudiante.apellido : '';
+            var nombre   = _estudiante ? _estudiante.nombre   : (_sesion ? _sesion.nombre : '');
+            var dni      = _estudiante ? _estudiante.dni      : (_sesion ? _sesion.dni : '');
+
+            var subject = 'Solicitud de baja — ' + (prog.nombre || 'Programa') + ' — ' + (coh.nombre || 'Cohorte');
+
+            var body =
+                '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' +
+                'body{font-family:Arial,sans-serif;color:#1e3a5f;max-width:640px;margin:0 auto;}' +
+                '.hdr{background:#5C1018;color:#fff;padding:18px 24px;border-radius:8px 8px 0 0;}' +
+                '.hdr h1{margin:0;font-size:18px;} .hdr p{margin:4px 0 0;font-size:12px;opacity:.8;}' +
+                '.bod{background:#f8f6f1;padding:20px 24px;}' +
+                '.ftr{background:#e5e7eb;padding:10px 24px;font-size:11px;color:#6b7280;border-radius:0 0 8px 8px;}' +
+                '.alerta{background:#fee2e2;border-left:4px solid #c0392b;padding:12px 16px;margin:16px 0;border-radius:0 4px 4px 0;font-size:14px;}' +
+                'table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}' +
+                'th{background:#5C1018;color:#fff;padding:7px 10px;text-align:left;}' +
+                'td{padding:6px 10px;}' +
+                'p{font-size:14px;line-height:1.6;}' +
+                '</style></head><body>' +
+                '<div class="hdr"><h1>Secretaría de Posgrado — FCE UNCUYO</h1><p>Sistema de Gestión de Posgrado</p></div>' +
+                '<div class="bod">' +
+                '<div class="alerta">Se ha recibido una <strong>solicitud de baja</strong> del siguiente estudiante.</div>' +
+                '<p><strong>Apellido:</strong> ' + apellido + '<br>' +
+                '<strong>Nombre:</strong> ' + nombre + '<br>' +
+                '<strong>DNI:</strong> ' + dni + '<br>' +
+                '<strong>Programa/Curso:</strong> ' + (prog.nombre || '—') + '<br>' +
+                '<strong>Cohorte/Edición:</strong> ' + (coh.nombre || '—') + '</p>' +
+                (cobros.length > 0
+                    ? '<h3 style="color:#5C1018;margin-bottom:4px;">Estado de cuotas</h3>' +
+                      '<table><tr><th>Concepto</th><th>Período</th><th>Vencimiento</th><th style="text-align:right">Monto</th><th style="text-align:right">Saldo</th><th>Estado</th></tr>' +
+                      filasCuotas + '</table>'
+                    : '<p>El estudiante no tiene cuotas registradas en esta cohorte.</p>') +
+                '</div>' +
+                '<div class="ftr">Mensaje automático del sistema SiGPo. Fecha: ' + new Date().toLocaleDateString('es-AR') + '</div>' +
+                '</body></html>';
+
+            // Destinatarios: estudiante + cooperadora + coordinadores
+            var emails = [];
+            if (emailEst) emails.push(emailEst);
+            (receptores || []).forEach(function(r) {
+                if (r.email && emails.indexOf(r.email) < 0) emails.push(r.email);
+            });
+
+            var enviados = 0;
+            for (var i = 0; i < emails.length; i++) {
+                var ok = await enviarEmailGas(gasUrl, emails[i], subject, body);
+                if (ok) enviados++;
+            }
+
+            btn.textContent = 'Baja solicitada';
+            btn.style.borderColor = '#9ca3af';
+            btn.style.color = '#9ca3af';
+
+            alert('Solicitud enviada correctamente.' + (enviados > 0 ? ' Se notificó a ' + enviados + ' destinatario/s.' : ''));
+
+        } catch(err) {
+            console.error(err);
+            btn.disabled = false;
+            btn.textContent = 'Solicitar baja';
+            alert('Error al enviar la solicitud. Intentá nuevamente.');
+        }
+    }
+
     cargar();
-    </script>
+</script>
 </body>
 </html>
