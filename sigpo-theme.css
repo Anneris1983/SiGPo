@@ -91,7 +91,6 @@ body {
   flex-shrink: 0 !important;
 }
 
-.nav-brand img   { height: 44px !important; width: auto !important; }
 .nav-brand span  { white-space: nowrap !important; }
 
 .nav-links {
@@ -503,13 +502,6 @@ body > .header .header-top-left > div:first-child {
   flex-shrink: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
-}
-
-body > .header .header-left > div:first-child img,
-body > .header .header-top-left > div:first-child img {
-  height: 44px !important;
-  width: auto !important;
-  display: block !important;
 }
 
 /* page title in the navbar */
