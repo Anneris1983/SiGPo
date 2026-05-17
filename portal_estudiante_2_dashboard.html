@@ -638,7 +638,7 @@
     }
 
     async function solicitarBaja(programaId, cohorteId, btn) {
-        if (!confirm('¿Confirmar solicitud de baja? Se enviará un correo a la Secretaría de Posgrado.')) return;
+        if (!confirm('¿Confirmar solicitud de baja? Se notificará por email a Secretaría, Cooperadora y Coordinador/es del programa.')) return;
 
         btn.disabled = true;
         btn.textContent = 'Enviando…';
@@ -653,13 +653,12 @@
 
             var cobros = _cobrosMap[cohorteId] || [];
 
-            // Obtener emails de cooperadora y coordinadores del programa
+            // Obtener emails de secretaria, cooperadora y coordinadores del programa
+            // Usa RPC con SECURITY DEFINER para bypassear RLS (estudiante no puede leer otros usuarios)
             var sb = await getSupabase();
-            var { data: receptores } = await sb
-                .from('usuarios')
-                .select('nombre, apellido, email, rol')
-                .in('rol', ['COOPERADORA', 'COORDINADOR'])
-                .eq('estado_usuario', 'ACTIVO');
+            var { data: receptores, error: errRec } = await sb
+                .rpc('get_destinatarios_baja', { p_programa_id: parseInt(programaId) });
+            if (errRec) console.warn('get_destinatarios_baja error:', errRec.message);
 
             var emailEst = _sesion && _sesion.email ? _sesion.email : '';
 
@@ -718,7 +717,7 @@
                 '<div class="ftr">Mensaje automático del sistema SiGPo. Fecha: ' + new Date().toLocaleDateString('es-AR') + '</div>' +
                 '</body></html>';
 
-            // Destinatarios: estudiante + cooperadora + coordinadores
+            // Destinatarios: estudiante + secretaria + cooperadora + coordinadores del programa
             var emails = [];
             if (emailEst) emails.push(emailEst);
             (receptores || []).forEach(function(r) {
