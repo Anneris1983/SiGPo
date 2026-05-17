@@ -309,6 +309,12 @@ function leerNotif(id) {
     marcarNotificacionLeida(id);
 }
 
+function marcarTodasLeidas() {
+    _notifs.forEach(function (n) { n.leida = true; });
+    renderNotificaciones(_notifs);
+    marcarTodasNotificacionesLeidas();
+}
+
 document.addEventListener('click', function (e) {
     var w = document.querySelector('.notif-wrapper');
     if (w && !w.contains(e.target)) {
