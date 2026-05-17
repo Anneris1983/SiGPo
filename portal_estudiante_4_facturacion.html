@@ -359,8 +359,8 @@ function spin(on) {
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', async function() {
-    var sesion = getSesion();
-    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    var sesion = await requireAuth();
+    if (!sesion || sesion.rol !== 'ESTUDIANTE') { window.location.href = 'portal_login.html'; return; }
     obtenerNotificaciones('ESTUDIANTE').then(renderNotificaciones);
     await cargarDatos();
     await cargarDatosBancarios();

@@ -365,6 +365,9 @@ function marcarTodasLeidas() {
    INIT — usa obtenerConfiguracion de supabase.js
 ══════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async function() {
+    var _ses = await requireAuth();
+    if (!_ses || _ses.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
+
     try {
         // obtenerConfiguracion() está definida en supabase.js
         // devuelve un objeto plano { clave: valor, ... }

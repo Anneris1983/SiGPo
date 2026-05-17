@@ -362,8 +362,8 @@
 
     /* ── INIT ── */
     document.addEventListener('DOMContentLoaded', async function() {
-        var sesion = getSesion();
-        if (!sesion) {
+        var sesion = await requireAuth();
+        if (!sesion || sesion.rol !== 'ESTUDIANTE') {
             window.location.href = 'portal_login.html';
             return;
         }

@@ -5,6 +5,16 @@
  * ══════════════════════════════════════════════════════════════
  */
 
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 const SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
 
@@ -297,9 +307,9 @@ function renderNotificaciones(datos) {
     var iconos = { pago: '💰', mora: '🔴', solicitud: '📋', reclamo: '⚠️', alerta: '🚨', cuota: '📅' };
     var colores = { pago: '#dcfce7', mora: '#fee2e2', solicitud: '#dbeafe', reclamo: '#fef3c7', alerta: '#fce7f3', cuota: '#dbeafe' };
     lista.innerHTML = _notifs.map(function (n) {
-        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
+        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + escapeHtml(n.id) + '\')">'
             + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo] || '#f3f4f6') + ';">' + (iconos[n.tipo] || '🔔') + '</div>'
-            + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo || '') + '</div></div></div>';
+            + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + escapeHtml(n.mensaje) + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + escapeHtml(n.tiempo) + '</div></div></div>';
     }).join('');
 }
 

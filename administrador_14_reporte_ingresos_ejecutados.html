@@ -393,7 +393,10 @@ var _reporteChart = null;
 function exportarExcel() { alert('Exportando reporte a Excel...'); }
 function exportarPDF()   { alert('Exportando reporte a PDF...'); }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    var _ses = await requireAuth();
+    if (!_ses || _ses.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
+
     cargarDatos();
 });
 

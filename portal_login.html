@@ -248,7 +248,7 @@ async function iniciarSesion() {
     } catch (err) {
         btn.classList.remove('loading');
         btn.disabled = false;
-        mostrarError('Error técnico: ' + (err.message || err) + ' | URL: ' + SUPABASE_URL);
+        mostrarError('Error técnico al iniciar sesión. Por favor, intentá de nuevo.');
         console.error('Login error:', err);
     }
 }
@@ -267,7 +267,7 @@ async function recuperarPassword(e) {
 
     var resp = await sb.from('usuarios').select('email').eq('dni', dni).single();
     if (resp.error || !resp.data) {
-        alert('No se encontró un usuario con DNI ' + dni);
+        alert('Si el DNI está registrado, recibirás un correo con instrucciones para recuperar el acceso.');
         return;
     }
 

@@ -485,6 +485,9 @@ function marcarTodasLeidas() { _notifs.forEach(function(n){n.leida=true;}); rend
    INIT
 ══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async function() {
+    var _ses = await requireAuth();
+    if (!_ses || _ses.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
+
     // Fechas por defecto: inicio de año → hoy
     var hoy = new Date();
     var inicioAno = hoy.getFullYear() + '-01-01';

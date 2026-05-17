@@ -437,7 +437,10 @@ var _egresos = [];
 // ──────────────────────────────────────────────────────────
 // INIT
 // ──────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    var _ses = await requireAuth();
+    if (!_ses || _ses.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
+
     leerFiltrosCashflow();
     cargarDatos();
 });

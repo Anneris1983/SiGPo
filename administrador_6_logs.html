@@ -317,6 +317,9 @@ var _paginaActual = 1;
    INIT
 ══════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async function () {
+    var _ses = await requireAuth();
+    if (!_ses || _ses.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
+
     // Fechas por defecto: últimos 90 días
     var hoy   = new Date();
     var hace90 = new Date(hoy); hace90.setDate(hoy.getDate() - 90);

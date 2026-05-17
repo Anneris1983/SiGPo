@@ -1306,8 +1306,9 @@ function renderTabla() {
                 <div style="font-weight:700;font-size:13px;">${est.descuento_porcentaje}%</div>
                 ${(function(){
                     // Etiqueta del motivo: buscar en motivos dinámicos o usar el valor directo
-                    var motStr = est.descuento_motivo ? (est.descuento_motivo.replace(/_/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();})) : '';
-                    var ff=function(f){return f?f.split('-').reverse().join('/'):'';};
+                    var motRaw = est.descuento_motivo ? (est.descuento_motivo.replace(/_/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();})) : '';
+                    var motStr = escapeHtml(motRaw);
+                    var ff=function(f){return f?escapeHtml(f.split('-').reverse().join('/')):'';};
                     var vig=est.descuento_desde?(ff(est.descuento_desde)+(est.descuento_hasta?' → '+ff(est.descuento_hasta):'')):'';
                     return (motStr?'<div style="font-size:9px;color:#555;font-weight:600;text-transform:uppercase;line-height:1.2;">'+motStr+'</div>':'')
                           +(vig?'<div style="font-size:9px;color:#888;line-height:1.2;">'+vig+'</div>':'');
