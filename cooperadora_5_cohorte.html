@@ -1508,6 +1508,15 @@
                     dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'', recibo_url:c.recibo_url||'' });
                 });
 
+                // Agregar estudiantes inscriptos que aún no tienen cobros
+                inscripciones.forEach(function(insc) {
+                    var est = estList.find(function(e) { return e.id === insc.estudiante_id; });
+                    if (!est) return;
+                    var dk = String(est.dni);
+                    if (dniMap[dk]) return; // ya está en el mapa vía cobros
+                    dniMap[dk] = { estudianteId:est.id||dk, dni:dk, nombre:est.nombre||'', apellido:est.apellido||dk, nombreCompleto:((est.apellido||dk)+' '+(est.nombre||'')).trim(), email:est.email||'', estadoAcademico:insc.estado_academico||'ACTIVO', descuentoPorcentaje:Number(insc.descuento_porcentaje||0), descuentoFechaInicio:'', descuentoFechaFin:'', descuentoEtiqueta:insc.descuento_motivo||'', noDebeAbonar:false, cuotas:[] };
+                });
+
                 var maxCuota = cobros.reduce(function(m,c){return Math.max(m,Number(c.nro_cuota||0));},0);
                 var respuesta = {
                     programa: { programaId:cohorte.programa_id||programaId, nombre:prog.nombre||'Programa', tipo:prog.tipo||'', estado:prog.estado||'ACTIVO' },
