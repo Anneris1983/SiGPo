@@ -1,0 +1,700 @@
+/*
+ * ═══════════════════════════════════════════════════════════════
+ * SiGPo — Design System
+ * Secretaría de Posgrado · FCE UNCUYO
+ * ═══════════════════════════════════════════════════════════════
+ */
+
+/* ── TOKENS ────────────────────────────────────────────────── */
+:root {
+  --primary:        #5C1018;
+  --primary-hover:  #731520;
+  --primary-dark:   #3d0a10;
+  --accent:         #C49A2A;
+  --accent-hover:   #d4af4a;
+  --accent-pale:    #fdf8ee;
+
+  --bg:             #f4f1ec;
+  --surface:        #ffffff;
+  --surface-alt:    #faf8f4;
+  --border:         #e3ddd4;
+  --border-light:   #eceae4;
+
+  --text:           #1c1510;
+  --text-secondary: #6b6254;
+  --text-muted:     #a09484;
+
+  --success:        #166534;
+  --success-bg:     #dcfce7;
+  --warning:        #92400e;
+  --warning-bg:     #fef3c7;
+  --danger:         #991b1b;
+  --danger-bg:      #fee2e2;
+  --info:           #1e40af;
+  --info-bg:        #dbeafe;
+
+  --radius-xs:      4px;
+  --radius-sm:      7px;
+  --radius:         11px;
+  --radius-lg:      15px;
+
+  --shadow-xs:      0 1px 2px rgba(28,21,16,.05);
+  --shadow-sm:      0 1px 4px rgba(28,21,16,.06), 0 1px 2px rgba(28,21,16,.04);
+  --shadow:         0 3px 12px rgba(28,21,16,.08), 0 1px 4px rgba(28,21,16,.04);
+  --shadow-lg:      0 10px 32px rgba(28,21,16,.11), 0 3px 10px rgba(28,21,16,.06);
+}
+
+/* ── BASE ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── SCROLLBAR ─────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: var(--bg); }
+::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── NAVBAR ────────────────────────────────────────────────── */
+.navbar {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  padding: 0 32px !important;
+  height: 58px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 200 !important;
+}
+
+.nav-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-family: 'Crimson Pro', serif !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--primary) !important;
+  letter-spacing: 0.01em !important;
+  text-decoration: none !important;
+  flex-shrink: 0 !important;
+}
+
+.nav-brand span  { white-space: nowrap !important; }
+
+.nav-links {
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+}
+
+.nav-link {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary) !important;
+  text-decoration: none !important;
+  padding: 6px 11px !important;
+  border-radius: var(--radius-sm) !important;
+  transition: background .15s, color .15s !important;
+  white-space: nowrap !important;
+}
+.nav-link:hover         { background: var(--accent-pale) !important; color: var(--primary) !important; }
+.nav-link.active        { background: var(--primary) !important; color: #fff !important; }
+.nav-link[onclick*="cerrar"],
+.nav-link[href*="login"] { color: var(--text-muted) !important; }
+
+/* ── CONTAINER ─────────────────────────────────────────────── */
+.container {
+  max-width: 1300px !important;
+  margin: 26px auto !important;
+  padding: 0 28px !important;
+}
+
+/* ── PAGE HEADER ───────────────────────────────────────────── */
+.header,
+.page-header { margin-bottom: 22px !important; }
+
+.header h1,
+.page-header h1,
+.content-header h1 {
+  font-family: 'Crimson Pro', serif !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  color: var(--primary) !important;
+  letter-spacing: -.02em !important;
+  line-height: 1.2 !important;
+}
+
+.header p,
+.page-header p,
+.content-header p {
+  font-size: 13.5px !important;
+  color: var(--text-secondary) !important;
+  margin-top: 3px !important;
+}
+
+/* ── CARDS & SECTIONS ──────────────────────────────────────── */
+.card,
+.section {
+  background: var(--surface) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 22px 26px !important;
+}
+
+/* ── SECTION TITLE ─────────────────────────────────────────── */
+.section-title {
+  font-family: 'Crimson Pro', serif !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: var(--primary) !important;
+  letter-spacing: -.01em !important;
+  margin-bottom: 18px !important;
+}
+
+/* ── STAT CARDS ─────────────────────────────────────────────── */
+.stat-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 18px 20px !important;
+  transition: box-shadow .2s, transform .2s, border-color .2s !important;
+}
+.stat-card:hover {
+  box-shadow: var(--shadow) !important;
+  transform: translateY(-1px) !important;
+  border-color: var(--accent) !important;
+}
+
+.stat-value {
+  font-family: 'Crimson Pro', serif !important;
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  color: var(--primary) !important;
+  line-height: 1 !important;
+}
+
+.stat-label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  text-transform: uppercase !important;
+  letter-spacing: .07em !important;
+  margin-top: 4px !important;
+}
+
+/* ── ACTION CARDS ───────────────────────────────────────────── */
+.action-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border-light) !important;
+  border-top: 3px solid transparent !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 20px !important;
+  cursor: pointer !important;
+  transition: all .2s !important;
+}
+.action-card:hover {
+  border-top-color: var(--accent) !important;
+  box-shadow: var(--shadow) !important;
+  transform: translateY(-2px) !important;
+}
+
+.action-icon  { font-size: 26px !important; margin-bottom: 10px !important; }
+.action-title {
+  font-family: 'Crimson Pro', serif !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: var(--primary) !important;
+}
+.action-desc  { font-size: 12.5px !important; color: var(--text-secondary) !important; margin-top: 3px !important; }
+
+/* ── BUTTONS ────────────────────────────────────────────────── */
+.btn {
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 8px 18px !important;
+  border-radius: var(--radius-sm) !important;
+  cursor: pointer !important;
+  transition: all .15s !important;
+  letter-spacing: .01em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  text-decoration: none !important;
+  line-height: 1.4 !important;
+}
+
+.btn-primary,
+.btn-primary:link,
+.btn-primary:visited  { background: var(--primary) !important; color: #fff !important; border: none !important; }
+.btn-primary:hover    { background: var(--primary-hover) !important; box-shadow: 0 2px 8px rgba(92,16,24,.28) !important; }
+.btn-primary:active   { background: var(--primary-dark) !important; }
+
+.btn-outline,
+.btn-secondary        { background: var(--surface) !important; color: var(--primary) !important; border: 1.5px solid var(--border) !important; }
+.btn-outline:hover,
+.btn-secondary:hover  { border-color: var(--primary) !important; background: var(--surface-alt) !important; }
+
+.btn-accent           { background: var(--accent) !important; color: #fff !important; border: none !important; }
+.btn-accent:hover     { background: var(--accent-hover) !important; }
+
+.btn-danger           { background: var(--surface) !important; color: var(--danger) !important; border: 1.5px solid #fca5a5 !important; }
+.btn-danger:hover     { background: var(--danger-bg) !important; border-color: var(--danger) !important; }
+
+.btn-sm  { font-size: 12px !important; padding: 5px 12px !important; }
+.btn-lg  { font-size: 14px !important; padding: 11px 24px !important; }
+
+.btn:disabled,
+.btn[disabled] { opacity: .5 !important; cursor: not-allowed !important; pointer-events: none !important; }
+
+/* ── FORMS ──────────────────────────────────────────────────── */
+input:not([type=checkbox]):not([type=radio]),
+select,
+textarea {
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 13.5px !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 8px 12px !important;
+  color: var(--text) !important;
+  background: var(--surface) !important;
+  transition: border-color .15s, box-shadow .15s !important;
+  width: 100% !important;
+}
+
+input:not([type=checkbox]):not([type=radio]):focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(196,154,42,.13) !important;
+}
+
+label {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: var(--text-secondary) !important;
+  text-transform: uppercase !important;
+  letter-spacing: .06em !important;
+  margin-bottom: 5px !important;
+  display: block !important;
+}
+
+/* ── TABLES ─────────────────────────────────────────────────── */
+table    { width: 100% !important; border-collapse: collapse !important; font-size: 13.5px !important; }
+
+thead tr { border-bottom: 2px solid var(--border) !important; background: transparent !important; }
+
+th {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: var(--text-muted) !important;
+  text-transform: uppercase !important;
+  letter-spacing: .07em !important;
+  padding: 10px 14px !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  background: transparent !important;
+}
+
+td {
+  padding: 12px 14px !important;
+  border-bottom: 1px solid var(--border-light) !important;
+  color: var(--text) !important;
+  vertical-align: middle !important;
+}
+
+tbody tr:last-child td { border-bottom: none !important; }
+tbody tr:hover         { background: var(--surface-alt) !important; }
+
+/* ── BADGES ─────────────────────────────────────────────────── */
+.estado-badge,
+.badge {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 3px 10px !important;
+  border-radius: 20px !important;
+  letter-spacing: .04em !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+}
+
+/* ── SEARCH / FILTER BAR ────────────────────────────────────── */
+.search-bar,
+.filter-bar,
+.filtros {
+  display: flex !important;
+  gap: 10px !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  margin-bottom: 18px !important;
+}
+
+.search-bar input,
+.search-input {
+  max-width: 280px !important;
+  width: 100% !important;
+}
+
+/* ── MODALS ─────────────────────────────────────────────────── */
+.modal-overlay,
+.modal-backdrop {
+  background: rgba(28,21,16,.45) !important;
+  backdrop-filter: blur(3px) !important;
+}
+
+.modal-content,
+.modal-box {
+  background: var(--surface) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--border-light) !important;
+}
+
+.modal-header {
+  padding: 20px 24px !important;
+  border-bottom: 1px solid var(--border-light) !important;
+}
+
+.modal-title,
+.modal-header h2,
+.modal-header h3 {
+  font-family: 'Crimson Pro', serif !important;
+  font-size: 19px !important;
+  font-weight: 700 !important;
+  color: var(--primary) !important;
+}
+
+.modal-body  { padding: 22px 24px !important; }
+.modal-footer {
+  padding: 16px 24px !important;
+  border-top: 1px solid var(--border-light) !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+
+/* ── DROPDOWN / SELECT PANELS ───────────────────────────────── */
+.dropdown-menu {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-lg) !important;
+  overflow: hidden !important;
+}
+
+/* ── NOTIFICATION PANEL ─────────────────────────────────────── */
+#notif-dropdown {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--border-light) !important;
+}
+
+/* ── ALERT / INFO BOXES ─────────────────────────────────────── */
+.alert,
+.info-box,
+.warn-box {
+  border-radius: var(--radius-sm) !important;
+  padding: 13px 16px !important;
+  font-size: 13.5px !important;
+  line-height: 1.55 !important;
+}
+
+/* ── TABS ───────────────────────────────────────────────────── */
+.tab-btn.active,
+.tab.active,
+.tab-active {
+  border-bottom: 2px solid var(--accent) !important;
+  color: var(--primary) !important;
+  font-weight: 700 !important;
+}
+
+/* ── EMPTY STATE ────────────────────────────────────────────── */
+.empty-state {
+  text-align: center !important;
+  padding: 48px 24px !important;
+  color: var(--text-muted) !important;
+}
+
+.empty-state svg,
+.empty-state .empty-icon { opacity: .35 !important; }
+
+/* ── TYPOGRAPHY UTILITIES ───────────────────────────────────── */
+.font-serif   { font-family: 'Crimson Pro', serif !important; }
+.text-primary { color: var(--primary) !important; }
+.text-accent  { color: var(--accent) !important; }
+.text-muted   { color: var(--text-muted) !important; }
+.text-sm      { font-size: 12.5px !important; }
+.text-xs      { font-size: 11.5px !important; }
+.font-bold    { font-weight: 700 !important; }
+.uppercase    { text-transform: uppercase !important; letter-spacing: .06em !important; }
+
+/* ── DIVIDER ────────────────────────────────────────────────── */
+hr,
+.divider { border: none !important; border-top: 1px solid var(--border-light) !important; margin: 18px 0 !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+ * WHITE TOP-NAVIGATION OVERRIDE
+ * Converts all dark gradient .header used as top nav to white.
+ * Uses body > .header to target only top-level nav headers,
+ * leaving .header page-title sections inside .container intact.
+ * ═══════════════════════════════════════════════════════════════ */
+
+body > .header {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 200 !important;
+  padding: 0 32px !important;
+  min-height: 58px !important;
+  margin-bottom: 0 !important;
+}
+
+/* inner wrapper — flex row, full height */
+body > .header .header-content,
+body > .header .header-top {
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  height: 58px !important;
+  gap: 16px !important;
+  width: 100% !important;
+}
+
+/* left side: logo + title inline */
+body > .header .header-left,
+body > .header .header-top-left {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+/* logo pill wrapper — strip white card on white bg */
+body > .header .header-left > div:first-child,
+body > .header .header-top-left > div:first-child {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* page title in the navbar */
+body > .header h1,
+body > .header .header-left h1,
+body > .header .header-top-left h1 {
+  font-family: 'Crimson Pro', serif !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--primary) !important;
+  margin: 0 !important;
+  letter-spacing: -.01em !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* hide subtitle in compact navbar */
+body > .header p,
+body > .header .header-left p,
+body > .header .header-top-left p {
+  display: none !important;
+}
+
+/* breadcrumb back-link: display inline, dark style */
+body > .header .breadcrumb {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+body > .header .breadcrumb a,
+body > .header .btn-cashflow {
+  color: var(--text-secondary) !important;
+  font-size: 12px !important;
+  text-decoration: none !important;
+  padding: 4px 8px !important;
+  border-radius: var(--radius-xs) !important;
+  border: 1px solid var(--border) !important;
+  white-space: nowrap !important;
+  background: transparent !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+body > .header .breadcrumb a:hover,
+body > .header .btn-cashflow:hover {
+  background: var(--accent-pale) !important;
+  color: var(--primary) !important;
+  border-color: var(--accent) !important;
+}
+
+/* right side buttons container */
+body > .header .header-right,
+body > .header .header-top-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+/* header action buttons — convert from white-on-transparent to outlined */
+body > .header .header-btn,
+body > .header .btn-back,
+body > .header .logout-btn,
+body > .header .btn-logout,
+body > .header a.header-btn,
+body > .header a.btn-logout {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  padding: 6px 13px !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 13px !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: background .15s, border-color .15s, color .15s !important;
+  white-space: nowrap !important;
+}
+body > .header .header-btn:hover,
+body > .header .btn-back:hover,
+body > .header .logout-btn:hover,
+body > .header .btn-logout:hover,
+body > .header a.header-btn:hover,
+body > .header a.btn-logout:hover {
+  background: var(--accent-pale) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+/* notif bell hover on white bg */
+body > .header .notif-bell,
+body > .header .notif-btn,
+body > .header button[onclick*="toggleNotif"] {
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 8px !important;
+  border-radius: var(--radius-sm) !important;
+  transition: background .15s !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+body > .header .notif-bell:hover,
+body > .header .notif-btn:hover,
+body > .header button[onclick*="toggleNotif"]:hover {
+  background: var(--accent-pale) !important;
+}
+
+/* fix badge border (was dark for dark bg) */
+body > .header .notif-badge,
+body > .header #notif-badge {
+  border-color: white !important;
+}
+
+/* inline-styled white-transparent buttons inside any converted header */
+body > .header button[style*="rgba(255,255,255"],
+#app > .page-header button[style*="rgba(255,255,255"],
+body > .header a[style*="rgba(255,255,255"] {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* ── #app > .page-header (Secretaria_4_Tabla, coordinador_3_cohorte) ── */
+#app > .page-header {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 200 !important;
+  padding: 0 32px !important;
+  min-height: 58px !important;
+  margin-bottom: 0 !important;
+}
+#app > .page-header .header-left {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+#app > .page-header .header-left > div:first-child {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+  flex-shrink: 0 !important;
+}
+#app > .page-header .header-left > div:first-child img {
+  height: 44px !important;
+  width: auto !important;
+}
+#app > .page-header h1 {
+  font-family: 'Crimson Pro', serif !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--primary) !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+#app > .page-header p { display: none !important; }
+#app > .page-header .notif-badge,
+#app > .page-header #notif-badge { border-color: white !important; }
+
+/* ── CATCH-ALL: inline white styles on legacy headers ──────── */
+
+/* logo pill wrappers (rgba white bg) — make transparent */
+body > .header div[style*="rgba(255,255,255"],
+#app > .page-header div[style*="rgba(255,255,255"] {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* white-colored links/text inside converted headers */
+body > .header a[style*="color:white"],
+body > .header a[style*="color: white"],
+body > .header a[style*="color:#fff"],
+body > .header a[style*="color: #fff"],
+#app > .page-header a[style*="color:white"],
+#app > .page-header a[style*="color:#fff"] {
+  color: var(--text-secondary) !important;
+  text-decoration: none !important;
+}
+body > .header a[style*="color:white"]:hover,
+body > .header a[style*="color:#fff"]:hover,
+#app > .page-header a[style*="color:white"]:hover {
+  color: var(--primary) !important;
+}

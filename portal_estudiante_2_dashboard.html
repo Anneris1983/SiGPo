@@ -82,6 +82,25 @@
         .btn-baja:hover:not(:disabled) { background: #fee2e2; }
         .btn-baja:disabled { border-color: #9ca3af; color: #9ca3af; cursor: not-allowed; background: #f9fafb; }
 
+        .btn-libre-deuda {
+            margin-top: 14px;
+            padding: 7px 16px;
+            border-radius: 6px;
+            border: 1.5px solid #059669;
+            background: white;
+            color: #059669;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-libre-deuda:hover:not(:disabled) { background: #d1fae5; }
+        .btn-libre-deuda:disabled { border-color: #9ca3af; color: #9ca3af; cursor: not-allowed; background: #f9fafb; }
+
         .carrera-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; gap: 12px; }
         .carrera-nombre { font-weight: 700; color: var(--primary); font-size: 16px; }
         .carrera-cohorte { font-size: 12px; color: #888; font-weight: 500; margin-top: 3px; }
@@ -129,12 +148,12 @@
             .carrera-card::after { display: none; }
         }
     </style>
+    <link rel="stylesheet" href="sigpo-theme.css">
 </head>
 <body>
     <div class="navbar">
         <div class="nav-brand">
-            <img src="assets/logo_fce.png" alt="FCE UNCUYO" onerror="this.style.display='none'">
-            <span>Portal de Estudiantes</span>
+                        <span>Portal de Estudiantes</span>
         </div>
 
         <div class="nav-links">
@@ -232,6 +251,9 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.1/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script src="supabase.js"></script>
 
     <script>
@@ -359,7 +381,7 @@
                     .eq('estudiante_id', estId),
 
                 sb.from('cobros')
-                    .select('cobro_id, concepto, periodo, fecha_vencimiento, monto_final, saldo_pendiente, estado, no_aplica, cohorte_id, programa_id')
+                    .select('cobro_id, concepto, periodo, fecha_vencimiento, fecha_pago, monto_final, saldo_pendiente, estado, no_aplica, cohorte_id, programa_id')
                     .eq('dni', String(dni))
                     .order('fecha_vencimiento'),
 
@@ -471,6 +493,7 @@
                     }, 0);
 
                     var esBaja = insc.estado_academico === 'BAJA';
+                    var todoAbonado = !esBaja && totalCoh > 0 && abonadasCoh === totalCoh && deudaCoh === 0;
 
                     var badge = esBaja
                         ? '<span class="carrera-badge badge-baja">Baja</span>'
@@ -519,7 +542,10 @@
                                     : '') +
                             '</div>' +
                             '<div style="margin-top:12px;">' +
-                                '<button class="btn-baja" id="btn-baja-' + cohorteId + '" onclick="event.stopPropagation(); solicitarBaja(\'' + programaId + '\', \'' + cohorteId + '\', this)">Solicitar baja</button>' +
+                                (todoAbonado
+                                    ? '<button class="btn-libre-deuda" id="btn-ld-' + cohorteId + '" onclick="event.stopPropagation(); descargarLibreDeuda(\'' + programaId + '\', \'' + cohorteId + '\', this)">📄 Libre deuda</button>'
+                                    : '<button class="btn-baja" id="btn-baja-' + cohorteId + '" onclick="event.stopPropagation(); solicitarBaja(\'' + programaId + '\', \'' + cohorteId + '\', this)">Solicitar baja</button>'
+                                ) +
                             '</div>' +
                         '</div>';
                 });
@@ -637,7 +663,7 @@
     }
 
     async function solicitarBaja(programaId, cohorteId, btn) {
-        if (!confirm('¿Confirmar solicitud de baja? Se enviará un correo a la Secretaría de Posgrado.')) return;
+        if (!confirm('¿Confirmar solicitud de baja? Se notificará por email a Secretaría, Cooperadora y Coordinador/es del programa.')) return;
 
         btn.disabled = true;
         btn.textContent = 'Enviando…';
@@ -652,13 +678,12 @@
 
             var cobros = _cobrosMap[cohorteId] || [];
 
-            // Obtener emails de cooperadora y coordinadores del programa
+            // Obtener emails de secretaria, cooperadora y coordinadores del programa
+            // Usa RPC con SECURITY DEFINER para bypassear RLS (estudiante no puede leer otros usuarios)
             var sb = await getSupabase();
-            var { data: receptores } = await sb
-                .from('usuarios')
-                .select('nombre, apellido, email, rol')
-                .in('rol', ['COOPERADORA', 'COORDINADOR'])
-                .eq('estado_usuario', 'ACTIVO');
+            var { data: receptores, error: errRec } = await sb
+                .rpc('get_destinatarios_baja', { p_programa_id: parseInt(programaId) });
+            if (errRec) console.warn('get_destinatarios_baja error:', errRec.message);
 
             var emailEst = _sesion && _sesion.email ? _sesion.email : '';
 
@@ -717,7 +742,7 @@
                 '<div class="ftr">Mensaje automático del sistema SiGPo. Fecha: ' + new Date().toLocaleDateString('es-AR') + '</div>' +
                 '</body></html>';
 
-            // Destinatarios: estudiante + cooperadora + coordinadores
+            // Destinatarios: estudiante + secretaria + cooperadora + coordinadores del programa
             var emails = [];
             if (emailEst) emails.push(emailEst);
             (receptores || []).forEach(function(r) {
@@ -745,6 +770,257 @@
     }
 
     cargar();
+
+    // ── LIBRE DEUDA ─────────────────────────────────────────────────────────
+
+    var SUPABASE_STORAGE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co/storage/v1/object/public/libre-deudas/';
+
+    async function descargarLibreDeuda(programaId, cohorteId, btn) {
+        btn.disabled = true;
+        btn.textContent = 'Generando…';
+
+        try {
+            var insc = _inscripciones.find(function(i) { return String(i.cohorte_id) === String(cohorteId); });
+            if (!insc) throw new Error('Inscripción no encontrada');
+
+            var coh  = insc.cohortes || {};
+            var prog = coh.programas || {};
+            var cobros = (_cobrosMap[cohorteId] || []).filter(function(c) { return !c.no_aplica; });
+
+            var dni     = _sesion.dni || '';
+            var apellido = _estudiante ? (_estudiante.apellido || '') : '';
+            var nombre   = _estudiante ? (_estudiante.nombre   || '') : '';
+            var nombreCompleto = apellido ? (apellido + ', ' + nombre) : (_sesion.nombre || '');
+
+            var codigo = 'LD-' + cohorteId + '-' + dni + '-' + Date.now().toString(36).toUpperCase();
+            var ts     = Date.now();
+            var storagePath = dni + '-' + cohorteId + '-' + ts + '.pdf';
+            var pdfPublicUrl = SUPABASE_STORAGE_URL + storagePath;
+
+            // ── 1. QR Code como data URL ──────────────────────────────────
+            var qrDataUrl = await QRCode.toDataURL(pdfPublicUrl, {
+                width: 120, margin: 1,
+                color: { dark: '#1c1510', light: '#ffffff' }
+            });
+
+            // ── 2. Construir PDF con jsPDF ────────────────────────────────
+            var { jsPDF } = window.jspdf;
+            var doc = new jsPDF('p', 'mm', 'a4');
+            var W = 210, ml = 18, mr = 18, cw = W - ml - mr;
+            var y = 0;
+
+            // Encabezado bordo
+            doc.setFillColor(92, 16, 24);
+            doc.rect(0, 0, W, 28, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            doc.text('SECRETARÍA DE POSGRADO  ·  FCE UNCUYO', ml, 11);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.text('Sistema de Gestión de Posgrado  —  SiGPo', ml, 18);
+            doc.setFontSize(8);
+            doc.text('Facultad de Ciencias Económicas · Universidad Nacional de Cuyo', ml, 24);
+            y = 38;
+
+            // Título principal
+            doc.setTextColor(92, 16, 24);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(20);
+            doc.text('CERTIFICADO DE LIBRE DEUDA', W / 2, y, { align: 'center' });
+            y += 7;
+            doc.setFillColor(196, 154, 42);
+            doc.rect(ml, y, cw, 1, 'F');
+            y += 8;
+
+            // Fecha emisión
+            var now = new Date();
+            var fechaStr = now.toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(107, 98, 84);
+            doc.text('Emitido el: ' + fechaStr, W / 2, y, { align: 'center' });
+            y += 10;
+
+            // Sección: datos del estudiante
+            doc.setFillColor(248, 246, 241);
+            doc.roundedRect(ml, y, cw, 32, 2, 2, 'F');
+            doc.setTextColor(92, 16, 24);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.text('DATOS DEL ESTUDIANTE', ml + 4, y + 6);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(28, 21, 16);
+            var col2 = ml + 55;
+            doc.setFont('helvetica', 'bold');   doc.text('Apellido y Nombre:', ml + 4, y + 14);
+            doc.setFont('helvetica', 'normal'); doc.text(nombreCompleto || '—', col2, y + 14);
+            doc.setFont('helvetica', 'bold');   doc.text('DNI:', ml + 4, y + 21);
+            doc.setFont('helvetica', 'normal'); doc.text(String(dni || '—'), col2, y + 21);
+            doc.setFont('helvetica', 'bold');   doc.text('Programa / Curso:', ml + 4, y + 28);
+            doc.setFont('helvetica', 'normal'); doc.text(prog.nombre || '—', col2, y + 28);
+            y += 37;
+
+            // Sección: cohorte
+            doc.setFillColor(240, 237, 232);
+            doc.roundedRect(ml, y, cw, 12, 2, 2, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(92, 16, 24);
+            var labelCoh = (prog.tipo && prog.tipo.toLowerCase().includes('curso')) ? 'Edición' : 'Cohorte';
+            doc.text(labelCoh + ':  ', ml + 4, y + 8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(28, 21, 16);
+            doc.text(coh.nombre || '—', ml + 4 + doc.getTextWidth(labelCoh + ':  '), y + 8);
+            y += 18;
+
+            // Tabla de cuotas
+            var ESTADOS = {
+                ABONADA: 'ABONADA', EN_MORA: 'EN MORA', PENDIENTE: 'PEND. APROB.',
+                PAGO_PARCIAL: 'PAGO PARCIAL', NO_ABONADA: 'NO ABONADA',
+                A_DEFINIR: 'A DEFINIR', NO_APLICA: 'NO APLICA'
+            };
+
+            var tableRows = cobros.map(function(c) {
+                var fv = c.fecha_vencimiento ? c.fecha_vencimiento.split('T')[0].split('-').reverse().join('/') : '—';
+                var fp = c.fecha_pago        ? c.fecha_pago.split('T')[0].split('-').reverse().join('/')        : '—';
+                return [
+                    c.concepto || '—',
+                    c.periodo  || '—',
+                    fv,
+                    fp,
+                    '$' + Number(c.monto_final || 0).toLocaleString('es-AR', {minimumFractionDigits:2}),
+                    ESTADOS[c.estado] || c.estado || '—'
+                ];
+            });
+
+            doc.autoTable({
+                startY: y,
+                head: [['Concepto', 'Período', 'Vencimiento', 'Fecha pago', 'Monto', 'Estado']],
+                body: tableRows,
+                margin: { left: ml, right: mr },
+                styles: { fontSize: 8.5, cellPadding: 3 },
+                headStyles: { fillColor: [92, 16, 24], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [248, 246, 241] },
+                columnStyles: {
+                    0: { cellWidth: 42 },
+                    1: { cellWidth: 22 },
+                    2: { cellWidth: 24 },
+                    3: { cellWidth: 24 },
+                    4: { cellWidth: 24, halign: 'right' },
+                    5: { cellWidth: 26, fontStyle: 'bold', textColor: [5, 150, 105] }
+                }
+            });
+            y = doc.lastAutoTable.finalY + 6;
+
+            // Total abonado
+            var totalAbonado = cobros.reduce(function(s, c) { return s + Number(c.monto_final || 0); }, 0);
+            doc.setFillColor(92, 16, 24);
+            doc.roundedRect(ml, y, cw, 10, 2, 2, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(255, 255, 255);
+            doc.text('TOTAL ABONADO:', ml + 4, y + 7);
+            doc.text('$' + totalAbonado.toLocaleString('es-AR', {minimumFractionDigits:2}), W - mr - 4, y + 7, { align: 'right' });
+            y += 16;
+
+            // Texto certificante
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(9);
+            doc.setTextColor(107, 98, 84);
+            var texto = 'El presente certificado acredita que el/la estudiante identificado/a precedentemente ha cumplido ' +
+                        'con la totalidad de las obligaciones económicas correspondientes al programa indicado. ' +
+                        'Puede verificarse su autenticidad escaneando el código QR adjunto.';
+            var lines = doc.splitTextToSize(texto, cw);
+            doc.text(lines, ml, y);
+            y += lines.length * 4.5 + 6;
+
+            // Leyenda aclaratoria
+            doc.setFillColor(255, 243, 205);
+            var leyendaTxt = 'Tenga en cuenta que, si aún no ha egresado de la carrera y tiene pendiente recursar espacios curriculares ' +
+                'y/o presentar el trabajo final, podría corresponder el pago de la readmisión. Asimismo, en caso de que deba recursar, ' +
+                'se determinará la cantidad de cuotas aplicables según los espacios curriculares que corresponda realizar nuevamente.';
+            var leyendaLines = doc.splitTextToSize(leyendaTxt, cw - 8);
+            var leyendaH = leyendaLines.length * 4.2 + 8;
+            doc.roundedRect(ml, y, cw, leyendaH, 2, 2, 'F');
+            doc.setDrawColor(230, 126, 34);
+            doc.setLineWidth(0.4);
+            doc.rect(ml, y, 2, leyendaH, 'F');
+            doc.setDrawColor(200, 200, 200);
+            doc.setFont('helvetica', 'bolditalic');
+            doc.setFontSize(7.5);
+            doc.setTextColor(133, 100, 4);
+            doc.text('⚠ Aclaración importante:', ml + 4, y + 5);
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(7.5);
+            doc.text(leyendaLines, ml + 4, y + 10);
+            y += leyendaH + 6;
+
+            // QR + pie
+            var qrSize = 32;
+            var qrX = W - mr - qrSize;
+            doc.addImage(qrDataUrl, 'PNG', qrX, y, qrSize, qrSize);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(92, 16, 24);
+            doc.text('Código de verificación:', ml, y + 5);
+            doc.setFont('courier', 'bold');
+            doc.setFontSize(8.5);
+            doc.text(codigo, ml, y + 11);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            doc.setTextColor(107, 98, 84);
+            doc.text('Escanear QR para verificar la autenticidad del documento', ml, y + 18);
+
+            // Línea final
+            y += qrSize + 4;
+            doc.setDrawColor(196, 154, 42);
+            doc.setLineWidth(0.5);
+            doc.line(ml, y, W - mr, y);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.setTextColor(160, 148, 132);
+            doc.text('Documento generado automáticamente por SiGPo · FCE UNCUYO · ' + fechaStr, W / 2, y + 4, { align: 'center' });
+
+            // ── 3. Obtener blob ────────────────────────────────────────────
+            var pdfBlob = doc.output('blob');
+
+            // ── 4. Subir a Supabase Storage ───────────────────────────────
+            var sb = await getSupabase();
+            var { error: uploadErr } = await sb.storage
+                .from('libre-deudas')
+                .upload(storagePath, pdfBlob, { contentType: 'application/pdf', upsert: true });
+            if (uploadErr) throw new Error('Error subiendo PDF: ' + uploadErr.message);
+
+            // ── 5. Registrar en base de datos ─────────────────────────────
+            var { error: dbErr } = await sb.from('libre_deudas').insert({
+                cohorte_id:          parseInt(cohorteId),
+                programa_id:         parseInt(programaId),
+                dni:                 dni,
+                estudiante_nombre:   nombreCompleto,
+                pdf_url:             pdfPublicUrl,
+                codigo_verificacion: codigo,
+                auth_user_id:        (await sb.auth.getSession()).data.session.user.id
+            });
+            if (dbErr) console.warn('libre_deudas insert:', dbErr.message);
+
+            // ── 6. Descargar en el navegador ──────────────────────────────
+            var fileName = 'libre-deuda-' + (prog.nombre || 'programa').replace(/[^a-z0-9]/gi, '-') + '-' + dni + '.pdf';
+            doc.save(fileName);
+
+            btn.textContent = '✓ Descargado';
+            btn.style.borderColor = '#9ca3af';
+            btn.style.color = '#9ca3af';
+            btn.disabled = false;
+
+        } catch(err) {
+            console.error('descargarLibreDeuda:', err);
+            btn.disabled = false;
+            btn.innerHTML = '📄 Libre deuda';
+            alert('Error al generar el certificado: ' + err.message);
+        }
+    }
 </script>
 </body>
 </html>

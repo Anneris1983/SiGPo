@@ -661,6 +661,41 @@
         }
 
         .modal.small { max-width: 560px; }
+        .modal.med { max-width: 680px; }
+
+        /* Approval modal extras */
+        .ap-info-box { background:#f8f6f1; padding:14px 16px; border-radius:10px; margin-bottom:16px; }
+        .ap-info-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+        .ap-info-item { display:flex; flex-direction:column; }
+        .ap-info-lbl { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; }
+        .ap-info-val { font-size:14px; font-weight:600; color:var(--text); }
+        .ap-info-val.big { font-size:20px; color:var(--primary); }
+        .ap-sec-title { font-size:14px; font-weight:700; color:var(--primary); margin:16px 0 10px; padding-bottom:6px; border-bottom:2px solid #e0e0e0; }
+        .ap-payment-opts { margin-bottom:14px; }
+        .ap-radio-opt { background:#f8f6f1; padding:12px 16px; border-radius:8px; margin-bottom:8px; cursor:pointer; border:2px solid transparent; display:flex; align-items:center; gap:10px; transition:all 0.15s; }
+        .ap-radio-opt:hover { background:#e8e6e1; }
+        .ap-radio-opt.selected { border-color:var(--accent,#C49A2A); background:#fff9e6; }
+        .ap-radio-opt input[type="radio"] { width:16px; height:16px; cursor:pointer; }
+        .ap-radio-title { font-weight:700; font-size:14px; }
+        .ap-radio-desc { font-size:12px; color:#666; margin-top:2px; }
+        .ap-partial-sec { display:none; background:#f8f6f1; padding:14px; border-radius:8px; margin-bottom:14px; }
+        .ap-partial-sec.active { display:block; }
+        .ap-input-grp label { display:block; font-weight:600; font-size:13px; margin-bottom:5px; }
+        .ap-input-grp input { width:100%; padding:10px 12px; border:2px solid #e0e0e0; border-radius:8px; font-size:14px; font-family:inherit; }
+        .ap-input-grp input:focus { outline:none; border-color:var(--accent,#C49A2A); }
+        .ap-calc-box { background:linear-gradient(135deg,#e8f4f8,#d1ecf1); padding:12px 16px; border-radius:8px; border-left:4px solid #0c5460; margin-top:12px; }
+        .ap-calc-row { display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
+        .ap-calc-row.total { font-weight:700; border-top:1px solid #aecdd5; margin-top:4px; padding-top:7px; }
+        .ap-alert { background:#fff3cd; border-left:4px solid #e67e22; padding:10px 14px; border-radius:8px; margin-top:12px; font-size:12px; color:#856404; }
+        .ap-upload-box { border:3px dashed #d0d0d0; border-radius:10px; padding:22px; text-align:center; background:#f8f6f1; cursor:pointer; transition:all 0.2s; }
+        .ap-upload-box:hover { border-color:var(--accent,#C49A2A); background:#fff9e6; }
+        .ap-file-uploaded { background:#d4edda; border:2px solid #2d7a4f; border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; }
+        .ap-warn-nofile { background:#fff3cd; border-left:4px solid #ffc107; padding:8px 12px; border-radius:8px; margin-top:8px; font-size:12px; color:#856404; font-weight:600; }
+        .ap-rechazo-sec { display:none; margin-top:14px; }
+        .ap-rechazo-sec.active { display:block; }
+        .ap-rechazo-sec textarea { width:100%; padding:10px; border:2px solid var(--danger,#c0392b); border-radius:8px; font-size:13px; font-family:inherit; resize:vertical; min-height:70px; }
+        .ap-footer-normal { display:flex; }
+        .ap-footer-rechazo { display:none; }
 
         .modal-header {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
@@ -1044,6 +1079,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="sigpo-theme.css">
 </head>
 <body>
     <header class="header">
@@ -1267,28 +1303,115 @@
 
     <!-- Modal aprobación de comprobante -->
     <div class="modal-overlay" id="modalAprobacionOverlay" onclick="cerrarSiOverlay(event, 'modalAprobacionOverlay', cerrarAprobacionModal)">
-        <div class="modal small">
+        <div class="modal med">
             <div class="modal-header">
                 <div>
-                    <h3>Revisar comprobante</h3>
+                    <h3>✅ Aprobar comprobante de pago</h3>
                     <p id="aprobModalSub">—</p>
                 </div>
                 <button class="modal-close" type="button" onclick="cerrarAprobacionModal()">×</button>
             </div>
             <div class="modal-body">
-                <div id="aprobComprobanteArea" style="margin-bottom:16px;"></div>
-                <div class="modal-section">
-                    <h4>Recibo oficial (requerido para aprobar)</h4>
-                    <input type="file" id="aprobReciboFile" accept="image/*,.pdf" style="width:100%;padding:8px 0;font-family:inherit;">
-                    <p style="font-size:12px;color:#888;margin-top:4px;">Adjuntá el recibo que generás al alumno para confirmar la aprobación.</p>
+                <!-- Info estudiante / cuota -->
+                <div class="ap-info-box">
+                    <div class="ap-info-grid">
+                        <div class="ap-info-item">
+                            <div class="ap-info-lbl">Estudiante</div>
+                            <div class="ap-info-val" id="apNombre">—</div>
+                        </div>
+                        <div class="ap-info-item">
+                            <div class="ap-info-lbl">DNI</div>
+                            <div class="ap-info-val" id="apDni">—</div>
+                        </div>
+                        <div class="ap-info-item">
+                            <div class="ap-info-lbl">Cuota</div>
+                            <div class="ap-info-val" id="apCuota">—</div>
+                        </div>
+                        <div class="ap-info-item">
+                            <div class="ap-info-lbl">Monto total</div>
+                            <div class="ap-info-val big" id="apMonto">—</div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Comprobante existente -->
+                <div id="aprobComprobanteArea" style="margin-bottom:14px;"></div>
+
+                <!-- Opciones de pago -->
+                <div class="ap-sec-title">¿Cómo registrar este pago?</div>
+                <div class="ap-payment-opts">
+                    <div class="ap-radio-opt selected" id="apFullOpt" onclick="apSelectTipo('full')">
+                        <input type="radio" name="ap-tipo" id="apFullRadio" checked>
+                        <div>
+                            <div class="ap-radio-title">💯 Pago Completo</div>
+                            <div class="ap-radio-desc" id="apFullDesc">El estudiante pagó el monto total de la cuota</div>
+                        </div>
+                    </div>
+                    <div class="ap-radio-opt" id="apPartialOpt" onclick="apSelectTipo('partial')">
+                        <input type="radio" name="ap-tipo" id="apPartialRadio">
+                        <div>
+                            <div class="ap-radio-title">📊 Pago Parcial</div>
+                            <div class="ap-radio-desc">El estudiante pagó solo una parte del monto total</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input pago parcial -->
+                <div class="ap-partial-sec" id="apPartialSec">
+                    <div class="ap-input-grp" style="margin-bottom:10px;">
+                        <label for="apMontoAbonado">💰 Monto Abonado</label>
+                        <input type="number" id="apMontoAbonado" placeholder="Ejemplo: 70000" step="0.01" oninput="apCalcularResto()">
+                    </div>
+                    <div class="ap-calc-box">
+                        <div class="ap-calc-row"><span>Monto total de la cuota:</span><strong id="apCalcTotal">—</strong></div>
+                        <div class="ap-calc-row"><span>Monto abonado:</span><strong id="apCalcPaid">$0,00</strong></div>
+                        <div class="ap-calc-row total"><span>Saldo pendiente:</span><strong id="apCalcResto">—</strong></div>
+                    </div>
+                    <div class="ap-alert">
+                        <strong>⚠️ Importante:</strong>
+                        El saldo pendiente podrá entrar en mora si no se paga antes del día 16 del próximo mes.
+                    </div>
+                </div>
+
+                <!-- Subir recibo -->
+                <div class="ap-sec-title">📄 Subir Recibo Oficial (OBLIGATORIO)</div>
+                <div class="ap-upload-box" id="apUploadBox">
+                    <input type="file" id="aprobReciboFile" accept=".pdf,image/*" style="display:none;" onchange="apHandleFile(event)">
+                    <label for="aprobReciboFile" style="cursor:pointer;display:block;">
+                        <div style="font-size:32px;margin-bottom:6px;">📎</div>
+                        <strong>Click para seleccionar archivo</strong>
+                        <p style="font-size:12px;color:#888;margin-top:4px;">PDF o imagen · Máximo 10 MB</p>
+                    </label>
+                </div>
+                <div class="ap-file-uploaded" id="apFileUploaded" style="display:none;">
+                    <div style="font-size:24px;">✅</div>
+                    <div style="flex:1;">
+                        <div style="font-weight:700;font-size:13px;" id="apFileName"></div>
+                        <div style="font-size:12px;color:#555;" id="apFileSize"></div>
+                    </div>
+                    <button class="btn light" style="padding:4px 10px;font-size:12px;" onclick="apRemoveFile()">✕ Cambiar</button>
+                </div>
+                <div class="ap-warn-nofile" id="apWarnNoFile">⚠️ No podrás aprobar sin subir el recibo oficial</div>
+
+                <!-- Sección de rechazo -->
+                <div class="ap-rechazo-sec" id="apRechazoSec">
+                    <div class="ap-sec-title" style="color:var(--danger,#c0392b);border-bottom-color:var(--danger,#c0392b);">✕ Motivo de Rechazo</div>
+                    <textarea id="apRechazoMotivo" placeholder="Ingrese el motivo del rechazo (opcional)…"></textarea>
+                </div>
+
+                <div id="aprobMsgBox" style="margin-top:10px;font-size:13px;color:var(--danger,#c0392b);"></div>
             </div>
-            <div class="modal-footer">
-                <div class="footer-info" id="aprobMsgBox"></div>
+            <div class="modal-footer ap-footer-normal" id="apFooterNormal">
                 <div class="footer-buttons">
                     <button class="btn light" type="button" onclick="cerrarAprobacionModal()">Cancelar</button>
-                    <button class="btn danger" type="button" onclick="rechazarCuotaDesdeModal()">✕ Rechazar</button>
-                    <button class="btn success" type="button" id="btnAprobConfirm" onclick="aprobarCuotaDesdeModal()">✔ Aprobar</button>
+                    <button class="btn danger" type="button" onclick="apMostrarRechazo()">✕ Rechazar</button>
+                    <button class="btn success" type="button" id="btnAprobConfirm" disabled style="opacity:0.5;cursor:not-allowed;" onclick="aprobarCuotaDesdeModal()">✔ Aprobar</button>
+                </div>
+            </div>
+            <div class="modal-footer ap-footer-rechazo" id="apFooterRechazo">
+                <div class="footer-buttons">
+                    <button class="btn light" type="button" onclick="apCancelarRechazo()">← Volver</button>
+                    <button class="btn danger" type="button" onclick="apConfirmarRechazo()">✕ Confirmar Rechazo</button>
                 </div>
             </div>
         </div>
@@ -1383,6 +1506,15 @@
                     var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
                     var estadoRaw = c.no_aplica ? 'NODEBE' : (c.estado||'NO_ABONADA');
                     dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'', recibo_url:c.recibo_url||'' });
+                });
+
+                // Agregar estudiantes inscriptos que aún no tienen cobros
+                inscripciones.forEach(function(insc) {
+                    var est = estList.find(function(e) { return e.id === insc.estudiante_id; });
+                    if (!est) return;
+                    var dk = String(est.dni);
+                    if (dniMap[dk]) return; // ya está en el mapa vía cobros
+                    dniMap[dk] = { estudianteId:est.id||dk, dni:dk, nombre:est.nombre||'', apellido:est.apellido||dk, nombreCompleto:((est.apellido||dk)+' '+(est.nombre||'')).trim(), email:est.email||'', estadoAcademico:insc.estado_academico||'ACTIVO', descuentoPorcentaje:Number(insc.descuento_porcentaje||0), descuentoFechaInicio:'', descuentoFechaFin:'', descuentoEtiqueta:insc.descuento_motivo||'', noDebeAbonar:false, cuotas:[] };
                 });
 
                 var maxCuota = cobros.reduce(function(m,c){return Math.max(m,Number(c.nro_cuota||0));},0);
@@ -2544,42 +2676,113 @@
         /* ── APROBACIÓN DE COMPROBANTES ── */
         var _aprobacionCobroId = null;
 
+        var _aprobCuota = null;
+
+        function apFmt(n) { return '$' + (n||0).toLocaleString('es-AR', {minimumFractionDigits:2}); }
+
+        function apSelectTipo(tipo) {
+            var esFull = tipo === 'full';
+            document.getElementById('apFullRadio').checked = esFull;
+            document.getElementById('apPartialRadio').checked = !esFull;
+            document.getElementById('apFullOpt').classList.toggle('selected', esFull);
+            document.getElementById('apPartialOpt').classList.toggle('selected', !esFull);
+            var sec = document.getElementById('apPartialSec');
+            if (esFull) sec.classList.remove('active'); else sec.classList.add('active');
+        }
+
+        function apCalcularResto() {
+            var total = _aprobCuota ? (_aprobCuota.montoFinal || 0) : 0;
+            var paid = parseFloat(document.getElementById('apMontoAbonado').value) || 0;
+            document.getElementById('apCalcTotal').textContent = apFmt(total);
+            document.getElementById('apCalcPaid').textContent = apFmt(paid);
+            document.getElementById('apCalcResto').textContent = apFmt(total - paid);
+        }
+
+        function apHandleFile(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 10 * 1024 * 1024) { alert('El archivo no puede superar los 10 MB'); event.target.value = ''; return; }
+            document.getElementById('apUploadBox').style.display = 'none';
+            document.getElementById('apFileUploaded').style.display = 'flex';
+            document.getElementById('apWarnNoFile').style.display = 'none';
+            document.getElementById('apFileName').textContent = file.name;
+            document.getElementById('apFileSize').textContent = (file.size / (1024*1024)).toFixed(2) + ' MB';
+            var btn = document.getElementById('btnAprobConfirm');
+            btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+        }
+
+        function apRemoveFile() {
+            document.getElementById('aprobReciboFile').value = '';
+            document.getElementById('apUploadBox').style.display = 'block';
+            document.getElementById('apFileUploaded').style.display = 'none';
+            document.getElementById('apWarnNoFile').style.display = 'block';
+            var btn = document.getElementById('btnAprobConfirm');
+            btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
+        }
+
+        function apMostrarRechazo() {
+            document.getElementById('apRechazoSec').classList.add('active');
+            document.getElementById('apFooterNormal').style.display = 'none';
+            document.getElementById('apFooterRechazo').style.display = 'flex';
+        }
+
+        function apCancelarRechazo() {
+            document.getElementById('apRechazoSec').classList.remove('active');
+            document.getElementById('apFooterNormal').style.display = '';
+            document.getElementById('apFooterRechazo').style.display = 'none';
+            document.getElementById('apRechazoMotivo').value = '';
+        }
+
         function abrirAprobacionModal(cobroId, evt) {
             if (evt) evt.stopPropagation();
             _aprobacionCobroId = cobroId;
+            _aprobCuota = null;
 
-            // Find cobro data to populate modal
             var cuota = null;
             var estudiante = null;
             vistaData.estudiantes.forEach(function(est) {
                 est.cuotas.forEach(function(c) {
-                    if (String(c.cobroId) === String(cobroId)) {
-                        cuota = c;
-                        estudiante = est;
-                    }
+                    if (String(c.cobroId) === String(cobroId)) { cuota = c; estudiante = est; }
                 });
             });
+            _aprobCuota = cuota;
 
-            var sub = estudiante ? (estudiante.nombreCompleto + ' · ' + (cuota.nombre || 'Cuota') + ' · ' + formatearMoneda(cuota.montoFinal || 0)) : cobroId;
+            // Reset state
+            apSelectTipo('full');
+            apRemoveFile();
+            apCancelarRechazo();
+            document.getElementById('aprobMsgBox').textContent = '';
+
+            // Populate info
+            var total = cuota ? (cuota.montoFinal || 0) : 0;
+            document.getElementById('apNombre').textContent = estudiante ? estudiante.nombreCompleto : '—';
+            document.getElementById('apDni').textContent = estudiante ? (estudiante.dni || '—') : '—';
+            document.getElementById('apCuota').textContent = cuota ? (cuota.nombre || ('Cuota ' + (cuota.nroCuota || ''))) : '—';
+            document.getElementById('apMonto').textContent = apFmt(total);
+            document.getElementById('apFullDesc').textContent = 'El estudiante pagó el monto total de la cuota (' + apFmt(total) + ')';
+            document.getElementById('apCalcTotal').textContent = apFmt(total);
+            document.getElementById('apCalcResto').textContent = apFmt(total);
+            document.getElementById('apCalcPaid').textContent = apFmt(0);
+
+            var sub = estudiante ? (estudiante.nombreCompleto + ' · ' + (cuota.nombre || 'Cuota') + ' · ' + apFmt(total)) : cobroId;
             document.getElementById('aprobModalSub').textContent = sub;
 
             var compArea = document.getElementById('aprobComprobanteArea');
             if (cuota && cuota.comprobanteUrl) {
-                compArea.innerHTML = '<div style="padding:12px;background:#f0f4ff;border-radius:8px;display:flex;align-items:center;gap:10px;">'
-                    + '<span style="font-size:24px;">📄</span>'
+                compArea.innerHTML = '<div style="padding:10px 14px;background:#f0f4ff;border-radius:8px;display:flex;align-items:center;gap:10px;">'
+                    + '<span style="font-size:22px;">📄</span>'
                     + '<div><div style="font-weight:700;font-size:13px;">Comprobante adjunto</div>'
                     + '<button onclick="verComprobante(\'' + escapeJs(cuota.comprobanteUrl) + '\')" style="font-size:12px;color:#4338ca;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;">👁️ Ver comprobante</button></div></div>';
             } else {
-                compArea.innerHTML = '<div style="padding:10px 0;color:#aaa;font-size:13px;">Sin comprobante adjunto</div>';
+                compArea.innerHTML = '<div style="padding:6px 0;color:#aaa;font-size:13px;">Sin comprobante adjunto</div>';
             }
 
-            document.getElementById('aprobReciboFile').value = '';
-            document.getElementById('aprobMsgBox').textContent = '';
             abrirOverlay('modalAprobacionOverlay');
         }
 
         function cerrarAprobacionModal() {
             _aprobacionCobroId = null;
+            _aprobCuota = null;
             cerrarOverlay('modalAprobacionOverlay');
         }
 
@@ -2590,31 +2793,52 @@
                 document.getElementById('aprobMsgBox').textContent = '⚠️ Debés adjuntar el recibo oficial antes de aprobar.';
                 return;
             }
+            var esFull = document.getElementById('apFullRadio').checked;
+            var tipo = esFull ? 'COMPLETO' : 'PARCIAL';
+            var monto = esFull
+                ? (_aprobCuota ? (_aprobCuota.montoFinal || 0) : null)
+                : (parseFloat(document.getElementById('apMontoAbonado').value) || 0);
+            if (!esFull && (!monto || monto <= 0)) {
+                document.getElementById('aprobMsgBox').textContent = '⚠️ Ingresá el monto abonado.';
+                return;
+            }
             var btn = document.getElementById('btnAprobConfirm');
-            btn.disabled = true;
-            btn.textContent = 'Procesando…';
+            btn.disabled = true; btn.textContent = 'Procesando…';
             document.getElementById('aprobMsgBox').textContent = '';
             try {
-                var res = await aprobarPago(_aprobacionCobroId, 'COMPLETO', null, file);
+                var res = await aprobarPago(_aprobacionCobroId, tipo, monto, file);
                 if (!res || !res.ok) {
                     document.getElementById('aprobMsgBox').textContent = '✕ ' + (res && res.mensaje ? res.mensaje : 'Error al aprobar.');
-                    btn.disabled = false;
-                    btn.textContent = '✔ Aprobar';
+                    btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.textContent = '✔ Aprobar';
                     return;
                 }
                 cerrarAprobacionModal();
                 await cargarDetalleCohorte();
             } catch(e) {
                 document.getElementById('aprobMsgBox').textContent = '✕ Error al aprobar: ' + (e.message || e);
-                btn.disabled = false;
-                btn.textContent = '✔ Aprobar';
+                btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.textContent = '✔ Aprobar';
+            }
+        }
+
+        async function apConfirmarRechazo() {
+            if (!_aprobacionCobroId) return;
+            var motivo = (document.getElementById('apRechazoMotivo').value || '').trim();
+            var btn = document.querySelector('#apFooterRechazo .btn.danger');
+            if (btn) { btn.disabled = true; btn.textContent = 'Rechazando…'; }
+            try {
+                await rechazarPago(_aprobacionCobroId);
+                cerrarAprobacionModal();
+                await cargarDetalleCohorte();
+            } catch(e) {
+                alert('Error al rechazar: ' + (e.message || e));
+                if (btn) { btn.disabled = false; btn.textContent = '✕ Confirmar Rechazo'; }
             }
         }
 
         async function rechazarCuotaDesdeModal(cobroId) {
             if (!confirm('¿Rechazar el comprobante? El estado volverá a pendiente de pago.')) return;
             try {
-                await rechazarPago(cobroId);
+                await rechazarPago(cobroId || _aprobacionCobroId);
                 cerrarAprobacionModal();
                 await cargarDetalleCohorte();
             } catch(e) {
