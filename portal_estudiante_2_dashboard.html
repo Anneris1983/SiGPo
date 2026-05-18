@@ -381,7 +381,7 @@
                     .eq('estudiante_id', estId),
 
                 sb.from('cobros')
-                    .select('cobro_id, concepto, periodo, fecha_vencimiento, monto_final, saldo_pendiente, estado, no_aplica, cohorte_id, programa_id')
+                    .select('cobro_id, concepto, periodo, fecha_vencimiento, fecha_pago, monto_final, saldo_pendiente, estado, no_aplica, cohorte_id, programa_id')
                     .eq('dni', String(dni))
                     .order('fecha_vencimiento'),
 
