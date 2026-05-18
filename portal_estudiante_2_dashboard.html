@@ -933,7 +933,28 @@
                         'Puede verificarse su autenticidad escaneando el código QR adjunto.';
             var lines = doc.splitTextToSize(texto, cw);
             doc.text(lines, ml, y);
-            y += lines.length * 4.5 + 4;
+            y += lines.length * 4.5 + 6;
+
+            // Leyenda aclaratoria
+            doc.setFillColor(255, 243, 205);
+            var leyendaTxt = 'Tenga en cuenta que, si aún no ha egresado de la carrera y tiene pendiente recursar espacios curriculares ' +
+                'y/o presentar el trabajo final, podría corresponder el pago de la readmisión. Asimismo, en caso de que deba recursar, ' +
+                'se determinará la cantidad de cuotas aplicables según los espacios curriculares que corresponda realizar nuevamente.';
+            var leyendaLines = doc.splitTextToSize(leyendaTxt, cw - 8);
+            var leyendaH = leyendaLines.length * 4.2 + 8;
+            doc.roundedRect(ml, y, cw, leyendaH, 2, 2, 'F');
+            doc.setDrawColor(230, 126, 34);
+            doc.setLineWidth(0.4);
+            doc.rect(ml, y, 2, leyendaH, 'F');
+            doc.setDrawColor(200, 200, 200);
+            doc.setFont('helvetica', 'bolditalic');
+            doc.setFontSize(7.5);
+            doc.setTextColor(133, 100, 4);
+            doc.text('⚠ Aclaración importante:', ml + 4, y + 5);
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(7.5);
+            doc.text(leyendaLines, ml + 4, y + 10);
+            y += leyendaH + 6;
 
             // QR + pie
             var qrSize = 32;
