@@ -341,7 +341,10 @@
         <div class="header-left">
             <button onclick="volverAPrograma()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 13px;border-radius:8px;font-size:12px;cursor:pointer;margin-bottom:10px;display:inline-flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;">← Volver</button>
             <h1 id="hdr-programa">—</h1>
-            <p id="hdr-sub">—</p>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;">
+                <span id="hdr-cohorte" style="background:rgba(255,255,255,0.18);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:0.03em;"></span>
+                <p id="hdr-sub" style="font-size:13px;opacity:0.85;"></p>
+            </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;flex-shrink:0;">
             <div style="display:flex;align-items:center;gap:12px;">
@@ -1153,8 +1156,9 @@ function renderHeader() {
     var c  = V.data.cohorte;
     var es = V.data.estudiantes;
     document.getElementById('hdr-programa').textContent = p.nombre;
+    document.getElementById('hdr-cohorte').textContent = c.nombre;
     document.getElementById('hdr-sub').textContent =
-        c.nombre + ' • ' + es.length + ' estudiante' + (es.length !== 1 ? 's' : '')
+        es.length + ' estudiante' + (es.length !== 1 ? 's' : '')
         + ' • ' + fFecha(c.fecha_inicio) + ' → ' + fFecha(c.fecha_fin);
 }
 

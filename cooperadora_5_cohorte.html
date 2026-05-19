@@ -1153,7 +1153,8 @@
                 <div class="breadcrumb"><a href="#" onclick="volverACohortes(event)">← Volver a Cohortes</a></div>
                 <h1 id="headerCohorte">Cargando...</h1>
                 <div style="display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;">
-                    <p id="headerPrograma" style="font-size:14px;opacity:0.92;"></p>
+                    <span id="hdrCohorteNombre" style="background:rgba(255,255,255,0.18);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:0.03em;"></span>
+                    <p id="headerPrograma" style="font-size:13px;opacity:0.85;"></p>
                     <span class="badge type" id="summaryTipo" style="font-size:11px;padding:3px 10px;background:rgba(255,255,255,0.18);color:#fff;">—</span>
                     <span class="badge active" id="summaryEstado" style="font-size:11px;padding:3px 10px;">—</span>
                 </div>
@@ -1606,7 +1607,8 @@
         function renderEncabezado() {
             document.title = 'SiGPo - ' + vistaData.programa.nombre;
             document.getElementById('headerCohorte').textContent = vistaData.programa.nombre;
-            document.getElementById('headerPrograma').textContent = vistaData.cohorte.nombre + ' · ' + formatearRangoFechas(vistaData.cohorte.fechaInicio, vistaData.cohorte.fechaFin);
+            document.getElementById('hdrCohorteNombre').textContent = vistaData.cohorte.nombre;
+            document.getElementById('headerPrograma').textContent = formatearRangoFechas(vistaData.cohorte.fechaInicio, vistaData.cohorte.fechaFin);
             document.getElementById('summaryTipo').textContent = formatearTipo(vistaData.programa.tipo);
 
             const badgeEstado = document.getElementById('summaryEstado');
