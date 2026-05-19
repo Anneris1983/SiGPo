@@ -310,7 +310,6 @@
                         <input type="text" id="buscarEjecutados" placeholder="Buscar por concepto, proveedor..." onkeyup="buscar(this.value, 'ejecutados')">
                     </div>
                     <select class="filter-select" id="filtroCatEjecutados" onchange="filtrarCategoria(this.value, 'ejecutados')"></select>
-                    <button class="btn btn-success" onclick="nuevoGasto('ejecutados')">+ Nuevo Gasto</button>
                     <button class="btn btn-success" onclick="exportar('ejecutados')">📊 Exportar</button>
                 </div>
 
@@ -697,8 +696,8 @@
                         <td>
                             <div class="actions-group">
                                 ${tipo === 'proyectados' ? `<button class="btn btn-primary btn-icon" onclick="ejecutarGasto('${escapeJs(g.id)}')" title="Ejecutar gasto">✓ Ejecutar</button>` : ''}
-                                <button class="btn btn-primary btn-icon" onclick="editarGasto('${escapeJs(g.id)}', '${tipo}')" title="Editar">✏️</button>
-                                <button class="btn btn-danger btn-icon" onclick="eliminarGasto('${escapeJs(g.id)}', '${tipo}')" title="Eliminar">🗑️</button>
+                                ${tipo === 'proyectados' ? `<button class="btn btn-primary btn-icon" onclick="editarGasto('${escapeJs(g.id)}', '${tipo}')" title="Editar">✏️</button>` : ''}
+                                ${tipo === 'proyectados' ? `<button class="btn btn-danger btn-icon" onclick="eliminarGasto('${escapeJs(g.id)}', '${tipo}')" title="Eliminar">🗑️</button>` : ''}
                             </div>
                         </td>
                     </tr>
