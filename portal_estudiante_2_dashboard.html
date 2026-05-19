@@ -928,8 +928,8 @@
             doc.setFont('helvetica', 'italic');
             doc.setFontSize(9);
             doc.setTextColor(107, 98, 84);
-            var texto = 'El presente certificado acredita que el/la estudiante identificado/a precedentemente ha cumplido ' +
-                        'con la totalidad de las obligaciones económicas correspondientes al programa indicado. ' +
+            var texto = 'El presente certificado acredita que el/la estudiante identificado/a precedentemente ha abonado ' +
+                        'la totalidad de la cuotas correspondientes al periodo del programa indicado. ' +
                         'Puede verificarse su autenticidad escaneando el código QR adjunto.';
             var lines = doc.splitTextToSize(texto, cw);
             doc.text(lines, ml, y);
@@ -937,9 +937,8 @@
 
             // Leyenda aclaratoria
             doc.setFillColor(255, 243, 205);
-            var leyendaTxt = 'Tenga en cuenta que, si aún no ha egresado de la carrera y tiene pendiente recursar espacios curriculares ' +
-                'y/o presentar el trabajo final, podría corresponder el pago de la readmisión. Asimismo, en caso de que deba recursar, ' +
-                'se determinará la cantidad de cuotas aplicables según los espacios curriculares que corresponda realizar nuevamente.';
+            var leyendaTxt = 'Recuerde que los plazos vencidos y las bajas dan lugar al abono de una readmisión. ' +
+                'En el caso de recursar se determinará la cantidad de cuotas aplicables según los espacios curriculares que correspondan.';
             var leyendaLines = doc.splitTextToSize(leyendaTxt, cw - 8);
             var leyendaH = leyendaLines.length * 4.2 + 8;
             doc.roundedRect(ml, y, cw, leyendaH, 2, 2, 'F');
