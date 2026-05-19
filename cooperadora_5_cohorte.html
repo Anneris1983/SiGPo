@@ -1094,6 +1094,26 @@
             }
         }
 
+        /* ── Plan cuotas estilo administrador ── */
+        #modal-cuota-new { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center; }
+        #modal-cuota-new.show { display:flex; }
+        .pcuota-paso { font-size:13px; font-weight:700; color:#5C1018; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.4px; }
+        .pcuota-fila { display:grid; grid-template-columns:auto 1fr 110px 110px 130px auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; transition:border-color 0.2s; }
+        .pcuota-fila:focus-within { border-color:#C49A2A; }
+        .pcuota-fila.fila-irreg { border-color:#e67e22; background:#fffbf5; }
+        .pcuota-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
+        .pcuota-fila input { width:100%; padding:7px 9px; border:1.5px solid #ddd; border-radius:7px; font-size:12px; font-family:'DM Sans',sans-serif; transition:border-color 0.2s; background:white; box-sizing:border-box; }
+        .pcuota-fila input:focus { outline:none; border-color:#5C1018; }
+        .pcuota-num { width:26px; height:26px; border-radius:50%; background:#5C1018; color:white; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:2px; }
+        .pcuota-monto { position:relative; }
+        .pcuota-monto input { padding-left:20px; }
+        .pcuota-monto::before { content:'$'; position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:12px; color:#999; pointer-events:none; }
+        .pcuota-del { background:none; border:none; cursor:pointer; color:#e74c3c; font-size:17px; padding:4px; border-radius:6px; transition:background 0.2s; line-height:1; align-self:end; margin-bottom:2px; }
+        .pcuota-del:hover { background:#fdecea; }
+        .btn-pcuota-agregar { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:#2d7a4f; color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-pcuota-agregar:hover { background:#246441; }
+        .pcuota-destino { background:#f0f8ff; border:1.5px solid #b3d4f0; border-radius:10px; padding:14px 16px; }
+
         /* ── Modal descuento estilo administrador ── */
         .modal-box { background:white; border-radius:16px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden; animation:mIn 0.22s ease; }
         @keyframes mIn { from{opacity:0;transform:scale(0.94) translateY(-8px);} to{opacity:1;transform:scale(1) translateY(0);} }
@@ -1186,7 +1206,7 @@
 
                 <div class="actions">
                     <button class="btn success" type="button" onclick="irAAprobarPagos()">✅ Aprobar pagos</button>
-                    <button class="btn warning" type="button" onclick="abrirModalCrearCuotas()">➕ Crear cuotas</button>
+                    <button class="btn warning" type="button" onclick="abrirCrearCuotaCoop()">➕ Crear cuotas</button>
                     <button class="btn primary" type="button" onclick="exportarExcel()">📤 Exportar Excel</button>
                 </div>
             </div>
@@ -1229,64 +1249,36 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="modalCuotasOverlay" onclick="cerrarSiOverlay(event, 'modalCuotasOverlay', cerrarModalCrearCuotas)">
-        <div class="modal">
-            <div class="modal-header">
-                <div>
-                    <h3>Crear plan de cuotas</h3>
-                    <p id="modalCuotasSubtitulo">Programa y cohorte seleccionados</p>
-                </div>
-                <button class="modal-close" type="button" onclick="cerrarModalCrearCuotas()">×</button>
+    <!-- ═══ MODAL: CREAR PLAN DE CUOTAS (estilo administrador) ═══ -->
+    <div id="modal-cuota-new">
+        <div class="modal-box" style="max-width:640px;">
+            <div class="modal-hdr">
+                <div><h2>➕ Crear Plan de Cuotas</h2><p id="cuota-sub-coop">—</p></div>
+                <button class="modal-close" onclick="cerrarCrearCuotaCoop()">×</button>
             </div>
-
-            <div class="modal-body">
-                <div class="message-box" id="msgCuotas"></div>
-
-                <div class="modal-section">
-                    <h4>Paso 1: definir cuotas</h4>
-
-                    <div class="cuotas-list" id="cuotasList"></div>
-
-                    <button class="btn success" type="button" onclick="agregarNuevaCuota()">Agregar otra cuota</button>
-
-                    <div class="warning-box">
-                        <div class="warning-icon">⚠️</div>
-                        <div class="warning-text">
-                            Si no conocés el monto todavía, podés dejar la cuota como <strong>A definir</strong>.
-                            Además, el sistema no debe crear cuotas para estudiantes marcados como <strong>no debe abonar</strong>.
-                        </div>
+            <div class="modal-body" style="padding:0;">
+                <div style="padding:20px 22px 0;">
+                    <div class="pcuota-paso">Paso 1: Definir Cuotas</div>
+                    <div id="pcuota-filas"></div>
+                    <div id="pcuota-alerta" style="display:none;margin:10px 0;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px 14px;font-size:12px;color:#795548;line-height:1.5;">
+                        ⚠️ <strong>Consejo:</strong> Si dejás el monto vacío, la cuota se guardará como <strong>A definir</strong> y no habilitará pagos hasta cargarle valor.
                     </div>
+                    <button class="btn-pcuota-agregar" onclick="pcuotaAgregar()">+ Agregar otra cuota</button>
                 </div>
-
-                <div class="modal-section">
-                    <h4>Paso 2: aplicar a estudiantes</h4>
-
-                    <div class="selector-card">
-                        <input type="radio" name="aplicarCuotas" id="aplicarTodos" value="todos" checked onchange="cambiarModoAplicacion()" />
-                        <label for="aplicarTodos" class="selector-title">Toda la cohorte</label>
-                        <div class="selector-desc" id="textoAplicarTodos">Se crearán cuotas para todos los estudiantes habilitados de esta cohorte.</div>
-                    </div>
-
-                    <div class="selector-card">
-                        <input type="radio" name="aplicarCuotas" id="aplicarEspecificos" value="especificos" onchange="cambiarModoAplicacion()" />
-                        <label for="aplicarEspecificos" class="selector-title">Estudiantes específicos</label>
-                        <div class="selector-desc">Elegí manualmente a qué estudiantes aplicar el plan.</div>
-                    </div>
-
-                    <div class="students-picker" id="studentsPicker">
-                        <div id="studentsPickerList"></div>
+                <div style="border-top:1px solid #eee;margin:14px 0 0;"></div>
+                <div style="padding:14px 22px 20px;">
+                    <div class="pcuota-paso">Aplicar a</div>
+                    <div class="pcuota-destino">
+                        <div style="font-weight:700;font-size:13px;color:#5C1018;">Toda la cohorte</div>
+                        <div style="font-size:11px;color:#666;margin-top:2px;">Se crea el plan para los <strong id="pcuota-n-todos">—</strong> estudiantes activos de esta cohorte.</div>
                     </div>
                 </div>
             </div>
-
-            <div class="modal-footer">
-                <div class="footer-info">
-                    Se crearán <strong id="footerCuotas">0</strong> cuotas para <strong id="footerEstudiantes">0</strong> estudiantes.
-                    Total de registros: <strong id="footerRegistros">0</strong>.
-                </div>
-                <div class="footer-buttons">
-                    <button class="btn light" type="button" onclick="cerrarModalCrearCuotas()">Cancelar</button>
-                    <button class="btn primary" type="button" onclick="crearPlanCuotas()">Crear plan de cuotas</button>
+            <div class="modal-footer" style="justify-content:space-between;align-items:center;">
+                <div id="pcuota-resumen" style="font-size:12px;color:#555;font-weight:600;"></div>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn-cancel-desc" onclick="cerrarCrearCuotaCoop()">Cancelar</button>
+                    <button class="btn-save-desc" id="pcuota-btn-guardar" onclick="guardarCuotasCoop()" style="background:#5C1018;">✔ Crear Plan de Cuotas</button>
                 </div>
             </div>
         </div>
@@ -1933,8 +1925,10 @@
         }
 
         function mostrarSpinner(on) {
-            var btn = document.querySelector('#modal-descuento-new .btn-save-desc');
-            if (btn) { btn.disabled = on; btn.textContent = on ? '⏳ Guardando…' : '💾 Guardar'; }
+            // Deshabilita el botón guardar del modal activo
+            var btn = document.querySelector('#modal-descuento-new.show .btn-save-desc')
+                   || document.querySelector('#modal-cuota-new.show #pcuota-btn-guardar');
+            if (btn) { btn.disabled = on; btn.textContent = on ? '⏳ Guardando…' : (btn.id === 'pcuota-btn-guardar' ? '✔ Crear Plan de Cuotas' : '💾 Guardar'); }
         }
 
         function descHoy() { return new Date().toISOString().split('T')[0]; }
@@ -2072,6 +2066,161 @@
             }
         }
 
+        /* ══ CREAR CUOTAS — estilo administrador ══ */
+        var _pcuotaFilas = [];
+
+        function _pcuotaHoy() { return new Date().toISOString().split('T')[0]; }
+        function _pcuotaPeriodoSig(offset) {
+            var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + offset);
+            return d.toLocaleDateString('es-AR', { month:'long', year:'numeric' }).replace(/^\w/, function(c){ return c.toUpperCase(); });
+        }
+        function _pcuotaFechaDefault(offset) {
+            var d = new Date(); d.setDate(15); d.setMonth(d.getMonth() + offset);
+            return d.toISOString().split('T')[0];
+        }
+        function _pcuotaAvanzarMes(dateStr) {
+            var d = new Date((dateStr || _pcuotaFechaDefault(0)) + 'T12:00:00');
+            d.setDate(1); d.setMonth(d.getMonth() + 1); d.setDate(15);
+            return d;
+        }
+        function _pcuotaPeriodoDeDate(d) {
+            return d.toLocaleDateString('es-AR', { month:'long', year:'numeric' }).replace(/^\w/, function(c){ return c.toUpperCase(); });
+        }
+
+        function abrirCrearCuotaCoop() {
+            var ests = vistaData ? vistaData.estudiantes : [];
+            document.getElementById('pcuota-n-todos').textContent = ests.length;
+            document.getElementById('cuota-sub-coop').textContent = (vistaData ? vistaData.programa.nombre + ' · ' + vistaData.cohorte.nombre : '—');
+
+            // Auto-detectar última cuota
+            var maxVenc = null, maxNum = 0, yaHayInscripcion = false;
+            ests.forEach(function(est) {
+                (est.cuotas || []).forEach(function(c) {
+                    var fv = c.fechaVencimiento || c.fecha_vencimiento || '';
+                    if (fv) { var d = String(fv).split('T')[0]; if (!maxVenc || d > maxVenc) maxVenc = d; }
+                    var m = (c.nombre || '').match(/cuota[\s_]?(\d+)/i);
+                    if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+                    if (/inscripci[oó]n/i.test(c.nombre || '')) yaHayInscripcion = true;
+                });
+            });
+
+            if (!maxVenc) {
+                _pcuotaFilas = [
+                    { nombre:'Inscripción', periodo:_pcuotaPeriodoSig(0), monto:'', vencimiento:_pcuotaFechaDefault(0) },
+                    { nombre:'Cuota 1',     periodo:_pcuotaPeriodoSig(1), monto:'', vencimiento:_pcuotaFechaDefault(1) }
+                ];
+            } else {
+                var sig = _pcuotaAvanzarMes(maxVenc);
+                var nextNum = maxNum + 1;
+                var label = !yaHayInscripcion ? 'Inscripción' : 'Cuota ' + nextNum;
+                _pcuotaFilas = [{ nombre:label, periodo:_pcuotaPeriodoDeDate(sig), monto:'', vencimiento:sig.toISOString().split('T')[0] }];
+            }
+
+            pcuotaRenderFilas();
+            pcuotaActualizarResumen();
+            pcuotaCheckAlerta();
+            document.getElementById('modal-cuota-new').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarCrearCuotaCoop() {
+            document.getElementById('modal-cuota-new').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function pcuotaRenderFilas() {
+            var cont = document.getElementById('pcuota-filas');
+            cont.innerHTML = '';
+            _pcuotaFilas.forEach(function(f, i) {
+                var div = document.createElement('div');
+                div.className = 'pcuota-fila' + (!f.monto ? ' fila-irreg' : '');
+                div.innerHTML =
+                    '<div class="pcuota-num">' + (i+1) + '</div>'
+                    + '<div><label>Nombre de la cuota</label><input type="text" value="' + escapeHtml(f.nombre) + '" placeholder="Cuota ' + (i+1) + '" onchange="_pcuotaFilas[' + i + '].nombre=this.value;pcuotaActualizarResumen();"></div>'
+                    + '<div><label>Período</label><input type="text" value="' + escapeHtml(f.periodo) + '" placeholder="Mar 2026" onchange="_pcuotaFilas[' + i + '].periodo=this.value;"></div>'
+                    + '<div class="pcuota-monto"><label>Monto</label><input type="number" value="' + f.monto + '" placeholder="0" oninput="_pcuotaFilas[' + i + '].monto=this.value;pcuotaCheckAlerta();pcuotaActualizarResumen();this.closest(\'.pcuota-fila\').classList.toggle(\'fila-irreg\',!this.value||parseFloat(this.value)===0);"></div>'
+                    + '<div><label>Vencimiento</label><input type="date" value="' + f.vencimiento + '" onchange="_pcuotaFilas[' + i + '].vencimiento=this.value;"></div>'
+                    + '<button class="pcuota-del" title="Eliminar" onclick="pcuotaEliminar(' + i + ')">🗑</button>';
+                cont.appendChild(div);
+            });
+        }
+
+        function pcuotaAgregar() {
+            var last = _pcuotaFilas[_pcuotaFilas.length - 1];
+            var sig  = _pcuotaAvanzarMes(last ? last.vencimiento : _pcuotaFechaDefault(0));
+            var m    = last && (last.nombre || '').match(/cuota[\s_]?(\d+)/i);
+            var nextNum = m ? parseInt(m[1], 10) + 1 : _pcuotaFilas.length + 1;
+            _pcuotaFilas.push({ nombre:'Cuota ' + nextNum, periodo:_pcuotaPeriodoDeDate(sig), monto:'', vencimiento:sig.toISOString().split('T')[0] });
+            pcuotaRenderFilas(); pcuotaActualizarResumen(); pcuotaCheckAlerta();
+        }
+
+        function pcuotaEliminar(i) {
+            if (_pcuotaFilas.length <= 1) return;
+            _pcuotaFilas.splice(i, 1);
+            pcuotaRenderFilas(); pcuotaActualizarResumen(); pcuotaCheckAlerta();
+        }
+
+        function pcuotaCheckAlerta() {
+            var hayVacio = _pcuotaFilas.some(function(f){ return !f.monto || parseFloat(f.monto) === 0; });
+            document.getElementById('pcuota-alerta').style.display = hayVacio ? 'block' : 'none';
+        }
+
+        function pcuotaActualizarResumen() {
+            var n = vistaData ? vistaData.estudiantes.length : 0;
+            var q = _pcuotaFilas.length;
+            document.getElementById('pcuota-resumen').innerHTML =
+                'Se crearán <strong>' + q + '</strong> cuota' + (q !== 1 ? 's' : '')
+                + ' para <strong>' + n + '</strong> estudiante' + (n !== 1 ? 's' : '')
+                + ' <span style="color:#999;">(' + (q * n) + ' registros totales)</span>';
+        }
+
+        async function guardarCuotasCoop() {
+            if (!_pcuotaFilas.length) { mostrarToast('Agregá al menos una cuota', 'error'); return; }
+            var ests = vistaData ? vistaData.estudiantes : [];
+            if (!ests.length) { mostrarToast('No hay estudiantes en esta cohorte', 'error'); return; }
+
+            mostrarSpinner(true);
+            try {
+                var sb = await getSupabase();
+                var registros = [];
+                ests.forEach(function(est) {
+                    var pct = Number(est.descuentoPorcentaje) || 0;
+                    _pcuotaFilas.forEach(function(f) {
+                        var tieneMonto = f.monto !== '' && f.monto !== null && f.monto !== undefined && !isNaN(parseFloat(f.monto));
+                        var montoOriginal = tieneMonto ? Math.round(parseFloat(f.monto) * 100) / 100 : null;
+                        var montoFinal = (tieneMonto && pct > 0) ? Math.round(montoOriginal * (1 - pct/100) * 100) / 100 : montoOriginal;
+                        var estado = !tieneMonto ? 'A_DEFINIR' : 'NO_ABONADA';
+                        registros.push({
+                            dni:                  String(est.dni),
+                            programa_id:          vistaData.programa.programaId,
+                            cohorte_id:           vistaData.cohorte.cohorteId,
+                            concepto:             (f.nombre || '').trim(),
+                            periodo:              (f.periodo || '').trim(),
+                            fecha_vencimiento:    f.vencimiento || null,
+                            monto_original:       montoOriginal,
+                            descuento_porcentaje: pct,
+                            monto_final:          montoFinal,
+                            saldo_pendiente:      montoFinal,
+                            estado:               estado
+                        });
+                    });
+                });
+
+                var res = await sb.from('cobros').insert(registros);
+                if (res.error) throw res.error;
+
+                mostrarToast(_pcuotaFilas.length + ' cuota' + (_pcuotaFilas.length > 1 ? 's' : '') + ' creada' + (_pcuotaFilas.length > 1 ? 's' : '') + ' para ' + ests.length + ' estudiante' + (ests.length > 1 ? 's' : '') + ' ✓', 'success');
+                cerrarCrearCuotaCoop();
+                await cargarVista();
+            } catch(e) {
+                console.error(e);
+                mostrarToast('Error al crear el plan: ' + (e.message || ''), 'error');
+            } finally {
+                mostrarSpinner(false);
+            }
+        }
+
+        /* ══ (funciones legacy de cuotas - mantenidas para referencias internas) ══ */
         function prepararCuotasIniciales() {
             if (cuotasParaCrear.length) return;
 

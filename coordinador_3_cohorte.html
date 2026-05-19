@@ -1098,10 +1098,34 @@ function abrirCrearCuota() {
     const total = V.data ? V.data.estudiantes.length : 0;
     document.getElementById('plan-n-todos').textContent = total;
     if (V.data) document.getElementById('cuota-sub').textContent = `${V.data.programa.nombre} · ${V.data.cohorte.nombre}`;
-    planFilas = [
-        { nombre:'Inscripción', periodo: planPeriodoSiguiente(0), monto:'', vencimiento: planFechaDefault(0) },
-        { nombre:'Cuota 1', periodo: planPeriodoSiguiente(1), monto:'', vencimiento: planFechaDefault(1) }
-    ];
+
+    // Auto-detectar última cuota para continuar la secuencia
+    const estParaCalc = V.data ? V.data.estudiantes : [];
+    let maxVenc = null, maxNum = 0, yaHayInscripcion = false;
+    estParaCalc.forEach(function(est) {
+        (est.cobros || []).forEach(function(c) {
+            if (c.fecha_vencimiento) {
+                const d = String(c.fecha_vencimiento).split('T')[0];
+                if (!maxVenc || d > maxVenc) maxVenc = d;
+            }
+            const m = (c.concepto || '').match(/cuota[\s_]?(\d+)/i);
+            if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+            if (/inscripci[oó]n/i.test(c.concepto || '')) yaHayInscripcion = true;
+        });
+    });
+
+    if (!maxVenc) {
+        planFilas = [
+            { nombre:'Inscripción', periodo: planPeriodoSiguiente(0), monto:'', vencimiento: planFechaDefault(0) },
+            { nombre:'Cuota 1',     periodo: planPeriodoSiguiente(1), monto:'', vencimiento: planFechaDefault(1) }
+        ];
+    } else {
+        const sig = planAvanzarMes(maxVenc);
+        const nextNum = maxNum + 1;
+        const label = !yaHayInscripcion ? 'Inscripción' : 'Cuota ' + nextNum;
+        planFilas = [{ nombre: label, periodo: planPeriodoDeDate(sig), monto:'', vencimiento: sig.toISOString().split('T')[0] }];
+    }
+
     document.querySelector('input[name="plan-dest"][value="cohorte"]').checked = true;
     planDestChange();
     planRenderFilas();
@@ -1116,6 +1140,14 @@ function planPeriodoSiguiente(offset) {
 function planFechaDefault(offset) {
     const d = new Date(); d.setDate(15); d.setMonth(d.getMonth() + offset);
     return d.toISOString().split('T')[0];
+}
+function planAvanzarMes(dateStr) {
+    const d = new Date((dateStr || planFechaDefault(0)) + 'T12:00:00');
+    d.setDate(1); d.setMonth(d.getMonth() + 1); d.setDate(15);
+    return d;
+}
+function planPeriodoDeDate(d) {
+    return d.toLocaleDateString('es-AR', { month:'long', year:'numeric' }).replace(/^\w/, c=>c.toUpperCase());
 }
 function planRenderFilas() {
     const cont = document.getElementById('plan-filas');
@@ -1146,8 +1178,11 @@ function planRenderFilas() {
     });
 }
 function planAgregar() {
-    const offset = planFilas.length;
-    planFilas.push({ nombre:`Cuota ${offset}`, periodo:planPeriodoSiguiente(offset), monto:'', vencimiento:planFechaDefault(offset) });
+    const last = planFilas[planFilas.length - 1];
+    const sig  = planAvanzarMes(last ? last.vencimiento : planFechaDefault(0));
+    const m    = last && (last.nombre || '').match(/cuota[\s_]?(\d+)/i);
+    const nextNum = m ? parseInt(m[1], 10) + 1 : planFilas.length + 1;
+    planFilas.push({ nombre:'Cuota ' + nextNum, periodo:planPeriodoDeDate(sig), monto:'', vencimiento:sig.toISOString().split('T')[0] });
     planRenderFilas(); planActualizarResumen(); planCheckAlerta();
 }
 function planEliminar(i) {
@@ -1191,31 +1226,60 @@ function planActualizarResumen() {
     document.getElementById('plan-resumen').innerHTML = `Se crearán <strong>${q}</strong> cuota${q!==1?'s':''} para <strong>${n}</strong> estudiante${n!==1?'s':''} <span style="color:#999;">(${q*n} registros totales)</span>`;
 }
 async function guardarCuotas() {
-    if (!planFilas.length) { toast('Agregá al menos una cuota','err'); return; }
-    if (!planFilas.some(f=>String(f.nombre||'').trim())) { toast('Completá el nombre de al menos una cuota','err'); return; }
+    if (!planFilas.length) { toast('Agregá al menos una cuota', 'err'); return; }
+    if (!planFilas.some(f => String(f.nombre||'').trim())) { toast('Completá el nombre de al menos una cuota', 'err'); return; }
+
     const val = document.querySelector('input[name="plan-dest"]:checked').value;
-    let dnis = val === 'cohorte' ? V.data.estudiantes.map(e=>e.dni) : getSel();
-    if (val==='especificos' && !dnis.length) { toast('Seleccioná al menos un estudiante','err'); return; }
+    const dnis = val === 'cohorte' ? V.data.estudiantes.map(e => e.dni) : getSel();
+    if (val === 'especificos' && !dnis.length) { toast('Seleccioná al menos un estudiante', 'err'); return; }
+
     spin(true);
     try {
-        const payload = {
-            programaId: PROGRAMA_ID,
-            cohorteId: COHORTE_ID,
-            dnis,
-            cuotas: planFilas.map(f => ({
-                concepto: String(f.nombre || '').trim(),
-                periodo: String(f.periodo || '').trim(),
-                fechaVencimiento: f.vencimiento || '',
-                montoOriginal: f.monto === '' ? null : Number(f.monto)
-            }))
-        };
-        if (estaEnAppsScript()) await gs('crearPlanCuotasCoordinador', payload);
-        else await delay(600);
-        toast(`${planFilas.length} cuota${planFilas.length>1?'s':''} creadas para ${dnis.length} estudiante${dnis.length>1?'s':''} ✓`, 'ok');
+        const sb = await getSupabase();
+
+        const descuentoMap = {};
+        V.data.estudiantes.forEach(function(est) {
+            descuentoMap[String(est.dni)] = Number(est.descuento_porcentaje) || 0;
+        });
+
+        const registros = [];
+        dnis.forEach(function(dni) {
+            const pct = descuentoMap[String(dni)] || 0;
+            planFilas.forEach(function(f) {
+                const tieneMonto = f.monto !== '' && f.monto !== null && f.monto !== undefined && !isNaN(parseFloat(f.monto));
+                const montoOriginal = tieneMonto ? _descRedondear2(parseFloat(f.monto)) : null;
+                const montoFinal = (tieneMonto && pct > 0) ? _descRedondear2(montoOriginal * (1 - pct / 100)) : montoOriginal;
+                const estado = !tieneMonto ? 'A_DEFINIR'
+                    : _descNormEstado(montoFinal, montoFinal, f.vencimiento || null, 'NO_ABONADA');
+                registros.push({
+                    dni:                  String(dni),
+                    programa_id:          PROGRAMA_ID,
+                    cohorte_id:           COHORTE_ID,
+                    concepto:             (f.nombre || '').trim(),
+                    periodo:              (f.periodo || '').trim(),
+                    fecha_vencimiento:    f.vencimiento || null,
+                    monto_original:       montoOriginal,
+                    descuento_porcentaje: pct,
+                    monto_final:          montoFinal,
+                    saldo_pendiente:      montoFinal,
+                    estado:               estado
+                });
+            });
+        });
+
+        const res = await sb.from('cobros').insert(registros);
+        if (res.error) throw res.error;
+
+        toast(`${planFilas.length} cuota${planFilas.length > 1 ? 's' : ''} creada${planFilas.length > 1 ? 's' : ''} para ${dnis.length} estudiante${dnis.length > 1 ? 's' : ''} ✓`, 'ok');
         cerrar('modal-cuota');
         deselAll();
-    } catch(e) { toast('Error al crear el plan','err'); }
-    finally { spin(false); }
+        await cargar();
+    } catch(e) {
+        console.error(e);
+        toast('Error al crear el plan: ' + (e.message || ''), 'err');
+    } finally {
+        spin(false);
+    }
 }
 
 let _bcDni = null, _bcNombre = '', _bcNuevoEstado = '';
