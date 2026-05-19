@@ -1093,6 +1093,36 @@
                 padding: 11px 14px;
             }
         }
+
+        /* ── Modal descuento estilo administrador ── */
+        .modal-box { background:white; border-radius:16px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden; animation:mIn 0.22s ease; }
+        @keyframes mIn { from{opacity:0;transform:scale(0.94) translateY(-8px);} to{opacity:1;transform:scale(1) translateY(0);} }
+        .modal-hdr { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:18px 22px; display:flex; justify-content:space-between; align-items:flex-start; }
+        .modal-hdr h2 { font-family:'Crimson Pro',serif; font-size:20px; margin-bottom:2px; }
+        .modal-hdr p  { font-size:12px; opacity:0.85; }
+        #modal-descuento-new .modal-close { background:rgba(255,255,255,0.2); border:none; color:white; width:30px; height:30px; border-radius:8px; font-size:18px; cursor:pointer; flex-shrink:0; line-height:1; }
+        #modal-descuento-new .modal-close:hover { background:rgba(255,255,255,0.35); }
+        #modal-descuento-new .modal-body { padding:22px; }
+        #modal-descuento-new .modal-footer { padding:14px 22px; border-top:1px solid #f0ede6; display:flex; justify-content:flex-end; gap:10px; }
+        .btn-cancel-desc { padding:9px 18px; background:white; border:2px solid #ddd; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; color:#666; font-family:'DM Sans',sans-serif; }
+        .btn-cancel-desc:hover { background:#f0f0f0; }
+        .btn-save-desc { padding:9px 18px; background:#10b981; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-save-desc:hover { background:#0d9268; }
+        .desc-periodo-fila { display:grid; grid-template-columns:26px 90px 130px 130px 1fr auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; }
+        .desc-periodo-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
+        .desc-periodo-fila input, .desc-periodo-fila select { width:100%; padding:7px 9px; border:1.5px solid #ddd; border-radius:7px; font-size:12px; font-family:'DM Sans',sans-serif; background:white; box-sizing:border-box; }
+        .desc-periodo-fila input:focus, .desc-periodo-fila select:focus { outline:none; border-color:#5C1018; }
+        .desc-periodo-fila .pct-wrap { display:flex; align-items:center; gap:4px; }
+        .desc-periodo-fila .pct-wrap input { width:60px; }
+        .desc-periodo-fila .pct-wrap span { font-weight:700; color:#666; font-size:14px; flex-shrink:0; }
+        .desc-fila-num { width:26px; height:26px; border-radius:50%; background:#5C1018; color:white; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .btn-del-desc { background:none; border:none; cursor:pointer; color:#e74c3c; font-size:17px; padding:4px; border-radius:6px; transition:background 0.2s; line-height:1; align-self:end; margin-bottom:2px; }
+        .btn-del-desc:hover { background:#fdecea; }
+        .btn-agregar-periodo { margin-top:4px; padding:8px 16px; background:#5C1018; color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
+        .btn-agregar-periodo:hover { background:#8C1A28; }
+        .desc-hint { font-size:11px; color:#999; margin-top:10px; }
+        #modal-descuento-new { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center; }
+        #modal-descuento-new.show { display:flex; }
     </style>
     <link rel="stylesheet" href="sigpo-theme.css">
 </head>
@@ -1180,52 +1210,21 @@
         </section>
     </main>
 
-    <div class="modal-overlay" id="modalDescuentoOverlay" onclick="cerrarSiOverlay(event, 'modalDescuentoOverlay', cerrarModalDescuento)">
-        <div class="modal small">
-            <div class="modal-header">
-                <div>
-                    <h3>Editar descuento</h3>
-                    <p id="modalDescNombre">Estudiante</p>
-                </div>
-                <button class="modal-close" type="button" onclick="cerrarModalDescuento()">×</button>
+    <!-- ═══ MODAL: DESCUENTO (estilo administrador) ═══ -->
+    <div id="modal-descuento-new">
+        <div class="modal-box" style="max-width:640px;">
+            <div class="modal-hdr">
+                <div><h2>✏️ Editar Descuento</h2><p id="desc-sub-coop">—</p></div>
+                <button class="modal-close" onclick="cerrarDescuentoCoop()">×</button>
             </div>
-
             <div class="modal-body">
-                <div class="message-box" id="msgDescuento"></div>
-
-                <div class="form-grid">
-                    <div class="field">
-                        <label for="descPorcentaje">Porcentaje<span class="required">*</span></label>
-                        <input type="number" id="descPorcentaje" min="0" max="100" step="1" />
-                        <div class="help-text">Usá 0 para quitar el descuento.</div>
-                    </div>
-
-                    <div class="field">
-                        <label for="descEtiqueta">Etiqueta</label>
-                        <select id="descEtiqueta">
-                            <option value="">— Sin etiqueta —</option>
-                        </select>
-                        <div class="help-text">Las etiquetas pueden venir desde Configuración.</div>
-                    </div>
-
-                    <div class="field">
-                        <label for="descFechaInicio">Fecha de inicio</label>
-                        <input type="date" id="descFechaInicio" />
-                    </div>
-
-                    <div class="field">
-                        <label for="descFechaFin">Fecha de finalización</label>
-                        <input type="date" id="descFechaFin" />
-                    </div>
-                </div>
+                <div id="desc-periodos-cont-coop"></div>
+                <button class="btn-agregar-periodo" onclick="descAgregarPeriodoCoop()">+ Agregar período</button>
+                <div class="desc-hint">Cada cuota recibe el descuento del período cuya fecha de vencimiento caiga dentro del rango. Si ningún período aplica, la cuota no tiene descuento.</div>
             </div>
-
             <div class="modal-footer">
-                <div class="footer-info">Este cambio actualiza el descuento del estudiante en la cohorte seleccionada.</div>
-                <div class="footer-buttons">
-                    <button class="btn light" type="button" onclick="cerrarModalDescuento()">Cancelar</button>
-                    <button class="btn success" type="button" onclick="guardarDescuento()">Guardar descuento</button>
-                </div>
+                <button class="btn-cancel-desc" onclick="cerrarDescuentoCoop()">Cancelar</button>
+                <button class="btn-save-desc" onclick="guardarDescuentoCoop()">💾 Guardar</button>
             </div>
         </div>
     </div>
@@ -1914,85 +1913,162 @@
             renderTabla();
         }
 
+        /* ══ MODAL DESCUENTO NUEVO (multi-período, estilo administrador) ══ */
+        var _descPeriodosCoop = [];
+
+        function mostrarToast(msg, tipo) {
+            var tw = document.getElementById('_coop-toast-wrap');
+            if (!tw) {
+                tw = document.createElement('div');
+                tw.id = '_coop-toast-wrap';
+                tw.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
+                document.body.appendChild(tw);
+            }
+            var t = document.createElement('div');
+            t.style.cssText = 'padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;color:white;box-shadow:0 8px 24px rgba(0,0,0,0.2);max-width:340px;';
+            t.style.background = tipo === 'error' ? '#ef4444' : tipo === 'success' ? '#10b981' : '#5C1018';
+            t.textContent = msg;
+            tw.appendChild(t);
+            setTimeout(function(){ if (t.parentNode) t.parentNode.removeChild(t); }, 3500);
+        }
+
+        function mostrarSpinner(on) {
+            var btn = document.querySelector('#modal-descuento-new .btn-save-desc');
+            if (btn) { btn.disabled = on; btn.textContent = on ? '⏳ Guardando…' : '💾 Guardar'; }
+        }
+
+        function descHoy() { return new Date().toISOString().split('T')[0]; }
+
+        function descGetMotivosCoop(selected) {
+            var motivos = (vistaData && vistaData.etiquetasDescuento) ? vistaData.etiquetasDescuento : [];
+            var html = '<option value="">— Sin especificar —</option>';
+            motivos.forEach(function(m) {
+                var val = String(m).toUpperCase().replace(/\s+/g,'_');
+                html += '<option value="' + val + '"' + (selected === val ? ' selected' : '') + '>' + escapeHtml(m) + '</option>';
+            });
+            html += '<option value="OTRO"' + (selected === 'OTRO' ? ' selected' : '') + '>Otro</option>';
+            return html;
+        }
+
+        function descRenderPeriodosCoop() {
+            var cont = document.getElementById('desc-periodos-cont-coop');
+            cont.innerHTML = '';
+            _descPeriodosCoop.forEach(function(p, i) {
+                var div = document.createElement('div');
+                div.className = 'desc-periodo-fila';
+                div.innerHTML =
+                    '<div class="desc-fila-num">' + (i+1) + '</div>'
+                    + '<div><label>Descuento</label><div class="pct-wrap"><input type="number" min="0" max="100" step="0.5" value="' + (p.pct !== undefined ? p.pct : '') + '" placeholder="0" oninput="_descPeriodosCoop[' + i + '].pct=parseFloat(this.value)||0;"><span>%</span></div></div>'
+                    + '<div><label>Aplica desde</label><input type="date" value="' + (p.desde||'') + '" onchange="_descPeriodosCoop[' + i + '].desde=this.value;"></div>'
+                    + '<div><label>Hasta <span style="font-weight:400;color:#bbb;">(opc.)</span></label><input type="date" value="' + (p.hasta||'') + '" onchange="_descPeriodosCoop[' + i + '].hasta=this.value;"></div>'
+                    + '<div><label>Motivo</label><select onchange="_descPeriodosCoop[' + i + '].motivo=this.value;">' + descGetMotivosCoop(p.motivo) + '</select></div>'
+                    + (_descPeriodosCoop.length > 1
+                        ? '<button class="btn-del-desc" title="Eliminar período" onclick="descQuitarPeriodoCoop(' + i + ')">🗑</button>'
+                        : '<div></div>');
+                cont.appendChild(div);
+            });
+        }
+
+        function descAgregarPeriodoCoop() {
+            _descPeriodosCoop.push({ pct: 0, desde: descHoy(), hasta: '', motivo: '' });
+            descRenderPeriodosCoop();
+        }
+
+        function descQuitarPeriodoCoop(i) {
+            if (_descPeriodosCoop.length <= 1) return;
+            _descPeriodosCoop.splice(i, 1);
+            descRenderPeriodosCoop();
+        }
+
         function abrirModalDescuento(estudianteId, event) {
             if (event) event.stopPropagation();
-
-            estudianteDescuentoActual = vistaData.estudiantes.find(function (est) {
+            estudianteDescuentoActual = vistaData.estudiantes.find(function(est) {
                 return String(est.estudianteId) === String(estudianteId);
             });
-
             if (!estudianteDescuentoActual) return;
-
-            document.getElementById('modalDescNombre').textContent = estudianteDescuentoActual.nombreCompleto;
-            document.getElementById('descPorcentaje').value = estudianteDescuentoActual.descuentoPorcentaje || 0;
-            document.getElementById('descFechaInicio').value = normalizarFechaInput(estudianteDescuentoActual.descuentoFechaInicio);
-            document.getElementById('descFechaFin').value = normalizarFechaInput(estudianteDescuentoActual.descuentoFechaFin);
-
-            const select = document.getElementById('descEtiqueta');
-            select.innerHTML = '<option value="">— Sin etiqueta —</option>';
-            vistaData.etiquetasDescuento.forEach(function (et) {
-                const opt = document.createElement('option');
-                opt.value = et;
-                opt.textContent = et;
-                select.appendChild(opt);
-            });
-            select.value = estudianteDescuentoActual.descuentoEtiqueta || '';
-
-            mostrarMensaje('msgDescuento', '', '');
-            abrirOverlay('modalDescuentoOverlay');
+            document.getElementById('desc-sub-coop').textContent =
+                (estudianteDescuentoActual.apellido || '') + ', ' + (estudianteDescuentoActual.nombre || '') +
+                ' — DNI ' + (estudianteDescuentoActual.dni || '');
+            _descPeriodosCoop = [{ pct: estudianteDescuentoActual.descuentoPorcentaje || 0, desde: descHoy(), hasta: '', motivo: '' }];
+            descRenderPeriodosCoop();
+            document.getElementById('modal-descuento-new').classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
 
-        function cerrarModalDescuento() {
+        function cerrarDescuentoCoop() {
             estudianteDescuentoActual = null;
-            mostrarMensaje('msgDescuento', '', '');
-            cerrarOverlay('modalDescuentoOverlay');
+            document.getElementById('modal-descuento-new').classList.remove('show');
+            document.body.style.overflow = '';
         }
 
-        function guardarDescuento() {
-            if (!estudianteDescuentoActual) return;
-
-            const porcentaje = Number(document.getElementById('descPorcentaje').value || 0);
-            const fechaInicio = document.getElementById('descFechaInicio').value;
-            const fechaFin = document.getElementById('descFechaFin').value;
-            const etiqueta = document.getElementById('descEtiqueta').value;
-
-            if (porcentaje < 0 || porcentaje > 100) {
-                mostrarMensaje('msgDescuento', 'El porcentaje debe estar entre 0 y 100.', 'error');
-                return;
+        async function guardarDescuentoCoop() {
+            for (var pi = 0; pi < _descPeriodosCoop.length; pi++) {
+                var p = _descPeriodosCoop[pi];
+                if (isNaN(p.pct) || p.pct < 0 || p.pct > 100) { mostrarToast('Período ' + (pi+1) + ': porcentaje inválido (0–100)', 'error'); return; }
+                if (!p.desde) { mostrarToast('Período ' + (pi+1) + ': indicá la fecha de inicio', 'error'); return; }
+                if (p.hasta && p.hasta < p.desde) { mostrarToast('Período ' + (pi+1) + ': la fecha fin debe ser posterior al inicio', 'error'); return; }
             }
+            mostrarSpinner(true);
+            try {
+                var sb = await getSupabase();
+                var est = estudianteDescuentoActual;
+                var hoyStr = descHoy();
 
-            const payload = {
-                programaId: vistaData.programa.programaId,
-                cohorteId: vistaData.cohorte.cohorteId,
-                estudianteId: estudianteDescuentoActual.estudianteId,
-                descuentoPorcentaje: porcentaje,
-                descuentoFechaInicio: fechaInicio,
-                descuentoFechaFin: fechaFin,
-                descuentoEtiqueta: etiqueta
-            };
+                var periodoRef = _descPeriodosCoop.slice()
+                    .sort(function(a,b){ return b.desde.localeCompare(a.desde); })
+                    .find(function(p){ return p.desde <= hoyStr && (!p.hasta || p.hasta >= hoyStr); })
+                    || _descPeriodosCoop[_descPeriodosCoop.length-1];
 
-            if (estaEnAppsScript()) {
-                google.script.run
-                    .withSuccessHandler(function () {
-                        estudianteDescuentoActual.descuentoPorcentaje = porcentaje;
-                        estudianteDescuentoActual.descuentoFechaInicio = fechaInicio;
-                        estudianteDescuentoActual.descuentoFechaFin = fechaFin;
-                        estudianteDescuentoActual.descuentoEtiqueta = etiqueta;
-                        renderTabla();
-                        mostrarMensaje('msgDescuento', 'Descuento guardado correctamente.', 'success');
-                        setTimeout(cerrarModalDescuento, 700);
-                    })
-                    .withFailureHandler(function (error) {
-                        mostrarMensaje('msgDescuento', obtenerMensajeError(error, 'No se pudo guardar el descuento.'), 'error');
-                    })
-                    .guardarDescuentoCooperadora(payload);
-                estudianteDescuentoActual.descuentoPorcentaje = porcentaje;
-                estudianteDescuentoActual.descuentoFechaInicio = fechaInicio;
-                estudianteDescuentoActual.descuentoFechaFin = fechaFin;
-                estudianteDescuentoActual.descuentoEtiqueta = etiqueta;
-                renderTabla();
-                mostrarMensaje('msgDescuento', 'Vista previa local: descuento actualizado.', 'success');
-                setTimeout(cerrarModalDescuento, 700);
+                var resInsc = await sb.from('inscripciones').update({
+                    descuento_porcentaje: periodoRef.pct,
+                    descuento_motivo:     periodoRef.motivo || null,
+                    descuento_desde:      periodoRef.desde  || null,
+                    descuento_hasta:      periodoRef.hasta  || null
+                }).eq('estudiante_id', est.estudianteId).eq('cohorte_id', vistaData.cohorte.cohorteId);
+                if (resInsc.error) throw resInsc.error;
+
+                for (var i = 0; i < est.cuotas.length; i++) {
+                    var c = est.cuotas[i];
+                    if (['abonada','parcial','pendiente','mora'].includes(c.estado)) continue;
+                    var fCuota = c.fechaVencimiento ? String(c.fechaVencimiento).split('T')[0] : null;
+                    if (fCuota && fCuota <= hoyStr) continue;
+
+                    var pctAplicar = 0;
+                    if (fCuota) {
+                        _descPeriodosCoop.forEach(function(p) {
+                            if (fCuota >= p.desde && (!p.hasta || fCuota <= p.hasta)) pctAplicar = p.pct;
+                        });
+                    } else {
+                        pctAplicar = _descPeriodosCoop[0] ? _descPeriodosCoop[0].pct : 0;
+                    }
+
+                    if (!c.montoFinal && c.montoFinal !== 0) {
+                        await sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobroId);
+                        continue;
+                    }
+
+                    var base = Number(c.montoBase || c.montoFinal || 0);
+                    var abonado = Number(c.montoAbonado || 0);
+                    var nuevoFinal = Math.round(base * (1 - pctAplicar/100) * 100) / 100;
+                    var nuevoSaldo = Math.round(Math.max(0, nuevoFinal - abonado) * 100) / 100;
+                    var nuevoEstado = (nuevoSaldo <= 0) ? 'ABONADA' : (fCuota && fCuota < hoyStr ? 'EN_MORA' : 'NO_ABONADA');
+
+                    await sb.from('cobros').update({
+                        descuento_porcentaje: pctAplicar,
+                        monto_final:          nuevoFinal,
+                        saldo_pendiente:      nuevoSaldo,
+                        estado:               nuevoEstado
+                    }).eq('cobro_id', c.cobroId);
+                }
+
+                mostrarToast('Descuento actualizado ✓', 'success');
+                cerrarDescuentoCoop();
+                await cargarVista();
+            } catch(e) {
+                console.error(e);
+                mostrarToast('Error al guardar: ' + (e.message||''), 'error');
+            } finally {
+                mostrarSpinner(false);
             }
         }
 
