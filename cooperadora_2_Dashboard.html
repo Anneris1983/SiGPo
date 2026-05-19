@@ -1244,8 +1244,8 @@
         getSupabase().then(function(sb) {
             return sb.from('cobros')
                 .select('*, estudiantes!cobros_dni_fkey(nombre, apellido, dni), programas(nombre)')
-                .eq('estado', 'PENDIENTE')
                 .not('comprobante_url', 'is', null)
+                .not('estado', 'in', '("ABONADA","PAGO_PARCIAL","NO_APLICA","A_DEFINIR")')
                 .order('updated_at', { ascending: false });
         }).then(function(res) {
             renderComprobantes(res.data || []);
@@ -1361,8 +1361,8 @@
             getSupabase().then(function(sb) {
                 return sb.from('cobros')
                     .select('*, estudiantes!cobros_dni_fkey(nombre, apellido, dni), programas(nombre)')
-                    .eq('estado', 'PENDIENTE')
                     .not('comprobante_url', 'is', null)
+                    .not('estado', 'in', '("ABONADA","PAGO_PARCIAL","NO_APLICA","A_DEFINIR")')
                     .order('updated_at', { ascending: false })
                     .then(function(res) { return res.data || []; });
             }),
