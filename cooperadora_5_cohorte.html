@@ -591,6 +591,21 @@
         .legend-color.pendiente { background: #f0f0f0; }
         .legend-color.nodebe { background: #fafafa; border: 1px dashed #ddd; }
 
+        /* ── Header stats bar ── */
+        .hstats-bar {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 10px 28px 14px;
+            display: flex;
+            gap: 8px 32px;
+            flex-wrap: wrap;
+            border-top: 1px solid rgba(255,255,255,0.15);
+        }
+        .hstat { display: flex; flex-direction: column; align-items: flex-start; }
+        .hstat-sep { padding-left: 32px; border-left: 1px solid rgba(255,255,255,0.2); }
+        .hstat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.65); margin-bottom: 2px; }
+        .hstat-val { font-size: 20px; font-weight: 700; color: #fff; line-height: 1.1; }
+
         .loading-block,
         .empty-state {
             text-align: center;
@@ -1087,7 +1102,11 @@
             <div class="header-left">
                 <div class="breadcrumb"><a href="#" onclick="volverACohortes(event)">← Volver a Cohortes</a></div>
                 <h1 id="headerCohorte">Cargando...</h1>
-                <p id="headerPrograma" style="font-size:14px;opacity:0.92;margin-top:4px;"></p>
+                <div style="display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;">
+                    <p id="headerPrograma" style="font-size:14px;opacity:0.92;"></p>
+                    <span class="badge type" id="summaryTipo" style="font-size:11px;padding:3px 10px;background:rgba(255,255,255,0.18);color:#fff;">—</span>
+                    <span class="badge active" id="summaryEstado" style="font-size:11px;padding:3px 10px;">—</span>
+                </div>
             </div>
 
             <div class="header-right">
@@ -1114,47 +1133,20 @@
                 <button class="btn-logout" type="button" onclick="cerrarSesion()">Cerrar sesión</button>
             </div>
         </div>
+
+        <!-- Stats bar integrada en el header -->
+        <div class="hstats-bar">
+            <div class="hstat"><div class="hstat-lbl">Estudiantes</div><div class="hstat-val" id="statEstudiantes">0</div></div>
+            <div class="hstat"><div class="hstat-lbl">Al día</div><div class="hstat-val" style="color:#86efac" id="statAlDia">0</div></div>
+            <div class="hstat"><div class="hstat-lbl">Mora</div><div class="hstat-val" style="color:#fca5a5" id="statMora">0</div></div>
+            <div class="hstat"><div class="hstat-lbl">Parcial</div><div class="hstat-val" style="color:#fde68a" id="statParcial">0</div></div>
+            <div class="hstat hstat-sep"><div class="hstat-lbl">Ingresos</div><div class="hstat-val" id="statIngresos">—</div></div>
+            <div class="hstat"><div class="hstat-lbl">Egresos</div><div class="hstat-val" style="color:#fbbf24" id="statEgresos">—</div></div>
+            <div class="hstat"><div class="hstat-lbl">Saldo</div><div class="hstat-val" id="statSaldo">—</div></div>
+        </div>
     </header>
 
     <main class="page">
-        <section class="summary-card">
-            <div class="summary-badges">
-                <span class="badge type" id="summaryTipo">Especialización</span>
-                <span class="badge active" id="summaryEstado">Activa</span>
-            </div>
-
-            <div class="summary-stats">
-                <div class="summary-stat">
-                    <div class="label">Estudiantes</div>
-                    <div class="value" id="statEstudiantes">0</div>
-                </div>
-                <div class="summary-stat">
-                    <div class="label">Al día</div>
-                    <div class="value" style="color:var(--success)" id="statAlDia">0</div>
-                </div>
-                <div class="summary-stat">
-                    <div class="label">Mora</div>
-                    <div class="value" style="color:var(--danger)" id="statMora">0</div>
-                </div>
-                <div class="summary-stat">
-                    <div class="label">Parcial</div>
-                    <div class="value" style="color:var(--warning)" id="statParcial">0</div>
-                </div>
-                <div class="summary-stat">
-                    <div class="label">Ingresos</div>
-                    <div class="value" id="statIngresos">—</div>
-                </div>
-                <div class="summary-stat">
-                    <div class="label">Egresos</div>
-                    <div class="value" style="color:var(--warning)" id="statEgresos">—</div>
-                </div>
-                <div class="summary-stat">
-                    <div class="label">Saldo</div>
-                    <div class="value" id="statSaldo">—</div>
-                </div>
-            </div>
-        </section>
-
         <section class="toolbar">
             <div class="toolbar-top">
                 <div class="toolbar-title">
@@ -1621,9 +1613,9 @@
         }
 
         function renderEncabezado() {
-            document.title = 'SiGPo - ' + vistaData.cohorte.nombre;
-            document.getElementById('headerCohorte').textContent = vistaData.cohorte.nombre;
-            document.getElementById('headerPrograma').textContent = vistaData.programa.nombre + ' · ' + formatearRangoFechas(vistaData.cohorte.fechaInicio, vistaData.cohorte.fechaFin);
+            document.title = 'SiGPo - ' + vistaData.programa.nombre;
+            document.getElementById('headerCohorte').textContent = vistaData.programa.nombre;
+            document.getElementById('headerPrograma').textContent = vistaData.cohorte.nombre + ' · ' + formatearRangoFechas(vistaData.cohorte.fechaInicio, vistaData.cohorte.fechaFin);
             document.getElementById('summaryTipo').textContent = formatearTipo(vistaData.programa.tipo);
 
             const badgeEstado = document.getElementById('summaryEstado');
