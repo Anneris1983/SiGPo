@@ -248,9 +248,7 @@ h4, .h4 { font-family: var(--font-sans) !important;  font-size: var(--text-md) !
 
 p { margin: 0 !important; }
 
-/* Header de página — título serif bordo con regla dorada (certificado) */
-.page-header { margin-bottom: var(--s-6) !important; }
-.page-header h1,
+/* Título de página en el cuerpo (fondo claro) — serif bordo con regla dorada */
 .page-title {
   font-family: var(--font-serif) !important;
   font-size:   var(--text-3xl) !important;
@@ -262,7 +260,6 @@ p { margin: 0 !important; }
   padding-bottom: var(--s-3) !important;
   border-bottom: 2px solid var(--clr-accent) !important;
 }
-.page-header p,
 .page-subtitle {
   font-size: var(--text-sm) !important;
   color:     var(--clr-text-2) !important;
@@ -755,229 +752,60 @@ tbody tr:hover td { background: var(--clr-brand-subtle) !important; }
 .nav-link.active { background: rgba(92,16,24,.08) !important; color: var(--clr-brand) !important; font-weight: 600 !important; }
 
 /* ──────────────────────────────────────────────────────────────────
-   OVERRIDE: Header oscuro/gradiente → Navbar blanca
+   HEADER INSTITUCIONAL — bordo con texto blanco y regla dorada
+   Idéntico al encabezado del Certificado de Libre Deuda oficial.
    Cubre body>.header y #app>.page-header
    ────────────────────────────────────────────────────────────────── */
 body > .header,
 #app > .page-header {
-  background:    rgba(255,255,255,.95) !important;
-  border-bottom: 1px solid var(--clr-border-light) !important;
-  box-shadow:    var(--shadow-sm) !important;
-  color:         var(--clr-text) !important;
-  position:      sticky !important;
-  top:           0 !important;
-  z-index:       200 !important;
-  padding:       0 var(--s-10) !important;
-  min-height:    var(--nav-h) !important;
+  background:    linear-gradient(135deg, var(--clr-brand) 0%, var(--clr-brand-2) 100%) !important;
+  color:         #fff !important;
+  border-bottom: 3px solid var(--clr-accent) !important;
+  box-shadow:    0 4px 20px rgba(92,16,24,.18) !important;
   margin-bottom: 0 !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
 }
 
-/* Wrapper flex */
-body > .header .header-content,
-body > .header .header-top,
-body > .header .header-main {
-  max-width:       1400px !important;
-  margin:          0 auto !important;
-  display:         flex !important;
-  justify-content: space-between !important;
-  align-items:     center !important;
-  height:          var(--nav-h) !important;
-  gap:             var(--s-4) !important;
-  width:           100% !important;
-}
-
-/* Lado izquierdo */
-body > .header .header-left,
-body > .header .header-top-left,
-#app > .page-header .header-left {
-  display:     flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap:         var(--s-3) !important;
-  flex:        1 !important;
-  min-width:   0 !important;
-}
-
-/* Logo wrapper — quitar bg white-transparent heredado */
-body > .header .header-left > div:first-child,
-body > .header .header-top-left > div:first-child,
-#app > .page-header .header-left > div:first-child {
-  background:    transparent !important;
-  padding:       0 !important;
-  border-radius: 0 !important;
-  margin-bottom: 0 !important;
-  flex-shrink:   0 !important;
-  display:       inline-flex !important;
-  align-items:   center !important;
-}
-#app > .page-header .header-left > div:first-child img { height: 44px !important; width: auto !important; }
-
-/* Título en navbar */
+/* Título del header en blanco serif (como el certificado) */
 body > .header h1,
 body > .header .header-left h1,
 body > .header .header-top-left h1,
-#app > .page-header h1 {
-  font-family:    var(--font-sans) !important;
-  font-size:      15px !important;
-  font-weight:    700 !important;
-  color:          var(--clr-brand) !important;
-  margin:         0 !important;
-  letter-spacing: -.02em !important;
-  white-space:    nowrap !important;
-  overflow:       hidden !important;
-  text-overflow:  ellipsis !important;
+#app > .page-header h1,
+#app > .page-header .header-left h1 {
+  font-family:    var(--font-serif) !important;
+  color:          #fff !important;
+  letter-spacing: -.01em !important;
+  border-bottom:  none !important;
+  padding-bottom: 0 !important;
 }
 
-/* Ocultar subtítulo en navbar */
-body > .header p,
+/* Subtítulo y textos secundarios del header */
 body > .header .header-left p,
 body > .header .header-top-left p,
-#app > .page-header p { display: none !important; }
+#app > .page-header .header-left p,
+#app > .page-header p { color: rgba(255,255,255,.85) !important; }
 
-/* Stats bar integrada en header (coordinador) */
+/* Stats integrados en el header (vista cohorte / tabla) */
+body > .header .stat-label,
+#app > .page-header .stat-label { color: rgba(255,255,255,.72) !important; }
+body > .header .stat-value,
+#app > .page-header .stat-value { color: #fff !important; }
+
+/* Stats-bar inferior (coordinador) sobre el bordo */
 body > .header .hstats-bar {
-  background:    var(--clr-brand-subtle) !important;
-  border-top:    1px solid rgba(92,16,24,.1) !important;
-  padding:       var(--s-2) var(--s-10) !important;
+  background: rgba(0,0,0,.12) !important;
+  border-top: 1px solid rgba(255,255,255,.15) !important;
 }
-body > .header .hstat-val  { color: var(--clr-brand) !important; font-weight: 700 !important; }
-body > .header .hstat-lbl  { color: var(--clr-text-muted) !important; }
+body > .header .hstat-val { color: #fff !important; font-weight: 700 !important; }
+body > .header .hstat-lbl { color: rgba(255,255,255,.7) !important; }
 
-/* Breadcrumb / btn-cashflow */
-body > .header .breadcrumb  { display: inline-flex !important; align-items: center !important; flex-shrink: 0 !important; }
+/* Breadcrumb / volver sobre el bordo */
 body > .header .breadcrumb a,
-body > .header .btn-cashflow {
-  color:       var(--clr-text-2) !important;
-  font-size:   var(--text-xs) !important;
-  font-weight: 500 !important;
-  padding:     5px 11px !important;
-  border-radius: var(--r-sm) !important;
-  border:      1px solid var(--clr-border) !important;
-  background:  transparent !important;
-  display:     inline-flex !important;
-  align-items: center !important;
+#app > .page-header .breadcrumb a {
+  color: rgba(255,255,255,.92) !important;
   text-decoration: none !important;
-  transition:  all var(--dur-1) var(--ease) !important;
-  white-space: nowrap !important;
 }
 body > .header .breadcrumb a:hover,
-body > .header .btn-cashflow:hover {
-  background:   var(--clr-surface-alt) !important;
-  border-color: var(--clr-text-muted) !important;
-  color:        var(--clr-text) !important;
-}
-
-/* Lado derecho */
-body > .header .header-right,
-body > .header .header-top-right,
-body > .header .header-actions {
-  display:     flex !important;
-  align-items: center !important;
-  gap:         var(--s-2) !important;
-  flex-shrink: 0 !important;
-}
-
-/* Botones de acción en navbar (login, logout, back, etc.) */
-body > .header .header-btn,
-body > .header .btn-back,
-body > .header .logout-btn,
-body > .header .btn-logout,
-body > .header .icon-btn,
-body > .header a.header-btn,
-body > .header a.btn-logout,
-#app > .page-header .header-btn,
-#app > .page-header .btn-back,
-#app > .page-header .logout-btn {
-  background:    transparent !important;
-  border:        1px solid var(--clr-border) !important;
-  color:         var(--clr-text-2) !important;
-  padding:       6px 13px !important;
-  border-radius: var(--r-sm) !important;
-  font-family:   var(--font-sans) !important;
-  font-size:     var(--text-sm) !important;
-  font-weight:   500 !important;
-  cursor:        pointer !important;
-  text-decoration: none !important;
-  display:       inline-flex !important;
-  align-items:   center !important;
-  gap:           6px !important;
-  transition:    all var(--dur-1) var(--ease) !important;
-  white-space:   nowrap !important;
-}
-body > .header .header-btn:hover,
-body > .header .btn-back:hover,
-body > .header .logout-btn:hover,
-body > .header .btn-logout:hover,
-body > .header .icon-btn:hover,
-body > .header a.header-btn:hover,
-body > .header a.btn-logout:hover,
-#app > .page-header .header-btn:hover,
-#app > .page-header .logout-btn:hover {
-  background:   var(--clr-surface-alt) !important;
-  border-color: var(--clr-text-muted) !important;
-  color:        var(--clr-text) !important;
-}
-
-/* Campana de notificaciones */
-body > .header .notif-bell,
-body > .header .notif-btn,
-body > .header .notification-bell,
-body > .header button[onclick*="toggleNotif"],
-body > .header button[onclick*="toggleNotification"],
-#app > .page-header button[onclick*="toggleNotif"] {
-  background:    transparent !important;
-  border:        none !important;
-  cursor:        pointer !important;
-  padding:       8px !important;
-  border-radius: var(--r-sm) !important;
-  display:       inline-flex !important;
-  align-items:   center !important;
-  justify-content: center !important;
-  transition:    background var(--dur-1) var(--ease) !important;
-}
-body > .header .notif-bell:hover,
-body > .header .notif-btn:hover,
-body > .header .notification-bell:hover,
-body > .header button[onclick*="toggleNotif"]:hover { background: var(--clr-surface-alt) !important; }
-
-/* Badge de notificaciones */
-body > .header .notif-badge,
-body > .header #notif-badge,
-body > .header .notification-badge,
-#app > .page-header .notif-badge,
-#app > .page-header #notif-badge { border-color: white !important; }
-
-/* Logo wrapper con rgba(255,255,255,...) heredado */
-body > .header div[style*="rgba(255,255,255"],
-#app > .page-header div[style*="rgba(255,255,255"] {
-  background:    transparent !important;
-  padding:       0 !important;
-  border-radius: 0 !important;
-  margin-bottom: 0 !important;
-}
-
-/* Botones con rgba(255,255,255) inline */
-body > .header button[style*="rgba(255,255,255"],
-#app > .page-header button[style*="rgba(255,255,255"],
-body > .header a[style*="rgba(255,255,255"] {
-  background:   transparent !important;
-  border:       1px solid var(--clr-border) !important;
-  color:        var(--clr-text-2) !important;
-}
-
-/* Links con color:white inline */
-body > .header a[style*="color:white"],
-body > .header a[style*="color: white"],
-body > .header a[style*="color:#fff"],
-body > .header a[style*="color: #fff"],
-#app > .page-header a[style*="color:white"],
-#app > .page-header a[style*="color:#fff"] {
-  color: var(--clr-text-2) !important; text-decoration: none !important;
-}
-body > .header a[style*="color:white"]:hover,
-body > .header a[style*="color:#fff"]:hover { color: var(--clr-brand) !important; }
+#app > .page-header .breadcrumb a:hover { color: #fff !important; text-decoration: underline !important; }
 
 /* ══════════════════════════════════════════════════════════════════
    12. TABS / FILTROS
