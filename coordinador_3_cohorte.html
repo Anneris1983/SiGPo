@@ -1141,6 +1141,12 @@ function planFechaDefault(offset) {
     const d = new Date(); d.setDate(15); d.setMonth(d.getMonth() + offset);
     return d.toISOString().split('T')[0];
 }
+function _planNroFromNombre(nombre, maxNro, index) {
+    var m = String(nombre).match(/cuota[\s_]?(\d+)/i);
+    if (m) return parseInt(m[1], 10);
+    if (/inscripci[oó]n/i.test(nombre)) return 0;
+    return maxNro + index + 1;
+}
 function planAvanzarMes(dateStr) {
     const d = new Date((dateStr || planFechaDefault(0)) + 'T12:00:00');
     d.setDate(1); d.setMonth(d.getMonth() + 1); d.setDate(15);
@@ -1242,10 +1248,20 @@ async function guardarCuotas() {
             descuentoMap[String(est.dni)] = Number(est.descuento_porcentaje) || 0;
         });
 
+        // Max nro_cuota existente para asignar números correlativos a los nuevos cobros
+        let maxNroExist = 0;
+        V.data.estudiantes.forEach(function(est) {
+            (est.cobros || []).forEach(function(c) {
+                const m = (c.concepto || '').match(/cuota[\s_]?(\d+)/i);
+                if (m) maxNroExist = Math.max(maxNroExist, parseInt(m[1], 10));
+            });
+        });
+
         const registros = [];
         dnis.forEach(function(dni) {
             const pct = descuentoMap[String(dni)] || 0;
-            planFilas.forEach(function(f) {
+            planFilas.forEach(function(f, fi) {
+                const nroCuota = _planNroFromNombre(f.nombre, maxNroExist, fi);
                 const tieneMonto = f.monto !== '' && f.monto !== null && f.monto !== undefined && !isNaN(parseFloat(f.monto));
                 const montoOriginal = tieneMonto ? _descRedondear2(parseFloat(f.monto)) : null;
                 const montoFinal = (tieneMonto && pct > 0) ? _descRedondear2(montoOriginal * (1 - pct / 100)) : montoOriginal;
@@ -1258,6 +1274,7 @@ async function guardarCuotas() {
                     concepto:             (f.nombre || '').trim(),
                     periodo:              (f.periodo || '').trim(),
                     fecha_vencimiento:    f.vencimiento || null,
+                    nro_cuota:            nroCuota,
                     monto_original:       montoOriginal,
                     descuento_porcentaje: pct,
                     monto_final:          montoFinal,

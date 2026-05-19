@@ -1820,13 +1820,23 @@
 
             vistaData.estudiantes.forEach(function (est) {
                 est.cuotas.forEach(function (cuota) {
-                    const key = cuota.numeroCuota != null ? String(cuota.numeroCuota) : (cuota.nombre || cuota.mes || Math.random().toString());
+                    // clave única por nombre de cuota (no por número, para que "Cuota 5" sea una columna distinta)
+                    const key = cuota.nombre || (cuota.numeroCuota != null ? String(cuota.numeroCuota) : (cuota.mes || Math.random().toString()));
                     if (!mapa.has(key)) {
                         const label = cuota.nombre || (cuota.numeroCuota === 0 ? 'Inscripción' : 'C' + cuota.numeroCuota);
                         const mes = cuota.mes ? ' · ' + cuota.mes : '';
+                        // numero para ordenar: usar nroCuota si existe; si no, parsear del nombre; último recurso: fecha
+                        var numero = cuota.numeroCuota != null ? Number(cuota.numeroCuota) : null;
+                        if (numero === null) {
+                            var mm = (cuota.nombre || '').match(/cuota[\s_]?(\d+)/i);
+                            if (mm) numero = parseInt(mm[1], 10);
+                            else if (/inscripci[oó]n/i.test(cuota.nombre || '')) numero = 0;
+                            else numero = 9999;
+                        }
                         mapa.set(key, {
                             key: key,
-                            numero: cuota.numeroCuota != null ? cuota.numeroCuota : 9999,
+                            numero: numero,
+                            fechaRef: cuota.fechaVencimiento || '',
                             label: label,
                             tooltip: label + mes
                         });
@@ -1835,13 +1845,14 @@
             });
 
             return Array.from(mapa.values()).sort(function (a, b) {
-                return a.numero - b.numero;
+                if (a.numero !== b.numero) return a.numero - b.numero;
+                return (a.fechaRef || '').localeCompare(b.fechaRef || '');
             });
         }
 
         function obtenerCuotaEstudiante(est, key) {
             return est.cuotas.find(function (cuota) {
-                const cuotaKey = cuota.numeroCuota != null ? String(cuota.numeroCuota) : (cuota.nombre || cuota.mes || '');
+                const cuotaKey = cuota.nombre || (cuota.numeroCuota != null ? String(cuota.numeroCuota) : (cuota.mes || ''));
                 return cuotaKey === key;
             });
         }
@@ -2174,10 +2185,23 @@
                 + ' <span style="color:#999;">(' + (q * n) + ' registros totales)</span>';
         }
 
+        function _pcuotaNroFromNombre(nombre, maxNro, index) {
+            var m = String(nombre).match(/cuota[\s_]?(\d+)/i);
+            if (m) return parseInt(m[1], 10);
+            if (/inscripci[oó]n/i.test(nombre)) return 0;
+            return maxNro + index + 1;
+        }
+
         async function guardarCuotasCoop() {
             if (!_pcuotaFilas.length) { mostrarToast('Agregá al menos una cuota', 'error'); return; }
             var ests = vistaData ? vistaData.estudiantes : [];
             if (!ests.length) { mostrarToast('No hay estudiantes en esta cohorte', 'error'); return; }
+
+            // Calcular max nro_cuota existente para asignar números correlativos a las nuevas
+            var maxNroExist = 0;
+            ests.forEach(function(est) {
+                (est.cuotas || []).forEach(function(c) { maxNroExist = Math.max(maxNroExist, Number(c.numeroCuota || 0)); });
+            });
 
             mostrarSpinner(true);
             try {
@@ -2185,7 +2209,8 @@
                 var registros = [];
                 ests.forEach(function(est) {
                     var pct = Number(est.descuentoPorcentaje) || 0;
-                    _pcuotaFilas.forEach(function(f) {
+                    _pcuotaFilas.forEach(function(f, fi) {
+                        var nroCuota = _pcuotaNroFromNombre(f.nombre, maxNroExist, fi);
                         var tieneMonto = f.monto !== '' && f.monto !== null && f.monto !== undefined && !isNaN(parseFloat(f.monto));
                         var montoOriginal = tieneMonto ? Math.round(parseFloat(f.monto) * 100) / 100 : null;
                         var montoFinal = (tieneMonto && pct > 0) ? Math.round(montoOriginal * (1 - pct/100) * 100) / 100 : montoOriginal;
@@ -2197,6 +2222,7 @@
                             concepto:             (f.nombre || '').trim(),
                             periodo:              (f.periodo || '').trim(),
                             fecha_vencimiento:    f.vencimiento || null,
+                            nro_cuota:            nroCuota,
                             monto_original:       montoOriginal,
                             descuento_porcentaje: pct,
                             monto_final:          montoFinal,
