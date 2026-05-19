@@ -867,17 +867,13 @@ async function enviarComprobante() {
 
         // ── Paso 2: crear notificación interna para Cooperadora ──
         var sb = await getSupabase();
-        var notifData = {
-            rol_destino: 'COOPERADORA',
-            tipo:        'pago',
-            mensaje:     'Nuevo comprobante de ' + (SESION.nombre || 'Estudiante')
+        var mensaje = 'Nuevo comprobante de ' + (SESION.nombre || 'Estudiante')
                          + ' (DNI ' + dni + ') para "'
                          + _cobroActual.concepto + ' - ' + _cobroActual.periodo
                          + '". Monto declarado: $' + Number(monto).toLocaleString('es-AR')
                          + (nroOp ? ' | N° op: ' + nroOp : '')
-                         + (obs   ? ' | Obs: '   + obs   : ''),
-        };
-        var notifResult = await sb.from('notificaciones').insert(notifData);
+                         + (obs   ? ' | Obs: '   + obs   : '');
+        var notifResult = await sb.rpc('notificar_cooperadora', { p_mensaje: mensaje });
         if (notifResult.error) {
             // No crítico — loguear pero seguir
             console.warn('Notificación no creada:', notifResult.error.message);
