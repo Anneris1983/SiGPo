@@ -34,38 +34,38 @@
    1. DESIGN TOKENS
    ══════════════════════════════════════════════════════════════════ */
 :root {
-  /* ── Marca ── */
+  /* ── Marca — bordo institucional de Posgrado ── */
   --clr-brand:          #5C1018;
   --clr-brand-hover:    #6f1420;
   --clr-brand-dark:     #3d0a10;
-  --clr-brand-2:        #8C1A28;   /* dark end of brand gradient */
-  --clr-brand-subtle:   #fdf2f3;   /* brand tint surface */
+  --clr-brand-2:        #8C1A28;   /* extremo oscuro del gradiente */
+  --clr-brand-subtle:   #F6EAEB;   /* tinte rosado cálido */
 
-  /* ── Acento ── */
+  /* ── Acento — dorado institucional ── */
   --clr-accent:         #C49A2A;
-  --clr-accent-hover:   #b08820;
-  --clr-accent-subtle:  #fffbf0;
+  --clr-accent-hover:   #A9831C;
+  --clr-accent-subtle:  #FBF4E3;
 
-  /* ── Semánticos ── */
-  --clr-success:        #1a7a4a;
-  --clr-success-bg:     #f0fdf6;
-  --clr-success-border: #bbf7d0;
-  --clr-success-text:   #14532d;
+  /* ── Semánticos (verde = "ABONADA" del certificado oficial) ── */
+  --clr-success:        #059669;
+  --clr-success-bg:     #ECFDF5;
+  --clr-success-border: #A7F3D0;
+  --clr-success-text:   #065F46;
 
-  --clr-warning:        #b45309;
-  --clr-warning-bg:     #fffbeb;
-  --clr-warning-border: #fde68a;
-  --clr-warning-text:   #78350f;
+  --clr-warning:        #B07D1A;
+  --clr-warning-bg:     #FBF4E3;
+  --clr-warning-border: #EBD9A6;
+  --clr-warning-text:   #7A5610;
 
-  --clr-danger:         #c0392b;
-  --clr-danger-bg:      #fff1f1;
-  --clr-danger-border:  #fecaca;
-  --clr-danger-text:    #991b1b;
+  --clr-danger:         #C0392B;
+  --clr-danger-bg:      #FBEDEB;
+  --clr-danger-border:  #EFC4BE;
+  --clr-danger-text:    #8E2A20;
 
-  --clr-info:           #1e6fa8;
-  --clr-info-bg:        #eff6ff;
-  --clr-info-border:    #bfdbfe;
-  --clr-info-text:      #1e3a6e;
+  --clr-info:           #1E6FA8;
+  --clr-info-bg:        #EAF3F9;
+  --clr-info-border:    #BFDCEC;
+  --clr-info-text:      #1A5077;
 
   /* ── Paleta legacy (evita var() undefined → fondo transparente) ── */
   --primary:        var(--clr-brand);
@@ -89,25 +89,27 @@
   --cyan:           #0891B2;
   --gray:           #6B7280;
 
-  /* ── Superficies ── */
-  --clr-bg:           #F5F6FA;
+  /* ── Superficies — crema institucional cálido (certificado oficial) ── */
+  --clr-bg:           #F7F5F0;   /* fondo de página crema cálido */
   --clr-surface:      #ffffff;
-  --clr-surface-alt:  #F0F1F6;
-  --clr-border:       #E2E5EF;
-  --clr-border-light: #ECEEF6;
+  --clr-surface-alt:  #F8F6F1;   /* caja de sección del certificado */
+  --clr-surface-2:    #F0EDE8;   /* caja secundaria (cohorte) */
+  --clr-border:       #E6DFD2;   /* borde cálido */
+  --clr-border-light: #EFEAE0;   /* hairline cálido */
 
   /* ── Aliases legacy ── */
   --bg:           var(--clr-bg);
   --surface:      var(--clr-surface);
   --surface-alt:  var(--clr-surface-alt);
+  --surface-2:    var(--clr-surface-2);
   --border:       var(--clr-border);
   --border-light: var(--clr-border-light);
   --line:         var(--clr-border-light);
 
-  /* ── Texto ── */
-  --clr-text:       #0A0F1E;
-  --clr-text-2:     #4A5468;
-  --clr-text-muted: #8B96A8;
+  /* ── Texto cálido (certificado oficial) ── */
+  --clr-text:       #1C1510;   /* casi-negro cálido */
+  --clr-text-2:     #594F42;   /* secundario cálido */
+  --clr-text-muted: #6B6254;   /* gris cálido (fecha del certificado) */
 
   /* ── Aliases legacy ── */
   --text:           var(--clr-text);
@@ -246,7 +248,7 @@ h4, .h4 { font-family: var(--font-sans) !important;  font-size: var(--text-md) !
 
 p { margin: 0 !important; }
 
-/* Header de página */
+/* Header de página — título serif bordo con regla dorada (certificado) */
 .page-header { margin-bottom: var(--s-6) !important; }
 .page-header h1,
 .page-title {
@@ -254,9 +256,11 @@ p { margin: 0 !important; }
   font-size:   var(--text-3xl) !important;
   font-weight: 700 !important;
   color:       var(--clr-brand) !important;
-  letter-spacing: -.025em !important;
+  letter-spacing: -.02em !important;
   line-height: 1.2 !important;
-  margin: 0 !important;
+  margin: 0 0 var(--s-3) 0 !important;
+  padding-bottom: var(--s-3) !important;
+  border-bottom: 2px solid var(--clr-accent) !important;
 }
 .page-header p,
 .page-subtitle {
@@ -265,18 +269,20 @@ p { margin: 0 !important; }
   margin-top: var(--s-1) !important;
 }
 
-/* Título de sección */
+/* Título de sección — serif bordo con acento dorado a la izquierda */
 .section-title,
 .card-title {
   font-family: var(--font-serif) !important;
   font-size:   var(--text-xl) !important;
   font-weight: 700 !important;
-  color:       var(--clr-text) !important;
-  letter-spacing: -.015em !important;
+  color:       var(--clr-brand) !important;
+  letter-spacing: -.01em !important;
   line-height: 1.3 !important;
   margin-bottom: var(--s-5) !important;
   padding-bottom: 0 !important;
+  padding-left: var(--s-3) !important;
   border-bottom: none !important;
+  border-left: 3px solid var(--clr-accent) !important;
 }
 
 /* Label tipo capitular */
@@ -562,32 +568,36 @@ table {
   font-size:       var(--text-sm) !important;
 }
 
-thead tr { border-bottom: 2px solid var(--clr-border) !important; }
+/* Cabecera institucional: fondo bordo, texto blanco (igual al certificado) */
+thead tr { border-bottom: none !important; }
 
 th {
   font-family:    var(--font-sans) !important;
-  font-size:      var(--text-2xs) !important;
+  font-size:      var(--text-xs) !important;
   font-weight:    700 !important;
-  color:          var(--clr-text-muted) !important;
-  text-transform: uppercase !important;
-  letter-spacing: .08em !important;
-  padding:        11px 15px !important;
+  color:          #fff !important;
+  background:     var(--clr-brand) !important;
+  letter-spacing: .02em !important;
+  padding:        12px 16px !important;
   text-align:     left !important;
   white-space:    nowrap !important;
-  background:     transparent !important;
 }
+th:first-child { border-top-left-radius: var(--r-sm) !important; }
+th:last-child  { border-top-right-radius: var(--r-sm) !important; }
 
 td {
-  padding:        13px 15px !important;
+  padding:        12px 16px !important;
   border-bottom:  1px solid var(--clr-border-light) !important;
   color:          var(--clr-text) !important;
   vertical-align: middle !important;
 }
 
+/* Filas crema alternadas */
+tbody tr:nth-child(even) td { background: var(--clr-surface-alt) !important; }
 tbody tr:last-child td { border-bottom: none !important; }
 
 tbody tr { transition: background var(--dur-1) var(--ease) !important; }
-tbody tr:hover td { background: var(--clr-surface-alt) !important; }
+tbody tr:hover td { background: var(--clr-brand-subtle) !important; }
 
 /* Tabla contenida en card */
 .table-wrap {
