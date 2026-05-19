@@ -6,6 +6,7 @@
     <title>Reportes - Coordinador</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -297,6 +298,8 @@ const DEFAULT_COHORTE_ID = QS.get('cohorteId') || QS.get('cohorte_id') || '';
 const DEFAULT_ANIO = QS.get('anio') || String(new Date().getFullYear());
 
 let reportesData = null;
+let _cobrosExport = [];
+let _egresosExport = [];
 let charts = {};
 
 function estaEnAppsScript() {
@@ -424,6 +427,8 @@ async function cargarVista() {
         var cohortes = rC.data || [];
         var cobros = rCob.data || [];
         var egresos = rEgr.data || [];
+        _cobrosExport = cobros;
+        _egresosExport = egresos;
 
         // Apply filters
         var cobF = cobros.filter(function(c){
@@ -721,26 +726,82 @@ function recargarConFiltros() {
     cargarVista();
 }
 
-async function exportar(tipo) {
-    const payload = {
-        tipo,
-        programaId: document.getElementById('selPrograma').value,
-        cohorteId: document.getElementById('selCohorte').value,
-        anio: document.getElementById('selAnio').value
-    };
+function exportar(tipo) {
+    if (!reportesData) { toast('Cargá los datos antes de exportar.', 'err'); return; }
+    var wb = XLSX.utils.book_new();
+    var prog = (reportesData.encabezado && reportesData.encabezado.programaNombre) || 'Programa';
+    var fecha = new Date().toISOString().slice(0, 10);
 
     try {
-        if (estaEnAppsScript()) {
-            const res = await gs('exportarReporteCoordinador', payload);
-            if (res && res.url) {
-                window.open(res.url, '_blank');
-                toast(`Reporte "${tipo}" exportado correctamente`, 'ok');
-                return;
-            }
+        if (tipo === 'resumen') {
+            var r = reportesData.resumen;
+            var filas = [
+                { 'Indicador': 'Total Recaudado',     'Valor': r.totalRecaudado },
+                { 'Indicador': 'Estudiantes al Día',  'Valor': r.estudiantesAlDia },
+                { 'Indicador': 'Estudiantes en Mora', 'Valor': r.enMora },
+                { 'Indicador': 'Pago Parcial',        'Valor': r.pagoParcial },
+                { 'Indicador': 'Tasa de Pago (%)',    'Valor': r.tasaPago }
+            ];
+            var ws = XLSX.utils.json_to_sheet(filas);
+            ws['!cols'] = [{wch:28},{wch:18}];
+            XLSX.utils.book_append_sheet(wb, ws, 'Resumen');
+        } else if (tipo === 'cashflow') {
+            var cf = reportesData.charts.cashflow;
+            var filas = cf.labels.map(function(lbl, i) {
+                return { 'Mes': lbl, 'Ingresos ($)': cf.ingresos[i] || 0, 'Egresos ($)': cf.egresos[i] || 0, 'Saldo ($)': (cf.ingresos[i] || 0) - (cf.egresos[i] || 0) };
+            });
+            if (!filas.length) { toast('Sin datos de cashflow para exportar.', 'err'); return; }
+            var ws = XLSX.utils.json_to_sheet(filas);
+            ws['!cols'] = [{wch:14},{wch:16},{wch:16},{wch:16}];
+            XLSX.utils.book_append_sheet(wb, ws, 'Cashflow');
+        } else if (tipo === 'estados') {
+            var ec = reportesData.charts.estadosPorCohorte;
+            var filas = ec.labels.map(function(lbl, i) {
+                return { 'Cohorte/Edición': lbl, 'Al Día': ec.alDia[i] || 0, 'En Mora': ec.enMora[i] || 0, 'Pago Parcial': ec.pagoParcial[i] || 0 };
+            });
+            if (!filas.length) { toast('Sin datos de estados para exportar.', 'err'); return; }
+            var ws = XLSX.utils.json_to_sheet(filas);
+            ws['!cols'] = [{wch:24},{wch:12},{wch:12},{wch:14}];
+            XLSX.utils.book_append_sheet(wb, ws, 'Estados por Cohorte');
+        } else if (tipo === 'mora') {
+            var em = reportesData.charts.evolucionMora;
+            var filas = em.labels.map(function(lbl, i) {
+                return { 'Mes': lbl, 'Estudiantes en Mora': em.estudiantes[i] || 0, 'Intereses Generados ($k)': em.intereses[i] || 0 };
+            });
+            if (!filas.length) { toast('Sin datos de mora para exportar.', 'err'); return; }
+            var ws = XLSX.utils.json_to_sheet(filas);
+            ws['!cols'] = [{wch:14},{wch:22},{wch:24}];
+            XLSX.utils.book_append_sheet(wb, ws, 'Evolución Mora');
+        } else if (tipo === 'estudiantes') {
+            var filtPrograma = document.getElementById('selPrograma').value;
+            var filtCohorte  = document.getElementById('selCohorte').value;
+            var filtAnio     = document.getElementById('selAnio').value;
+            var cobF = _cobrosExport.filter(function(c) {
+                if (filtPrograma && String(c.programa_id) !== String(filtPrograma)) return false;
+                if (filtCohorte  && String(c.cohorte_id)  !== String(filtCohorte))  return false;
+                if (filtAnio && c.fecha_vencimiento && !c.fecha_vencimiento.startsWith(filtAnio)) return false;
+                return true;
+            });
+            if (!cobF.length) { toast('Sin datos de estudiantes para exportar.', 'err'); return; }
+            var filas = cobF.map(function(c) {
+                return {
+                    'DNI':              c.dni || '',
+                    'Estado':           c.estado || '',
+                    'Monto ($)':        Number(c.monto_final || 0),
+                    'Saldo Pendiente':  Number(c.saldo_pendiente || 0),
+                    'Vencimiento':      c.fecha_vencimiento || ''
+                };
+            });
+            var ws = XLSX.utils.json_to_sheet(filas);
+            ws['!cols'] = [{wch:14},{wch:16},{wch:14},{wch:16},{wch:14}];
+            XLSX.utils.book_append_sheet(wb, ws, 'Estudiantes');
         }
-        toast(`Vista previa local: exportación "${tipo}" lista para conectar con Apps Script.`, 'ok');
-    } catch (e) {
-        toast(`No se pudo exportar el reporte "${tipo}"`, 'err');
+
+        XLSX.writeFile(wb, 'reporte_' + tipo + '_' + fecha + '.xlsx');
+        toast('Excel descargado correctamente.', 'ok');
+    } catch(e) {
+        console.error(e);
+        toast('No se pudo generar el Excel.', 'err');
     }
 }
 
