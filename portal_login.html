@@ -6,95 +6,189 @@
     <title>Iniciar Sesión — SiGPo FCE UNCUYO</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #5C1018; --accent: #C49A2A; --bg: #f8f6f1; --success: #2d7a4f; --danger: #c0392b; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+        body {
+            font-family: 'Inter','DM Sans',system-ui,sans-serif;
+            background:  #F5F6FA;
+            min-height:  100vh;
+            display:     flex;
+            align-items: center;
+            justify-content: center;
+            padding:     24px 16px;
+            font-size:   14px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Fondo decorativo sutil ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 20% 10%, rgba(92,16,24,.05) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 80% 90%, rgba(196,154,42,.04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Card ── */
         .login-container {
-            width: 100%; max-width: 460px; padding: 20px;
+            width:     100%;
+            max-width: 440px;
+            position:  relative;
+            z-index:   1;
         }
 
         .login-card {
-            background: white; border-radius: 20px; overflow: hidden;
-            box-shadow: 0 12px 48px rgba(0,0,0,0.1);
+            background:    #fff;
+            border-radius: 20px;
+            overflow:      hidden;
+            box-shadow:    0 2px 4px rgba(10,15,30,.04),
+                           0 8px 24px rgba(10,15,30,.07),
+                           0 24px 48px rgba(10,15,30,.05);
+            border:        1px solid #ECEEF6;
         }
 
-        /* ── HEADER ── */
+        /* ── Logo ── */
         .login-header {
-            background: #ffffff;
-            padding: 36px 32px 28px; text-align: center; color: var(--primary);
+            padding:    32px 36px 24px;
+            background: #fff;
+            text-align: center;
+            border-bottom: 1px solid #ECEEF6;
         }
         .login-brand-img {
-            width: 100%;
-            max-width: 460px;
-            height: auto;
+            width:   100%;
+            max-width: 320px;
+            height:  auto;
             display: block;
-            margin: 0 auto;
+            margin:  0 auto;
         }
 
-        /* ── FORM ── */
-        .login-body { padding: 32px; }
-        .field { margin-bottom: 20px; }
+        /* ── Formulario ── */
+        .login-body { padding: 32px 36px 24px; }
+
+        .field { margin-bottom: 18px; }
         .field label {
-            display: block; font-size: 13px; font-weight: 600;
-            color: var(--primary); margin-bottom: 6px;
+            display:        block;
+            font-size:      11.5px;
+            font-weight:    700;
+            color:          #4A5468;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            margin-bottom:  6px;
         }
         .field input {
-            width: 100%; padding: 12px 14px; border: 2px solid #e0e0e0;
-            border-radius: 10px; font-size: 15px; font-family: 'DM Sans', sans-serif;
-            transition: border-color 0.2s;
+            width:         100%;
+            padding:       11px 14px;
+            border:        1.5px solid #E2E5EF;
+            border-radius: 10px;
+            font-size:     15px;
+            font-family:   'Inter','DM Sans',sans-serif;
+            color:         #0A0F1E;
+            background:    #fff;
+            transition:    border-color .14s, box-shadow .14s;
         }
-        .field input:focus { outline: none; border-color: var(--primary); }
-        .field input::placeholder { color: #bbb; }
+        .field input:hover:not(:focus) { border-color: #8B96A8; }
+        .field input:focus {
+            outline:      none;
+            border-color: #5C1018;
+            box-shadow:   0 0 0 3px rgba(92,16,24,.08);
+        }
+        .field input::placeholder { color: #B0BAC8; }
 
-        .field-password { position: relative; }
-        .field-password input { padding-right: 44px; }
+        /* Contraseña */
+        .field-password           { position: relative; }
+        .field-password input     { padding-right: 46px; }
         .toggle-pass {
-            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-            background: none; border: none; cursor: pointer; font-size: 18px;
-            color: #999; padding: 4px;
+            position:   absolute;
+            right:      13px;
+            top:        50%;
+            transform:  translateY(-50%);
+            background: none;
+            border:     none;
+            cursor:     pointer;
+            font-size:  17px;
+            color:      #8B96A8;
+            padding:    4px;
+            line-height: 1;
+            transition: color .12s;
         }
-        .toggle-pass:hover { color: var(--primary); }
+        .toggle-pass:hover { color: #5C1018; }
 
+        /* Error */
         .error-msg {
-            display: none; background: #fee2e2; color: #991b1b;
-            padding: 10px 14px; border-radius: 8px; font-size: 13px;
-            margin-bottom: 16px; border-left: 4px solid var(--danger);
+            display:       none;
+            background:    #fff1f1;
+            color:         #991b1b;
+            padding:       10px 14px;
+            border-radius: 8px;
+            font-size:     13px;
+            margin-bottom: 16px;
+            border:        1px solid #fecaca;
+            border-left:   4px solid #c0392b;
         }
         .error-msg.show { display: block; }
 
+        /* ── Botón de login ── */
         .btn-login {
-            width: 100%; padding: 14px; background: var(--primary);
-            color: white; border: none; border-radius: 10px;
-            font-size: 16px; font-weight: 700; cursor: pointer;
-            font-family: 'DM Sans', sans-serif; transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width:          100%;
+            padding:        13px 24px;
+            background:     #5C1018;
+            color:          #fff;
+            border:         none;
+            border-radius:  10px;
+            font-family:    'Inter','DM Sans',sans-serif;
+            font-size:      15px;
+            font-weight:    700;
+            letter-spacing: -.01em;
+            cursor:         pointer;
+            display:        flex;
+            align-items:    center;
+            justify-content: center;
+            gap:            8px;
+            transition:     background .14s, box-shadow .14s, transform .12s;
+            margin-top:     6px;
         }
-        .btn-login:hover { background: #8C1A28; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(92,16,24,0.3); }
-        .btn-login:active { transform: translateY(0); }
-        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-login:hover    { background: #6f1420; box-shadow: 0 4px 16px rgba(92,16,24,.28); transform: translateY(-1px); }
+        .btn-login:active   { background: #3d0a10; transform: none; box-shadow: none; }
+        .btn-login:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
         .btn-login .spinner {
-            display: none; width: 18px; height: 18px;
-            border: 2.5px solid rgba(255,255,255,0.3); border-top-color: white;
-            border-radius: 50%; animation: spin 0.7s linear infinite;
+            display:       none;
+            width:         18px;
+            height:        18px;
+            border:        2.5px solid rgba(255,255,255,.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation:     spin .7s linear infinite;
         }
-        .btn-login.loading .spinner { display: inline-block; }
+        .btn-login.loading .spinner  { display: inline-block; }
         .btn-login.loading .btn-text { display: none; }
+
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── FOOTER ── */
+        /* ── Footer ── */
         .login-footer {
-            padding: 16px 32px 24px; text-align: center;
-            font-size: 12px; color: #999;
+            padding:    16px 36px 28px;
+            text-align: center;
+            font-size:  12px;
+            color:      #8B96A8;
+            line-height: 1.8;
         }
-        .login-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
-        .login-footer a:hover { text-decoration: underline; }
+        .login-footer a {
+            color:           #C49A2A;
+            text-decoration: none;
+            font-weight:     600;
+            transition:      color .12s;
+        }
+        .login-footer a:hover { color: #b08820; text-decoration: underline; }
 
-        /* ── RESPONSIVE ── */
-        @media (max-width: 500px) {
-            .login-container { padding: 12px; }
-            .login-header { padding: 28px 24px 22px; }
-            .login-body { padding: 24px; }
+        /* ── Responsive ── */
+        @media (max-width: 480px) {
+            .login-header { padding: 24px 24px 20px; }
+            .login-body   { padding: 24px 24px 20px; }
+            .login-footer { padding: 12px 24px 24px; }
         }
     </style>
     <link rel="stylesheet" href="sigpo-theme.css">
