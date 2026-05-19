@@ -385,11 +385,13 @@
     async function cargarCobros() {
         try {
             var sb = await getSupabase();
-            var r = await sb.from('cobros')
+            var q = sb.from('cobros')
                 .select('cobro_id, dni, estudiantes!cobros_dni_fkey(nombre, apellido), programa_id, cohorte_id, concepto, nro_cuota, monto_final, saldo_pendiente, estado, comprobante_url, comprobante_fecha, fecha_vencimiento')
                 .eq('estado', 'PENDIENTE')
-                .not('comprobante_url', 'is', null)
-                .order('comprobante_fecha', { ascending: false });
+                .not('comprobante_url', 'is', null);
+            if (_cohorteId)  q = q.eq('cohorte_id', _cohorteId);
+            if (_programaId) q = q.eq('programa_id', _programaId);
+            var r = await q.order('comprobante_fecha', { ascending: false });
             _cobros = r.data || [];
             renderResumen();
             renderLista();
