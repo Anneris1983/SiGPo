@@ -8,6 +8,16 @@
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+        /* ── Header institucional ── */
+        .header { padding: 0; }
+        .header-content { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; gap: 16px; }
+        .header-left { flex: 1; min-width: 0; }
+        .header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .header-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.3); color: #fff !important; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: background .15s; font-family: inherit; }
+        .header-btn:hover { background: rgba(255,255,255,.22); }
+        .notif-bell { background: none; border: none; cursor: pointer; position: relative; padding: 8px; border-radius: 8px; transition: background .15s; }
+        .notif-bell:hover { background: rgba(255,255,255,.12); }
+
         /* ── Contenedor principal ── */
         .container  { max-width: 1400px; margin: 28px auto; padding: 0 32px; }
 
