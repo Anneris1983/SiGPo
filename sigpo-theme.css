@@ -1046,3 +1046,36 @@ hr,
 
   .btn-lg { font-size: var(--text-sm) !important; padding: 10px 20px !important; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   19. HOMOLOGACIÓN TIPOGRÁFICA GLOBAL
+   Una sola identidad de letra en los 59 HTML:
+   · Cuerpo / UI ............ Inter        (var(--font-sans))
+   · Títulos / display ...... Crimson Pro  (var(--font-serif))
+   · Cifras técnicas / logs . monospace    (var(--font-mono))
+   Pisa los font-family propios de cada página (DM Sans, Arial, etc.)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* 1 · Todo el texto → Inter */
+body,
+body * { font-family: var(--font-sans) !important; }
+
+/* 2 · Títulos y números de display → Crimson Pro serif */
+h1, h2, .h1, .h2,
+.page-title, .page-header h1,
+.section-title, .card-title,
+.modal-title, .modal-header h2, .modal-header h3, .modal-top h2,
+.stat-value, .hstat-val, .stat-val,
+.cuota-monto, .cuota-value.highlight,
+.rpill-value, .aprobar-info-value.highlight,
+.modal-dato-value.monto,
+.serif, .font-serif,
+[class*="-serif"] { font-family: var(--font-serif) !important; }
+
+/* 3 · Cifras técnicas, fórmulas y logs → monospace */
+code, pre, kbd, samp, tt,
+.mono, .font-mono,
+.log-header, .log-details, .log-line, .log-raw,
+.metrica-formula,
+[style*="monospace"],
+[style*="Courier"] { font-family: var(--font-mono) !important; }
