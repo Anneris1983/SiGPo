@@ -481,6 +481,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="supabase.js"></script>
 <script>
         const CATEGORIAS = [
@@ -945,34 +946,34 @@
         function exportar(tipo) {
             var datos = gastosFiltrados(tipo);
             if (!datos.length) { toast('No hay datos para exportar.', 'err'); return; }
-            var encabezado = ['Fecha', 'Categoría', 'Concepto', 'Programa', 'Cohorte/Edición', 'Monto', 'Proveedor', 'Nº Comprobante', 'Estado'];
+
+            var label = tipo === 'proyectados' ? 'Proyectado' : 'Ejecutado';
             var filas = datos.map(function(g) {
-                return [
-                    g.fechaEstimada || g.fechaEjecucion || '',
-                    g.categoria || '',
-                    g.concepto || '',
-                    g.programa || '',
-                    g.cohorte || '',
-                    g.monto || 0,
-                    g.proveedor || '',
-                    g.comprobante || '',
-                    g.estado || tipo === 'proyectados' ? 'Proyectado' : 'Ejecutado'
-                ].map(function(v) {
-                    var s = String(v).replace(/"/g, '""');
-                    return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s + '"' : s;
-                }).join(',');
+                return {
+                    'Fecha':             g.fechaEstimada || g.fechaEjecucion || '',
+                    'Categoría':         g.categoria || '',
+                    'Concepto':          g.concepto || '',
+                    'Programa':          g.programa || '',
+                    'Cohorte/Edición':   g.cohorte || '',
+                    'Monto ($)':         Number(g.monto || 0),
+                    'Proveedor':         g.proveedor || '',
+                    'Nº Comprobante':    g.comprobante || '',
+                    'Estado':            g.estado || label
+                };
             });
-            var csv = '﻿' + [encabezado.join(',')].concat(filas).join('\r\n');
-            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = 'gastos_' + tipo + '_' + new Date().toISOString().slice(0,10) + '.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            toast('CSV descargado correctamente.', 'ok');
+
+            var wb = XLSX.utils.book_new();
+            var ws = XLSX.utils.json_to_sheet(filas);
+
+            // Ancho de columnas
+            ws['!cols'] = [
+                {wch:12}, {wch:18}, {wch:30}, {wch:28}, {wch:18},
+                {wch:14}, {wch:22}, {wch:16}, {wch:12}
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Gastos ' + label + 's');
+            XLSX.writeFile(wb, 'gastos_' + tipo + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
+            toast('Excel descargado correctamente.', 'ok');
         }
 
         function limpiarModalGasto() {
