@@ -241,7 +241,7 @@
             </div>
             <div class="field">
                 <label for="selAnio">Año</label>
-                <select id="selAnio"></select>
+                <input type="number" id="selAnio" min="2000" max="2099" style="width:100px;" onkeydown="if(event.key==='Enter') recargarConFiltros()">
             </div>
         </div>
         <button class="btn-filter" type="button" onclick="recargarConFiltros()">Actualizar reportes</button>
@@ -520,7 +520,7 @@ async function cargarVista() {
 function renderFiltros() {
     fillSelect('selPrograma', reportesData.programas, 'programaId', 'nombre', reportesData.filtros.programaId, null);
     fillSelect('selCohorte', reportesData.cohortes, 'cohorteId', 'nombre', reportesData.filtros.cohorteId, 'Todas las cohortes');
-    fillSelect('selAnio', reportesData.anios.map(a => ({ value: a, label: a })), 'value', 'label', reportesData.filtros.anio, null);
+    document.getElementById('selAnio').value = reportesData.filtros.anio || new Date().getFullYear();
 }
 
 function renderHeader() {
