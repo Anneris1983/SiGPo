@@ -1722,7 +1722,7 @@
 
             return `
                 <tr data-estado="${estadoGeneral}">
-                    <td class="student-cell" style="cursor:pointer;" onclick="navegar('vista_facturacion_estudiante.html', {dni:${JSON.stringify(String(est.dni))}})">
+                    <td class="student-cell" style="cursor:pointer;" onclick="navegar('vista_facturacion_estudiante.html?dni=${escapeJs(String(est.dni))}')"  >
                         ${escapeHtml(est.nombreCompleto)}
                         <span class="student-sub">${escapeHtml(est.estadoAcademico || 'ACTIVO')}</span>
                     </td>
