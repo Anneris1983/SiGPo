@@ -1304,7 +1304,7 @@ async function procesarImport() {
     finally { spin(false); }
 }
 
-function irEstudiante(dni) { navegar('coordinador_4_estudiante.html', { dni:dni, cohorte_id:COHORTE_ID, programa_id:PROGRAMA_ID }); }
+function irEstudiante(dni) { navegar('vista_facturacion_estudiante.html', { dni:dni, cohorte_id:COHORTE_ID, programa_id:PROGRAMA_ID }); }
 function volverADashboard() { navegar('coordinador_1_dashboard.html'); }
 function navegar(destino, params={}) {
     const qs = new URLSearchParams(params).toString();

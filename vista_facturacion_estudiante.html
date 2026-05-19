@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturación del Estudiante - SiGPo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary:#5C1018; --primary-2:#8C1A28; --accent:#C49A2A; --bg:#f8f6f1; --success:#2d7a4f; --danger:#c0392b; --muted:#6b7280; --line:#e5e7eb; }
+        body { font-family:'DM Sans',sans-serif; background:var(--bg); font-size:14px; color:#2c2c2c; }
+
+        /* HEADER */
+        .header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:18px 28px; position:sticky; top:0; z-index:100; box-shadow:0 4px 20px rgba(0,0,0,0.12); }
+        .header-inner { max-width:900px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+        .header-left h1 { font-family:'Crimson Pro',serif; font-size:22px; margin-bottom:3px; }
+        .header-left p { font-size:13px; opacity:0.85; }
+        .btn-back { background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.3); color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; }
+        .btn-back:hover { background:rgba(255,255,255,0.28); }
+
+        /* CONTENIDO */
+        .container { max-width:900px; margin:28px auto; padding:0 24px 48px; }
+        .card { background:white; border-radius:14px; padding:28px 32px; box-shadow:0 2px 12px rgba(0,0,0,0.06); border:1px solid var(--line); margin-bottom:20px; }
+        .card-title { font-family:'Crimson Pro',serif; font-size:22px; color:var(--primary); margin-bottom:18px; padding-bottom:12px; border-bottom:2px solid var(--accent); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+        .card-title span { font-size:14px; font-family:'DM Sans',sans-serif; font-weight:400; color:var(--muted); }
+
+        /* DATOS ESTUDIANTE */
+        .student-banner { background:linear-gradient(135deg,#f8f6f1 0%,#ede9df 100%); border:1px solid #d9d4c9; border-radius:10px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; }
+        .student-avatar { width:48px; height:48px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-family:'Crimson Pro',serif; font-size:20px; font-weight:700; flex-shrink:0; }
+        .student-info h2 { font-size:17px; font-weight:700; color:var(--primary); }
+        .student-info p { font-size:13px; color:var(--muted); margin-top:2px; }
+
+        /* DATOS GRID */
+        .datos-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+        .dato-item { background:#f8f6f1; border-radius:8px; padding:12px 16px; }
+        .dato-item.full { grid-column:1/-1; }
+        .dato-label { font-size:11px; color:#9ca3af; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+        .dato-value { font-size:15px; font-weight:600; color:var(--primary); }
+        .dato-value.empty { color:#ccc; font-style:italic; font-weight:400; font-size:13px; }
+
+        /* FACTURAS */
+        .facturas-list { display:flex; flex-direction:column; gap:10px; }
+        .factura-item { background:#f8f6f1; border-radius:10px; padding:14px 18px; display:flex; align-items:center; gap:14px; border:1px solid #e8e4dc; }
+        .factura-icon { font-size:28px; flex-shrink:0; }
+        .factura-info { flex:1; min-width:0; }
+        .factura-desc { font-weight:700; color:var(--primary); font-size:14px; margin-bottom:2px; }
+        .factura-meta { font-size:12px; color:var(--muted); }
+        .factura-actions { display:flex; gap:8px; flex-shrink:0; }
+        .btn-ver { background:#e0e7ff; color:#4338ca; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; }
+        .btn-ver:hover { background:#c7d2fe; }
+        .btn-del { background:#fee2e2; color:#991b1b; border:none; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; }
+        .btn-del:hover { background:#fecaca; }
+
+        /* UPLOAD */
+        .upload-box { border:3px dashed #d0d0d0; border-radius:10px; padding:24px; text-align:center; background:#f8f6f1; cursor:pointer; transition:all 0.2s; }
+        .upload-box:hover, .upload-box.dragover { border-color:var(--accent); background:#fff9e6; }
+        .upload-box-icon { font-size:32px; margin-bottom:8px; }
+        .upload-box-text { font-size:13px; color:#666; }
+        .upload-box-text strong { color:var(--primary); }
+        .upload-form { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+        .upload-field label { display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:5px; }
+        .upload-field input { width:100%; padding:9px 12px; border:2px solid #e5e7eb; border-radius:8px; font-size:13px; font-family:inherit; }
+        .upload-field input:focus { outline:none; border-color:var(--accent); }
+        .file-selected { display:none; background:#d1fae5; border:1px solid #6ee7b7; border-radius:8px; padding:10px 14px; align-items:center; gap:10px; margin-top:10px; font-size:13px; }
+        .file-selected.show { display:flex; }
+        .file-selected button { background:none; border:none; color:#aaa; cursor:pointer; font-size:18px; line-height:1; flex-shrink:0; }
+
+        /* BOTONES */
+        .btn { padding:10px 20px; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:all 0.2s; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-primary:hover { background:#8C1A28; }
+        .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+        .btn-outline { background:white; color:#374151; border:2px solid #d1d5db; }
+        .btn-outline:hover { border-color:var(--primary); color:var(--primary); }
+
+        /* EMPTY */
+        .empty-state { text-align:center; padding:32px; color:#9ca3af; border:2px dashed #e7dfd2; border-radius:10px; font-size:13px; }
+        .empty-icon { font-size:36px; margin-bottom:8px; }
+
+        /* SPINNER */
+        #spinner { display:none; position:fixed; inset:0; background:rgba(255,255,255,0.75); z-index:9000; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
+        #spinner.show { display:flex; }
+        .spin-circle { width:38px; height:38px; border:4px solid #e0e0e0; border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* ROLE BADGE */
+        .role-banner { display:none; background:#fff9e6; border:1px solid #fbbf24; border-radius:8px; padding:10px 14px; font-size:13px; color:#92400e; margin-bottom:16px; }
+        .role-banner.show { display:flex; align-items:center; gap:8px; }
+    </style>
+    <link rel="stylesheet" href="sigpo-theme.css">
+</head>
+<body>
+<div id="spinner"><div class="spin-circle"></div><span style="color:#5C1018;font-weight:600;font-size:14px;">Cargando...</span></div>
+
+<div class="header">
+    <div class="header-inner">
+        <div class="header-left">
+            <h1>📄 Datos de Facturación</h1>
+            <p id="hdr-sub">Cargando…</p>
+        </div>
+        <button class="btn-back" onclick="history.back()">← Volver</button>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- Banner de rol (solo vista) -->
+    <div class="role-banner" id="roleBanner">
+        👁️ <span id="roleBannerText">Estás viendo los datos de facturación del estudiante.</span>
+    </div>
+
+    <!-- Datos del estudiante -->
+    <div class="card">
+        <div class="card-title">Estudiante</div>
+
+        <div class="student-banner" id="studentBanner">
+            <div class="student-avatar" id="studentAvatar">?</div>
+            <div class="student-info">
+                <h2 id="studentNombre">Cargando…</h2>
+                <p id="studentMeta">—</p>
+            </div>
+        </div>
+
+        <div class="datos-grid" id="datosGrid">
+            <div class="dato-item">
+                <div class="dato-label">Razón Social / Nombre</div>
+                <div class="dato-value" id="v-razon">—</div>
+            </div>
+            <div class="dato-item">
+                <div class="dato-label">CUIT</div>
+                <div class="dato-value" id="v-cuit">—</div>
+            </div>
+            <div class="dato-item">
+                <div class="dato-label">Condición IVA</div>
+                <div class="dato-value" id="v-iva">—</div>
+            </div>
+            <div class="dato-item">
+                <div class="dato-label">Código Postal</div>
+                <div class="dato-value" id="v-cp">—</div>
+            </div>
+            <div class="dato-item">
+                <div class="dato-label">Provincia</div>
+                <div class="dato-value" id="v-provincia">—</div>
+            </div>
+            <div class="dato-item">
+                <div class="dato-label">Teléfono</div>
+                <div class="dato-value" id="v-telefono">—</div>
+            </div>
+            <div class="dato-item full">
+                <div class="dato-label">Dirección Fiscal</div>
+                <div class="dato-value" id="v-direccion">—</div>
+            </div>
+            <div class="dato-item full">
+                <div class="dato-label">Email para comprobantes</div>
+                <div class="dato-value" id="v-email">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Facturas cargadas por Cooperadora -->
+    <div class="card">
+        <div class="card-title">
+            🧾 Facturas / Comprobantes
+            <span id="factCount"></span>
+        </div>
+
+        <!-- Solo cooperadora puede subir -->
+        <div id="uploadSection" style="display:none;">
+            <div class="role-banner show" style="margin-bottom:16px;">
+                💡 Como Cooperadora podés cargar facturas para este estudiante. El estudiante podrá verlas en su portal.
+            </div>
+            <div class="upload-form">
+                <div class="upload-field">
+                    <label>Descripción <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="upDesc" placeholder="Ej: Factura cuota Enero 2026">
+                </div>
+                <div class="upload-field">
+                    <label>Período</label>
+                    <input type="text" id="upPeriodo" placeholder="Ej: Enero 2026">
+                </div>
+            </div>
+            <div class="upload-box" id="uploadBox" onclick="document.getElementById('fileInput').click()" ondragover="onDrag(event)" ondragleave="offDrag(event)" ondrop="onDrop(event)">
+                <div class="upload-box-icon">📄</div>
+                <div class="upload-box-text">Arrastrá o <strong>hacé clic</strong> para seleccionar el archivo<br><span style="font-size:11px;color:#aaa;margin-top:4px;display:block;">PDF, imagen o cualquier formato</span></div>
+            </div>
+            <input type="file" id="fileInput" style="display:none;" onchange="onFileSelect(this)">
+            <div class="file-selected" id="fileSelected">
+                <span style="font-size:20px;">📎</span>
+                <span id="fileName" style="flex:1;font-weight:600;color:#065f46;font-size:13px;"></span>
+                <button onclick="quitarArchivo()">×</button>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:14px;gap:10px;">
+                <button class="btn btn-primary" id="btnSubir" onclick="subirFactura()" disabled>📤 Subir Factura</button>
+            </div>
+            <hr style="border:none;border-top:2px solid #f0ede6;margin:20px 0;">
+        </div>
+
+        <!-- Lista de facturas -->
+        <div class="facturas-list" id="facturasList">
+            <div class="empty-state"><div class="empty-icon">📂</div>No hay facturas cargadas todavía.</div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+var QS    = new URLSearchParams(location.search);
+var DNI   = QS.get('dni') || '';
+var VOLVER = QS.get('from') || '';
+var ROL   = '';
+var _est  = null;
+var _file = null;
+var _facturas = [];
+
+document.addEventListener('DOMContentLoaded', async function() {
+    var sesion = getSesion();
+    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    ROL = sesion.rol || '';
+    if (!DNI) { alert('DNI no especificado.'); history.back(); return; }
+    spin(true);
+    try {
+        await Promise.all([cargarEstudiante(), cargarFacturas()]);
+        configurarRol();
+    } finally {
+        spin(false);
+    }
+});
+
+async function cargarEstudiante() {
+    var sb = await getSupabase();
+    var r = await sb.from('estudiantes')
+        .select('id,dni,nombre,apellido,email,telefono,razon_social,cuit,condicion_iva,direccion_fiscal,provincia,codigo_postal,email_facturacion')
+        .eq('dni', DNI).single();
+    if (r.error || !r.data) return;
+    _est = r.data;
+    var nombre = (_est.apellido || '') + ', ' + (_est.nombre || '');
+    document.getElementById('hdr-sub').textContent = nombre.trim() + ' · DNI ' + DNI;
+    document.getElementById('studentNombre').textContent = nombre.trim();
+    document.getElementById('studentMeta').textContent = 'DNI ' + DNI + (_est.email ? ' · ' + _est.email : '');
+    document.getElementById('studentAvatar').textContent = (_est.apellido || _est.nombre || '?')[0].toUpperCase();
+    set('v-razon',    _est.razon_social || ((_est.apellido||'') + ' ' + (_est.nombre||'')).trim());
+    set('v-cuit',     _est.cuit);
+    set('v-iva',      _est.condicion_iva);
+    set('v-cp',       _est.codigo_postal);
+    set('v-provincia',_est.provincia);
+    set('v-telefono', _est.telefono);
+    set('v-direccion',_est.direccion_fiscal);
+    set('v-email',    _est.email_facturacion || _est.email);
+}
+
+function set(id, val) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (val) { el.textContent = val; el.className = 'dato-value'; }
+    else      { el.textContent = 'Sin datos'; el.className = 'dato-value empty'; }
+}
+
+async function cargarFacturas() {
+    var sb = await getSupabase();
+    var r = await sb.from('facturas').select('*').eq('estudiante_dni', DNI).order('created_at', { ascending: false });
+    _facturas = r.data || [];
+    renderFacturas();
+}
+
+function renderFacturas() {
+    var lista = document.getElementById('facturasList');
+    document.getElementById('factCount').textContent = _facturas.length ? _facturas.length + ' archivo' + (_facturas.length > 1 ? 's' : '') : '';
+    if (!_facturas.length) {
+        lista.innerHTML = '<div class="empty-state"><div class="empty-icon">📂</div>No hay facturas cargadas todavía.</div>';
+        return;
+    }
+    lista.innerHTML = _facturas.map(function(f) {
+        var fecha = f.created_at ? new Date(f.created_at).toLocaleDateString('es-AR') : '';
+        var delBtn = (ROL === 'COOPERADORA' || ROL === 'SECRETARIA' || ROL === 'ADMINISTRADOR')
+            ? `<button class="btn-del" onclick="eliminarFactura('${escHtml(f.id)}')" title="Eliminar">🗑</button>` : '';
+        return `<div class="factura-item">
+            <div class="factura-icon">🧾</div>
+            <div class="factura-info">
+                <div class="factura-desc">${escHtml(f.descripcion || 'Factura')}</div>
+                <div class="factura-meta">${f.periodo ? 'Período: ' + escHtml(f.periodo) + ' · ' : ''}${fecha}</div>
+            </div>
+            <div class="factura-actions">
+                <button class="btn-ver" onclick="verFactura('${escHtml(f.archivo_url || '')}')">📎 Ver</button>
+                ${delBtn}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function configurarRol() {
+    var banner = document.getElementById('roleBanner');
+    if (ROL === 'COOPERADORA') {
+        document.getElementById('uploadSection').style.display = 'block';
+        banner.className = 'role-banner';
+    } else if (ROL === 'COORDINADOR') {
+        document.getElementById('roleBannerText').textContent = 'Vista de solo lectura. Solo Cooperadora puede cargar facturas.';
+        banner.className = 'role-banner show';
+    } else if (ROL === 'SECRETARIA' || ROL === 'ADMINISTRADOR') {
+        document.getElementById('uploadSection').style.display = 'block';
+        banner.className = 'role-banner';
+    }
+}
+
+function onFileSelect(input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    _file = file;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSelected').classList.add('show');
+    document.getElementById('btnSubir').disabled = false;
+}
+function onDrag(e) { e.preventDefault(); document.getElementById('uploadBox').classList.add('dragover'); }
+function offDrag(e) { e.preventDefault(); document.getElementById('uploadBox').classList.remove('dragover'); }
+function onDrop(e) {
+    e.preventDefault(); document.getElementById('uploadBox').classList.remove('dragover');
+    var file = e.dataTransfer.files && e.dataTransfer.files[0]; if (!file) return;
+    _file = file;
+    var dt = new DataTransfer(); dt.items.add(file);
+    document.getElementById('fileInput').files = dt.files;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSelected').classList.add('show');
+    document.getElementById('btnSubir').disabled = false;
+}
+function quitarArchivo() {
+    _file = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileSelected').classList.remove('show');
+    document.getElementById('fileName').textContent = '';
+    document.getElementById('btnSubir').disabled = true;
+}
+
+async function subirFactura() {
+    var desc = document.getElementById('upDesc').value.trim();
+    var periodo = document.getElementById('upPeriodo').value.trim();
+    if (!desc) { alert('Ingresá una descripción para la factura.'); document.getElementById('upDesc').focus(); return; }
+    if (!_file) { alert('Seleccioná un archivo.'); return; }
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var sesion = getSesion();
+        var safeName = _file.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_');
+        var filePath = 'facturas/' + DNI + '/' + Date.now() + '_' + safeName;
+        var { error: upErr } = await sb.storage.from('comprobantes').upload(filePath, _file);
+        if (upErr) throw new Error('Error al subir archivo: ' + upErr.message);
+        var { data: urlData } = sb.storage.from('comprobantes').getPublicUrl(filePath);
+        var { error: insErr } = await sb.from('facturas').insert({
+            estudiante_dni: parseInt(DNI),
+            descripcion: desc,
+            periodo: periodo || null,
+            archivo_url: urlData.publicUrl,
+            subido_por_dni: sesion ? sesion.dni : null
+        });
+        if (insErr) throw new Error('Error al guardar registro: ' + insErr.message);
+        quitarArchivo();
+        document.getElementById('upDesc').value = '';
+        document.getElementById('upPeriodo').value = '';
+        await cargarFacturas();
+        toast('✅ Factura cargada correctamente');
+    } catch(e) {
+        alert('Error: ' + e.message);
+    } finally {
+        spin(false);
+    }
+}
+
+async function verFactura(url) {
+    if (!url) return;
+    try {
+        var sb = await getSupabase();
+        var match = String(url).match(/\/object\/(?:public|sign)\/comprobantes\/(.+)/);
+        if (match) {
+            var r = await sb.storage.from('comprobantes').createSignedUrl(match[1], 3600);
+            if (r.data && r.data.signedUrl) { window.open(r.data.signedUrl, '_blank'); return; }
+        }
+        window.open(url, '_blank');
+    } catch(e) { window.open(url, '_blank'); }
+}
+
+async function eliminarFactura(id) {
+    if (!confirm('¿Eliminar esta factura?')) return;
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        await sb.from('facturas').delete().eq('id', id);
+        _facturas = _facturas.filter(function(f) { return f.id !== id; });
+        renderFacturas();
+        toast('Factura eliminada');
+    } finally { spin(false); }
+}
+
+function spin(on) { document.getElementById('spinner').classList.toggle('show', !!on); }
+function escHtml(v) { return String(v==null?'':v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+function toast(msg, type) {
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:' + (type==='err'?'#c0392b':'#2d7a4f') + ';color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:9999;max-width:340px;';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function() { t.remove(); }, 3500);
+}
+</script>
+</body>
+</html>
