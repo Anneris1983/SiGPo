@@ -313,10 +313,10 @@ function cargarNotificaciones() {
    FORMATEO DE MONTOS
    ══════════════════════════════════════════════ */
 function fMillones(valor) {
-    if (valor === null || valor === undefined) return '$0';
+    if (valor === null || valor === undefined) return '$0,00';
     var num = parseFloat(valor);
-    if (isNaN(num)) return '$0';
-    return (num < 0 ? '-$' : '$') + Math.round(Math.abs(num)).toLocaleString('es-AR');
+    if (isNaN(num)) return '$0,00';
+    return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
 /* ══════════════════════════════════════════════
