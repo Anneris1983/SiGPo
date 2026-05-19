@@ -234,6 +234,12 @@
         .plan-radio-opcion input[type=radio] { margin-top:3px; accent-color:var(--primary); width:15px; height:15px; flex-shrink:0; }
         .plan-radio-opcion.seleccionado { background:rgba(30,58,95,0.06); border-radius:8px; padding:8px; margin:-8px; }
 
+        /* ── Botones comprobante/recibo en celda ── */
+        .cell-links { display:flex; gap:3px; margin-top:4px; justify-content:center; flex-wrap:wrap; }
+        .clink { border:none; border-radius:3px; padding:2px 5px; font-size:10px; font-weight:600; cursor:pointer; font-family:inherit; line-height:1.4; text-decoration:none; display:inline-block; }
+        .clink-comp   { background:#e0e7ff; color:#4338ca; }
+        .clink-recibo { background:#fef3c7; color:#92400e; }
+
         /* ── BAJA / ALTA COHORTE ── */
         tr.fila-pasiva-cohorte .cell-name { color:#999; text-decoration:line-through; }
         tr.fila-pasiva-cohorte td { opacity:0.6; }
@@ -264,7 +270,10 @@
         <div class="header-left">
             <button onclick="volverADashboard()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 13px;border-radius:8px;font-size:12px;cursor:pointer;margin-bottom:10px;display:inline-flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;">← Volver</button>
             <h1 id="hdr-programa">—</h1>
-            <p id="hdr-sub">—</p>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;">
+                <span id="hdr-cohorte" style="background:rgba(255,255,255,0.18);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:0.03em;"></span>
+                <p id="hdr-sub" style="font-size:13px;opacity:0.85;"></p>
+            </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;flex-shrink:0;">
             <div style="display:flex;align-items:center;gap:10px;">
@@ -606,7 +615,7 @@ async function cargar() {
         var sb = await getSupabase();
         var [rCoh, rCob, rInsc, rEst, rEgr, rProg, rCfg] = await Promise.all([
             sb.from('cohortes').select('*, programas(nombre,gas_url,email_remitente)').eq('cohorte_id', COHORTE_ID).single(),
-            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
+            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
             sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico').eq('cohorte_id', COHORTE_ID),
             sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
             sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', COHORTE_ID),
@@ -644,7 +653,7 @@ async function cargar() {
                 dniMap[dk] = { dni:c.dni, apellido:est.apellido||dk, nombre:est.nombre||'', email:est.email||'', telefono:'', descuento_porcentaje:insc.descuento_porcentaje||0, estado_academico:insc.estado_academico||'ACTIVO', cobros:[] };
             }
             var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
-            dniMap[dk].cobros.push({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final != null ? Number(c.monto_final) : null, monto_abonado:abonado, saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'A_DEFINIR':(c.estado||'NO_ABONADA') });
+            dniMap[dk].cobros.push({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final != null ? Number(c.monto_final) : null, monto_abonado:abonado, saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'A_DEFINIR':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null });
         });
 
         // Agregar estudiantes inscriptos que aún no tienen cobros
@@ -769,7 +778,9 @@ function normalizarCobro(c) {
         monto_final: montoFinal,
         monto_abonado: montoAbonado,
         saldo_pendiente: saldo,
-        estado: estado
+        estado: estado,
+        comprobante_url: c.comprobante_url || c.comprobanteUrl || null,
+        recibo_url: c.recibo_url || c.reciboUrl || null
     };
 }
 
@@ -788,8 +799,8 @@ function derivarColumnas(estudiantes) {
 function renderHeader() {
     const { programa, cohorte, estudiantes } = V.data;
     document.getElementById('hdr-programa').textContent = programa.nombre;
-    const partes = [cohorte.nombre];
-    partes.push(`${estudiantes.length} estudiante${estudiantes.length !== 1 ? 's' : ''}`);
+    document.getElementById('hdr-cohorte').textContent = cohorte.nombre;
+    const partes = [`${estudiantes.length} estudiante${estudiantes.length !== 1 ? 's' : ''}`];
     if (cohorte.fecha_inicio || cohorte.fecha_fin) partes.push(`${cohorte.fecha_inicio || '—'} → ${cohorte.fecha_fin || '—'}`);
     document.getElementById('hdr-sub').textContent = partes.join(' • ');
 }
@@ -832,7 +843,10 @@ function renderTabla() {
             else if (c.estado === 'A_DEFINIR') txt = 'a definir';
             else txt = fMonto(c.monto_final);
             const title = `${c.concepto} · ${c.periodo || ''} | Estado: ${c.estado} | Abonado: ${fMonto(c.monto_abonado)} | Saldo: ${fMonto(c.saldo_pendiente)}${c.fecha_vencimiento ? ' | Vence: '+c.fecha_vencimiento : ''}`;
-            return `<td data-est="${c.estado}" title="${escapeHtml(title)}">${txt}</td>`;
+            const btnComp   = c.comprobante_url ? `<button class="clink clink-comp"   onclick="event.stopPropagation();verArchivo('${escapeJs(c.comprobante_url)}')" title="Ver comprobante del estudiante">📎 Comp.</button>` : '';
+            const btnRecibo = c.recibo_url      ? `<button class="clink clink-recibo" onclick="event.stopPropagation();verArchivo('${escapeJs(c.recibo_url)}')"      title="Ver recibo de Cooperadora">🧾 Recibo</button>` : '';
+            const links = (btnComp || btnRecibo) ? `<div class="cell-links">${btnComp}${btnRecibo}</div>` : '';
+            return `<td data-est="${c.estado}" title="${escapeHtml(title)}">${txt}${links}</td>`;
         }).join('');
 
         const tr = document.createElement('tr');
@@ -1364,6 +1378,18 @@ function fMillones(n) {
     if (n>=1000000) return '$'+(n/1000000).toFixed(1)+'M';
     if (n>=1000)    return '$'+(n/1000).toFixed(0)+'k';
     return fMonto(n);
+}
+async function verArchivo(url) {
+    if (!url) return;
+    try {
+        var sb = await getSupabase();
+        var match = String(url).match(/\/object\/(?:public|sign)\/comprobantes\/(.+)/);
+        if (match) {
+            var result = await sb.storage.from('comprobantes').createSignedUrl(match[1], 3600);
+            if (result.data && result.data.signedUrl) { window.open(result.data.signedUrl, '_blank'); return; }
+        }
+        window.open(url, '_blank');
+    } catch(e) { window.open(url, '_blank'); }
 }
 function escapeHtml(valor) {
     return String(valor == null ? '' : valor).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'", '&#39;');
