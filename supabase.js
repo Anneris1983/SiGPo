@@ -520,7 +520,10 @@ async function subirComprobante(cobroId, file) {
     const sesion = getSesion();
     if (!sesion) return { ok: false };
 
-    const fileName = sesion.dni + '/' + Date.now() + '_' + file.name;
+    const safeName = file.name
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-zA-Z0-9._-]/g, '_');
+    const fileName = sesion.dni + '/' + Date.now() + '_' + safeName;
     const { data: uploadData, error: uploadErr } = await sb.storage
         .from('comprobantes')
         .upload(fileName, file);
