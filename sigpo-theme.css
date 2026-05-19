@@ -898,17 +898,11 @@ hr,
 @keyframes fadeIn  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes pulse   { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
 
-.loading-spinner,
-.spinner {
-  display:       inline-block !important;
-  width:         18px !important;
-  height:        18px !important;
-  border:        2.5px solid var(--clr-border) !important;
-  border-top-color: var(--clr-brand) !important;
-  border-radius: 50% !important;
-  animation:     spin .7s linear infinite !important;
-  flex-shrink:   0 !important;
-}
+/* NOTA: el spinner NO se estiliza globalmente. Cada página define su
+   propio .spinner / .loading-spinner y controla cuándo mostrarlo
+   (display:none por defecto, visible solo en estado .loading/.active).
+   Un override global con !important lo dejaba siempre visible y
+   simulaba una "carga eterna" (ej. botón Iniciar Sesión del login). */
 
 .skeleton {
   background:      linear-gradient(90deg, var(--clr-surface-alt) 25%, var(--clr-border-light) 50%, var(--clr-surface-alt) 75%) !important;
