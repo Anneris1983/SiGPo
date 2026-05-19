@@ -811,7 +811,7 @@
         <!-- TABS -->
         <div class="tabs">
             <button class="tab active">
-                Nuevos Comprobantes
+                Comprobantes
                 <span class="badge" id="tab-badge-pendientes">&mdash;</span>
             </button>
 
@@ -819,7 +819,7 @@
 
         <!-- SECCI&#211;N COMPROBANTES -->
         <div>
-        <h2 class="section-title">&#x1F195; Comprobantes Nuevos - Requieren Aprobaci&#243;n</h2>
+        <h2 class="section-title">Comprobantes que requieren aprobaci&#243;n</h2>
 
         <div id="comprobantes-lista">
         <!-- Contenido din&#225;mico -->
@@ -1255,7 +1255,18 @@
     }
 
     /* == RENDER COMPROBANTES == */
+    var _todosComprobantes = [];
+    var _paginaActual = 1;
+    var _POR_PAGINA = 10;
+
     function renderComprobantes(cobros) {
+        _todosComprobantes = cobros || [];
+        _paginaActual = 1;
+        _renderPagina();
+    }
+
+    function _renderPagina() {
+        var cobros = _todosComprobantes;
         var lista = document.getElementById('comprobantes-lista');
         if (!cobros || cobros.length === 0) {
             lista.innerHTML = '<div class="empty-state"><div class="icon">&#x2705;</div><h3>No hay comprobantes pendientes de revision</h3></div>';
@@ -1267,7 +1278,12 @@
         document.getElementById('stat-pendientes').textContent = cobros.length;
         document.getElementById('tab-badge-pendientes').textContent = cobros.length;
 
-        lista.innerHTML = cobros.map(function(c) {
+        var totalPaginas = Math.ceil(cobros.length / _POR_PAGINA);
+        var inicio = (_paginaActual - 1) * _POR_PAGINA;
+        var fin = Math.min(inicio + _POR_PAGINA, cobros.length);
+        var pagina = cobros.slice(inicio, fin);
+
+        lista.innerHTML = pagina.map(function(c) {
             var estudiante = c.estudiantes || {};
             var nombre = ((estudiante.apellido || c.apellido || '') + ', ' + (estudiante.nombre || c.nombre || '')).trim().replace(/^,\s*|,\s*$/g, '');
             if (!nombre || nombre === ', ') nombre = c.dni || '—';
@@ -1313,6 +1329,25 @@
                 + '</div>'
                 + '</div>';
         }).join('');
+
+        // Paginación
+        if (totalPaginas > 1) {
+            lista.innerHTML += '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 4px 4px;font-size:13px;color:#666;">'
+                + '<span>' + (inicio+1) + '–' + fin + ' de ' + cobros.length + '</span>'
+                + '<div style="display:flex;align-items:center;gap:8px;">'
+                + '<button onclick="_cambiarPagina(' + (_paginaActual-1) + ')" ' + (_paginaActual===1?'disabled':'') + ' style="padding:5px 12px;border:1px solid #ddd;border-radius:6px;background:white;cursor:pointer;font-size:13px;' + (_paginaActual===1?'opacity:0.4;cursor:not-allowed;':'') + '">&#8249;</button>'
+                + '<span>Página ' + _paginaActual + ' de ' + totalPaginas + '</span>'
+                + '<button onclick="_cambiarPagina(' + (_paginaActual+1) + ')" ' + (_paginaActual===totalPaginas?'disabled':'') + ' style="padding:5px 12px;border:1px solid #ddd;border-radius:6px;background:white;cursor:pointer;font-size:13px;' + (_paginaActual===totalPaginas?'opacity:0.4;cursor:not-allowed;':'') + '">&#8250;</button>'
+                + '</div></div>';
+        }
+    }
+
+    function _cambiarPagina(pagina) {
+        var totalPaginas = Math.ceil(_todosComprobantes.length / _POR_PAGINA);
+        if (pagina < 1 || pagina > totalPaginas) return;
+        _paginaActual = pagina;
+        _renderPagina();
+        document.getElementById('comprobantes-lista').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     /* == INIT == */
