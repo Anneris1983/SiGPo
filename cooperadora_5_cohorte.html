@@ -1278,7 +1278,7 @@
                 <div id="pcuota-resumen" style="font-size:12px;color:#555;font-weight:600;"></div>
                 <div style="display:flex;gap:10px;">
                     <button class="btn-cancel-desc" onclick="cerrarCrearCuotaCoop()">Cancelar</button>
-                    <button class="btn-save-desc" id="pcuota-btn-guardar" onclick="guardarCuotasCoop()" style="background:#5C1018;">✔ Crear Plan de Cuotas</button>
+                    <button class="btn-save-desc" id="pcuota-btn-guardar" onclick="guardarCuotasCoop()" style="background:#5C1018;">✔ Crear cuotas</button>
                 </div>
             </div>
         </div>
@@ -2217,8 +2217,8 @@
                         var estado = !tieneMonto ? 'A_DEFINIR' : 'NO_ABONADA';
                         registros.push({
                             dni:                  String(est.dni),
-                            programa_id:          vistaData.programa.programaId,
-                            cohorte_id:           vistaData.cohorte.cohorteId,
+                            programa_id:          vistaData.programa.programaId || null,
+                            cohorte_id:           vistaData.cohorte.cohorteId || null,
                             concepto:             (f.nombre || '').trim(),
                             periodo:              (f.periodo || '').trim(),
                             fecha_vencimiento:    f.vencimiento || null,

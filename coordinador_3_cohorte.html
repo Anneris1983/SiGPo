@@ -374,7 +374,7 @@
     <div class="modal-box" style="max-width:640px;">
         <div class="modal-hdr" style="background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%);">
             <div>
-                <h2>➕ Crear Plan de Cuotas</h2>
+                <h2>➕ Crear cuotas</h2>
                 <p id="cuota-sub">Especialización en Costos y Gestión Empresarial · Cohorte 2025–2026</p>
             </div>
             <button class="modal-close" onclick="cerrar('modal-cuota')">×</button>
@@ -424,7 +424,7 @@
             <div id="plan-resumen" style="font-size:12px;color:#555;font-weight:600;"></div>
             <div style="display:flex;gap:10px;">
                 <button class="btn-cancel" onclick="cerrar('modal-cuota')">Cancelar</button>
-                <button class="btn-save" onclick="guardarCuotas()" style="background:var(--primary);">✔ Crear Plan de Cuotas</button>
+                <button class="btn-save" onclick="guardarCuotas()" style="background:var(--primary);">✔ Crear cuotas</button>
             </div>
         </div>
     </div>
@@ -1269,8 +1269,8 @@ async function guardarCuotas() {
                     : _descNormEstado(montoFinal, montoFinal, f.vencimiento || null, 'NO_ABONADA');
                 registros.push({
                     dni:                  String(dni),
-                    programa_id:          PROGRAMA_ID,
-                    cohorte_id:           COHORTE_ID,
+                    programa_id:          PROGRAMA_ID || null,
+                    cohorte_id:           COHORTE_ID || null,
                     concepto:             (f.nombre || '').trim(),
                     periodo:              (f.periodo || '').trim(),
                     fecha_vencimiento:    f.vencimiento || null,
@@ -1486,7 +1486,7 @@ async function procesarImport() {
     finally { spin(false); }
 }
 
-function irEstudiante(dni) { navegar('vista_facturacion_estudiante.html', { dni:dni, cohorte_id:COHORTE_ID, programa_id:PROGRAMA_ID }); }
+function irEstudiante(dni) { navegar('vista_facturacion_estudiante.html?dni=' + encodeURIComponent(String(dni)) + (COHORTE_ID ? '&cohorte_id=' + encodeURIComponent(COHORTE_ID) : '') + (PROGRAMA_ID ? '&programa_id=' + encodeURIComponent(PROGRAMA_ID) : '')); }
 function volverADashboard() { navegar('coordinador_1_dashboard.html'); }
 function navegar(destino, params={}) {
     const qs = new URLSearchParams(params).toString();
