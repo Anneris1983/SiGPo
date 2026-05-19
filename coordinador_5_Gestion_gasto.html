@@ -695,7 +695,6 @@
                         <td><span class="badge ${badgeClass}">${escapeHtml(g.estado)}</span></td>
                         <td>
                             <div class="actions-group">
-                                ${tipo === 'proyectados' ? `<button class="btn btn-primary btn-icon" onclick="ejecutarGasto('${escapeJs(g.id)}')" title="Ejecutar gasto">✓ Ejecutar</button>` : ''}
                                 ${tipo === 'proyectados' ? `<button class="btn btn-primary btn-icon" onclick="editarGasto('${escapeJs(g.id)}', '${tipo}')" title="Editar">✏️</button>` : ''}
                                 ${tipo === 'proyectados' ? `<button class="btn btn-danger btn-icon" onclick="eliminarGasto('${escapeJs(g.id)}', '${tipo}')" title="Eliminar">🗑️</button>` : ''}
                             </div>
