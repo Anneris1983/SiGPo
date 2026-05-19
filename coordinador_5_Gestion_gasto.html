@@ -292,6 +292,7 @@
                         </thead>
                         <tbody id="tbodyProyectados"></tbody>
                     </table>
+                    <div id="paginador-proyectados"></div>
                     <div id="emptyProyectados" class="empty-state" style="display:none;">
                         <strong>Sin resultados</strong>
                         No hay gastos proyectados que coincidan con la búsqueda o el filtro.
@@ -331,6 +332,7 @@
                         </thead>
                         <tbody id="tbodyEjecutados"></tbody>
                     </table>
+                    <div id="paginador-ejecutados"></div>
                     <div id="emptyEjecutados" class="empty-state" style="display:none;">
                         <strong>Sin resultados</strong>
                         No hay gastos ejecutados que coincidan con la búsqueda o el filtro.
@@ -512,7 +514,8 @@
             filtros: {
                 proyectados: { search: '', categoria: 'Todas las categorías' },
                 ejecutados: { search: '', categoria: 'Todas las categorías' }
-            }
+            },
+            paginas: { proyectados: 1, ejecutados: 1 }
         };
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -669,6 +672,30 @@
                 + lista.map(c => `<option value="${c.cohorte_id}">${escapeHtml(c.nombre)}</option>`).join('');
         }
 
+        const POR_PAGINA = 10;
+
+        function renderPaginadorGasto(tipo, total) {
+            var el = document.getElementById('paginador-' + tipo);
+            if (!el) return;
+            var pag = state.paginas[tipo];
+            var totalPags = Math.ceil(total / POR_PAGINA);
+            if (totalPags <= 1) { el.innerHTML = ''; return; }
+            var desde = (pag - 1) * POR_PAGINA + 1;
+            var hasta = Math.min(pag * POR_PAGINA, total);
+            el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid #e8e8e8;font-size:13px;color:#6B6254;">'
+                + '<span>' + desde + '–' + hasta + ' de ' + total + '</span>'
+                + '<div style="display:flex;align-items:center;gap:4px;">'
+                + '<button onclick="cambiarPagGasto(\'' + tipo + '\',' + (pag - 1) + ')" ' + (pag === 1 ? 'disabled' : '') + ' style="padding:5px 12px;border:1px solid #e0e0e0;border-radius:6px;background:white;cursor:pointer;font-size:14px;font-family:inherit;">‹</button>'
+                + '<span style="padding:0 12px;">Página ' + pag + ' de ' + totalPags + '</span>'
+                + '<button onclick="cambiarPagGasto(\'' + tipo + '\',' + (pag + 1) + ')" ' + (pag === totalPags ? 'disabled' : '') + ' style="padding:5px 12px;border:1px solid #e0e0e0;border-radius:6px;background:white;cursor:pointer;font-size:14px;font-family:inherit;">›</button>'
+                + '</div></div>';
+        }
+
+        function cambiarPagGasto(tipo, pag) {
+            state.paginas[tipo] = pag;
+            renderTabla(tipo);
+        }
+
         function renderTabla(tipo) {
             const tbody = document.getElementById(tipo === 'proyectados' ? 'tbodyProyectados' : 'tbodyEjecutados');
             const empty = document.getElementById(tipo === 'proyectados' ? 'emptyProyectados' : 'emptyEjecutados');
@@ -677,11 +704,17 @@
             if (!lista.length) {
                 tbody.innerHTML = '';
                 empty.style.display = 'block';
+                renderPaginadorGasto(tipo, 0);
                 return;
             }
 
+            var totalPags = Math.ceil(lista.length / POR_PAGINA);
+            state.paginas[tipo] = Math.min(state.paginas[tipo], totalPags);
+            var pag = state.paginas[tipo];
+            var slice = lista.slice((pag - 1) * POR_PAGINA, pag * POR_PAGINA);
+
             empty.style.display = 'none';
-            tbody.innerHTML = lista.map(g => {
+            tbody.innerHTML = slice.map(g => {
                 const badgeClass = tipo === 'ejecutados' ? 'badge-ejecutado' : 'badge-proyectado';
                 return `
                     <tr>
@@ -703,6 +736,7 @@
                     </tr>
                 `;
             }).join('');
+            renderPaginadorGasto(tipo, lista.length);
         }
 
         function gastosFiltrados(tipo) {
@@ -727,11 +761,13 @@
 
         function buscar(texto, tipo) {
             state.filtros[tipo].search = texto || '';
+            state.paginas[tipo] = 1;
             renderTabla(tipo);
         }
 
         function filtrarCategoria(categoria, tipo) {
             state.filtros[tipo].categoria = categoria;
+            state.paginas[tipo] = 1;
             renderTabla(tipo);
         }
 

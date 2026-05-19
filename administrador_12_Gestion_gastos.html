@@ -147,7 +147,7 @@
                 <button class="btn btn-warning" onclick="abrirImportar('proyectados')">📥 Importar</button>
                 <button class="btn btn-outline" onclick="exportarExcel('proyectados')">📊 Exportar</button>
             </div>
-            <div class="table-container"><table><thead><tr><th>Fecha Est.</th><th>Categoría</th><th>Concepto</th><th>Programa</th><th>Cohorte</th><th>Monto</th><th>Proveedor</th><th>Comprobante</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tbody-proyectados"></tbody></table></div>
+            <div class="table-container"><table><thead><tr><th>Fecha Est.</th><th>Categoría</th><th>Concepto</th><th>Programa</th><th>Cohorte</th><th>Monto</th><th>Proveedor</th><th>Comprobante</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tbody-proyectados"></tbody></table><div id="paginador-proyectados"></div></div>
         </div>
     </div>
 
@@ -162,7 +162,7 @@
                 <button class="btn btn-danger" onclick="abrirImportar('ejecutados')">📥 Importar</button>
                 <button class="btn btn-outline" onclick="exportarExcel('ejecutados')">📊 Exportar</button>
             </div>
-            <div class="table-container"><table><thead><tr><th>Fecha Pago</th><th>Categoría</th><th>Concepto</th><th>Programa</th><th>Cohorte</th><th>Monto Pagado</th><th>Proveedor</th><th>Comprobante</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tbody-ejecutados"></tbody></table></div>
+            <div class="table-container"><table><thead><tr><th>Fecha Pago</th><th>Categoría</th><th>Concepto</th><th>Programa</th><th>Cohorte</th><th>Monto Pagado</th><th>Proveedor</th><th>Comprobante</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tbody-ejecutados"></tbody></table><div id="paginador-ejecutados"></div></div>
         </div>
     </div>
 </div>
@@ -238,6 +238,8 @@
 <script>
 
 var G = { egresos:[], programas:[], cohortes:[], categorias:[], gastoPendEjec:null };
+var _pag = { proyectados: 1, ejecutados: 1 };
+var POR_PAG = 10;
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', async function() {
@@ -339,9 +341,30 @@ function badgeEstado(s) {
     return '<span class="badge '+v[0]+'">'+v[1]+'</span>';
 }
 
+function renderPaginadorAdmin12(tipo, total) {
+    var el = document.getElementById('paginador-'+tipo);
+    if (!el) return;
+    var pag = _pag[tipo];
+    var totalPags = Math.ceil(total / POR_PAG);
+    if (totalPags <= 1) { el.innerHTML = ''; return; }
+    var desde = (pag - 1) * POR_PAG + 1;
+    var hasta = Math.min(pag * POR_PAG, total);
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid #e8e8e8;font-size:13px;color:#6B6254;">'
+        + '<span>' + desde + '–' + hasta + ' de ' + total + '</span>'
+        + '<div style="display:flex;align-items:center;gap:4px;">'
+        + '<button onclick="cambiarPagAdmin12(\'' + tipo + '\',' + (pag - 1) + ')" ' + (pag === 1 ? 'disabled' : '') + ' style="padding:5px 12px;border:1px solid #e0e0e0;border-radius:6px;background:white;cursor:pointer;font-size:14px;">‹</button>'
+        + '<span style="padding:0 12px;">Página ' + pag + ' de ' + totalPags + '</span>'
+        + '<button onclick="cambiarPagAdmin12(\'' + tipo + '\',' + (pag + 1) + ')" ' + (pag === totalPags ? 'disabled' : '') + ' style="padding:5px 12px;border:1px solid #e0e0e0;border-radius:6px;background:white;cursor:pointer;font-size:14px;">›</button>'
+        + '</div></div>';
+}
+
+function cambiarPagAdmin12(tipo, pag) {
+    _pag[tipo] = pag;
+    renderTabla(tipo);
+}
+
 function renderTabla(tipo) {
     var tbody     = document.getElementById('tbody-'+tipo);
-    var tipoFilt  = tipo==='proyectados' ? 'PROYECTADO' : 'EJECUTADO';
     var sfx       = tipo==='proyectados' ? 'proy' : 'ejec';
     var texto     = (document.querySelector('#tab-'+tipo+' .search-box input')||{value:''}).value.toLowerCase();
     var cat       = document.getElementById('filtro-cat-'+sfx).value;
@@ -360,10 +383,16 @@ function renderTabla(tipo) {
 
     if (!rows.length) {
         tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:48px;color:#aaa;font-size:14px;">No hay registros para mostrar</td></tr>';
+        renderPaginadorAdmin12(tipo, 0);
         return;
     }
 
-    tbody.innerHTML = rows.map(function(e) {
+    var totalPags = Math.ceil(rows.length / POR_PAG);
+    _pag[tipo] = Math.min(_pag[tipo], totalPags);
+    var pag = _pag[tipo];
+    var slice = rows.slice((pag - 1) * POR_PAG, pag * POR_PAG);
+
+    tbody.innerHTML = slice.map(function(e) {
         var esEjec = tipo==='ejecutados';
         var fecha  = esEjec ? fFecha(e.fecha_pago||e.fecha_estimada) : fFecha(e.fecha_estimada);
         var monto  = esEjec ? fMonto(e.monto_pagado||e.monto_original) : fMonto(e.monto_original);
@@ -385,6 +414,7 @@ function renderTabla(tipo) {
             +'<td>'+acciones+'</td>'
             +'</tr>';
     }).join('');
+    renderPaginadorAdmin12(tipo, rows.length);
 }
 
 /* ── TABS ── */
@@ -395,7 +425,7 @@ function cambiarTab(tab) {
     });
 }
 
-function aplicarFiltros(tipo) { renderTabla(tipo); }
+function aplicarFiltros(tipo) { _pag[tipo] = 1; renderTabla(tipo); }
 
 /* ── MODAL NUEVO/EDITAR ── */
 function limpiarModal() {
