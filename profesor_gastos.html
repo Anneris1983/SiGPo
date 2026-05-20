@@ -339,8 +339,7 @@ function renderTabla(data) {
 document.addEventListener('DOMContentLoaded', async function() {
     var sesion = getSesion();
     if (!sesion || sesion.rol !== 'PROFESOR') { window.location.href = 'portal_login.html'; return; }
-    document.getElementById('nav-nombre').textContent = (sesion.nombre || 'Profesor/a') + ' · SiGPo';
-    document.getElementById('header-sub').textContent = 'Gastos de mis programas y cohortes asignadas';
+    document.getElementById('header-sub').textContent = (sesion.nombre || 'Profesor/a') + ' · Gastos de mis programas y cohortes asignadas';
 
     try {
         var sb = await getSupabase();
