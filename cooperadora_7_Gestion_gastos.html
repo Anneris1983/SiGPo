@@ -336,31 +336,34 @@
 
     <!-- MODAL: EJECUTAR GASTO -->
     <div class="modal" id="modalEjecutar">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">✓ Ejecutar Gasto Proyectado</h3>
-                <button class="modal-close" onclick="cerrarModal('modalEjecutar')">×</button>
+        <div class="modal-content" style="max-width:460px;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#2d7a4f,#246441);border-radius:12px 12px 0 0;">
+                <h3 class="modal-title" style="color:#fff;">✓ Ejecutar Gasto</h3>
+                <button class="modal-close" style="background:rgba(255,255,255,.2);color:#fff;border-radius:8px;width:30px;height:30px;font-size:18px;line-height:1;" onclick="cerrarModal('modalEjecutar')">×</button>
             </div>
             <div class="modal-body">
-                <p style="margin-bottom: 20px; color: #666;">Complete los datos para ejecutar este gasto:</p>
+                <div id="ejec-resumen" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:#166534;line-height:1.5;"></div>
                 <div class="form-group">
-                    <label class="form-label">Fecha de Ejecución</label>
-                    <input type="date" class="form-input" id="fechaEjecucion">
-                    <div class="form-hint">Fecha en que se realizó el pago</div>
+                    <label class="form-label">FECHA DE EJECUCIÓN *</label>
+                    <input type="date" class="form-input" id="ejec-fecha">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">N° de comprobante *</label>
-                    <input type="text" class="form-input" id="comprobanteEjecucion" placeholder="ej: FC-2026-0234">
-                    <div class="form-hint">Número de factura o comprobante de pago</div>
+                    <label class="form-label">N° DE COMPROBANTE *</label>
+                    <input type="text" class="form-input" id="ejec-comprobante" placeholder="ej: FC-2026-0234">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Observaciones</label>
-                    <textarea class="form-textarea" id="observaciones" placeholder="Detalles adicionales (opcional)"></textarea>
+                    <label class="form-label">MONTO PAGADO *</label>
+                    <input type="number" class="form-input" id="ejec-monto" placeholder="0" min="0" step="100">
+                    <div class="form-hint">Si es pago parcial, ingresá el monto abonado</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">OBSERVACIONES</label>
+                    <textarea class="form-textarea" id="ejec-obs" style="min-height:60px;"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn" style="background: #e0e0e0; color: #666;" onclick="cerrarModal('modalEjecutar')">Cancelar</button>
-                <button class="btn btn-success" onclick="confirmarEjecucion()">✓ Confirmar Ejecución</button>
+                <button class="btn" style="background:#e0e0e0;color:#666;" onclick="cerrarModal('modalEjecutar')">Cancelar</button>
+                <button class="btn btn-success" onclick="confirmarEjecucion()">✓ Confirmar</button>
             </div>
         </div>
     </div>
@@ -517,20 +520,29 @@ async function eliminarGasto(id) {
 
 function abrirEjecutar(id) {
     G.gastoAEjecutar = id;
-    document.getElementById('fechaEjecucion').value = new Date().toISOString().split('T')[0];
-    document.getElementById('comprobanteEjecucion').value = '';
-    document.getElementById('observaciones').value = '';
+    var e = G.egresos.find(function(x){ return x.egreso_id===id; });
+    document.getElementById('ejec-resumen').innerHTML = e
+        ? '<strong>'+esc(e.concepto||'')+'</strong><br>'
+          + esc(e.categoria||'') + ' · ' + esc(nomProg(e.programa_id)) + '<br>'
+          + 'Monto original: <strong>'+fMonto(e.monto||e.monto_original)+'</strong>'
+        : '';
+    document.getElementById('ejec-fecha').value       = new Date().toISOString().split('T')[0];
+    document.getElementById('ejec-comprobante').value = '';
+    document.getElementById('ejec-monto').value       = e ? (e.monto||e.monto_original||'') : '';
+    document.getElementById('ejec-obs').value         = '';
     document.getElementById('modalEjecutar').classList.add('active');
 }
 
 async function confirmarEjecucion() {
-    var fecha = document.getElementById('fechaEjecucion').value;
-    var comp = document.getElementById('comprobanteEjecucion').value.trim();
-    var obs = document.getElementById('observaciones').value.trim();
-    if (!fecha) { alert('Ingresá la fecha de ejecución'); return; }
-    if (!comp) { alert('Ingresá el número de comprobante'); return; }
+    var fecha  = document.getElementById('ejec-fecha').value;
+    var comp   = document.getElementById('ejec-comprobante').value.trim();
+    var monto  = parseFloat(document.getElementById('ejec-monto').value);
+    var obs    = document.getElementById('ejec-obs').value.trim();
+    if (!fecha)  { alert('Ingresá la fecha de ejecución'); return; }
+    if (!comp)   { alert('Ingresá el número de comprobante'); return; }
+    if (!monto)  { alert('Ingresá el monto pagado'); return; }
     try {
-        await guardarEgreso({ egreso_id: G.gastoAEjecutar, tipo:'EJECUTADO', estado:'CANCELADO', fecha_pago:fecha, nro_comprobante:comp, observaciones:obs||null });
+        await guardarEgreso({ egreso_id: G.gastoAEjecutar, tipo:'EJECUTADO', estado:'CANCELADO', fecha_pago:fecha, monto_pagado:monto, nro_comprobante:comp, observaciones:obs||null });
         cerrarModal('modalEjecutar');
         G.gastoAEjecutar = null;
         await cargarDatos();
