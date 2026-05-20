@@ -315,9 +315,9 @@
                 <div class="stat-item"><div class="stat-label">Al día</div><div class="stat-value" id="s-aldia">—</div></div>
                 <div class="stat-item"><div class="stat-label">En mora</div><div class="stat-value" id="s-mora" style="color:#ffc107;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
-                <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado">—</div></div>
-                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;">—</div></div>
-                <div class="stat-item"><div class="stat-label">Saldo</div><div class="stat-value" id="s-saldo">—</div></div>
+                <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado" style="font-size:15px;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;font-size:15px;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Saldo</div><div class="stat-value" id="s-saldo" style="font-size:15px;">—</div></div>
             </div>
         </div>
     </div>
@@ -901,10 +901,10 @@ function actualizarStats() {
     document.getElementById('s-aldia').textContent     = ests.filter(e=>cg(e)==='ABONADA').length;
     document.getElementById('s-mora').textContent      = ests.filter(e=>cg(e)==='EN_MORA').length;
     document.getElementById('s-parcial').textContent   = ests.filter(e=>cg(e)==='PAGO_PARCIAL').length;
-    document.getElementById('s-recaudado').textContent = fMillones(recaud);
-    document.getElementById('s-egresos').textContent   = fMillones(egrExec);
+    document.getElementById('s-recaudado').textContent = fMonto(recaud);
+    document.getElementById('s-egresos').textContent   = fMonto(egrExec);
     const sEl = document.getElementById('s-saldo');
-    sEl.textContent = fMillones(saldo);
+    sEl.textContent = fMonto(saldo);
     sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
 }
 
