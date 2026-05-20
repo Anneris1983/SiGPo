@@ -1230,6 +1230,8 @@ async function guardarCuotas() {
             });
         });
 
+        const resolvedProgramaId = PROGRAMA_ID || (V.data && V.data.programa && V.data.programa.programaId) || null;
+
         const registros = [];
         dnis.forEach(function(dni) {
             const pct = descuentoMap[String(dni)] || 0;
@@ -1242,7 +1244,7 @@ async function guardarCuotas() {
                     : _descNormEstado(montoFinal, montoFinal, f.vencimiento || null, 'NO_ABONADA');
                 registros.push({
                     dni:                  String(dni),
-                    programa_id:          PROGRAMA_ID || null,
+                    programa_id:          resolvedProgramaId,
                     cohorte_id:           COHORTE_ID || null,
                     concepto:             (f.nombre || '').trim(),
                     periodo:              (f.periodo || '').trim(),
