@@ -242,7 +242,7 @@
                     <table id="tablaEjecutados">
                         <thead>
                             <tr>
-                                <th>Fecha Estimada</th>
+                                <th>Fecha de Pago</th>
                                 <th>Categoría</th>
                                 <th>Concepto/Descripción</th>
                                 <th>Programa/Curso</th>
@@ -459,8 +459,9 @@ function renderTabla(tipo) {
         var acciones = (!ejec ? '<button class="btn btn-success btn-sm" onclick="abrirEjecutar('+e.egreso_id+')" title="'+(parcial?'Completar pago':'Ejecutar')+'">'+(parcial?'💰':'✓')+'</button>' : '')
             + '<button class="btn btn-primary btn-sm" onclick="abrirModalGasto(\''+tipo+'\','+e.egreso_id+')" title="Editar">✏️</button>'
             + '<button class="btn btn-danger btn-sm" onclick="eliminarGasto('+e.egreso_id+')" title="Eliminar">🗑️</button>';
+        var fechaCell = (ejec || parcial) ? fFechaCorta(e.fecha_pago||'—') : fFechaCorta(e.fecha_estimada||'—');
         return '<tr>'
-            +'<td>'+fFechaCorta(e.fecha_estimada||e.fecha_pago)+'</td>'
+            +'<td>'+fechaCell+'</td>'
             +'<td>'+esc(e.categoria||'—')+'</td>'
             +'<td>'+esc(e.concepto||'—')+'</td>'
             +'<td style="font-size:12px;">'+esc(nomProg(e.programa_id))+'</td>'

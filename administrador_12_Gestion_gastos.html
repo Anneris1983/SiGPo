@@ -402,7 +402,7 @@ function renderTabla(tipo) {
     tbody.innerHTML = slice.map(function(e) {
         var esEjec = esEjecutadoFn(e);
         var parc   = esParcialFn(e);
-        var fecha  = esEjec ? fFecha(e.fecha_pago||e.fecha_estimada) : fFecha(e.fecha_estimada);
+        var fecha  = (esEjec || parc) ? fFecha(e.fecha_pago||e.fecha_estimada) : fFecha(e.fecha_estimada);
         var montoCell;
         if (parc) {
             montoCell = '<td style="font-weight:700;color:#5C1018;">'+fMonto(e.monto_pagado)+' pagado<br>'
