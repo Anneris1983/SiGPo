@@ -675,11 +675,16 @@ async function obtenerEgresos(filtros) {
 async function guardarEgreso(datos) {
     const sb = await getSupabase();
     if (datos.egreso_id) {
-        const { error } = await sb.from('egresos').update(datos).eq('egreso_id', datos.egreso_id);
-        return { ok: !error };
+        const id = datos.egreso_id;
+        const payload = Object.assign({}, datos);
+        delete payload.egreso_id;
+        const { error } = await sb.from('egresos').update(payload).eq('egreso_id', id);
+        if (error) throw error;
+        return { ok: true };
     } else {
         const { error } = await sb.from('egresos').insert(datos);
-        return { ok: !error };
+        if (error) throw error;
+        return { ok: true };
     }
 }
 
