@@ -380,8 +380,8 @@
     <div class="modal-box" style="max-width:640px;">
         <div class="modal-hdr" style="background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%);">
             <div>
-                <h2>➕ Crear cuotas</h2>
-                <p id="cuota-sub">Especialización en Costos y Gestión Empresarial · Cohorte 2025–2026</p>
+                <h2>➕ Crear Plan de Cuotas</h2>
+                <p id="cuota-sub">—</p>
             </div>
             <button class="modal-close" onclick="cerrar('modal-cuota')">×</button>
         </div>
@@ -392,9 +392,8 @@
                 <div class="plan-paso-titulo">Paso 1: Definir Cuotas</div>
                 <div id="plan-filas"></div>
 
-                <!-- Alerta monto bajo -->
                 <div id="plan-alerta" style="display:none;margin:10px 0;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px 14px;font-size:12px;color:#795548;line-height:1.5;">
-                    ⚠️ <strong>Consejo:</strong> Al no colocar el monto también se guardará <strong>$ 0,00</strong>. Podés actualizar el valor más adelante y la cuota se creará con <em>saldo pendiente total</em> hasta que se registre el monto.
+                    ⚠️ <strong>Consejo:</strong> Si dejás el monto vacío, la cuota se guardará como <strong>A definir</strong> y no habilitará pagos hasta cargarle valor.
                 </div>
 
                 <button class="btn-agregar-cuota" onclick="planAgregar()">+ Agregar otra cuota</button>
@@ -402,25 +401,12 @@
 
             <div style="border-top:1px solid #eee;margin:14px 0 0;"></div>
 
-            <!-- PASO 2 -->
+            <!-- APLICAR A -->
             <div style="padding:14px 22px 20px;">
-                <div class="plan-paso-titulo">Paso 2: Aplicar a Estudiantes</div>
+                <div class="plan-paso-titulo">Aplicar a</div>
                 <div class="plan-destino-box">
-                    <label class="plan-radio-opcion" id="opt-cohorte">
-                        <input type="radio" name="plan-dest" value="cohorte" checked onchange="planDestChange()">
-                        <div>
-                            <div style="font-weight:700;font-size:13px;color:var(--primary);">Toda la cohorte</div>
-                            <div id="plan-desc-cohorte" style="font-size:11px;color:#666;margin-top:2px;">Se creará el plan para los <strong id="plan-n-todos">—</strong> estudiantes de la Cohorte.</div>
-                        </div>
-                    </label>
-                    <label class="plan-radio-opcion" id="opt-especificos" style="margin-top:8px;">
-                        <input type="radio" name="plan-dest" value="especificos" onchange="planDestChange()">
-                        <div>
-                            <div style="font-weight:700;font-size:13px;color:var(--primary);">Estudiantes específicos</div>
-                            <div id="plan-desc-especificos" style="font-size:11px;color:#666;margin-top:2px;">Seleccioná manualmente a quiénes aplicar este plan.</div>
-                            <div id="plan-sel-nombres" style="display:none;margin-top:8px;font-size:11px;color:#8C1A28;font-weight:600;line-height:1.6;"></div>
-                        </div>
-                    </label>
+                    <div style="font-weight:700;font-size:13px;color:var(--primary);">Toda la cohorte</div>
+                    <div style="font-size:11px;color:#666;margin-top:2px;">Se crea el plan para los <strong id="plan-n-todos">—</strong> estudiantes activos de esta cohorte.</div>
                 </div>
             </div>
         </div>
@@ -430,7 +416,7 @@
             <div id="plan-resumen" style="font-size:12px;color:#555;font-weight:600;"></div>
             <div style="display:flex;gap:10px;">
                 <button class="btn-cancel" onclick="cerrar('modal-cuota')">Cancelar</button>
-                <button class="btn-save" onclick="guardarCuotas()" style="background:var(--primary);">✔ Crear cuotas</button>
+                <button class="btn-save" onclick="guardarCuotas()" style="background:var(--primary);">✔ Crear Plan de Cuotas</button>
             </div>
         </div>
     </div>
