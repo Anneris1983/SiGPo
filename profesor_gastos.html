@@ -24,10 +24,11 @@
         .header p { color: #888; font-size: 14px; }
 
         /* SUMMARY CARDS */
-        .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+        .summary-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 28px; }
         .summary-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #e0e0e0; }
         .summary-card.c-ejecutado  { border-color: var(--danger); }
         .summary-card.c-proyectado { border-color: var(--warning); }
+        .summary-card.c-total      { border-color: #0891b2; }
         .summary-card.c-categorias { border-color: #6366f1; }
         .summary-card.c-proveedores { border-color: var(--primary); }
         .summary-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
@@ -66,7 +67,8 @@
         .skeleton-row td { background: linear-gradient(90deg,#e8e8e8 25%,#f5f5f5 50%,#e8e8e8 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; height: 44px; }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-        @media (max-width: 900px) { .summary-cards { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width: 1100px) { .summary-cards { grid-template-columns: repeat(3,1fr); } }
+        @media (max-width: 700px)  { .summary-cards { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 640px) { .navbar, .container { padding-left: 16px; padding-right: 16px; } }
     </style>
     <link rel="stylesheet" href="sigpo-theme.css">
@@ -98,6 +100,11 @@
             <div class="summary-label">Total Proyectado</div>
             <div class="summary-value" id="sc-proyectado">—</div>
             <div class="summary-sub" id="sc-proyectado-n">registros</div>
+        </div>
+        <div class="summary-card c-total">
+            <div class="summary-label">Total Gastos</div>
+            <div class="summary-value" id="sc-total">—</div>
+            <div class="summary-sub" id="sc-total-n">registros</div>
         </div>
         <div class="summary-card c-categorias">
             <div class="summary-label">Categorías</div>
@@ -243,6 +250,8 @@ function renderSummary(data) {
     document.getElementById('sc-ejecutado-n').textContent  = (ejec.length+parc.length) + ' registros';
     document.getElementById('sc-proyectado').textContent   = fMk(sumPr);
     document.getElementById('sc-proyectado-n').textContent = (proy.length+parc.length) + ' registros';
+    document.getElementById('sc-total').textContent        = fMk(sumEj + sumPr);
+    document.getElementById('sc-total-n').textContent      = data.length + ' registros';
     document.getElementById('sc-categorias').textContent   = cats;
     document.getElementById('sc-proveedores').textContent  = provs;
 }
