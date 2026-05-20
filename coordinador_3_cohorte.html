@@ -1123,8 +1123,8 @@ function abrirCrearCuota() {
         planFilas = [{ nombre: label, periodo: planPeriodoDeDate(sig), monto:'', vencimiento: sig.toISOString().split('T')[0] }];
     }
 
-    document.querySelector('input[name="plan-dest"][value="cohorte"]').checked = true;
-    planDestChange();
+    document.querySelector('input[name="plan-dest"][value="cohorte"]') && (document.querySelector('input[name="plan-dest"][value="cohorte"]').checked = true);
+    planActualizarResumen();
     planRenderFilas();
     planActualizarResumen();
     planCheckAlerta();
@@ -1196,32 +1196,9 @@ function planCheckAlerta() {
     const hayVacio = planFilas.some(f => !f.monto || parseFloat(f.monto) === 0);
     document.getElementById('plan-alerta').style.display = hayVacio ? 'block' : 'none';
 }
-function planDestChange() {
-    const val = document.querySelector('input[name="plan-dest"]:checked').value;
-    const selNombres = document.getElementById('plan-sel-nombres');
-    document.getElementById('opt-cohorte').classList.toggle('seleccionado', val==='cohorte');
-    document.getElementById('opt-especificos').classList.toggle('seleccionado', val==='especificos');
-    if (val === 'especificos') {
-        const sel = getSel();
-        if (!sel.length) {
-            selNombres.style.display = 'block';
-            selNombres.textContent = 'Sin estudiantes seleccionados en la tabla. Cerrá el modal, seleccioná estudiantes y volvé a abrir.';
-            selNombres.style.color = '#c0392b';
-            const nombres = sel.map(dni => {
-                const e = V.data.estudiantes.find(x => x.dni === dni);
-                return e ? `${e.apellido}, ${e.nombre}` : `DNI ${dni}`;
-            });
-            selNombres.style.display = 'block';
-            selNombres.innerHTML = nombres.map(n => `• ${escapeHtml(n)}`).join('<br>');
-            selNombres.style.color = '#8C1A28';
-        }
-        selNombres.style.display = 'none';
-    }
-    planActualizarResumen();
-}
+function planDestChange() { planActualizarResumen(); }
 function planCantEstudiantes() {
-    const val = document.querySelector('input[name="plan-dest"]:checked').value;
-    return val === 'cohorte' ? (V.data ? V.data.estudiantes.length : 0) : getSel().length;
+    return V.data ? V.data.estudiantes.length : 0;
 }
 function planActualizarResumen() {
     const n = planCantEstudiantes();
@@ -1232,9 +1209,8 @@ async function guardarCuotas() {
     if (!planFilas.length) { toast('Agregá al menos una cuota', 'err'); return; }
     if (!planFilas.some(f => String(f.nombre||'').trim())) { toast('Completá el nombre de al menos una cuota', 'err'); return; }
 
-    const val = document.querySelector('input[name="plan-dest"]:checked').value;
-    const dnis = val === 'cohorte' ? V.data.estudiantes.map(e => e.dni) : getSel();
-    if (val === 'especificos' && !dnis.length) { toast('Seleccioná al menos un estudiante', 'err'); return; }
+    const dnis = V.data.estudiantes.map(e => e.dni);
+    if (!dnis.length) { toast('No hay estudiantes en esta cohorte', 'err'); return; }
 
     spin(true);
     try {
