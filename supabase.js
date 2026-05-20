@@ -775,6 +775,29 @@ async function obtenerProgramasAsignadosPorDni(dni) {
 }
 
 /**
+ * Retorna { progIds, cohIds } para un coordinador.
+ * progIds = programas asignados sin cohorte específica (ve todas las cohortes del programa).
+ * cohIds  = cohortes específicas asignadas.
+ */
+async function obtenerAsignacionesCoordinador(dni) {
+    const sb = await getSupabase();
+    const { data: usuario } = await sb
+        .from('usuarios')
+        .select('usuario_id')
+        .eq('dni', String(dni))
+        .single();
+    if (!usuario) return { progIds: [], cohIds: [] };
+    const { data: asigs } = await sb
+        .from('coordinadores_programas')
+        .select('programa_id, cohorte_id')
+        .eq('coordinador_id', usuario.usuario_id);
+    if (!asigs || !asigs.length) return { progIds: [], cohIds: [] };
+    const progIds = [...new Set(asigs.filter(function(a){ return !a.cohorte_id; }).map(function(a){ return a.programa_id; }))];
+    const cohIds  = [...new Set(asigs.filter(function(a){ return  a.cohorte_id; }).map(function(a){ return a.cohorte_id; }))];
+    return { progIds, cohIds };
+}
+
+/**
  * Asignar programas a un coordinador (reemplaza los existentes)
  */
 async function asignarProgramasCoordinador(usuarioId, programaIds) {

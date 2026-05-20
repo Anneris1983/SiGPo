@@ -530,16 +530,52 @@
             try {
                 var sb = await getSupabase();
                 var sesion = getSesion();
-                var progIds = sesion ? await obtenerProgramasAsignadosPorDni(sesion.dni) : [];
-                var qP = sb.from('programas').select('programa_id,nombre');
-                var qC = sb.from('cohortes').select('cohorte_id,nombre,programa_id');
-                var qE = sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,fecha_pago,fecha_estimada,proveedor,concepto,categoria,nro_comprobante');
-                if (progIds.length) {
-                    qP = qP.in('programa_id', progIds);
-                    qC = qC.in('programa_id', progIds);
-                    qE = qE.in('programa_id', progIds);
-                }
-                var [rP, rC, rE] = await Promise.all([qP, qC, qE]);
+                var asigs = sesion ? await obtenerAsignacionesCoordinador(sesion.dni) : { progIds: [], cohIds: [] };
+                var progIds = asigs.progIds; // programas globales (sin cohorte específica)
+                var cohIds  = asigs.cohIds;  // cohortes específicas asignadas
+
+                // Cargar cohortes de los programas globales y unir con las cohortes específicas
+                var rCohProg = progIds.length
+                    ? await sb.from('cohortes').select('cohorte_id,nombre,programa_id').in('programa_id', progIds)
+                    : { data: [] };
+                var cohsDeProgs = rCohProg.data || [];
+
+                // Todos los cohorte_ids visibles por este coordinador
+                var todosLosCohIds = [...new Set([
+                    ...cohsDeProgs.map(function(c){ return c.cohorte_id; }),
+                    ...cohIds
+                ])];
+
+                // Cargar cohortes específicas asignadas (si las hay) para tener sus datos completos
+                var rCohEsp = cohIds.length
+                    ? await sb.from('cohortes').select('cohorte_id,nombre,programa_id').in('cohorte_id', cohIds)
+                    : { data: [] };
+
+                // Combinar todas las cohortes (sin duplicados)
+                var todasCohortes = [...cohsDeProgs];
+                (rCohEsp.data || []).forEach(function(c) {
+                    if (!todasCohortes.find(function(x){ return x.cohorte_id === c.cohorte_id; }))
+                        todasCohortes.push(c);
+                });
+
+                // Todos los programa_ids visibles (de asignaciones directas + de cohortes específicas)
+                var todosProgIds = [...new Set([
+                    ...progIds,
+                    ...todasCohortes.map(function(c){ return c.programa_id; })
+                ])];
+
+                var rP = todosProgIds.length
+                    ? await sb.from('programas').select('programa_id,nombre').in('programa_id', todosProgIds)
+                    : { data: [] };
+
+                var rE = todosLosCohIds.length
+                    ? await sb.from('egresos')
+                        .select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,monto_pendiente,fecha_pago,fecha_estimada,proveedor,concepto,categoria,nro_comprobante')
+                        .in('cohorte_id', todosLosCohIds)
+                    : { data: [] };
+
+                // Alias para compatibilidad con el resto del código
+                var rC = { data: todasCohortes };
 
                 var programas = rP.data || [];
                 var cohortes = rC.data || [];
