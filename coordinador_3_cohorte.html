@@ -1468,8 +1468,10 @@ async function exportarExcel() {
         }
         const { columnas, estudiantes } = V.data;
         const etiquetas = { EN_MORA:'En mora', ABONADA:'Abonada', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'En revisión', NO_ABONADA:'No abonada', A_DEFINIR:'A definir', NO_APLICA:'No aplica' };
+        // Dos filas de header: nombre cuota y sub-fila monto/abonado/saldo/estado
+        const headerCuotas = columnas.map(c => c.concepto_base + (c.periodo ? ' ' + c.periodo : '') + (c.fecha_vencimiento ? ' [vence ' + c.fecha_vencimiento + ']' : ''));
         const header = ['Apellido','Nombre','DNI','Email','Desc %','Estado General','Estado Cohorte']
-            .concat(columnas.map(c => c.concepto_base + (c.periodo ? ' ' + c.periodo : '') + (c.fecha_vencimiento ? ' [' + c.fecha_vencimiento + ']' : '')))
+            .concat(headerCuotas)
             .concat(['Total a Pagar','Total Abonado','Saldo Pendiente']);
 
         const rows = estudiantes.map(est => {
@@ -1486,8 +1488,12 @@ async function exportarExcel() {
             ];
             columnas.forEach(col => {
                 const c = cobrosMap[col.concepto_base+'||'+(col.periodo||'')];
-                if (!c) { fila.push('no aplica'); return; }
-                fila.push(etiquetas[c.estado] || c.estado || '—');
+                if (!c) { fila.push(''); return; }
+                // Valor numérico de la cuota según estado
+                if (c.estado === 'ABONADA')      fila.push(Number(c.monto_final||0));
+                else if (c.estado === 'PAGO_PARCIAL') fila.push(Number(c.monto_abonado||0));
+                else if (c.estado === 'A_DEFINIR' || c.monto_final == null) fila.push('A definir');
+                else fila.push(Number(c.monto_final||0));
             });
             fila.push(totP, totA, totS);
             return fila;
@@ -1495,9 +1501,20 @@ async function exportarExcel() {
 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
-        // Anchos de columna
-        ws['!cols'] = header.map((h,i) => ({ wch: i < 4 ? 22 : i < 7 ? 14 : 12 }));
-        XLSX.utils.book_append_sheet(wb, ws, 'Estado de Pagos');
+        ws['!cols'] = header.map((h,i) => ({ wch: i < 4 ? 22 : i < 7 ? 14 : 14 }));
+        // Formato numérico para las columnas de cuotas y totales
+        const nColStart = 7; // primera columna de cuota
+        const nColEnd = header.length - 1;
+        rows.forEach((row, ri) => {
+            for (let ci = nColStart; ci <= nColEnd; ci++) {
+                const cellAddr = XLSX.utils.encode_cell({ r: ri + 1, c: ci });
+                if (ws[cellAddr] && typeof ws[cellAddr].v === 'number') {
+                    ws[cellAddr].t = 'n';
+                    ws[cellAddr].z = '#,##0.00';
+                }
+            }
+        });
+        XLSX.utils.book_append_sheet(wb, ws, 'Montos');
         const nombre = ((V.data.programa.nombre||'') + ' - ' + (V.data.cohorte.nombre||'')).replace(/[^a-zA-Z0-9 \-áéíóúñÁÉÍÓÚÑ]/g,'').substring(0,60);
         XLSX.writeFile(wb, nombre + '.xlsx');
         toast('Excel exportado ✓', 'ok');
