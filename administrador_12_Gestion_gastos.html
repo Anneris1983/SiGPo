@@ -66,7 +66,7 @@
         .badge-ejecutado { background: #d1fae5; color: #065f46; }
         .badge-proyectado { background: #fef3c7; color: #92400e; }
         .badge-pendiente { background: #fee2e2; color: #991b1b; }
-        .badge-parcial { background: #e0f2fe; color: #075985; }
+        .badge-parcial { background: #fef3c7; color: #92400e; font-weight: 700; }
         .badge-cancelado { background: #f3f4f6; color: #6b7280; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
@@ -324,11 +324,16 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot
 
 /* ── STATS ── */
 function renderStats() {
-    var ejec = G.egresos.filter(function(e){ return e.tipo==='EJECUTADO' || e.estado==='CANCELADO'; });
-    var proy = G.egresos.filter(function(e){ return e.tipo!=='EJECUTADO' && e.estado!=='CANCELADO'; });
-    document.getElementById('stat-ejecutado').textContent  = fMonto(ejec.reduce(function(s,e){ return s+(Number(e.monto_pagado)||0); },0));
-    document.getElementById('stat-proyectado').textContent = fMonto(proy.reduce(function(s,e){ return s+(Number(e.monto_original)||0); },0));
-    document.getElementById('stat-total').textContent      = fMonto(G.egresos.reduce(function(s,e){ return s+(Number(e.monto_pagado||e.monto_original)||0); },0));
+    var ejec   = G.egresos.filter(esEjecutadoFn);
+    var parc   = G.egresos.filter(esParcialFn);
+    var proy   = G.egresos.filter(function(e){ return !esEjecutadoFn(e) && !esParcialFn(e); });
+    var totalEjec = ejec.reduce(function(s,e){ return s+(Number(e.monto_pagado)||0); },0)
+                  + parc.reduce(function(s,e){ return s+(Number(e.monto_pagado)||0); },0);
+    var totalProy = proy.reduce(function(s,e){ return s+(Number(e.monto_original)||0); },0)
+                  + parc.reduce(function(s,e){ return s+(Number(e.monto_pendiente)||0); },0);
+    document.getElementById('stat-ejecutado').textContent  = fMonto(totalEjec);
+    document.getElementById('stat-proyectado').textContent = fMonto(totalProy);
+    document.getElementById('stat-total').textContent      = fMonto(totalEjec + totalProy);
     document.getElementById('stat-cantidad').textContent   = G.egresos.length;
 }
 
@@ -336,10 +341,12 @@ function renderStats() {
 function getNomProg(id) { var p=G.programas.find(function(x){ return x.programa_id===id; }); return p?p.nombre:'—'; }
 function getNomCoh(id)  { var c=G.cohortes.find(function(x){ return x.cohorte_id===id; });  return c?c.nombre:'—'; }
 function badgeEstado(s) {
-    var m={CANCELADO:['badge-ejecutado','Ejecutado'],PENDIENTE:['badge-proyectado','Pendiente']};
+    var m={CANCELADO:['badge-ejecutado','Ejecutado'],PENDIENTE:['badge-proyectado','Pendiente'],PARCIAL:['badge-parcial','Pago Parcial'],PAGADO:['badge-ejecutado','Pagado']};
     var v=m[s]||['badge-proyectado',s||'—'];
     return '<span class="badge '+v[0]+'">'+v[1]+'</span>';
 }
+function esEjecutadoFn(e) { return e.estado==='CANCELADO' || e.estado==='PAGADO'; }
+function esParcialFn(e)   { return e.estado==='PARCIAL'; }
 
 function renderPaginadorAdmin12(tipo, total) {
     var el = document.getElementById('paginador-'+tipo);
@@ -370,9 +377,9 @@ function renderTabla(tipo) {
     var cat       = document.getElementById('filtro-cat-'+sfx).value;
     var prog      = document.getElementById('filtro-prog-'+sfx).value;
 
-    var esEjecFn = function(e) { return e.tipo==='EJECUTADO' || e.estado==='CANCELADO'; };
     var rows = G.egresos.filter(function(e) {
-        var enEjec = esEjecFn(e);
+        var enEjec = esEjecutadoFn(e);
+        var enParc = esParcialFn(e);
         if (tipo==='ejecutados' && !enEjec) return false;
         if (tipo==='proyectados' && enEjec)  return false;
         if (cat  && e.categoria!==cat) return false;
@@ -393,11 +400,18 @@ function renderTabla(tipo) {
     var slice = rows.slice((pag - 1) * POR_PAG, pag * POR_PAG);
 
     tbody.innerHTML = slice.map(function(e) {
-        var esEjec = tipo==='ejecutados';
+        var esEjec = esEjecutadoFn(e);
+        var parc   = esParcialFn(e);
         var fecha  = esEjec ? fFecha(e.fecha_pago||e.fecha_estimada) : fFecha(e.fecha_estimada);
-        var monto  = esEjec ? fMonto(e.monto_pagado||e.monto_original) : fMonto(e.monto_original);
+        var montoCell;
+        if (parc) {
+            montoCell = '<td style="font-weight:700;color:#5C1018;">'+fMonto(e.monto_pagado)+' pagado<br>'
+                +'<span style="font-size:11px;color:#92400e;font-weight:600;">Pendiente: '+fMonto(e.monto_pendiente)+'</span></td>';
+        } else {
+            montoCell = '<td style="font-weight:700;color:#5C1018;">'+(esEjec ? fMonto(e.monto_pagado||e.monto_original) : fMonto(e.monto_original))+'</td>';
+        }
         var acciones = '<div style="display:flex;gap:4px;">'
-            + (!esEjec ? '<button class="btn btn-success btn-sm" onclick="abrirEjecutar('+e.egreso_id+')" title="Ejecutar">✓</button>' : '')
+            + (!esEjec ? '<button class="btn btn-success btn-sm" onclick="abrirEjecutar('+e.egreso_id+')" title="'+(parc?'Completar pago':'Ejecutar')+'">'+(parc?'💰':'✓')+'</button>' : '')
             + '<button class="btn btn-primary btn-sm" onclick="abrirModalGasto(\''+tipo+'\','+e.egreso_id+')" title="Editar">✏️</button>'
             + '<button class="btn btn-danger btn-sm" onclick="eliminarGasto('+e.egreso_id+')" title="Eliminar">🗑️</button>'
             + '</div>';
@@ -407,7 +421,7 @@ function renderTabla(tipo) {
             +'<td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+esc(e.concepto||'')+'">'+esc(e.concepto||'—')+'</td>'
             +'<td style="font-size:12px;">'+esc(getNomProg(e.programa_id))+'</td>'
             +'<td style="font-size:12px;">'+esc(e.cohorte_id?getNomCoh(e.cohorte_id):'—')+'</td>'
-            +'<td style="font-weight:700;color:#5C1018;">'+monto+'</td>'
+            + montoCell
             +'<td style="font-size:12px;">'+esc(e.proveedor||'—')+'</td>'
             +'<td style="font-size:12px;">'+esc(e.nro_comprobante||'—')+'</td>'
             +'<td>'+badgeEstado(e.estado)+'</td>'
@@ -514,13 +528,22 @@ async function guardarGasto() {
 function abrirEjecutar(egresoId) {
     G.gastoPendEjec = egresoId;
     var e = G.egresos.find(function(x){ return x.egreso_id===egresoId; });
-    document.getElementById('ejec-resumen').innerHTML = e
-        ? '<strong>'+esc(e.concepto||'')+'</strong><br>'+esc(e.categoria||'')+' · '+esc(getNomProg(e.programa_id))+'<br>Monto original: <strong>'+fMonto(e.monto_original)+'</strong>'
-        : '';
-    document.getElementById('ejec-monto').value      = e ? (e.monto_original||'') : '';
-    document.getElementById('ejec-fecha').value      = new Date().toISOString().split('T')[0];
-    document.getElementById('ejec-comprobante').value= '';
-    document.getElementById('ejec-obs').value        = '';
+    var parc = e && esParcialFn(e);
+    var pendiente = e ? Number(parc ? e.monto_pendiente : e.monto_original) : 0;
+    var resumen = '';
+    if (e) {
+        resumen = '<strong>'+esc(e.concepto||'')+'</strong><br>'+esc(e.categoria||'')+' · '+esc(getNomProg(e.programa_id))+'<br>Monto original: <strong>'+fMonto(e.monto_original)+'</strong>';
+        if (parc) resumen += '<br>Ya pagado: <strong>'+fMonto(e.monto_pagado)+'</strong> · Pendiente: <strong>'+fMonto(e.monto_pendiente)+'</strong>';
+    }
+    document.getElementById('ejec-resumen').innerHTML = resumen;
+    document.getElementById('ejec-monto').value       = pendiente || '';
+    document.getElementById('ejec-fecha').value       = new Date().toISOString().split('T')[0];
+    document.getElementById('ejec-comprobante').value = '';
+    document.getElementById('ejec-obs').value         = '';
+    var hint = document.querySelector('#ejec-monto + .form-hint');
+    if (hint) hint.textContent = parc
+        ? 'Pendiente: '+fMonto(pendiente)+'. Podés pagar menos si es otro pago parcial.'
+        : 'Si es pago parcial, ingresá el monto abonado';
     document.getElementById('modalEjecutar').classList.add('active');
 }
 
@@ -531,21 +554,32 @@ async function confirmarEjecucion() {
     var obs   = document.getElementById('ejec-obs').value.trim();
     if (!fecha) { toast('Ingresá la fecha','err'); return; }
     if (!comp)  { toast('Ingresá el comprobante','err'); return; }
-    if (!monto) { toast('Ingresá el monto','err'); return; }
+    if (!monto || monto <= 0) { toast('Ingresá el monto','err'); return; }
 
     var e = G.egresos.find(function(x){ return x.egreso_id===G.gastoPendEjec; });
-    var esParcial = e && e.monto_original && monto < Number(e.monto_original);
+    var yaPagado      = e ? Number(esParcialFn(e) ? e.monto_pagado : 0) : 0;
+    var pendiente     = e ? Number(esParcialFn(e) ? e.monto_pendiente : e.monto_original) : 0;
+    var nroPago       = e ? ((e.numero_pago||0) + 1) : 1;
+    var nuevoPagado   = yaPagado + monto;
+    var nuevoPendiente = Math.max(0, pendiente - monto);
+    var estaCompleto  = monto >= pendiente;
 
     spin(true);
     try {
         var sb = await getSupabase();
         var res = await sb.from('egresos').update({
-            tipo:'EJECUTADO', estado: 'CANCELADO',
-            fecha_pago:fecha, monto_pagado:monto,
-            nro_comprobante:comp, observaciones:obs||null
-        }).eq('egreso_id',G.gastoPendEjec);
+            tipo:            'EJECUTADO',
+            estado:          estaCompleto ? 'CANCELADO' : 'PARCIAL',
+            fecha_pago:      fecha,
+            monto_pagado:    nuevoPagado,
+            monto_pendiente: nuevoPendiente,
+            es_pago_parcial: !estaCompleto || esParcialFn(e),
+            numero_pago:     nroPago,
+            nro_comprobante: comp,
+            observaciones:   obs||null
+        }).eq('egreso_id', G.gastoPendEjec);
         if (res.error) throw res.error;
-        toast('Gasto ejecutado ✓','ok');
+        toast(estaCompleto ? 'Gasto ejecutado ✓' : 'Pago parcial registrado ✓', 'ok');
         cerrarModal('modalEjecutar');
         G.gastoPendEjec = null;
         await cargar();
