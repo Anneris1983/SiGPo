@@ -115,6 +115,7 @@
         .badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
         .badge-ejecutado { background: #fee2e2; color: #991b1b; }
         .badge-proyectado { background: #fef3c7; color: #92400e; }
+        .badge-parcial    { background: #fef3c7; color: #92400e; font-weight: 700; }
 
         .btn-icon { padding: 8px 12px; font-size: 13px; margin: 0 2px; }
         .actions-group { display: flex; gap: 4px; justify-content: flex-start; align-items: center; flex-wrap: wrap; }
@@ -556,19 +557,23 @@
 
                 function mapEgreso(e) {
                     return {
-                        id:          e.egreso_id,
+                        id:            e.egreso_id,
                         fechaEstimada: e.fecha_estimada||'',
                         fechaEjecucion: e.fecha_pago||'',
-                        categoria:   e.categoria||'',
-                        concepto:    e.concepto||e.descripcion||'',
-                        programa:    progMap[e.programa_id]||'',
-                        programaId:  e.programa_id||'',
-                        cohorte:     cohMap[e.cohorte_id]||'',
-                        cohorteId:   e.cohorte_id||'',
-                        monto:       Number(e.monto_pagado||e.monto_original||0),
-                        proveedor:   e.proveedor||'',
-                        comprobante: e.nro_comprobante||'',
-                        estado:      e.tipo==='EJECUTADO'?'Ejecutado':'Proyectado'
+                        categoria:     e.categoria||'',
+                        concepto:      e.concepto||e.descripcion||'',
+                        programa:      progMap[e.programa_id]||'',
+                        programaId:    e.programa_id||'',
+                        cohorte:       cohMap[e.cohorte_id]||'',
+                        cohorteId:     e.cohorte_id||'',
+                        monto:         Number(e.monto_pagado||e.monto_original||0),
+                        montoPagado:   Number(e.monto_pagado||0),
+                        montoPendiente:Number(e.monto_pendiente||0),
+                        montoOriginal: Number(e.monto_original||0),
+                        proveedor:     e.proveedor||'',
+                        comprobante:   e.nro_comprobante||'',
+                        estadoDB:      e.estado||'',
+                        estado:        e.estado==='PARCIAL' ? 'Pago Parcial' : e.tipo==='EJECUTADO' ? 'Ejecutado' : 'Proyectado'
                     };
                 }
 
@@ -576,8 +581,8 @@
                     programaActual: { nombre: programas[0] ? programas[0].nombre : 'Todos los programas' },
                     programas: state.programas,
                     cohortes:  state.cohortes,
-                    gastosProyectados: egresos.filter(function(e){return e.tipo==='PROYECTADO';}).map(mapEgreso),
-                    gastosEjecutados: egresos.filter(function(e){return e.tipo==='EJECUTADO'||e.estado==='CANCELADO';}).map(mapEgreso)
+                    gastosProyectados: egresos.filter(function(e){ return e.tipo==='PROYECTADO' || e.estado==='PARCIAL'; }).map(mapEgreso),
+                    gastosEjecutados:  egresos.filter(function(e){ return e.tipo==='EJECUTADO' && e.estado!=='PARCIAL'; }).map(mapEgreso)
                 };
 
                 normalizarData(data);
@@ -715,7 +720,11 @@
 
             empty.style.display = 'none';
             tbody.innerHTML = slice.map(g => {
-                const badgeClass = tipo === 'ejecutados' ? 'badge-ejecutado' : 'badge-proyectado';
+                const esPagoParc = g.estadoDB === 'PARCIAL';
+                const badgeClass = esPagoParc ? 'badge-parcial' : tipo === 'ejecutados' ? 'badge-ejecutado' : 'badge-proyectado';
+                const montoHtml  = esPagoParc
+                    ? `<strong>${escapeHtml(formatearMonto(g.montoPagado))}</strong> pagado<br><span style="font-size:11px;color:#92400e;font-weight:600">Pendiente: ${escapeHtml(formatearMonto(g.montoPendiente))}</span>`
+                    : escapeHtml(formatearMonto(g.monto));
                 return `
                     <tr>
                         <td>${escapeHtml(formatearFecha(g.fechaEstimada))}</td>
@@ -723,14 +732,14 @@
                         <td>${escapeHtml(g.concepto)}</td>
                         <td>${escapeHtml(g.programa || '-')}</td>
                         <td>${escapeHtml(g.cohorte || '-')}</td>
-                        <td>${escapeHtml(formatearMonto(g.monto))}</td>
+                        <td>${montoHtml}</td>
                         <td>${escapeHtml(g.proveedor || '-')}</td>
                         <td>${escapeHtml(g.comprobante || '-')}</td>
                         <td><span class="badge ${badgeClass}">${escapeHtml(g.estado)}</span></td>
                         <td>
                             <div class="actions-group">
-                                ${tipo === 'proyectados' ? `<button class="btn btn-primary btn-icon" onclick="editarGasto('${escapeJs(g.id)}', '${tipo}')" title="Editar">✏️</button>` : ''}
-                                ${tipo === 'proyectados' ? `<button class="btn btn-danger btn-icon" onclick="eliminarGasto('${escapeJs(g.id)}', '${tipo}')" title="Eliminar">🗑️</button>` : ''}
+                                ${tipo === 'proyectados' && !esPagoParc ? `<button class="btn btn-primary btn-icon" onclick="editarGasto('${escapeJs(g.id)}', '${tipo}')" title="Editar">✏️</button>` : ''}
+                                ${tipo === 'proyectados' && !esPagoParc ? `<button class="btn btn-danger btn-icon" onclick="eliminarGasto('${escapeJs(g.id)}', '${tipo}')" title="Eliminar">🗑️</button>` : ''}
                             </div>
                         </td>
                     </tr>
