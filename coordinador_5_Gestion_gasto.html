@@ -530,9 +530,23 @@
             try {
                 var sb = await getSupabase();
                 var sesion = getSesion();
-                var asigs = sesion ? await obtenerAsignacionesCoordinador(sesion.dni) : { progIds: [], cohIds: [] };
-                var progIds = asigs.progIds; // programas globales (sin cohorte específica)
-                var cohIds  = asigs.cohIds;  // cohortes específicas asignadas
+
+                // Obtener asignaciones del coordinador directamente desde coordinadores_programas
+                var progIds = [], cohIds = [];
+                if (sesion) {
+                    var rUsr = await sb.from('usuarios').select('usuario_id').eq('dni', String(sesion.dni)).single();
+                    if (rUsr.data) {
+                        var rAsigs = await sb.from('coordinadores_programas')
+                            .select('programa_id, cohorte_id')
+                            .eq('coordinador_id', rUsr.data.usuario_id);
+                        (rAsigs.data || []).forEach(function(a) {
+                            if (a.cohorte_id) cohIds.push(a.cohorte_id);
+                            else progIds.push(a.programa_id);
+                        });
+                        progIds = [...new Set(progIds)];
+                        cohIds  = [...new Set(cohIds)];
+                    }
+                }
 
                 // Cargar cohortes de los programas globales y unir con las cohortes específicas
                 var rCohProg = progIds.length
