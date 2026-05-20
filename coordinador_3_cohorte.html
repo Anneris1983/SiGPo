@@ -1516,7 +1516,7 @@ async function procesarImport() {
     finally { spin(false); }
 }
 
-function irEstudiante(dni) { navegar('vista_facturacion_estudiante.html?dni=' + encodeURIComponent(String(dni)) + (COHORTE_ID ? '&cohorte_id=' + encodeURIComponent(COHORTE_ID) : '') + (PROGRAMA_ID ? '&programa_id=' + encodeURIComponent(PROGRAMA_ID) : '')); }
+function irEstudiante(dni) { navegar('detalle_estudiante_cohorte.html?dni=' + encodeURIComponent(String(dni)) + (COHORTE_ID ? '&cohorte_id=' + encodeURIComponent(COHORTE_ID) : '') + (PROGRAMA_ID ? '&programa_id=' + encodeURIComponent(PROGRAMA_ID) : '')); }
 function volverADashboard() { navegar('coordinador_1_dashboard.html'); }
 function navegar(destino, params={}) {
     const qs = new URLSearchParams(params).toString();

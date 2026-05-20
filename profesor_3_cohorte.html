@@ -61,7 +61,8 @@
         td { padding:9px 6px; border-bottom:1px solid #ebebeb; border-right:1px solid #ebebeb; vertical-align:middle; }
         tr.fila-est:hover td { background:rgba(212,175,55,0.05); }
         tr.oculta { display:none; }
-        .cell-name  { font-weight:700; color:var(--primary); padding-left:10px; white-space:nowrap; }
+        .cell-name  { font-weight:700; color:var(--primary); padding-left:10px; white-space:nowrap; cursor:pointer; }
+        .cell-name:hover { text-decoration:underline; }
         .cell-desc  { text-align:center; font-weight:600; }
         .cell-email { font-size:11px; color:#8C1A28; padding-left:8px; }
 
@@ -284,7 +285,7 @@ async function cargar() {
 
         var progNombre = cohorte.programas ? cohorte.programas.nombre : (cohorte.programa_id ? 'Programa' : '—');
         V.data = {
-            programa: { nombre: progNombre },
+            programa: { nombre: progNombre, programaId: cohorte.programa_id || null },
             cohorte:  { cohorteId: COHORTE_ID, nombre: cohorte.nombre || 'Cohorte', fecha_inicio: cohorte.fecha_inicio||'', fecha_fin: cohorte.fecha_fin||'' },
             columnas: derivarColumnas(Object.values(dniMap)),
             estudiantes: Object.values(dniMap),
@@ -396,7 +397,8 @@ function renderTabla() {
         tr.className = 'fila-est';
         tr.dataset.dni = est.dni;
         tr.dataset.est = estadoGen;
-        tr.innerHTML = '<td class="cell-name">'+escHtml(est.apellido)+', '+escHtml(est.nombre)+'</td>'
+        var progId = V.data.programa.programaId;
+        tr.innerHTML = '<td class="cell-name" onclick="navegar(\'detalle_estudiante_cohorte.html?dni='+encodeURIComponent(String(est.dni))+'&cohorte_id='+COHORTE_ID+(progId?'&programa_id='+progId:'')+'\')">'+escHtml(est.apellido)+', '+escHtml(est.nombre)+'</td>'
             + '<td class="cell-desc" style="color:'+( est.descuento_porcentaje>0 ? 'var(--success)':'#aaa')+'">'+est.descuento_porcentaje+'%</td>'
             + '<td class="cell-email">'+escHtml(est.email)+'</td>'
             + celdas
