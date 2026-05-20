@@ -656,6 +656,7 @@
 
         function normalizarGasto(g, fallbackTipo) {
             const tipo = g.tipo || (String(g.estado || '').toLowerCase().includes('ejecut') ? 'ejecutados' : fallbackTipo);
+            const estadoDB = g.estadoDB || '';
             return {
                 id: g.id || g.gastoId || g.gasto_id || crearIdLocal(),
                 fechaEstimada: g.fechaEstimada || g.fecha_estimada || '',
@@ -664,9 +665,12 @@
                 programa: g.programa || g.programaNombre || '',
                 cohorte: g.cohorte || g.cohorteNombre || g.edicion || '',
                 monto: Number(g.monto || 0),
+                montoPagado:    Number(g.montoPagado || 0),
+                montoPendiente: Number(g.montoPendiente || 0),
                 proveedor: g.proveedor || '',
                 comprobante: g.comprobante || g.numeroComprobante || g.nro_comprobante || '',
-                estado: tipo === 'ejecutados' ? 'Ejecutado' : 'Proyectado',
+                estadoDB: estadoDB,
+                estado: estadoDB === 'PARCIAL' ? 'Pago Parcial' : tipo === 'ejecutados' ? 'Ejecutado' : 'Proyectado',
                 observaciones: g.observaciones || '',
                 fechaEjecucion: g.fechaEjecucion || g.fecha_pago || '',
                 tipo: tipo
