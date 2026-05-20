@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gastos - Profesor | SiGPo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#5C1018; --accent:#8C1A28; --bg:#f8f6f1; --success:#2d7a4f; --muted:#6b7280; --line:#e5e7eb; }
+        body { font-family:'DM Sans',sans-serif; background:var(--bg); color:#2c2c2c; font-size:14px; }
+
+        /* Header */
+        .header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:20px 40px; box-shadow:0 4px 20px rgba(0,0,0,.1); position:sticky; top:0; z-index:100; }
+        .header-content { max-width:1300px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+        .header-left h1 { font-family:'Crimson Pro',serif; font-size:24px; margin-bottom:3px; }
+        .header-left p { opacity:.85; font-size:13px; }
+        .hbtn { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:white; padding:9px 18px; border-radius:8px; font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .2s; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+        .hbtn:hover { background:rgba(255,255,255,.28); }
+
+        /* Layout */
+        .container { max-width:1300px; margin:32px auto; padding:0 24px; }
+        .card { background:white; border-radius:12px; padding:24px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:24px; }
+
+        /* Notice */
+        .notice { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:10px 16px; border-radius:8px; margin-bottom:20px; font-size:13px; }
+
+        /* Stat pills */
+        .stats-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+        .stat-pill { background:white; border-radius:10px; padding:14px 18px; box-shadow:0 1px 4px rgba(0,0,0,.07); border-left:3px solid var(--accent); min-width:140px; }
+        .stat-pill-label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+        .stat-pill-value { font-family:'Crimson Pro',serif; font-size:22px; font-weight:700; color:var(--primary); }
+
+        /* Filtros */
+        .filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+        .filters input, .filters select { padding:9px 12px; border:1.5px solid var(--line); border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; background:white; }
+        .filters input:focus, .filters select:focus { outline:none; border-color:var(--accent); }
+        .filters input { flex:1; min-width:180px; }
+
+        /* Tabla */
+        .table-wrap { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        thead th { background:#5C1018; color:white; padding:12px 14px; text-align:left; font-size:12px; font-weight:700; letter-spacing:.04em; white-space:nowrap; }
+        tbody td { padding:12px 14px; border-bottom:1px solid #f0ede6; vertical-align:middle; }
+        tbody tr:hover { background:#fafaf8; }
+
+        /* Badges */
+        .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+        .badge-ejecutado  { background:#fce7e7; color:#991b1b; }
+        .badge-proyectado { background:#fef3c7; color:#92400e; }
+        .badge-parcial    { background:#fef3c7; color:#92400e; font-weight:700; }
+        .badge-cancelado  { background:#d1fae5; color:#065f46; }
+        .badge-pendiente  { background:#f3f4f6; color:#6b7280; }
+
+        /* Paginador */
+        .paginador { display:flex; align-items:center; justify-content:space-between; padding:12px 0; font-size:13px; color:var(--muted); }
+        .paginador button { padding:5px 12px; border:1px solid var(--line); border-radius:6px; background:white; cursor:pointer; font-size:14px; }
+        .paginador button:disabled { opacity:.4; cursor:default; }
+
+        .empty { text-align:center; padding:48px; color:var(--muted); }
+        .loading { text-align:center; padding:40px; color:var(--muted); }
+        .monto-pend { font-size:11px; color:#92400e; font-weight:600; }
+    </style>
+    <link rel="stylesheet" href="sigpo-theme.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="header-content">
+        <div class="header-left">
+            <h1>💸 Gastos</h1>
+            <p id="headerSub">Cargando…</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <a class="hbtn" href="profesor_1_dashboard.html">← Dashboard</a>
+            <button class="hbtn" onclick="cerrarSesion()">Cerrar Sesión</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="notice">📋 Vista de solo lectura — mostrando gastos de tus programas y cohortes asignadas.</div>
+
+    <div class="stats-row">
+        <div class="stat-pill"><div class="stat-pill-label">Proyectado</div><div class="stat-pill-value" id="st-proy">—</div></div>
+        <div class="stat-pill" style="border-left-color:#c0392b;"><div class="stat-pill-label">Ejecutado</div><div class="stat-pill-value" id="st-ejec" style="color:#c0392b;">—</div></div>
+        <div class="stat-pill" style="border-left-color:#2d7a4f;"><div class="stat-pill-label">Total gastos</div><div class="stat-pill-value" id="st-cant" style="color:#2d7a4f;">—</div></div>
+    </div>
+
+    <div class="card">
+        <div class="filters">
+            <input type="text" id="f-buscar" placeholder="🔍 Buscar concepto, proveedor…" oninput="renderTabla()">
+            <select id="f-prog" onchange="renderTabla()"><option value="">Todos los programas</option></select>
+            <select id="f-cat"  onchange="renderTabla()"><option value="">Todas las categorías</option></select>
+            <select id="f-tipo" onchange="renderTabla()">
+                <option value="">Todos</option>
+                <option value="PROYECTADO">Proyectados</option>
+                <option value="EJECUTADO">Ejecutados</option>
+                <option value="PARCIAL">Pago Parcial</option>
+            </select>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Categoría</th>
+                        <th>Concepto</th>
+                        <th>Programa</th>
+                        <th>Cohorte/Edición</th>
+                        <th>Monto</th>
+                        <th>Proveedor</th>
+                        <th>Comprobante</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-gastos">
+                    <tr><td colspan="9" class="loading">Cargando…</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="paginador" class="paginador" style="display:none;"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+var _gastos = [], _progMap = {}, _cohMap = {}, _pag = 1;
+var POR_PAG = 10;
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fM(n) {
+    if (n === null || n === undefined || n === '') return '—';
+    var num = parseFloat(n);
+    if (isNaN(num)) return '—';
+    return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fFecha(f) {
+    if (!f) return '—';
+    var p = String(f).split('T')[0].split('-');
+    return p.length === 3 ? p[2]+'/'+p[1]+'/'+p[0] : f;
+}
+
+function gastosFiltrados() {
+    var txt  = document.getElementById('f-buscar').value.toLowerCase();
+    var prog = document.getElementById('f-prog').value;
+    var cat  = document.getElementById('f-cat').value;
+    var tipo = document.getElementById('f-tipo').value;
+    return _gastos.filter(function(g) {
+        if (prog && String(g.programa_id) !== prog) return false;
+        if (cat  && g.categoria !== cat) return false;
+        if (tipo === 'PARCIAL'    && g.estado !== 'PARCIAL') return false;
+        if (tipo === 'PROYECTADO' && !(g.tipo === 'PROYECTADO' && g.estado !== 'PARCIAL')) return false;
+        if (tipo === 'EJECUTADO'  && !(g.tipo === 'EJECUTADO'  && g.estado !== 'PARCIAL')) return false;
+        if (txt) {
+            var hay = ((g.concepto||'')+(g.proveedor||'')+(g.categoria||'')).toLowerCase();
+            if (hay.indexOf(txt) < 0) return false;
+        }
+        return true;
+    });
+}
+
+function renderTabla() {
+    var lista = gastosFiltrados();
+    var tbody = document.getElementById('tbody-gastos');
+    var pag_div = document.getElementById('paginador');
+
+    if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty">No hay gastos para mostrar.</td></tr>';
+        pag_div.style.display = 'none';
+        return;
+    }
+
+    var totalPags = Math.ceil(lista.length / POR_PAG);
+    _pag = Math.min(_pag, totalPags);
+    var slice = lista.slice((_pag - 1) * POR_PAG, _pag * POR_PAG);
+
+    tbody.innerHTML = slice.map(function(g) {
+        var parcial = g.estado === 'PARCIAL';
+        var ejec    = g.tipo === 'EJECUTADO' && !parcial;
+        var fecha   = fFecha(ejec ? (g.fecha_pago || g.fecha_estimada) : g.fecha_estimada);
+
+        var montoHtml;
+        if (parcial) {
+            montoHtml = '<strong>'+fM(g.monto_pagado)+'</strong> pagado<br>'
+                + '<span class="monto-pend">Pendiente: '+fM(g.monto_pendiente)+'</span>';
+        } else {
+            montoHtml = esc(fM(ejec ? (g.monto_pagado || g.monto_original) : g.monto_original));
+        }
+
+        var badgeT = parcial
+            ? '<span class="badge badge-parcial">Pago Parcial</span>'
+            : ejec
+                ? '<span class="badge badge-ejecutado">Ejecutado</span>'
+                : '<span class="badge badge-proyectado">Proyectado</span>';
+        var badgeE = g.estado === 'CANCELADO'
+            ? '<span class="badge badge-cancelado">Pagado</span>'
+            : g.estado === 'PARCIAL'
+                ? '<span class="badge badge-parcial">Parcial</span>'
+                : '<span class="badge badge-pendiente">Pendiente</span>';
+
+        return '<tr>'
+            + '<td>'+fecha+'</td>'
+            + '<td>'+esc(g.categoria||'—')+'</td>'
+            + '<td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+esc(g.concepto||'')+'">'+esc(g.concepto||'—')+'</td>'
+            + '<td style="font-size:12px;">'+esc(_progMap[g.programa_id]||'—')+'</td>'
+            + '<td style="font-size:12px;">'+esc(_cohMap[g.cohorte_id]||'—')+'</td>'
+            + '<td style="font-weight:700;">'+montoHtml+'</td>'
+            + '<td style="font-size:12px;">'+esc(g.proveedor||'—')+'</td>'
+            + '<td style="font-size:12px;">'+esc(g.nro_comprobante||'—')+'</td>'
+            + '<td>'+badgeT+' '+badgeE+'</td>'
+            + '</tr>';
+    }).join('');
+
+    /* Paginador */
+    if (totalPags <= 1) {
+        pag_div.style.display = 'none';
+    } else {
+        pag_div.style.display = 'flex';
+        var desde = (_pag - 1) * POR_PAG + 1;
+        var hasta = Math.min(_pag * POR_PAG, lista.length);
+        pag_div.innerHTML = '<span>'+desde+'–'+hasta+' de '+lista.length+'</span>'
+            + '<div style="display:flex;gap:4px;align-items:center;">'
+            + '<button onclick="_pag--; renderTabla();" '+ (_pag===1?'disabled':'') +'>‹</button>'
+            + '<span style="padding:0 12px;">Página '+_pag+' de '+totalPags+'</span>'
+            + '<button onclick="_pag++; renderTabla();" '+ (_pag===totalPags?'disabled':'') +'>›</button>'
+            + '</div>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    var sesion = getSesion();
+    if (!sesion || sesion.rol !== 'PROFESOR') { window.location.href = 'portal_login.html'; return; }
+    document.getElementById('headerSub').textContent = sesion.nombre || 'Profesor/a';
+
+    try {
+        var sb = await getSupabase();
+        var progIds = await obtenerProgramasAsignadosPorDni(sesion.dni);
+
+        if (!progIds.length) {
+            document.getElementById('tbody-gastos').innerHTML = '<tr><td colspan="9" class="empty">No tenés programas asignados.</td></tr>';
+            return;
+        }
+
+        var [rP, rC] = await Promise.all([
+            sb.from('programas').select('programa_id,nombre').in('programa_id', progIds),
+            sb.from('cohortes').select('cohorte_id,nombre,programa_id').in('programa_id', progIds)
+        ]);
+
+        var programas = rP.data || [];
+        var cohortes  = rC.data || [];
+        programas.forEach(function(p){ _progMap[p.programa_id] = p.nombre; });
+        cohortes.forEach(function(c){ _cohMap[c.cohorte_id] = c.nombre; });
+
+        var cohIds = cohortes.map(function(c){ return c.cohorte_id; });
+
+        var rE = cohIds.length
+            ? await sb.from('egresos')
+                .select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_original,monto_pagado,monto_pendiente,fecha_estimada,fecha_pago,categoria,concepto,proveedor,nro_comprobante')
+                .in('cohorte_id', cohIds)
+            : { data: [] };
+
+        _gastos = rE.data || [];
+
+        /* Poblar filtros */
+        var selProg = document.getElementById('f-prog');
+        programas.forEach(function(p){
+            var o = document.createElement('option');
+            o.value = p.programa_id; o.textContent = p.nombre;
+            selProg.appendChild(o);
+        });
+        var cats = [...new Set(_gastos.map(function(g){ return g.categoria; }).filter(Boolean))].sort();
+        var selCat = document.getElementById('f-cat');
+        cats.forEach(function(c){
+            var o = document.createElement('option');
+            o.value = c; o.textContent = c;
+            selCat.appendChild(o);
+        });
+
+        /* Stats */
+        var ejec = _gastos.filter(function(g){ return g.tipo==='EJECUTADO' && g.estado!=='PARCIAL'; });
+        var parc = _gastos.filter(function(g){ return g.estado==='PARCIAL'; });
+        var proy = _gastos.filter(function(g){ return g.tipo==='PROYECTADO' && g.estado!=='PARCIAL'; });
+        var totalEjec = ejec.reduce(function(s,g){ return s+Number(g.monto_pagado||0); },0)
+                      + parc.reduce(function(s,g){ return s+Number(g.monto_pagado||0); },0);
+        var totalProy = proy.reduce(function(s,g){ return s+Number(g.monto_original||0); },0)
+                      + parc.reduce(function(s,g){ return s+Number(g.monto_pendiente||0); },0);
+        document.getElementById('st-proy').textContent = fM(totalProy);
+        document.getElementById('st-ejec').textContent = fM(totalEjec);
+        document.getElementById('st-cant').textContent = _gastos.length;
+
+        renderTabla();
+
+    } catch(err) {
+        console.error(err);
+        document.getElementById('tbody-gastos').innerHTML = '<tr><td colspan="9" class="empty">Error al cargar gastos.</td></tr>';
+    }
+});
+</script>
+</body>
+</html>

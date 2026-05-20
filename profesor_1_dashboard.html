@@ -95,9 +95,12 @@
     </div>
 
     <div class="card">
-        <div class="tabs-bar">
-            <button class="tab-btn active" id="tab-cohortes" onclick="mostrarTab('cohortes')">📚 Cohortes / Ediciones</button>
-            <button class="tab-btn" id="tab-programas" onclick="mostrarTab('programas')">🎓 Programas / Cursos</button>
+        <div class="tabs-bar" style="justify-content:space-between;align-items:center;">
+            <div style="display:flex;gap:8px;">
+                <button class="tab-btn active" id="tab-cohortes" onclick="mostrarTab('cohortes')">📚 Cohortes / Ediciones</button>
+                <button class="tab-btn" id="tab-programas" onclick="mostrarTab('programas')">🎓 Programas / Cursos</button>
+            </div>
+            <button class="tab-btn" style="background:#5C1018;color:white;border-color:#5C1018;" onclick="navegar('profesor_gastos.html')">💸 Gastos</button>
         </div>
         <div id="panel-cohortes"><div class="loading">Cargando…</div></div>
         <div id="panel-programas" style="display:none;"><div class="loading">Cargando…</div></div>
