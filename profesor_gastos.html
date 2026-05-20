@@ -10,18 +10,20 @@
         :root { --primary: #5C1018; --accent: #C49A2A; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
 
-        /* NAVBAR */
-        .navbar { background: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .nav-brand { font-weight: 700; color: var(--primary); font-size: 15px; }
-        .nav-links { display: flex; gap: 8px; align-items: center; }
-        .nav-link { text-decoration: none; color: #666; font-weight: 500; padding: 8px 14px; border-radius: 6px; transition: all 0.2s; font-size: 14px; }
-        .nav-link:hover, .nav-link.active { background: var(--accent); color: white; }
+        /* HEADER */
+        .header { background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%); color: white; padding: 20px 40px; }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+        .header-top-left { flex: 1; min-width: 280px; }
+        .breadcrumb { font-size: 14px; margin-bottom: 12px; }
+        .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s; }
+        .breadcrumb a:hover { background: rgba(255,255,255,0.24); }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 24px; margin-bottom: 4px; }
+        .header p { font-size: 13px; opacity: 0.85; }
+        .btn-logout { display: flex; align-items: center; gap: 7px; padding: 9px 18px; background: rgba(255,255,255,0.14); border: 1.5px solid rgba(255,255,255,0.38); color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: 'DM Sans', sans-serif; transition: background 0.2s; white-space: nowrap; flex-shrink: 0; margin-top: 4px; }
+        .btn-logout:hover { background: rgba(255,255,255,0.24); }
 
         /* LAYOUT */
-        .container { max-width: 1200px; margin: 32px auto; padding: 0 32px; }
-        .header { margin-bottom: 28px; }
-        .header h1 { font-family: 'Crimson Pro', serif; font-size: 30px; color: var(--primary); margin-bottom: 4px; }
-        .header p { color: #888; font-size: 14px; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 32px; }
 
         /* SUMMARY CARDS */
         .summary-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 28px; }
@@ -69,26 +71,29 @@
 
         @media (max-width: 1100px) { .summary-cards { grid-template-columns: repeat(3,1fr); } }
         @media (max-width: 700px)  { .summary-cards { grid-template-columns: repeat(2,1fr); } }
-        @media (max-width: 640px) { .navbar, .container { padding-left: 16px; padding-right: 16px; } }
+        @media (max-width: 640px) { .header, .container { padding-left: 16px; padding-right: 16px; } }
     </style>
     <link rel="stylesheet" href="sigpo-theme.css">
 </head>
 <body>
 
-<div class="navbar">
-    <div class="nav-brand" id="nav-nombre">Profesor/a · SiGPo</div>
-    <div class="nav-links">
-        <a href="profesor_1_dashboard.html" class="nav-link">🏠 Dashboard</a>
-        <a href="profesor_gastos.html"      class="nav-link active">💸 Gastos</a>
-        <a href="portal_login.html" class="nav-link" onclick="return cerrarSesion(event)">🚪 Salir</a>
+<div class="header">
+    <div class="header-top">
+        <div class="header-top-left">
+            <div class="breadcrumb"><a href="profesor_1_dashboard.html">← Volver al Dashboard</a></div>
+            <h1>💸 Gastos</h1>
+            <p id="header-sub">Mis programas y cohortes asignadas</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+            <button type="button" class="btn-logout" onclick="cerrarSesion()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesión
+            </button>
+        </div>
     </div>
 </div>
 
 <div class="container">
-    <div class="header">
-        <h1>💸 Gastos</h1>
-        <p id="header-sub">Mis programas y cohortes asignadas</p>
-    </div>
 
     <div class="summary-cards">
         <div class="summary-card c-ejecutado">
