@@ -253,7 +253,7 @@ function renderProgramas(cobros, egresos, insc) {
                            .reduce(function(s,e){ return s+Number(e.monto_pagado||e.monto_original||0); },0);
         var saldo = rec - egr;
         var badge = p.estado==='ACTIVO' ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-warning">' + esc(p.estado||'—') + '</span>';
-        return '<div class="item-card">' +
+        return '<div class="item-card" onclick="navegar(\'profesor_3_programa.html?programa_id=' + p.programa_id + '\')">' +
             '<div class="item-name">🎓 ' + esc(p.nombre) + ' ' + badge + '</div>' +
             '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">' + esc(p.tipo||'') + ' · ' + cohsProg.length + ' cohortes/ediciones</div>' +
             '<div class="item-stats">' +

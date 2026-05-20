@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cohorte - Profesor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#5C1018; --accent:#8C1A28; --success:#2d7a4f; --danger:#c0392b; --warning:#e67e22; --bg:#f8f6f1; }
+        body { font-family:'DM Sans',sans-serif; background:var(--bg); padding:20px; font-size:14px; }
+
+        /* HEADER */
+        .page-header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:22px 28px; border-radius:12px 12px 0 0; display:flex; justify-content:space-between; align-items:center; gap:20px; }
+        .header-left h1 { font-family:'Crimson Pro',serif; font-size:24px; margin-bottom:4px; }
+        .header-left p  { opacity:0.85; font-size:13px; }
+        .stat-row { display:flex; gap:20px; flex-shrink:0; align-items:flex-start; flex-wrap:wrap; }
+        .stat-item { text-align:center; }
+        .stat-label { font-size:10px; opacity:0.75; text-transform:uppercase; letter-spacing:0.5px; }
+        .stat-value { font-size:22px; font-weight:700; margin-top:2px; }
+
+        .btn-volver { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.3); color:white; padding:6px 13px; border-radius:8px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; display:inline-flex; align-items:center; gap:5px; transition:background 0.2s; margin-bottom:10px; }
+        .btn-volver:hover { background:rgba(255,255,255,0.22); }
+
+        .notif-wrapper { position:relative; display:inline-block; }
+        .notif-btn { background:rgba(255,255,255,0.14); border:1.5px solid rgba(255,255,255,0.38); color:white; padding:8px 12px; border-radius:8px; font-size:18px; cursor:pointer; position:relative; transition:background .2s; }
+        .notif-btn:hover { background:rgba(255,255,255,0.26); }
+        #notif-badge { position:absolute; top:-4px; right:-4px; background:#ef4444; color:white; border-radius:50%; min-width:18px; height:18px; font-size:10px; font-weight:700; display:none; align-items:center; justify-content:center; padding:0 3px; }
+        #notif-dropdown { display:none; position:absolute; right:0; top:48px; width:320px; background:white; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.15); z-index:500; overflow:hidden; color:#2c2c2c; border:1px solid #e5e7eb; }
+        .notif-head { padding:14px 16px; border-bottom:1px solid #f0f0f0; font-weight:700; color:#5C1018; font-size:14px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+        .notif-head button { background:none; border:none; color:#8C1A28; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
+
+        .btn-logout { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.3); color:white; padding:8px 14px; border-radius:8px; font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; display:inline-flex; align-items:center; gap:7px; transition:background 0.2s; }
+        .btn-logout:hover { background:rgba(192,57,43,0.55); }
+
+        /* READONLY BANNER */
+        .readonly-banner { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:10px 22px; font-size:13px; display:flex; align-items:center; gap:8px; }
+
+        /* TOOLBAR */
+        .toolbar { background:white; padding:14px 22px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e0e0e0; gap:12px; flex-wrap:wrap; }
+        .filters { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .filter-label { font-weight:600; font-size:13px; white-space:nowrap; }
+        .filter-btn { padding:6px 13px; border:2px solid #e0e0e0; background:white; border-radius:6px; font-size:12px; cursor:pointer; transition:all 0.2s; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+        .filter-btn:hover { border-color:var(--accent); }
+        .filter-btn.active { background:var(--primary); color:white; border-color:var(--primary); }
+        .btn-export { padding:8px 14px; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; font-family:'DM Sans',sans-serif; white-space:nowrap; background:var(--success); color:white; display:inline-flex; align-items:center; gap:5px; }
+        .btn-export:hover { background:#246441; }
+
+        /* TABLA */
+        .table-wrapper { background:white; overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        thead { position:sticky; top:0; z-index:10; }
+        th { padding:9px 6px; text-align:center; font-weight:600; border-bottom:2px solid #c5c5c5; border-right:1px solid #ddd; white-space:nowrap; font-size:10px; text-transform:uppercase; letter-spacing:0.4px; color:#555; background:#f0ede6; }
+        th.col-name  { text-align:left; min-width:165px; padding-left:10px; }
+        th.col-email { text-align:left; min-width:175px; padding-left:8px; }
+        th.col-cuota { min-width:82px; }
+        th.tot-hdr   { color:white; font-size:10px; min-width:100px; }
+        th.th-pagar   { background:#3730a3; }
+        th.th-abonado { background:#2d7a4f; }
+        th.th-saldo   { background:#c0392b; }
+        td { padding:9px 6px; border-bottom:1px solid #ebebeb; border-right:1px solid #ebebeb; vertical-align:middle; }
+        tr.fila-est:hover td { background:rgba(212,175,55,0.05); }
+        tr.oculta { display:none; }
+        .cell-name  { font-weight:700; color:var(--primary); padding-left:10px; white-space:nowrap; }
+        .cell-desc  { text-align:center; font-weight:600; }
+        .cell-email { font-size:11px; color:#8C1A28; padding-left:8px; }
+
+        td[data-est="ABONADA"]      { background:#d4edda; color:#1e7e44; text-align:center; font-weight:600; }
+        td[data-est="PAGO_PARCIAL"] { background:#fff3cd; color:#856404; text-align:center; font-weight:600; font-size:10px; }
+        td[data-est="EN_MORA"]      { background:#f8d7da; color:#c0392b; text-align:center; font-weight:600; }
+        td[data-est="PENDIENTE"]    { background:#f0f0f0; color:#666;    text-align:center; font-weight:600; }
+        td[data-est="NO_APLICA"]    { background:#fafafa; color:#ccc; font-style:italic; font-size:10px; border:1px dashed #e0e0e0; text-align:center; }
+        td[data-est="NO_ABONADA"]  { background:#eef2ff; color:#4338ca; text-align:center; font-weight:600; }
+        td[data-est="A_DEFINIR"]   { background:#f3f4f6; color:#6b7280; text-align:center; font-weight:600; font-style:italic; }
+
+        .est-badge { display:block; font-size:10px; font-weight:700; padding:1px 6px; border-radius:8px; margin-bottom:3px; }
+        .badge-mora      { background:#fecdd3; color:#9f1239; }
+        .badge-noabonada { background:#bfdbfe; color:#1e40af; }
+        .badge-parcial   { background:#fde68a; color:#92400e; }
+        .badge-pendiente { background:#fef08a; color:#713f12; }
+
+        .cell-tot-pagar   { background:#eef2ff; color:#5C1018; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+        .cell-tot-abonado { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+        .cell-saldo-pos   { background:#f8d7da; color:#c0392b; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+        .cell-saldo-cero  { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+
+        /* LEYENDA */
+        .leyenda { background:white; padding:12px 22px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; border-top:1px solid #e8e8e8; font-size:12px; color:#555; border-radius:0 0 12px 12px; box-shadow:0 4px 16px rgba(0,0,0,0.07); }
+        .ley-item { display:flex; align-items:center; gap:5px; }
+        .ley-box { width:18px; height:13px; border-radius:3px; flex-shrink:0; }
+        .ley-abonada   { background:#d4edda; border:1px solid #b8dcc7; }
+        .ley-parcial   { background:#fff3cd; border:1px solid #ffe082; }
+        .ley-mora      { background:#f8d7da; border:1px solid #f1a8b0; }
+        .ley-pendiente { background:#f0f0f0; border:1px solid #d0d0d0; }
+        .ley-noabonada { background:#eef2ff; border:1px solid #c7d2fe; }
+        .ley-adefinir  { background:#f3f4f6; border:1px solid #d1d5db; }
+        .ley-nodebe    { background:#fafafa; border:1px dashed #d0d0d0; }
+
+        /* EMPTY */
+        .empty-state { display:none; text-align:center; padding:60px 20px; color:#aaa; }
+        .empty-state.show { display:block; }
+
+        /* SPINNER */
+        .spinner-overlay { display:none; position:fixed; inset:0; background:rgba(255,255,255,0.78); z-index:9000; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
+        .spinner-overlay.show { display:flex; }
+        .spinner { width:42px; height:42px; border:4px solid #e0e0e0; border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* CELL LINKS */
+        .cell-links { display:flex; gap:3px; margin-top:4px; justify-content:center; flex-wrap:wrap; }
+        .clink { border:none; border-radius:3px; padding:2px 5px; font-size:10px; font-weight:600; cursor:pointer; font-family:inherit; line-height:1.4; text-decoration:none; display:inline-block; }
+        .clink-comp   { background:#e0e7ff; color:#4338ca; }
+        .clink-recibo { background:#fef3c7; color:#92400e; }
+
+        @media(max-width:680px){ body{ padding:10px; } .page-header{ padding:16px; border-radius:8px 8px 0 0; } }
+    </style>
+    <link rel="stylesheet" href="sigpo-theme.css">
+</head>
+<body>
+
+<div class="spinner-overlay" id="spinner"><div class="spinner"></div><span style="color:#5C1018;font-weight:600;font-size:14px;">Cargando...</span></div>
+
+<div id="app">
+
+<!-- HEADER -->
+<div class="page-header">
+    <div class="header-left">
+        <button class="btn-volver" onclick="history.back()">← Volver</button>
+        <h1 id="hdr-programa">—</h1>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;">
+            <span id="hdr-cohorte" style="background:rgba(255,255,255,0.18);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:0.03em;"></span>
+            <p id="hdr-sub" style="font-size:13px;opacity:0.85;"></p>
+        </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div class="notif-wrapper">
+                <button class="notif-btn" onclick="toggleNotif()" title="Notificaciones">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span id="notif-badge"></span>
+                </button>
+                <div id="notif-dropdown">
+                    <div class="notif-head"><span>🔔 Notificaciones</span><button onclick="marcarTodasLeidas()">Marcar leídas</button></div>
+                    <div id="notif-list" style="max-height:320px;overflow-y:auto;"><div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;">Cargando…</div></div>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="cerrarSesion()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesión
+            </button>
+        </div>
+        <div class="stat-row">
+            <div class="stat-item"><div class="stat-label">Al día</div><div class="stat-value" id="s-aldia">—</div></div>
+            <div class="stat-item"><div class="stat-label">En mora</div><div class="stat-value" id="s-mora" style="color:#ffc107;">—</div></div>
+            <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
+            <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado">—</div></div>
+            <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;">—</div></div>
+            <div class="stat-item"><div class="stat-label">Saldo</div><div class="stat-value" id="s-saldo">—</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- READONLY BANNER -->
+<div class="readonly-banner">👁️ Modo solo lectura — visualización de cobros de la cohorte.</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+    <div class="filters" id="filtros">
+        <span class="filter-label">Filtrar:</span>
+        <button class="filter-btn active" data-f="todos">Todos</button>
+        <button class="filter-btn" data-f="ABONADA">Al día</button>
+        <button class="filter-btn" data-f="EN_MORA">En mora</button>
+        <button class="filter-btn" data-f="PAGO_PARCIAL">Pago parcial</button>
+        <button class="filter-btn" data-f="PENDIENTE">Pendiente</button>
+        <button class="filter-btn" data-f="NO_ABONADA">No abonada</button>
+        <button class="filter-btn" data-f="A_DEFINIR">A definir</button>
+    </div>
+    <div>
+        <button class="btn-export" onclick="exportarExcel()">📊 Exportar a Excel</button>
+    </div>
+</div>
+
+<!-- TABLA -->
+<div class="table-wrapper">
+    <table id="tabla">
+        <thead id="t-head"></thead>
+        <tbody id="t-body"></tbody>
+    </table>
+    <div class="empty-state" id="empty"><div style="font-size:48px;margin-bottom:12px;">🔍</div><div style="font-size:15px;font-weight:600;color:#666;">Sin resultados para este filtro</div></div>
+</div>
+
+<!-- LEYENDA -->
+<div class="leyenda">
+    <strong style="color:#333;">Leyenda:</strong>
+    <div class="ley-item"><span class="ley-box ley-abonada"></span> Abonada</div>
+    <div class="ley-item"><span class="ley-box ley-parcial"></span> Pago Parcial</div>
+    <div class="ley-item"><span class="ley-box ley-mora"></span> En Mora</div>
+    <div class="ley-item"><span class="ley-box ley-pendiente"></span> Pendiente</div>
+    <div class="ley-item"><span class="ley-box ley-noabonada"></span> No abonada</div>
+    <div class="ley-item"><span class="ley-box ley-adefinir"></span> A definir</div>
+    <div class="ley-item"><span class="ley-box ley-nodebe"></span> No debe abonar</div>
+</div>
+
+</div><!-- #app -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+var COHORTE_ID = parseInt(new URLSearchParams(location.search).get('cohorte_id'), 10) || 0;
+var V = { data: null, filtro: 'todos' };
+
+function escHtml(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fMonto(n) { var num=parseFloat(n||0); if(isNaN(num))return '$0,00'; return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fMillones(n) { var num=parseFloat(n||0); if(isNaN(num))return '$0'; if(Math.abs(num)>=1000000)return (num<0?'-$':'$')+(Math.abs(num)/1000000).toLocaleString('es-AR',{minimumFractionDigits:1,maximumFractionDigits:1})+'M'; if(Math.abs(num)>=1000)return (num<0?'-$':'$')+(Math.abs(num)/1000).toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:1})+'k'; return fMonto(num); }
+function spin(on) { document.getElementById('spinner').classList.toggle('show', on); }
+
+/* ── NOTIFICACIONES ── */
+var _notifs = [];
+function toggleNotif() { var dd=document.getElementById('notif-dropdown'); if(dd)dd.style.display=dd.style.display==='block'?'none':'block'; }
+document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
+function renderNotificaciones(datos) {
+    _notifs=datos||[];
+    var sinLeer=_notifs.filter(function(n){return !n.leida;}).length;
+    var badge=document.getElementById('notif-badge'); if(badge){badge.textContent=sinLeer;badge.style.display=sinLeer>0?'flex':'none';}
+    var lista=document.getElementById('notif-list'); if(!lista)return;
+    if(!_notifs.length){lista.innerHTML='<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;">Sin notificaciones</div>';return;}
+    lista.innerHTML=_notifs.map(function(n){return '<div style="padding:12px 16px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#374151;">'+escHtml(n.mensaje)+'</div>';}).join('');
+}
+function marcarTodasLeidas(){_notifs.forEach(function(n){n.leida=true;});renderNotificaciones(_notifs);}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', async function() {
+    var sesion = getSesion();
+    if (!sesion || sesion.rol !== 'PROFESOR') { window.location.href = 'portal_login.html'; return; }
+    if (!COHORTE_ID) { alert('Cohorte no especificada.'); history.back(); return; }
+    if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones('PROFESOR').then(renderNotificaciones);
+    initFiltros();
+    try { await cargar(); } catch(e) { spin(false); console.error(e); alert('Error al cargar: ' + e.message); }
+});
+
+/* ── CARGAR DATOS ── */
+async function cargar() {
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
+            sb.from('cohortes').select('*, programas(nombre)').eq('cohorte_id', COHORTE_ID).single(),
+            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
+            sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico').eq('cohorte_id', COHORTE_ID),
+            sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
+            sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', COHORTE_ID)
+        ]);
+
+        var cohorte = rCoh.data || {};
+        var cobros  = rCob.data || [];
+        var inscripciones = rInsc.data || [];
+        var estList = rEst.data || [];
+
+        var estByDni = {};
+        estList.forEach(function(e){ estByDni[String(e.dni)] = e; });
+        var inscById = {};
+        inscripciones.forEach(function(i){ inscById[i.estudiante_id] = i; });
+
+        var dniMap = {};
+        cobros.forEach(function(c){
+            var dk = String(c.dni);
+            if (!dniMap[dk]) {
+                var est = estByDni[dk] || {};
+                var insc = est.id ? (inscById[est.id] || {}) : {};
+                dniMap[dk] = { id:est.id||null, dni:c.dni, apellido:est.apellido||dk, nombre:est.nombre||'', email:est.email||'', descuento_porcentaje:insc.descuento_porcentaje||0, estado_academico:insc.estado_academico||'ACTIVO', cobros:[] };
+            }
+            var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
+            dniMap[dk].cobros.push(normalizarCobro({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final!=null?Number(c.monto_final):null, monto_abonado:abonado, saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'A_DEFINIR':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null }));
+        });
+
+        inscripciones.forEach(function(insc){
+            var est = estList.find(function(e){return e.id===insc.estudiante_id;});
+            if(!est)return;
+            var dk=String(est.dni);
+            if(dniMap[dk])return;
+            dniMap[dk]={id:est.id||null,dni:est.dni,apellido:est.apellido||dk,nombre:est.nombre||'',email:est.email||'',descuento_porcentaje:insc.descuento_porcentaje||0,estado_academico:insc.estado_academico||'ACTIVO',cobros:[]};
+        });
+
+        var progNombre = cohorte.programas ? cohorte.programas.nombre : (cohorte.programa_id ? 'Programa' : '—');
+        V.data = {
+            programa: { nombre: progNombre },
+            cohorte:  { cohorteId: COHORTE_ID, nombre: cohorte.nombre || 'Cohorte', fecha_inicio: cohorte.fecha_inicio||'', fecha_fin: cohorte.fecha_fin||'' },
+            columnas: derivarColumnas(Object.values(dniMap)),
+            estudiantes: Object.values(dniMap),
+            egresos: rEgr.data || []
+        };
+        renderHeader();
+        renderTabla();
+        actualizarStats();
+        actualizarFiltros();
+    } finally {
+        spin(false);
+    }
+}
+
+/* ── NORMALIZAR COBRO ── */
+function normalizarCobro(c) {
+    var concepto = c.concepto || 'Cuota';
+    var montoOriginal = c.monto_original != null ? Number(c.monto_original) : (c.monto_final != null ? Number(c.monto_final) : null);
+    var montoAbonado  = c.monto_abonado  != null ? Number(c.monto_abonado)  : 0;
+    var montoFinal    = c.monto_final    != null ? Number(c.monto_final)    : montoOriginal;
+    var saldo         = c.saldo_pendiente != null ? Number(c.saldo_pendiente) : (montoFinal != null ? Math.max(0, montoFinal - montoAbonado) : 0);
+    var descuento     = Number(c.descuento_porcentaje || 0);
+    var fechaVto      = c.fecha_vencimiento || '';
+    var estadoExpl    = String(c.estado || '').toUpperCase().trim().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    var hoyStr        = new Date().toISOString().split('T')[0];
+    var estado = 'NO_ABONADA';
+    if (['A_DEFINIR','A DEFINIR','NO DEFINIDO'].includes(estadoExpl) || montoFinal == null) estado = 'A_DEFINIR';
+    else if (['ABONADA','PAGADA','PAGADO'].includes(estadoExpl) || (montoFinal != null && saldo <= 0 && montoAbonado > 0)) estado = 'ABONADA';
+    else if (['PAGO PARCIAL','PARCIAL'].includes(estadoExpl) || (montoAbonado > 0 && saldo > 0)) estado = 'PAGO_PARCIAL';
+    else if (['PENDIENTE'].includes(estadoExpl)) estado = 'PENDIENTE';
+    else if (['EN MORA','MORA','VENCIDA'].includes(estadoExpl)) estado = 'EN_MORA';
+    else if (saldo > 0 && fechaVto && fechaVto < hoyStr) estado = 'EN_MORA';
+    else if (saldo > 0) estado = 'NO_ABONADA';
+    else estado = 'ABONADA';
+    return { cobro_id:c.cobro_id||'', concepto:concepto, concepto_base:concepto, periodo:c.periodo||'', fecha_vencimiento:fechaVto, fecha_pago:c.fecha_pago||'', monto_original:montoOriginal, descuento_porcentaje:descuento, monto_final:montoFinal, monto_abonado:montoAbonado, saldo_pendiente:saldo, estado:estado, comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null };
+}
+
+/* ── DERIVAR COLUMNAS ── */
+function derivarColumnas(estudiantes) {
+    var mapa = new Map();
+    estudiantes.forEach(function(est) {
+        est.cobros.forEach(function(c) {
+            if (!c) return;
+            var key = (c.concepto_base||c.concepto) + '||' + (c.periodo||'');
+            if (!mapa.has(key)) mapa.set(key, { concepto_base:c.concepto_base||c.concepto, periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'' });
+        });
+    });
+    return [...mapa.values()].sort(function(a,b){ return String(a.fecha_vencimiento||'9999-12-31').localeCompare(String(b.fecha_vencimiento||'9999-12-31')); });
+}
+
+/* ── RENDER HEADER ── */
+function renderHeader() {
+    var d = V.data;
+    document.getElementById('hdr-programa').textContent = d.programa.nombre;
+    document.getElementById('hdr-cohorte').textContent  = d.cohorte.nombre;
+    var partes = [d.estudiantes.length + ' estudiante' + (d.estudiantes.length !== 1 ? 's' : '')];
+    if (d.cohorte.fecha_inicio || d.cohorte.fecha_fin) partes.push((d.cohorte.fecha_inicio||'—') + ' → ' + (d.cohorte.fecha_fin||'—'));
+    document.getElementById('hdr-sub').textContent = partes.join(' • ');
+}
+
+/* ── RENDER TABLA ── */
+function renderTabla() {
+    var columnas = V.data.columnas, estudiantes = V.data.estudiantes;
+    var thead = document.getElementById('t-head'), tbody = document.getElementById('t-body');
+
+    thead.innerHTML = '<tr>'
+        + '<th class="col-name">Apellido y Nombre</th>'
+        + '<th style="min-width:74px;text-align:center;">Desc %</th>'
+        + '<th class="col-email">Correo electrónico</th>'
+        + columnas.map(function(c){ return '<th class="col-cuota">'+escHtml(c.concepto_base)+'<br><span style="font-weight:400;color:#888;font-size:9px;">'+escHtml(c.periodo||'')+'</span></th>'; }).join('')
+        + '<th class="tot-hdr th-pagar">Total a<br>Pagar</th>'
+        + '<th class="tot-hdr th-abonado">Total<br>Abonado</th>'
+        + '<th class="tot-hdr th-saldo">Saldo<br>Pendiente</th>'
+        + '</tr>';
+
+    tbody.innerHTML = '';
+    estudiantes.forEach(function(est) {
+        var estadoGen = calcEstadoGeneral(est.cobros);
+        var totP = 0, totA = 0, totS = 0;
+        est.cobros.forEach(function(c){ if(c){ totP += Number(c.monto_final||0); totA += Number(c.monto_abonado||0); totS += Number(c.saldo_pendiente||0); }});
+
+        var cobrosMap = {};
+        est.cobros.forEach(function(c){ if(c) cobrosMap[(c.concepto_base||c.concepto)+'||'+(c.periodo||'')] = c; });
+
+        var celdas = columnas.map(function(col) {
+            var c = cobrosMap[col.concepto_base+'||'+(col.periodo||'')];
+            if (!c) return '<td data-est="NO_APLICA">no debe<br>abonar</td>';
+            var txt = '';
+            if      (c.estado === 'ABONADA')      txt = fMonto(c.monto_final);
+            else if (c.estado === 'PAGO_PARCIAL')  txt = fMonto(c.monto_abonado)+'/'+fMonto(c.monto_final);
+            else if (c.estado === 'PENDIENTE')     txt = 'en revisión';
+            else if (c.estado === 'NO_ABONADA')    txt = fMonto(c.saldo_pendiente||c.monto_final);
+            else if (c.estado === 'EN_MORA')       txt = fMonto(c.saldo_pendiente||c.monto_final);
+            else if (c.estado === 'A_DEFINIR')     txt = 'a definir';
+            else txt = fMonto(c.monto_final);
+            var title = escHtml(c.concepto+' · '+(c.periodo||'')+' | Estado: '+c.estado+' | Abonado: '+fMonto(c.monto_abonado)+' | Saldo: '+fMonto(c.saldo_pendiente)+(c.fecha_vencimiento?' | Vence: '+c.fecha_vencimiento:''));
+            var btnComp   = c.comprobante_url ? '<button class="clink clink-comp" onclick="verArchivo(\''+escJs(c.comprobante_url)+'\')" title="Ver comprobante">📎 Comp.</button>' : '';
+            var btnRecibo = c.recibo_url      ? '<button class="clink clink-recibo" onclick="verArchivo(\''+escJs(c.recibo_url)+'\')" title="Ver recibo">🧾 Recibo</button>' : '';
+            var links = (btnComp||btnRecibo) ? '<div class="cell-links">'+btnComp+btnRecibo+'</div>' : '';
+            var badge = '';
+            if      (c.estado === 'EN_MORA')      badge = '<span class="est-badge badge-mora">En mora</span>';
+            else if (c.estado === 'NO_ABONADA')   badge = '<span class="est-badge badge-noabonada">Por abonar</span>';
+            else if (c.estado === 'PAGO_PARCIAL') badge = '<span class="est-badge badge-parcial">Pago parcial</span>';
+            else if (c.estado === 'PENDIENTE')    badge = '<span class="est-badge badge-pendiente">En revisión</span>';
+            return '<td data-est="'+c.estado+'" title="'+title+'">'+badge+txt+links+'</td>';
+        }).join('');
+
+        var tr = document.createElement('tr');
+        tr.className = 'fila-est';
+        tr.dataset.dni = est.dni;
+        tr.dataset.est = estadoGen;
+        tr.innerHTML = '<td class="cell-name">'+escHtml(est.apellido)+', '+escHtml(est.nombre)+'</td>'
+            + '<td class="cell-desc" style="color:'+( est.descuento_porcentaje>0 ? 'var(--success)':'#aaa')+'">'+est.descuento_porcentaje+'%</td>'
+            + '<td class="cell-email">'+escHtml(est.email)+'</td>'
+            + celdas
+            + '<td class="cell-tot-pagar">'+fMonto(totP)+'</td>'
+            + '<td class="cell-tot-abonado">'+fMonto(totA)+'</td>'
+            + '<td class="'+(totS===0?'cell-saldo-cero':'cell-saldo-pos')+'">'+fMonto(totS)+'</td>';
+        tbody.appendChild(tr);
+    });
+
+    aplicarFiltro();
+}
+
+/* ── CALC ESTADO GENERAL ── */
+function calcEstadoGeneral(cobros) {
+    var pesos = { EN_MORA:6, PAGO_PARCIAL:5, PENDIENTE:4, NO_ABONADA:3, A_DEFINIR:2, ABONADA:1 };
+    var peor = 'ABONADA';
+    cobros.forEach(function(c){ if(c && (pesos[c.estado]||0) > (pesos[peor]||0)) peor = c.estado; });
+    return peor;
+}
+
+/* ── STATS ── */
+function actualizarStats() {
+    var ests = V.data.estudiantes;
+    var cg = function(e){ return calcEstadoGeneral(e.cobros); };
+    var recaud = ests.reduce(function(s,e){ return s + e.cobros.reduce(function(ss,c){ return ss+(c?Number(c.monto_abonado||0):0); },0); }, 0);
+    var egrExec = (V.data.egresos||[]).filter(function(e){ return e.tipo==='EJECUTADO'; }).reduce(function(s,e){ return s+Number(e.monto_pagado||e.monto_original||0); },0);
+    var saldo = recaud - egrExec;
+    document.getElementById('s-aldia').textContent     = ests.filter(function(e){ return cg(e)==='ABONADA'; }).length;
+    document.getElementById('s-mora').textContent      = ests.filter(function(e){ return cg(e)==='EN_MORA'; }).length;
+    document.getElementById('s-parcial').textContent   = ests.filter(function(e){ return cg(e)==='PAGO_PARCIAL'; }).length;
+    document.getElementById('s-recaudado').textContent = fMillones(recaud);
+    document.getElementById('s-egresos').textContent   = fMillones(egrExec);
+    var sEl = document.getElementById('s-saldo');
+    sEl.textContent = fMillones(saldo);
+    sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
+}
+
+/* ── FILTROS ── */
+function actualizarFiltros() {
+    var ests = V.data.estudiantes;
+    var cg = function(e){ return calcEstadoGeneral(e.cobros); };
+    var n = function(f){ return f==='todos' ? ests.length : ests.filter(function(e){ return cg(e)===f; }).length; };
+    var labels = { todos:'Todos', ABONADA:'Al día', EN_MORA:'En mora', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'Pendiente', NO_ABONADA:'No abonada', A_DEFINIR:'A definir' };
+    document.querySelectorAll('.filter-btn').forEach(function(b){ b.textContent = labels[b.dataset.f] + ' (' + n(b.dataset.f) + ')'; });
+}
+function initFiltros() {
+    document.querySelectorAll('.filter-btn').forEach(function(b) {
+        b.onclick = function() {
+            V.filtro = b.dataset.f;
+            document.querySelectorAll('.filter-btn').forEach(function(x){ x.classList.remove('active'); });
+            b.classList.add('active');
+            aplicarFiltro();
+        };
+    });
+}
+function aplicarFiltro() {
+    var vis = 0;
+    document.querySelectorAll('.fila-est').forEach(function(tr) {
+        var ok = V.filtro === 'todos' || tr.dataset.est === V.filtro;
+        tr.classList.toggle('oculta', !ok);
+        if (ok) vis++;
+    });
+    document.getElementById('empty').classList.toggle('show', vis === 0);
+}
+
+/* ── ARCHIVO ── */
+function verArchivo(url) { window.open(url, '_blank'); }
+
+/* ── EXPORT ── */
+function exportarExcel() {
+    if (!V.data) return;
+    var d = V.data;
+    var cols = d.columnas;
+    var header = ['Apellido', 'Nombre', 'Desc%', 'Email'].concat(cols.map(function(c){ return c.concepto_base + (c.periodo?' '+c.periodo:''); })).concat(['Total a Pagar','Total Abonado','Saldo Pendiente']);
+    var rows = [header];
+    d.estudiantes.forEach(function(est) {
+        var cobrosMap = {};
+        est.cobros.forEach(function(c){ if(c) cobrosMap[(c.concepto_base||c.concepto)+'||'+(c.periodo||'')] = c; });
+        var row = [est.apellido, est.nombre, est.descuento_porcentaje+'%', est.email];
+        var totP=0, totA=0, totS=0;
+        cols.forEach(function(col) {
+            var c = cobrosMap[col.concepto_base+'||'+(col.periodo||'')];
+            if (!c) { row.push('no debe'); return; }
+            totP += Number(c.monto_final||0); totA += Number(c.monto_abonado||0); totS += Number(c.saldo_pendiente||0);
+            row.push(c.estado === 'ABONADA' ? Number(c.monto_final) : c.estado === 'PAGO_PARCIAL' ? Number(c.monto_abonado)+'/'+Number(c.monto_final) : c.estado);
+        });
+        row.push(totP, totA, totS);
+        rows.push(row);
+    });
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, 'Cohorte');
+    XLSX.writeFile(wb, 'cohorte_'+COHORTE_ID+'.xlsx');
+}
+
+/* ── UTIL ── */
+function escJs(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+</script>
+</body>
+</html>
