@@ -686,8 +686,17 @@
         }
 
         function renderStats() {
-            const proyectados = state.gastos.proyectados.reduce((acc, g) => acc + Number(g.monto || 0), 0);
-            const ejecutados = state.gastos.ejecutados.reduce((acc, g) => acc + Number(g.monto || 0), 0);
+            let proyectados = 0;
+            let ejecutadosParc = 0;
+            state.gastos.proyectados.forEach(function(g) {
+                if (g.estadoDB === 'PARCIAL') {
+                    proyectados  += Number(g.montoPendiente || 0);
+                    ejecutadosParc += Number(g.montoPagado  || 0);
+                } else {
+                    proyectados += Number(g.monto || 0);
+                }
+            });
+            const ejecutados = ejecutadosParc + state.gastos.ejecutados.reduce((acc, g) => acc + Number(g.monto || 0), 0);
             const total = proyectados + ejecutados;
 
             document.getElementById('statsGrid').innerHTML = `
