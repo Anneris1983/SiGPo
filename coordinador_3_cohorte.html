@@ -1455,15 +1455,53 @@ async function enviarEmailGas(gasUrl, to, subject, body, replyTo) {
     }
 }
 async function exportarExcel() {
+    if (!V.data) { toast('Sin datos para exportar','err'); return; }
     spin(true);
     try {
-        if (estaEnAppsScript()) {
-            const res = await gs('exportarEstadoPagosCohorteCoordinador', { cohorteId:COHORTE_ID, programaId:PROGRAMA_ID });
-            if (res && res.url) window.open(res.url, '_blank');
-            await delay(400);
+        if (!window.XLSX) {
+            await new Promise(function(resolve, reject) {
+                var s = document.createElement('script');
+                s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+                s.onload = resolve; s.onerror = reject;
+                document.head.appendChild(s);
+            });
         }
-        toast('Exportación iniciada — descargando archivo ✓','ok');
-    } catch(e) { toast('Error al exportar','err'); }
+        const { columnas, estudiantes } = V.data;
+        const etiquetas = { EN_MORA:'En mora', ABONADA:'Abonada', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'En revisión', NO_ABONADA:'No abonada', A_DEFINIR:'A definir', NO_APLICA:'No aplica' };
+        const header = ['Apellido','Nombre','DNI','Email','Desc %','Estado General','Estado Cohorte']
+            .concat(columnas.map(c => c.concepto_base + (c.periodo ? ' ' + c.periodo : '') + (c.fecha_vencimiento ? ' [' + c.fecha_vencimiento + ']' : '')))
+            .concat(['Total a Pagar','Total Abonado','Saldo Pendiente']);
+
+        const rows = estudiantes.map(est => {
+            const cobrosMap = {};
+            est.cobros.forEach(c => { if(c) cobrosMap[(c.concepto_base||c.concepto)+'||'+(c.periodo||'')] = c; });
+            let totP = 0, totA = 0, totS = 0;
+            est.cobros.forEach(c => { if(c){ totP += Number(c.monto_final||0); totA += Number(c.monto_abonado||0); totS += Number(c.saldo_pendiente||0); }});
+            const estadoGen = calcEstadoGeneral(est.cobros);
+            const fila = [
+                est.apellido, est.nombre, est.dni, est.email,
+                est.descuento_porcentaje + '%',
+                etiquetas[estadoGen] || estadoGen,
+                est.estado_academico === 'BAJA_COHORTE' ? 'Baja' : 'Activo'
+            ];
+            columnas.forEach(col => {
+                const c = cobrosMap[col.concepto_base+'||'+(col.periodo||'')];
+                if (!c) { fila.push('no aplica'); return; }
+                fila.push(etiquetas[c.estado] || c.estado || '—');
+            });
+            fila.push(totP, totA, totS);
+            return fila;
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+        // Anchos de columna
+        ws['!cols'] = header.map((h,i) => ({ wch: i < 4 ? 22 : i < 7 ? 14 : 12 }));
+        XLSX.utils.book_append_sheet(wb, ws, 'Estado de Pagos');
+        const nombre = ((V.data.programa.nombre||'') + ' - ' + (V.data.cohorte.nombre||'')).replace(/[^a-zA-Z0-9 \-áéíóúñÁÉÍÓÚÑ]/g,'').substring(0,60);
+        XLSX.writeFile(wb, nombre + '.xlsx');
+        toast('Excel exportado ✓', 'ok');
+    } catch(e) { console.error(e); toast('Error al exportar: ' + e.message, 'err'); }
     finally { spin(false); }
 }
 
