@@ -418,7 +418,8 @@ function fFechaCorta(f) {
     var p = String(f).split('T')[0].split('-');
     return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : f;
 }
-function esEjecutado(e) { return e.tipo==='EJECUTADO' || e.estado==='CANCELADO'; }
+function esEjecutado(e) { return e.tipo==='EJECUTADO' && (e.estado==='CANCELADO' || e.estado==='PAGADO'); }
+function esParcial(e)   { return e.estado==='PARCIAL'; }
 function nomProg(id) { var p=G.programas.find(function(x){return x.programa_id===id;}); return p?p.nombre:'—'; }
 
 function cambiarTab(tab, event) {
@@ -432,25 +433,42 @@ function cambiarTab(tab, event) {
 function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
 
 function renderTabla(tipo) {
-    var lista = tipo==='proyectados' ? G.egresos.filter(function(e){return !esEjecutado(e);}) : G.egresos.filter(esEjecutado);
+    var lista = tipo==='proyectados'
+        ? G.egresos.filter(function(e){ return !esEjecutado(e); })
+        : G.egresos.filter(esEjecutado);
     var tbody = document.querySelector('#tabla' + (tipo==='proyectados'?'Proyectados':'Ejecutados') + ' tbody');
     if (!tbody) return;
     if (!lista.length) { tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;color:#aaa;">No hay registros</td></tr>'; return; }
     tbody.innerHTML = lista.map(function(e) {
-        var esEjec = esEjecutado(e);
-        var acciones = (!esEjec ? '<button class="btn btn-success btn-sm" onclick="abrirEjecutar('+e.egreso_id+')" title="Ejecutar">✓</button>' : '')
+        var ejec   = esEjecutado(e);
+        var parcial = esParcial(e);
+        var montoCell, badgeHtml;
+        if (parcial) {
+            montoCell = '<td style="font-weight:700">'
+                + fMonto(e.monto_pagado) + ' pagado<br>'
+                + '<span style="font-size:11px;color:#92400e;font-weight:600">Pendiente: '+fMonto(e.monto_pendiente)+'</span>'
+                + '</td>';
+            badgeHtml = '<span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e;">Pago Parcial</span>';
+        } else if (ejec) {
+            montoCell = '<td style="font-weight:700">'+fMonto(e.monto_pagado||e.monto_original)+'</td>';
+            badgeHtml = '<span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:#d1fae5;color:#065f46;">Ejecutado</span>';
+        } else {
+            montoCell = '<td style="font-weight:700">'+fMonto(e.monto_original)+'</td>';
+            badgeHtml = '<span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:#e0f2fe;color:#075985;">Proyectado</span>';
+        }
+        var acciones = (!ejec ? '<button class="btn btn-success btn-sm" onclick="abrirEjecutar('+e.egreso_id+')" title="'+(parcial?'Completar pago':'Ejecutar')+'">'+(parcial?'💰':'✓')+'</button>' : '')
             + '<button class="btn btn-primary btn-sm" onclick="abrirModalGasto(\''+tipo+'\','+e.egreso_id+')" title="Editar">✏️</button>'
             + '<button class="btn btn-danger btn-sm" onclick="eliminarGasto('+e.egreso_id+')" title="Eliminar">🗑️</button>';
         return '<tr>'
-            +'<td>'+fFechaCorta(e.fecha_estimada)+'</td>'
+            +'<td>'+fFechaCorta(e.fecha_estimada||e.fecha_pago)+'</td>'
             +'<td>'+esc(e.categoria||'—')+'</td>'
             +'<td>'+esc(e.concepto||'—')+'</td>'
             +'<td style="font-size:12px;">'+esc(nomProg(e.programa_id))+'</td>'
             +'<td style="font-size:12px;">'+esc(e.periodo||'—')+'</td>'
-            +'<td style="font-weight:700">'+fMonto(e.monto_pagado||e.monto_original)+'</td>'
+            + montoCell
             +'<td style="font-size:12px;">'+esc(e.proveedor||'—')+'</td>'
             +'<td style="font-size:12px;">'+esc(e.nro_comprobante||'—')+'</td>'
-            +'<td><span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:'+(esEjec?'#d1fae5':'#fef3c7')+';color:'+(esEjec?'#065f46':'#92400e')+'">'+(esEjec?'Ejecutado':'Proyectado')+'</span></td>'
+            +'<td>'+badgeHtml+'</td>'
             +'<td><div style="display:flex;gap:4px;">'+acciones+'</div></td>'
             +'</tr>';
     }).join('');
@@ -521,15 +539,27 @@ async function eliminarGasto(id) {
 function abrirEjecutar(id) {
     G.gastoAEjecutar = id;
     var e = G.egresos.find(function(x){ return x.egreso_id===id; });
-    document.getElementById('ejec-resumen').innerHTML = e
-        ? '<strong>'+esc(e.concepto||'')+'</strong><br>'
-          + esc(e.categoria||'') + ' · ' + esc(nomProg(e.programa_id)) + '<br>'
-          + 'Monto original: <strong>'+fMonto(e.monto||e.monto_original)+'</strong>'
-        : '';
+    var parcial = e && esParcial(e);
+    var pendiente = e ? Number(parcial ? e.monto_pendiente : e.monto_original) : 0;
+    var resumen = '';
+    if (e) {
+        resumen = '<strong>'+esc(e.concepto||'')+'</strong><br>'
+            + esc(e.categoria||'') + ' · ' + esc(nomProg(e.programa_id)) + '<br>'
+            + 'Monto original: <strong>'+fMonto(e.monto_original)+'</strong>';
+        if (parcial) {
+            resumen += '<br>Ya pagado: <strong>'+fMonto(e.monto_pagado)+'</strong>'
+                + ' · Pendiente: <strong>'+fMonto(e.monto_pendiente)+'</strong>';
+        }
+    }
+    document.getElementById('ejec-resumen').innerHTML = resumen;
     document.getElementById('ejec-fecha').value       = new Date().toISOString().split('T')[0];
     document.getElementById('ejec-comprobante').value = '';
-    document.getElementById('ejec-monto').value       = e ? (e.monto||e.monto_original||'') : '';
+    document.getElementById('ejec-monto').value       = pendiente || '';
     document.getElementById('ejec-obs').value         = '';
+    var hint = document.querySelector('#ejec-monto + .form-hint');
+    if (hint) hint.textContent = parcial
+        ? 'Pendiente: '+fMonto(pendiente)+'. Podés pagar menos si es otro pago parcial.'
+        : 'Si es pago parcial, ingresá el monto abonado';
     document.getElementById('modalEjecutar').classList.add('active');
 }
 
@@ -540,13 +570,33 @@ async function confirmarEjecucion() {
     var obs    = document.getElementById('ejec-obs').value.trim();
     if (!fecha)  { alert('Ingresá la fecha de ejecución'); return; }
     if (!comp)   { alert('Ingresá el número de comprobante'); return; }
-    if (!monto)  { alert('Ingresá el monto pagado'); return; }
+    if (!monto || monto <= 0) { alert('Ingresá el monto pagado'); return; }
+
+    var e = G.egresos.find(function(x){ return x.egreso_id===G.gastoAEjecutar; });
+    var yaPagado   = e ? Number(esParcial(e) ? e.monto_pagado : 0) : 0;
+    var pendiente  = e ? Number(esParcial(e) ? e.monto_pendiente : e.monto_original) : 0;
+    var nroPago    = e ? ((e.numero_pago||0) + 1) : 1;
+    var nuevoPagado   = yaPagado + monto;
+    var nuevoPendiente = Math.max(0, pendiente - monto);
+    var estaCompleto  = monto >= pendiente;
+
     try {
-        await guardarEgreso({ egreso_id: G.gastoAEjecutar, tipo:'EJECUTADO', estado:'CANCELADO', fecha_pago:fecha, monto_pagado:monto, nro_comprobante:comp, observaciones:obs||null });
+        await guardarEgreso({
+            egreso_id:      G.gastoAEjecutar,
+            tipo:           'EJECUTADO',
+            estado:         estaCompleto ? 'CANCELADO' : 'PARCIAL',
+            fecha_pago:     fecha,
+            monto_pagado:   nuevoPagado,
+            monto_pendiente: nuevoPendiente,
+            es_pago_parcial: !estaCompleto || esParcial(e),
+            numero_pago:    nroPago,
+            nro_comprobante: comp,
+            observaciones:  obs||null
+        });
         cerrarModal('modalEjecutar');
         G.gastoAEjecutar = null;
         await cargarDatos();
-    } catch(e) { alert('Error: '+e.message); }
+    } catch(err) { alert('Error: '+err.message); }
 }
 
 function importarProyectados() { document.getElementById('modalImportar').classList.add('active'); document.getElementById('tipoImportacion').value='proyectados'; }
@@ -567,8 +617,10 @@ async function cargarDatos() {
         var sel = document.getElementById('programa');
         if (sel) sel.innerHTML = '<option value="">— Todos —</option>' + programas.map(function(p){return '<option value="'+p.programa_id+'">'+esc(p.nombre)+'</option>';}).join('');
 
-        var totalEjec = egresos.filter(esEjecutado).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0);
-        var totalProy = egresos.filter(function(e){return !esEjecutado(e);}).reduce(function(s,e){return s+Number(e.monto_pagado||e.monto_original||0);},0);
+        var totalEjec = egresos.filter(esEjecutado).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0)
+                      + egresos.filter(esParcial).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0);
+        var totalProy = egresos.filter(function(e){return !esEjecutado(e)&&!esParcial(e);}).reduce(function(s,e){return s+Number(e.monto_original||0);},0)
+                      + egresos.filter(esParcial).reduce(function(s,e){return s+Number(e.monto_pendiente||0);},0);
         document.getElementById('statEjecutados').textContent = fMonto(totalEjec);
         document.getElementById('statProyectados').textContent = fMonto(totalProy);
         document.getElementById('statTotal').textContent = fMonto(totalEjec + totalProy);
