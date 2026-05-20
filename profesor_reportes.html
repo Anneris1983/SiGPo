@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes - Profesor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #5C1018;
+            --primary-2: #8C1A28;
+            --accent: #C49A2A;
+            --success: #2d7a4f;
+            --danger: #c0392b;
+            --warning: #e67e22;
+            --info: #2563eb;
+            --muted: #6b7280;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; color: #1f2937; font-size: 14px; }
+
+        .header {
+            background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%);
+            color: white;
+            padding: 20px 40px;
+        }
+        .header-wrap {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .breadcrumb { font-size: 14px; margin-bottom: 12px; }
+        .breadcrumb button {
+            color: white; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+        }
+        .breadcrumb button:hover { background: rgba(255,255,255,0.28); }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 26px; margin-bottom: 4px; }
+        .header p  { font-size: 13px; opacity: 0.85; line-height: 1.5; }
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .header-btn {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+            color: white; padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;
+            cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s;
+        }
+        .header-btn:hover { background: rgba(255,255,255,0.28); }
+
+        .container { max-width: 1300px; margin: 36px auto; padding: 0 24px; }
+
+        .filters-bar {
+            background: white; border-radius: 12px; padding: 18px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 24px;
+            display: flex; justify-content: space-between; gap: 16px;
+            align-items: flex-end; flex-wrap: wrap;
+        }
+        .filters-group { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+        .field { min-width: 180px; }
+        .field label {
+            display: block; font-size: 12px; font-weight: 700; color: var(--primary);
+            margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px;
+        }
+        .field select, .field input {
+            width: 100%; padding: 10px 12px; border: 2px solid #e5e7eb;
+            border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif;
+            background: white; color: #374151;
+        }
+        .field select:focus, .field input:focus { outline: none; border-color: var(--primary); }
+        .btn-filter {
+            padding: 10px 16px; background: var(--primary); color: white;
+            border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+        }
+        .btn-filter:hover { background: var(--primary-2); }
+
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+        .summary-item {
+            background: white; padding: 20px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid var(--accent);
+        }
+        .summary-item.verde { border-color: var(--success); }
+        .summary-item.rojo  { border-color: var(--danger); }
+        .summary-item.naranja { border-color: var(--warning); }
+        .summary-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .summary-value { font-size: 28px; font-weight: 700; color: var(--primary); line-height: 1.1; }
+        .summary-value.verde  { color: var(--success); }
+        .summary-value.rojo   { color: var(--danger); }
+
+        .report-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .card-head {
+            display: flex; justify-content: space-between; gap: 10px;
+            align-items: center; margin-bottom: 16px; padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0; flex-wrap: wrap;
+        }
+        .card-title { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .chart-wrap { position: relative; height: 270px; }
+        .chart-empty {
+            display: none; height: 270px; align-items: center; justify-content: center;
+            text-align: center; color: #9ca3af; border: 2px dashed #e5e7eb;
+            border-radius: 10px; background: #fafafa; line-height: 1.5; padding: 14px;
+        }
+        .chart-empty.show { display: flex; }
+        .chart-wrap.hide { display: none; }
+
+        .export-btn {
+            width: 100%; padding: 11px; background: var(--primary); color: white;
+            border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+            margin-top: 16px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+            transition: background 0.2s;
+        }
+        .export-btn:hover { background: #8C1A28; }
+
+        .status-bar { margin-bottom: 20px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+        .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+        .toast {
+            background:#5C1018; color:white; padding:12px 18px; border-radius:10px;
+            font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,0.2); max-width:320px;
+        }
+        .toast.ok { background: var(--success); }
+        .toast.err { background: var(--danger); }
+
+        .readonly-banner {
+            background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;
+            padding: 12px 18px; margin-bottom: 20px; font-size: 13px; color: #92400e;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        @media (max-width: 1100px) { .summary-grid, .report-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 760px) {
+            .header, .container { padding-left: 18px; padding-right: 18px; }
+            .summary-grid, .report-grid { grid-template-columns: 1fr; }
+            .field { min-width: 100%; }
+        }
+    </style>
+    <link rel="stylesheet" href="sigpo-theme.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="header-wrap">
+        <div>
+            <div class="breadcrumb">
+                <button type="button" onclick="navegar('profesor_1_dashboard.html')">← Volver al Dashboard</button>
+            </div>
+            <h1>📊 Reportes y Estadísticas</h1>
+            <p id="headerSubtitle">Mis programas y cohortes</p>
+        </div>
+        <div class="header-actions">
+            <button class="header-btn" type="button" onclick="exportar('resumen')">📥 Exportar resumen</button>
+            <button class="header-btn" type="button" onclick="cerrarSesion()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesión
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="readonly-banner">👁️ Modo solo lectura — podés ver el estado financiero de tus programas y cohortes asignadas.</div>
+
+    <div class="filters-bar">
+        <div class="filters-group">
+            <div class="field">
+                <label for="selPrograma">Programa / Curso</label>
+                <select id="selPrograma" onchange="actualizarCohortes()"></select>
+            </div>
+            <div class="field">
+                <label for="selCohorte">Cohorte / Edición</label>
+                <select id="selCohorte"></select>
+            </div>
+            <div class="field" style="min-width:110px;">
+                <label for="selAnio">Año</label>
+                <input type="number" id="selAnio" min="2000" max="2099" style="width:110px;" onkeydown="if(event.key==='Enter') cargarVista()">
+            </div>
+        </div>
+        <button class="btn-filter" type="button" onclick="cargarVista()">Actualizar reportes</button>
+    </div>
+
+    <div class="status-bar" id="statusBar">Cargando reportes…</div>
+
+    <div class="summary-grid" id="summaryGrid">
+        <div class="summary-item"><div class="summary-label">Total Recaudado</div><div class="summary-value">—</div></div>
+        <div class="summary-item verde"><div class="summary-label">Estudiantes al Día</div><div class="summary-value verde">—</div></div>
+        <div class="summary-item rojo"><div class="summary-label">En Mora</div><div class="summary-value rojo">—</div></div>
+        <div class="summary-item naranja"><div class="summary-label">Tasa de Pago</div><div class="summary-value">—</div></div>
+    </div>
+
+    <div class="report-grid">
+        <div class="card">
+            <div class="card-head"><h3 class="card-title">💰 Cashflow Mensual</h3></div>
+            <div class="chart-wrap" id="wrap-cashflow"><canvas id="chart-cashflow"></canvas></div>
+            <div class="chart-empty" id="empty-cashflow">No hay datos suficientes para mostrar el cashflow.</div>
+            <button class="export-btn" onclick="exportar('cashflow')">📥 Exportar Cashflow</button>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h3 class="card-title">📊 Estado de Pagos por Cohorte</h3></div>
+            <div class="chart-wrap" id="wrap-estados"><canvas id="chart-estados"></canvas></div>
+            <div class="chart-empty" id="empty-estados">No hay datos suficientes para mostrar el estado de pagos.</div>
+            <button class="export-btn" onclick="exportar('estados')">📥 Exportar Estadísticas</button>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h3 class="card-title">📈 Evolución de Mora</h3></div>
+            <div class="chart-wrap" id="wrap-mora"><canvas id="chart-mora"></canvas></div>
+            <div class="chart-empty" id="empty-mora">No hay datos suficientes para mostrar la evolución de mora.</div>
+            <button class="export-btn" onclick="exportar('mora')">📥 Exportar Histórico</button>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h3 class="card-title">👥 Estudiantes por Estado</h3></div>
+            <div class="chart-wrap" id="wrap-estudiantes"><canvas id="chart-estudiantes"></canvas></div>
+            <div class="chart-empty" id="empty-estudiantes">No hay datos suficientes para mostrar estudiantes por estado.</div>
+            <button class="export-btn" onclick="exportar('estudiantes')">📥 Exportar Listado</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+'use strict';
+
+var _programas = [];
+var _cohortes  = [];
+var _cobrosExport = [];
+var _egresosExport = [];
+var charts = {};
+var DEFAULT_ANIO = String(new Date().getFullYear());
+
+function toast(msg, tipo) {
+    var c = document.getElementById('toasts');
+    var d = document.createElement('div');
+    d.className = 'toast' + (tipo ? ' ' + tipo : '');
+    d.textContent = msg;
+    c.appendChild(d);
+    setTimeout(function(){ d.remove(); }, 3200);
+}
+
+function fM(n) {
+    return Number(n || 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+}
+
+function actualizarCohortes() {
+    var progId = document.getElementById('selPrograma').value;
+    var sel = document.getElementById('selCohorte');
+    sel.innerHTML = '<option value="">Todas las cohortes</option>';
+    _cohortes
+        .filter(function(c){ return !progId || String(c.programa_id) === String(progId); })
+        .forEach(function(c){
+            var opt = document.createElement('option');
+            opt.value = c.cohorte_id;
+            opt.textContent = c.nombre || 'Cohorte';
+            sel.appendChild(opt);
+        });
+}
+
+function setEmptyState(key, show) {
+    document.getElementById('wrap-' + key).classList.toggle('hide', show);
+    document.getElementById('empty-' + key).classList.toggle('show', show);
+}
+
+function destroyCharts() {
+    Object.keys(charts).forEach(function(k){ if (charts[k]) charts[k].destroy(); });
+    charts = {};
+}
+
+async function cargarVista() {
+    document.getElementById('statusBar').textContent = 'Cargando reportes…';
+    try {
+        var sb = await getSupabase();
+        var sesion = getSesion();
+        if (!sesion) { window.location.href = 'portal_login.html'; return; }
+
+        var progIds = await obtenerProgramasAsignadosPorDni(sesion.dni);
+        if (!progIds.length) {
+            document.getElementById('statusBar').textContent = 'No tenés programas asignados.';
+            return;
+        }
+
+        var filtPrograma = document.getElementById('selPrograma').value;
+        var filtCohorte  = document.getElementById('selCohorte').value;
+        var filtAnio     = document.getElementById('selAnio').value || DEFAULT_ANIO;
+
+        var [rP, rC, rCob, rEgr] = await Promise.all([
+            sb.from('programas').select('programa_id,nombre').in('programa_id', progIds),
+            sb.from('cohortes').select('cohorte_id,nombre,programa_id').in('programa_id', progIds),
+            sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento').in('programa_id', progIds),
+            sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada').in('programa_id', progIds)
+        ]);
+
+        _programas = rP.data || [];
+        _cohortes  = rC.data || [];
+        _cobrosExport  = rCob.data || [];
+        _egresosExport = rEgr.data || [];
+
+        // Rellenar selector de programas solo la primera vez
+        var selProg = document.getElementById('selPrograma');
+        if (!selProg.options.length) {
+            selProg.innerHTML = '';
+            if (_programas.length > 1) {
+                var all = document.createElement('option');
+                all.value = ''; all.textContent = 'Todos mis programas';
+                selProg.appendChild(all);
+            }
+            _programas.forEach(function(p){
+                var opt = document.createElement('option');
+                opt.value = p.programa_id;
+                opt.textContent = p.nombre;
+                selProg.appendChild(opt);
+            });
+            if (_programas.length === 1) selProg.value = _programas[0].programa_id;
+            filtPrograma = selProg.value;
+            actualizarCohortes();
+        }
+
+        // Filtrar datos
+        var cobF = _cobrosExport.filter(function(c){
+            if (filtPrograma && String(c.programa_id) !== String(filtPrograma)) return false;
+            if (filtCohorte  && String(c.cohorte_id)  !== String(filtCohorte))  return false;
+            if (filtAnio && c.fecha_vencimiento && !c.fecha_vencimiento.startsWith(filtAnio)) return false;
+            return true;
+        });
+        var egrF = _egresosExport.filter(function(e){
+            if (filtPrograma && String(e.programa_id) !== String(filtPrograma)) return false;
+            if (filtCohorte  && String(e.cohorte_id)  !== String(filtCohorte))  return false;
+            var fecha = e.fecha_pago || e.fecha_estimada || '';
+            if (filtAnio && fecha && !fecha.startsWith(filtAnio)) return false;
+            return true;
+        });
+
+        // Resumen
+        function eKey(c){ return c.dni + '|' + c.programa_id; }
+        var dnisAlDia   = new Set(cobF.filter(function(c){ return c.estado === 'ABONADA'; }).map(eKey));
+        var dnisEnMora  = new Set(cobF.filter(function(c){ return c.estado === 'EN_MORA'; }).map(eKey));
+        var dnisParcial = new Set(cobF.filter(function(c){ return c.estado === 'PAGO_PARCIAL'; }).map(eKey));
+        var dnisTotal   = new Set(cobF.map(eKey));
+        var recaudado   = cobF.filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
+                              .reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
+        var tasaPago = dnisTotal.size > 0 ? Math.round(dnisAlDia.size / dnisTotal.size * 100) : 0;
+
+        document.getElementById('summaryGrid').innerHTML =
+            '<div class="summary-item"><div class="summary-label">Total Recaudado ' + filtAnio + '</div><div class="summary-value">' + fM(recaudado) + '</div></div>' +
+            '<div class="summary-item verde"><div class="summary-label">Estudiantes al Día</div><div class="summary-value verde">' + dnisAlDia.size + '</div></div>' +
+            '<div class="summary-item rojo"><div class="summary-label">En Mora</div><div class="summary-value rojo">' + dnisEnMora.size + '</div></div>' +
+            '<div class="summary-item naranja"><div class="summary-label">Tasa de Pago</div><div class="summary-value">' + tasaPago + '%</div></div>';
+
+        // Cashflow mensual
+        var mesKeys = {};
+        cobF.forEach(function(c){ if (c.fecha_vencimiento) { var k = c.fecha_vencimiento.substring(0,7); mesKeys[k] = 1; } });
+        egrF.forEach(function(e){ var d = e.fecha_pago || e.fecha_estimada || ''; if (d) { var k = d.substring(0,7); mesKeys[k] = 1; } });
+        var meses = Object.keys(mesKeys).sort();
+        var mesesLabels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        function mesLabel(k){ var p = k.split('-'); return mesesLabels[parseInt(p[1])-1] + ' ' + p[0]; }
+        var cfLabels   = meses.map(mesLabel);
+        var cfIngresos = meses.map(function(k){ return cobF.filter(function(c){ return (c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL') && c.fecha_vencimiento && c.fecha_vencimiento.startsWith(k); }).reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0); });
+        var cfEgresos  = meses.map(function(k){ return egrF.filter(function(e){ var d = e.fecha_pago||e.fecha_estimada||''; return e.tipo==='EJECUTADO' && d.startsWith(k); }).reduce(function(s,e){ return s + Number(e.monto_pagado||0); }, 0); });
+
+        // Estados por cohorte
+        var cohortesF = _cohortes.filter(function(c){
+            if (filtCohorte  && String(c.cohorte_id)  !== String(filtCohorte))  return false;
+            if (filtPrograma && String(c.programa_id) !== String(filtPrograma)) return false;
+            return true;
+        });
+        var ecLabels  = cohortesF.map(function(c){ return c.nombre || 'Cohorte'; });
+        var ecAlDia   = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x.estado==='ABONADA'; }).map(function(x){ return x.dni; })).size; });
+        var ecMora    = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x.estado==='EN_MORA'; }).map(function(x){ return x.dni; })).size; });
+        var ecParcial = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x.estado==='PAGO_PARCIAL'; }).map(function(x){ return x.dni; })).size; });
+
+        // Evolución mora mensual
+        var emMora = meses.map(function(k){ return new Set(cobF.filter(function(c){ return c.estado==='EN_MORA' && c.fecha_vencimiento && c.fecha_vencimiento.startsWith(k); }).map(function(c){ return c.dni; })).size; });
+
+        // Donut estudiantes por estado
+        var epLabels  = ['Al Día','En Mora','Pago Parcial','Pendiente'];
+        var epValores = [
+            dnisAlDia.size, dnisEnMora.size, dnisParcial.size,
+            new Set(cobF.filter(function(c){ return c.estado==='PENDIENTE'||c.estado==='NO_ABONADA'; }).map(eKey)).size
+        ];
+
+        // Encabezado subtitle
+        var progNombre = (_programas.find(function(p){ return String(p.programa_id)===String(filtPrograma); }) || _programas[0] || {}).nombre || 'Mis programas';
+        var cohNombre  = filtCohorte ? ((cohortesF[0] || {}).nombre || 'Cohorte') : 'Todas las cohortes';
+        document.getElementById('headerSubtitle').textContent = progNombre + ' • ' + cohNombre + ' • ' + filtAnio;
+
+        // Renderizar gráficos
+        destroyCharts();
+
+        renderBarChart('cashflow', cfLabels, [
+            { label: 'Ingresos', data: cfIngresos, backgroundColor: 'rgba(45,122,79,0.80)', borderColor: '#2d7a4f' },
+            { label: 'Egresos',  data: cfEgresos,  backgroundColor: 'rgba(192,57,43,0.75)', borderColor: '#c0392b' }
+        ], { y: { ticks: { callback: function(v){ return '$' + Math.round(v/1000) + 'k'; } } } });
+
+        renderBarChart('estados', ecLabels, [
+            { label: 'Al día',       data: ecAlDia,   backgroundColor: 'rgba(45,122,79,0.80)', borderColor: '#2d7a4f' },
+            { label: 'En mora',      data: ecMora,    backgroundColor: 'rgba(192,57,43,0.80)', borderColor: '#c0392b' },
+            { label: 'Pago parcial', data: ecParcial, backgroundColor: 'rgba(37,99,235,0.75)', borderColor: '#2563eb' }
+        ], {});
+
+        renderLineChart('mora', cfLabels, [
+            { label: 'Estudiantes en mora', data: emMora, borderColor: '#c0392b', backgroundColor: 'rgba(192,57,43,0.10)', fill: true }
+        ]);
+
+        renderDoughnut('estudiantes', epLabels, epValores);
+
+        document.getElementById('statusBar').textContent = 'Reportes actualizados correctamente.';
+    } catch(e) {
+        console.error(e);
+        document.getElementById('statusBar').textContent = 'No se pudieron cargar los reportes.';
+        toast('No se pudieron cargar los reportes', 'err');
+    }
+}
+
+function renderBarChart(key, labels, datasets, extraScales) {
+    var empty = !labels.length;
+    setEmptyState(key, empty);
+    if (empty) return;
+    var ctx = document.getElementById('chart-' + key).getContext('2d');
+    var scales = Object.assign({ x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f0f0f0' } } }, extraScales);
+    charts[key] = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: labels, datasets: datasets.map(function(d){ return Object.assign({ borderWidth: 1.5, borderRadius: 6 }, d); }) },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: scales }
+    });
+}
+
+function renderLineChart(key, labels, datasets) {
+    var empty = !labels.length;
+    setEmptyState(key, empty);
+    if (empty) return;
+    var ctx = document.getElementById('chart-' + key).getContext('2d');
+    charts[key] = new Chart(ctx, {
+        type: 'line',
+        data: { labels: labels, datasets: datasets.map(function(d){ return Object.assign({ borderWidth: 2.5, pointRadius: 5, tension: 0.3 }, d); }) },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f0f0f0' } } } }
+    });
+}
+
+function renderDoughnut(key, labels, valores) {
+    var empty = !valores.some(function(v){ return v > 0; });
+    setEmptyState(key, empty);
+    if (empty) return;
+    var ctx = document.getElementById('chart-' + key).getContext('2d');
+    charts[key] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{ data: valores, backgroundColor: ['#2d7a4f','#c0392b','#2563eb','#9ca3af'], borderColor: '#fff', borderWidth: 3 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 13 }, boxWidth: 14, padding: 16 } } } }
+    });
+}
+
+function exportar(tipo) {
+    if (!_cobrosExport.length && !_egresosExport.length) { toast('Cargá los datos antes de exportar.', 'err'); return; }
+    var wb = XLSX.utils.book_new();
+    var fecha = new Date().toISOString().slice(0, 10);
+    var filtPrograma = document.getElementById('selPrograma').value;
+    var filtCohorte  = document.getElementById('selCohorte').value;
+    var filtAnio     = document.getElementById('selAnio').value;
+
+    try {
+        if (tipo === 'resumen') {
+            var filas = [
+                { 'Indicador': 'Total Recaudado', 'Valor': document.querySelector('#summaryGrid .summary-value').textContent },
+                { 'Indicador': 'Estudiantes al Día', 'Valor': document.querySelectorAll('#summaryGrid .summary-value')[1].textContent },
+                { 'Indicador': 'En Mora', 'Valor': document.querySelectorAll('#summaryGrid .summary-value')[2].textContent },
+                { 'Indicador': 'Tasa de Pago', 'Valor': document.querySelectorAll('#summaryGrid .summary-value')[3].textContent }
+            ];
+            var ws = XLSX.utils.json_to_sheet(filas);
+            XLSX.utils.book_append_sheet(wb, ws, 'Resumen');
+        } else if (tipo === 'cashflow') {
+            var cf = charts['cashflow'] ? charts['cashflow'].data : null;
+            if (!cf || !cf.labels.length) { toast('Sin datos de cashflow para exportar.', 'err'); return; }
+            var filas = cf.labels.map(function(lbl, i){
+                return { 'Mes': lbl, 'Ingresos ($)': cf.datasets[0].data[i]||0, 'Egresos ($)': cf.datasets[1].data[i]||0, 'Saldo ($)': (cf.datasets[0].data[i]||0)-(cf.datasets[1].data[i]||0) };
+            });
+            var ws = XLSX.utils.json_to_sheet(filas);
+            XLSX.utils.book_append_sheet(wb, ws, 'Cashflow');
+        } else if (tipo === 'estados') {
+            var cobF = _cobrosExport.filter(function(c){
+                if (filtPrograma && String(c.programa_id)!==String(filtPrograma)) return false;
+                if (filtCohorte  && String(c.cohorte_id) !==String(filtCohorte))  return false;
+                if (filtAnio && c.fecha_vencimiento && !c.fecha_vencimiento.startsWith(filtAnio)) return false;
+                return true;
+            });
+            if (!cobF.length) { toast('Sin datos para exportar.', 'err'); return; }
+            var filas = cobF.map(function(c){
+                return { 'DNI': c.dni||'', 'Estado': c.estado||'', 'Monto ($)': Number(c.monto_final||0), 'Saldo Pendiente': Number(c.saldo_pendiente||0), 'Vencimiento': c.fecha_vencimiento||'' };
+            });
+            var ws = XLSX.utils.json_to_sheet(filas);
+            XLSX.utils.book_append_sheet(wb, ws, 'Estados');
+        } else if (tipo === 'mora') {
+            var cobF = _cobrosExport.filter(function(c){ return c.estado === 'EN_MORA'; });
+            if (!cobF.length) { toast('Sin datos de mora para exportar.', 'err'); return; }
+            var filas = cobF.map(function(c){
+                return { 'DNI': c.dni||'', 'Monto ($)': Number(c.monto_final||0), 'Vencimiento': c.fecha_vencimiento||'' };
+            });
+            var ws = XLSX.utils.json_to_sheet(filas);
+            XLSX.utils.book_append_sheet(wb, ws, 'En Mora');
+        } else if (tipo === 'estudiantes') {
+            var cobF = _cobrosExport.filter(function(c){
+                if (filtPrograma && String(c.programa_id)!==String(filtPrograma)) return false;
+                if (filtCohorte  && String(c.cohorte_id) !==String(filtCohorte))  return false;
+                return true;
+            });
+            if (!cobF.length) { toast('Sin datos de estudiantes para exportar.', 'err'); return; }
+            var filas = cobF.map(function(c){
+                return { 'DNI': c.dni||'', 'Estado': c.estado||'', 'Monto ($)': Number(c.monto_final||0), 'Saldo': Number(c.saldo_pendiente||0) };
+            });
+            var ws = XLSX.utils.json_to_sheet(filas);
+            XLSX.utils.book_append_sheet(wb, ws, 'Estudiantes');
+        }
+        XLSX.writeFile(wb, 'reporte_profesor_' + tipo + '_' + fecha + '.xlsx');
+        toast('Excel descargado correctamente.', 'ok');
+    } catch(e) {
+        console.error(e);
+        toast('No se pudo generar el Excel.', 'err');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var sesion = getSesion();
+    if (!sesion || sesion.rol !== 'PROFESOR') { window.location.href = 'portal_login.html'; return; }
+    document.getElementById('selAnio').value = DEFAULT_ANIO;
+    cargarVista();
+});
+</script>
+</body>
+</html>
