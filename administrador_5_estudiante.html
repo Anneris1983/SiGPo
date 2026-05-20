@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle Estudiante - Administrador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#5C1018; --accent:#8C1A28; --bg:#f8f6f1; --success:#2d7a4f; --danger:#c0392b; --warning:#e67e22; --muted:#6b7280; --line:#e5e7eb; }
+        body { font-family:'DM Sans',sans-serif; background:var(--bg); font-size:14px; color:#2c2c2c; }
+
+        /* HEADER */
+        .header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:20px 32px; box-shadow:0 4px 20px rgba(0,0,0,0.12); }
+        .header-inner { max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+        .header-left .breadcrumb { font-size:12px; opacity:0.8; margin-bottom:6px; }
+        .header-left h1 { font-family:'Crimson Pro',serif; font-size:24px; margin-bottom:3px; }
+        .header-left p { font-size:13px; opacity:0.85; }
+        .header-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+        .btn-back { background:rgba(255,255,255,0.14); border:1.5px solid rgba(255,255,255,0.38); color:white; padding:9px 18px; border-radius:8px; font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-back:hover { background:rgba(255,255,255,0.26); }
+        .btn-logout { background:rgba(255,255,255,0.14); border:1.5px solid rgba(255,255,255,0.38); color:white; padding:9px 14px; border-radius:8px; font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; display:inline-flex; align-items:center; gap:7px; }
+        .btn-logout:hover { background:rgba(192,57,43,0.55); }
+
+        /* CONTAINER */
+        .container { max-width:1100px; margin:28px auto; padding:0 24px 48px; }
+
+        /* CARDS */
+        .card { background:white; border-radius:14px; padding:24px 28px; box-shadow:0 2px 12px rgba(0,0,0,0.06); border:1px solid var(--line); margin-bottom:20px; }
+        .card-title { font-family:'Crimson Pro',serif; font-size:20px; color:var(--primary); margin-bottom:18px; padding-bottom:10px; border-bottom:2px solid #e8e4dc; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+
+        /* STUDENT BANNER */
+        .student-banner { background:linear-gradient(135deg,#f8f6f1 0%,#ede9df 100%); border:1px solid #d9d4c9; border-radius:10px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; }
+        .student-avatar { width:52px; height:52px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-family:'Crimson Pro',serif; font-size:22px; font-weight:700; flex-shrink:0; }
+        .student-info h2 { font-size:18px; font-weight:700; color:var(--primary); }
+        .student-info p { font-size:13px; color:var(--muted); margin-top:2px; }
+
+        /* DATOS GRID */
+        .datos-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+        @media(max-width:680px){ .datos-grid{ grid-template-columns:repeat(2,1fr); } }
+        .dato-item { background:#f8f6f1; border-radius:8px; padding:12px 16px; }
+        .dato-item.full { grid-column:1/-1; }
+        .dato-label { font-size:11px; color:#9ca3af; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+        .dato-value { font-size:14px; font-weight:600; color:var(--primary); }
+        .dato-value.empty { color:#ccc; font-style:italic; font-weight:400; font-size:13px; }
+
+        /* STATS ROW */
+        .stats-row { display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+        .stat-box { background:white; border-radius:10px; padding:16px 20px; flex:1; min-width:130px; box-shadow:0 2px 8px rgba(0,0,0,0.06); border-left:4px solid var(--accent); }
+        .stat-box.success { border-left-color:var(--success); }
+        .stat-box.danger  { border-left-color:var(--danger); }
+        .stat-box.warning { border-left-color:var(--warning); }
+        .stat-lbl { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
+        .stat-val { font-size:22px; font-weight:700; color:var(--primary); }
+        .stat-val.success{ color:var(--success); } .stat-val.danger{ color:var(--danger); } .stat-val.warning{ color:var(--warning); }
+
+        /* COBROS TABLE */
+        .table-wrapper { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        th { padding:10px 12px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:#555; background:#f0ede6; border-bottom:2px solid #d0ccc4; white-space:nowrap; }
+        td { padding:12px 12px; border-bottom:1px solid #f0ede6; vertical-align:middle; }
+        tr:hover td { background:rgba(212,175,55,0.04); }
+
+        .est-badge { display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:10px; white-space:nowrap; }
+        .badge-abonada   { background:#d4edda; color:#1e7e44; }
+        .badge-mora      { background:#f8d7da; color:#c0392b; }
+        .badge-parcial   { background:#fff3cd; color:#856404; }
+        .badge-pendiente { background:#fef9c3; color:#854d0e; }
+        .badge-noabonada { background:#eef2ff; color:#4338ca; }
+        .badge-adefinir  { background:#f3f4f6; color:#6b7280; }
+
+        .monto-cell { text-align:right; font-weight:600; white-space:nowrap; }
+        .monto-pagar { color:#3730a3; }
+        .monto-abonado { color:var(--success); }
+        .monto-saldo   { color:var(--danger); }
+        .monto-saldo.cero { color:var(--success); }
+
+        .btn-action { padding:5px 10px; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; }
+        .btn-comp  { background:#e0e7ff; color:#4338ca; }
+        .btn-recibo{ background:#fef3c7; color:#92400e; }
+        .btn-comp:hover  { background:#c7d2fe; }
+        .btn-recibo:hover{ background:#fde68a; }
+
+        /* EDIT FORM */
+        .mfield { margin-bottom:14px; }
+        .mfield label { display:block; font-weight:600; font-size:12px; color:var(--primary); margin-bottom:5px; }
+        .mfield input, .mfield select, .mfield textarea { width:100%; padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; }
+        .mfield input:focus, .mfield select:focus { outline:none; border-color:var(--primary); }
+        .form-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .btn-save { padding:10px 22px; background:var(--success); color:white; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+        .btn-save:hover { background:#246441; }
+
+        /* SPINNER */
+        .spinner-overlay { display:none; position:fixed; inset:0; background:rgba(255,255,255,0.78); z-index:9000; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
+        .spinner-overlay.show { display:flex; }
+        .spinner { width:42px; height:42px; border:4px solid #e0e0e0; border-top-color:var(--primary); border-radius:50%; animation:spin .8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* TOAST */
+        .toast-wrap { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+        .toast { background:#5C1018; color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,0.2); max-width:340px; }
+        .toast.ok  { background:var(--success); }
+        .toast.err { background:var(--danger); }
+    </style>
+    <link rel="stylesheet" href="sigpo-theme.css">
+</head>
+<body>
+
+<div class="spinner-overlay" id="spinner"><div class="spinner"></div></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-inner">
+        <div class="header-left">
+            <div class="breadcrumb" id="breadcrumb">← Volver a cohorte</div>
+            <h1 id="hdr-nombre">Cargando…</h1>
+            <p id="hdr-sub"></p>
+        </div>
+        <div class="header-right">
+            <button class="btn-back" onclick="history.back()">← Volver</button>
+            <button class="btn-logout" onclick="cerrarSesion()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesión
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- BANNER ESTUDIANTE -->
+    <div class="student-banner">
+        <div class="student-avatar" id="avatar">?</div>
+        <div class="student-info">
+            <h2 id="banner-nombre">—</h2>
+            <p id="banner-meta">—</p>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+        <div class="stat-box success"><div class="stat-lbl">Total a Pagar</div><div class="stat-val" id="st-pagar">—</div></div>
+        <div class="stat-box success"><div class="stat-lbl">Total Abonado</div><div class="stat-val success" id="st-abonado">—</div></div>
+        <div class="stat-box danger"><div class="stat-lbl">Saldo Pendiente</div><div class="stat-val danger" id="st-saldo">—</div></div>
+        <div class="stat-box"><div class="stat-lbl">Estado General</div><div class="stat-val" id="st-estado">—</div></div>
+    </div>
+
+    <!-- COBROS -->
+    <div class="card">
+        <div class="card-title">💳 Cobros en esta cohorte <span id="cohorte-nombre"></span></div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cuota / Concepto</th>
+                        <th>Período</th>
+                        <th>Vencimiento</th>
+                        <th>Estado</th>
+                        <th style="text-align:right;">A Pagar</th>
+                        <th style="text-align:right;">Abonado</th>
+                        <th style="text-align:right;">Saldo</th>
+                        <th>Documentos</th>
+                    </tr>
+                </thead>
+                <tbody id="cobros-body"></tbody>
+            </table>
+            <div id="cobros-empty" style="display:none;padding:32px;text-align:center;color:#aaa;">Este estudiante no tiene cobros registrados en esta cohorte.</div>
+        </div>
+    </div>
+
+    <!-- DATOS PERSONALES -->
+    <div class="card">
+        <div class="card-title">👤 Datos personales</div>
+        <div class="datos-grid" id="datos-grid">
+            <div class="dato-item"><div class="dato-label">DNI</div><div class="dato-value" id="d-dni">—</div></div>
+            <div class="dato-item"><div class="dato-label">Nombre</div><div class="dato-value" id="d-nombre">—</div></div>
+            <div class="dato-item"><div class="dato-label">Apellido</div><div class="dato-value" id="d-apellido">—</div></div>
+            <div class="dato-item"><div class="dato-label">Email</div><div class="dato-value" id="d-email">—</div></div>
+            <div class="dato-item"><div class="dato-label">Teléfono</div><div class="dato-value" id="d-telefono">—</div></div>
+            <div class="dato-item"><div class="dato-label">Descuento en cohorte</div><div class="dato-value" id="d-descuento">—</div></div>
+        </div>
+    </div>
+
+    <!-- EDITAR DATOS -->
+    <div class="card">
+        <div class="card-title">✏️ Editar datos personales</div>
+        <div class="form-grid2">
+            <div class="mfield"><label>Nombre</label><input type="text" id="e-nombre"></div>
+            <div class="mfield"><label>Apellido</label><input type="text" id="e-apellido"></div>
+            <div class="mfield"><label>Email</label><input type="email" id="e-email"></div>
+            <div class="mfield"><label>Teléfono</label><input type="text" id="e-telefono"></div>
+        </div>
+        <button class="btn-save" onclick="guardarDatos()">💾 Guardar cambios</button>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script>
+var QS         = new URLSearchParams(location.search);
+var DNI        = QS.get('dni') || '';
+var COHORTE_ID = parseInt(QS.get('cohorte_id')) || null;
+var PROGRAMA_ID= QS.get('programa_id') || null;
+var _est       = null;
+
+function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fM(n) { var num=parseFloat(n||0); if(isNaN(num))return '$0,00'; return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function spin(v){ document.getElementById('spinner').classList.toggle('show',v); }
+function toast(msg,tipo){ var c=document.getElementById('toasts'); var d=document.createElement('div'); d.className='toast '+(tipo||''); d.textContent=msg; c.appendChild(d); setTimeout(function(){d.remove();},3500); }
+
+document.addEventListener('DOMContentLoaded', async function() {
+    var sesion = getSesion();
+    if (!sesion || sesion.rol !== 'ADMINISTRADOR') { window.location.href='portal_login.html'; return; }
+    if (!DNI) { toast('DNI no especificado','err'); return; }
+    spin(true);
+    try { await cargar(); } catch(e) { toast('Error: '+e.message,'err'); console.error(e); } finally { spin(false); }
+});
+
+async function cargar() {
+    var sb = await getSupabase();
+
+    var [rEst, rCob, rCoh, rInsc] = await Promise.all([
+        sb.from('estudiantes').select('*').eq('dni', DNI).single(),
+        COHORTE_ID
+            ? sb.from('cobros').select('cobro_id,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).eq('dni', DNI).order('fecha_vencimiento')
+            : Promise.resolve({data:[]}),
+        COHORTE_ID
+            ? sb.from('cohortes').select('nombre,programas(nombre)').eq('cohorte_id', COHORTE_ID).single()
+            : Promise.resolve({data:null}),
+        COHORTE_ID
+            ? sb.from('inscripciones').select('descuento_porcentaje,estado_academico').eq('cohorte_id', COHORTE_ID).eq('estudiante_id', '').maybeSingle()
+            : Promise.resolve({data:null})
+    ]);
+
+    _est = rEst.data || {};
+    var cobros = rCob.data || [];
+    var coh = rCoh.data;
+    var insc = rInsc.data;
+
+    // Header
+    var nombre = (_est.apellido||'') + ', ' + (_est.nombre||'');
+    document.getElementById('hdr-nombre').textContent = nombre;
+    document.getElementById('hdr-sub').textContent = 'DNI ' + DNI + (_est.email ? ' · ' + _est.email : '');
+    document.getElementById('banner-nombre').textContent = nombre;
+    document.getElementById('banner-meta').textContent = 'DNI ' + DNI + (_est.email ? ' · ' + _est.email : '') + (coh ? ' · ' + (coh.programas ? coh.programas.nombre : '') : '');
+    document.getElementById('avatar').textContent = (_est.apellido||'?')[0].toUpperCase();
+    if (coh) document.getElementById('cohorte-nombre').textContent = coh.nombre || '';
+    document.getElementById('breadcrumb').textContent = '← Volver a cohorte' + (coh ? ' ' + coh.nombre : '');
+
+    // Datos personales
+    document.getElementById('d-dni').textContent      = DNI;
+    document.getElementById('d-nombre').textContent   = _est.nombre   || '—';
+    document.getElementById('d-apellido').textContent = _est.apellido || '—';
+    document.getElementById('d-email').textContent    = _est.email    || '—';
+    document.getElementById('d-telefono').textContent = _est.telefono || '—';
+
+    // Buscar inscripción para descuento
+    if (_est.id) {
+        var rI = await sb.from('inscripciones').select('descuento_porcentaje').eq('cohorte_id', COHORTE_ID).eq('estudiante_id', _est.id).maybeSingle();
+        document.getElementById('d-descuento').textContent = rI.data ? (rI.data.descuento_porcentaje || 0) + '%' : '0%';
+    }
+
+    // Formulario de edición
+    document.getElementById('e-nombre').value    = _est.nombre    || '';
+    document.getElementById('e-apellido').value  = _est.apellido  || '';
+    document.getElementById('e-email').value     = _est.email     || '';
+    document.getElementById('e-telefono').value  = _est.telefono  || '';
+
+    // Cobros
+    renderCobros(cobros);
+}
+
+function resolverEstado(c) {
+    if (c.no_aplica) return 'NO_APLICA';
+    var s = String(c.estado||'').toUpperCase();
+    var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
+    var saldo   = Number(c.saldo_pendiente||0);
+    var hoy     = new Date().toISOString().split('T')[0];
+    if (c.monto_final == null) return 'A_DEFINIR';
+    if (['ABONADA','PAGADA'].includes(s) || (saldo <= 0 && abonado > 0)) return 'ABONADA';
+    if (['PAGO_PARCIAL','PARCIAL'].includes(s) || (abonado > 0 && saldo > 0)) return 'PAGO_PARCIAL';
+    if (s === 'PENDIENTE') return 'PENDIENTE';
+    if (s === 'EN_MORA' || (saldo > 0 && c.fecha_vencimiento && c.fecha_vencimiento < hoy)) return 'EN_MORA';
+    if (saldo > 0) return 'NO_ABONADA';
+    return 'ABONADA';
+}
+
+function renderCobros(cobros) {
+    var etq = { ABONADA:'Abonada', EN_MORA:'En mora', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'En revisión', NO_ABONADA:'Por abonar', A_DEFINIR:'A definir', NO_APLICA:'No aplica' };
+    var cls = { ABONADA:'badge-abonada', EN_MORA:'badge-mora', PAGO_PARCIAL:'badge-parcial', PENDIENTE:'badge-pendiente', NO_ABONADA:'badge-noabonada', A_DEFINIR:'badge-adefinir', NO_APLICA:'badge-adefinir' };
+    var tbody = document.getElementById('cobros-body');
+    if (!cobros.length) { document.getElementById('cobros-empty').style.display=''; tbody.innerHTML=''; return; }
+
+    var totP=0, totA=0, totS=0;
+    var pesoEstado = { EN_MORA:6, PAGO_PARCIAL:5, PENDIENTE:4, NO_ABONADA:3, A_DEFINIR:2, ABONADA:1 };
+    var peor = 'ABONADA';
+
+    tbody.innerHTML = cobros.map(function(c) {
+        var estado  = resolverEstado(c);
+        var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
+        var saldo   = Number(c.saldo_pendiente||0);
+        var monto   = Number(c.monto_final||0);
+        if (estado !== 'NO_APLICA' && c.monto_final != null) { totP += monto; totA += abonado; totS += saldo; }
+        if ((pesoEstado[estado]||0) > (pesoEstado[peor]||0)) peor = estado;
+
+        var docs = '';
+        if (c.comprobante_url) docs += '<button class="btn-action btn-comp" onclick="verDoc(\''+esc(c.comprobante_url)+'\')">📎 Comp.</button> ';
+        if (c.recibo_url)      docs += '<button class="btn-action btn-recibo" onclick="verDoc(\''+esc(c.recibo_url)+'\')">🧾 Recibo</button>';
+
+        var vence = c.fecha_vencimiento ? c.fecha_vencimiento.split('-').reverse().join('/') : '—';
+        return '<tr>'
+            + '<td><strong>'+esc(c.concepto)+'</strong></td>'
+            + '<td>'+esc(c.periodo||'—')+'</td>'
+            + '<td>'+vence+'</td>'
+            + '<td><span class="est-badge '+(cls[estado]||'badge-adefinir')+'">'+etq[estado]+'</span></td>'
+            + '<td class="monto-cell monto-pagar">'+fM(monto)+'</td>'
+            + '<td class="monto-cell monto-abonado">'+fM(abonado)+'</td>'
+            + '<td class="monto-cell monto-saldo'+(saldo===0?' cero':'')+'">'+fM(saldo)+'</td>'
+            + '<td style="white-space:nowrap;">'+docs+'</td>'
+            + '</tr>';
+    }).join('');
+
+    // Stats
+    document.getElementById('st-pagar').textContent   = fM(totP);
+    document.getElementById('st-abonado').textContent = fM(totA);
+    document.getElementById('st-saldo').textContent   = fM(totS);
+    var etqEst = { ABONADA:'✅ Al día', EN_MORA:'⚠️ En mora', PAGO_PARCIAL:'🔶 Pago parcial', PENDIENTE:'🕓 En revisión', NO_ABONADA:'🔵 Sin abonar', A_DEFINIR:'— A definir' };
+    document.getElementById('st-estado').textContent = etqEst[peor] || peor;
+    document.getElementById('st-saldo').style.color = totS > 0 ? 'var(--danger)' : 'var(--success)';
+}
+
+async function guardarDatos() {
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var upd = {
+            nombre:   document.getElementById('e-nombre').value.trim(),
+            apellido: document.getElementById('e-apellido').value.trim(),
+            email:    document.getElementById('e-email').value.trim(),
+            telefono: document.getElementById('e-telefono').value.trim()
+        };
+        var { error } = await sb.from('estudiantes').update(upd).eq('dni', DNI);
+        if (error) throw error;
+        document.getElementById('hdr-nombre').textContent = upd.apellido + ', ' + upd.nombre;
+        document.getElementById('banner-nombre').textContent = upd.apellido + ', ' + upd.nombre;
+        document.getElementById('d-nombre').textContent   = upd.nombre;
+        document.getElementById('d-apellido').textContent = upd.apellido;
+        document.getElementById('d-email').textContent    = upd.email;
+        document.getElementById('d-telefono').textContent = upd.telefono;
+        toast('Datos actualizados ✓', 'ok');
+    } catch(e) { toast('Error al guardar: ' + e.message, 'err'); } finally { spin(false); }
+}
+
+function verDoc(url) { window.open(url, '_blank'); }
+</script>
+</body>
+</html>
