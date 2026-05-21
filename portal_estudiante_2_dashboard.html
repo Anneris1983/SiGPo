@@ -434,10 +434,10 @@
                     var prog = coh.programas || {};
                     var cobrosCoh = cobrosMap[insc.cohorte_id] || [];
 
+                    // Todas las cuotas reales: excluye no_aplica y NO_APLICA, pero incluye A_DEFINIR sin monto
                     var conMonto = cobrosCoh.filter(function(c) {
-                        return c.monto_final !== null
-                            && c.monto_final !== undefined
-                            && !c.no_aplica;
+                        if (c.no_aplica) return false;
+                        return estadoCobro(c) !== 'NO_APLICA';
                     });
 
                     var abonadasCoh = conMonto.filter(function(c) {
