@@ -119,9 +119,16 @@
         .btn-pdf:hover   { background: #163050; }
         .btn-print { background: #2563eb; color: #fff; }
         .btn-print:hover { background: #1d4ed8; }
-
-        @media print { .actions { display: none; } }
-    </style>
+            @media print {
+            .header, .filter-band, .actions { display: none !important; }
+            body { background: white !important; font-size: 12px; }
+            .container { max-width: 100% !important; padding: 0 12px !important; }
+            .card, .chart-section { box-shadow: none !important; border: 1px solid #ddd !important; page-break-inside: avoid; margin-bottom: 12px; }
+            .summary-cards { page-break-inside: avoid; }
+            thead { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .progress-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+        </style>
     <link rel="stylesheet" href="sigpo-theme.css">
 </head>
 <body>

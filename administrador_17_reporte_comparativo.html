@@ -224,10 +224,15 @@
 
         /* ══ PRINT ══ */
         @media print {
-            .header, .btn-action, .selector-row { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .actions { display: none; }
+            .header, .filter-band, .actions, .selector-row, .btn-action { display: none !important; }
+            body { background: white !important; font-size: 12px; }
+            .container { max-width: 100% !important; padding: 0 12px !important; }
+            .card, .chart-section { box-shadow: none !important; border: 1px solid #ddd !important; page-break-inside: avoid; margin-bottom: 12px; }
+            .summary-cards { page-break-inside: avoid; }
+            thead { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .progress-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
-    </style>
+        </style>
     <link rel="stylesheet" href="sigpo-theme.css">
 </head>
 <body>
