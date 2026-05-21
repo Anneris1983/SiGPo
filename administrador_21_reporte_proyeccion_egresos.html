@@ -334,6 +334,7 @@ async function cargarDatos() {
             var _fCF  = _fRaw ? JSON.parse(_fRaw) : null;
             if (_fCF) {
                 if (_fCF.programa) proyectados = proyectados.filter(function(e){ return String(e.programa_id) === String(_fCF.programa); });
+                if (_fCF.cohorte)  proyectados = proyectados.filter(function(e){ return String(e.cohorte_id)  === String(_fCF.cohorte); });
                 if (_fCF.desde && !_fCF.desdeInicio) proyectados = proyectados.filter(function(e){ var fd=String(e.fecha_estimada||''); return !fd||fd>=_fCF.desde; });
                 if (_fCF.hasta)    proyectados = proyectados.filter(function(e){ var fd=String(e.fecha_estimada||''); return !fd||fd.substring(0,10)<=_fCF.hasta; });
             }

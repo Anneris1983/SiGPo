@@ -468,6 +468,7 @@ async function cargarDatos() {
                 if (_fCF.desde && !_fCF.desdeInicio) _cobros = _cobros.filter(function(c){ return !c.fecha_vencimiento||String(c.fecha_vencimiento)>=_fCF.desde; });
                 if (_fCF.hasta)    _cobros  = _cobros.filter(function(c){ return !c.fecha_vencimiento||String(c.fecha_vencimiento).substring(0,10)<=_fCF.hasta; });
                 if (_fCF.programa) _egresos = _egresos.filter(function(e){ return String(e.programa_id) === String(_fCF.programa); });
+                if (_fCF.cohorte)  _egresos = _egresos.filter(function(e){ return String(e.cohorte_id)  === String(_fCF.cohorte); });
                 if (_fCF.desde && !_fCF.desdeInicio) _egresos = _egresos.filter(function(e){ var fd=String(e.fecha_pago||e.fecha_estimada||''); return !fd||fd>=_fCF.desde; });
                 if (_fCF.hasta)    _egresos = _egresos.filter(function(e){ var fd=String(e.fecha_pago||e.fecha_estimada||''); return !fd||fd.substring(0,10)<=_fCF.hasta; });
             }
