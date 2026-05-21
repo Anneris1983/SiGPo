@@ -327,7 +327,7 @@ function exportarPDF() { window.print(); }
 async function cargarDatos() {
     try {
         var sb = await getSupabase();
-        var rC = await sb.from('cobros').select('programa_id,dni,descuento_porcentaje,monto_final,monto_original,estado');
+        var rC = await sb.from('cobros').select('programa_id,cohorte_id,dni,descuento_porcentaje,monto_final,monto_original,estado');
         var rP = await sb.from('programas').select('programa_id,nombre');
         var cobros = rC.data || [];
         // ── Aplicar filtros desde Cashflow ──
