@@ -461,7 +461,11 @@
                     var totalCoh = conMonto.length;
                     var pct = totalCoh > 0 ? Math.round(abonadasCoh / totalCoh * 100) : 0;
 
+                    // Exclude PENDIENTE (proof submitted, awaiting approval) and already-paid cuotas
                     var deudaCoh = cobrosCoh.reduce(function(s, c) {
+                        if (c.no_aplica) return s;
+                        var est = estadoCobro(c);
+                        if (est === 'PENDIENTE' || est === 'ABONADA' || est === 'NO_APLICA') return s;
                         return s + (Number(c.saldo_pendiente) || 0);
                     }, 0);
 
