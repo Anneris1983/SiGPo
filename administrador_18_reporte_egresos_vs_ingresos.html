@@ -269,8 +269,8 @@
         var rango = f.desdeInicio ? ('Desde el inicio → ' + hasta) : (desde + ' → ' + hasta);
         var tags = ['📅 ' + rango];
 
-        if (f.programa) tags.push('🎓 Programa filtrado');
-        if (f.cohorte) tags.push('📋 Cohorte filtrada');
+        if (f.programa) tags.push('🎓 ' + (f.programa_nombre || f.programa));
+        if (f.cohorte) tags.push('📋 ' + (f.cohorte_nombre || f.cohorte));
 
         band.innerHTML = '<span>🔎 Filtros aplicados desde Cashflow:</span>' +
             tags.map(function(t) { return '<span class="ftag">' + t + '</span>'; }).join('');
@@ -458,6 +458,20 @@ async function cargarDatos() {
         var rEgresos = await sb.from('egresos').select('*');
         var cobros   = rCobros.data  || [];
         var egresos  = rEgresos.data || [];
+        // ── Aplicar filtros desde Cashflow ──
+        try {
+            var _fRaw = sessionStorage.getItem('sigpo_filtros_cashflow');
+            var _fCF  = _fRaw ? JSON.parse(_fRaw) : null;
+            if (_fCF) {
+                if (_fCF.programa) cobros  = cobros.filter(function(c){ return String(c.programa_id) === String(_fCF.programa); });
+                if (_fCF.cohorte)  cobros  = cobros.filter(function(c){ return String(c.cohorte_id)  === String(_fCF.cohorte); });
+                if (_fCF.desde && !_fCF.desdeInicio) cobros = cobros.filter(function(c){ return !c.fecha_vencimiento||String(c.fecha_vencimiento)>=_fCF.desde; });
+                if (_fCF.hasta)    cobros  = cobros.filter(function(c){ return !c.fecha_vencimiento||String(c.fecha_vencimiento).substring(0,10)<=_fCF.hasta; });
+                if (_fCF.programa) egresos  = egresos.filter(function(e){ return String(e.programa_id) === String(_fCF.programa); });
+                if (_fCF.desde && !_fCF.desdeInicio) egresos = egresos.filter(function(e){ var fd=String(e.fecha_pago||e.fecha_estimada||''); return !fd||fd>=_fCF.desde; });
+                if (_fCF.hasta)    egresos  = egresos.filter(function(e){ var fd=String(e.fecha_pago||e.fecha_estimada||''); return !fd||fd.substring(0,10)<=_fCF.hasta; });
+            }
+        } catch(_e) {}
 
         // ── Agrupar cobros por mes (ingresos) ──
         var ingMap = {};

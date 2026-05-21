@@ -302,10 +302,8 @@
         var hasta = f.hasta ? fmt(f.hasta) : 'Sin límite';
         var rango = f.desdeInicio ? ('Desde el inicio → ' + hasta) : (desde + ' → ' + hasta);
         var tags = ['📅 ' + rango];
-        if (f.programa) tags.push('🎓 ' + document.getElementById('_prog_label_' + f.programa) ? '' : f.programa);
-        // fallback: usar valor crudo
-        if (f.programa) tags.push('🎓 Programa filtrado');
-        if (f.cohorte) tags.push('📋 ' + (f.cohorte === '' ? 'Todas las cohortes' : 'Cohorte filtrada'));
+        if (f.programa) tags.push('🎓 ' + (f.programa_nombre || f.programa));
+        if (f.cohorte) tags.push('📋 ' + (f.cohorte_nombre || f.cohorte));
         band.innerHTML = '<span>🔎 Filtros aplicados desde Cashflow:</span>' +
             tags.map(function(t){ return '<span class="ftag">'+t+'</span>'; }).join('');
 
@@ -330,6 +328,16 @@ async function cargarDatos() {
         var sb = await getSupabase();
         var r = await sb.from('egresos').select('*');
         var proyectados = (r.data || []).filter(function(e) { return e.tipo==='PROYECTADO' && e.estado==='PENDIENTE'; });
+        // ── Aplicar filtros desde Cashflow ──
+        try {
+            var _fRaw = sessionStorage.getItem('sigpo_filtros_cashflow');
+            var _fCF  = _fRaw ? JSON.parse(_fRaw) : null;
+            if (_fCF) {
+                if (_fCF.programa) proyectados = proyectados.filter(function(e){ return String(e.programa_id) === String(_fCF.programa); });
+                if (_fCF.desde && !_fCF.desdeInicio) proyectados = proyectados.filter(function(e){ var fd=String(e.fecha_estimada||''); return !fd||fd>=_fCF.desde; });
+                if (_fCF.hasta)    proyectados = proyectados.filter(function(e){ var fd=String(e.fecha_estimada||''); return !fd||fd.substring(0,10)<=_fCF.hasta; });
+            }
+        } catch(_e) {}
 
         var catTotals = {};
         var monthKeys = [];

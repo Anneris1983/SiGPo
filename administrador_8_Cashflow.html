@@ -477,12 +477,16 @@ function persistirFiltros() {
 
 function guardarFiltrosYNavegar(event, destino) {
     var desdeChk = document.getElementById('chkInicio').checked;
+    var selProg = document.getElementById('filtroPrograma');
+    var selCoh  = document.getElementById('filtroCohorte');
     filtrosActivos = {
-        desdeInicio: desdeChk,
-        desde:    desdeChk ? null : document.getElementById('fechaDesde').value,
-        hasta:    document.getElementById('fechaHasta').value,
-        programa: document.getElementById('filtroPrograma').value,
-        cohorte:  document.getElementById('filtroCohorte').value
+        desdeInicio:     desdeChk,
+        desde:           desdeChk ? null : document.getElementById('fechaDesde').value,
+        hasta:           document.getElementById('fechaHasta').value,
+        programa:        selProg.value,
+        programa_nombre: selProg.value ? selProg.options[selProg.selectedIndex].text : '',
+        cohorte:         selCoh.value,
+        cohorte_nombre:  selCoh.value ? selCoh.options[selCoh.selectedIndex].text : ''
     };
     persistirFiltros();
 }
