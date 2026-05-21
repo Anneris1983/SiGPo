@@ -10,17 +10,28 @@
         :root { --primary: #5C1018; --accent: #C49A2A; --success: #059669; --warning: #d97706; --danger: #dc2626; --border: #E6DFD2; --border-light: #EFEAE0; --text: #1C1510; --text-2: #594F42; --text-muted: #6B6254; --bg: #F8F6F1; }
         body { font-family: 'Inter','DM Sans',system-ui,sans-serif; background: var(--bg); color: var(--text); font-size: 14px; -webkit-font-smoothing: antialiased; }
 
-        .navbar { background: rgba(255,255,255,.95); backdrop-filter: blur(8px); padding: 12px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 0 var(--border-light), 0 2px 8px rgba(10,15,30,.04); }
-        .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--primary); font-size: 15px; }
-        .nav-links { display: flex; gap: 4px; align-items: center; }
-        .nav-link { text-decoration: none; color: var(--text-2); font-weight: 500; font-size: 13.5px; padding: 7px 14px; border-radius: 8px; transition: .15s; }
-        .nav-link:hover { background: var(--border-light); color: var(--text); }
-        .nav-link.active { background: #F6EAEB; color: var(--primary); font-weight: 700; }
+        /* ── Header institucional ── */
+        .header { padding: 0; }
+        .header-content { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; gap: 16px; flex-wrap: wrap; }
+        .header-left { flex: 1; min-width: 0; }
+        .header-left h1 { font-family: 'Crimson Pro',Georgia,serif; font-size: 22px; font-weight: 700; color: #fff; margin: 0 0 2px; }
+        .header-left p  { font-size: 13px; color: rgba(255,255,255,.8); margin: 0; }
+        .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
+        .header-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.3); color: #fff !important; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: background .15s; font-family: inherit; }
+        .header-btn:hover { background: rgba(255,255,255,.22); }
+        .header-nav-btn { text-decoration: none; color: rgba(255,255,255,.85); font-weight: 500; padding: 7px 13px; border-radius: 8px; font-size: 13px; transition: all .15s; border: 1.5px solid transparent; white-space: nowrap; }
+        .header-nav-btn:hover { background: rgba(255,255,255,.15); color: #fff; border-color: rgba(255,255,255,.25); }
+        .header-nav-btn.active { background: rgba(255,255,255,.2); color: #fff; border-color: rgba(255,255,255,.4); font-weight: 700; }
+        .notif-bell { background: none; border: none; cursor: pointer; position: relative; padding: 8px; border-radius: 8px; transition: background .15s; }
+        .notif-bell:hover { background: rgba(255,255,255,.15); }
+        .notif-wrapper { position: relative; display: inline-flex; align-items: center; }
+        .notif-badge-dot { position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid transparent; line-height: 1; }
+        .notif-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; width: 380px; max-height: 460px; overflow-y: auto; background: #fff; border-radius: 14px; box-shadow: 0 16px 48px rgba(10,15,30,.14); z-index: 999; border: 1px solid #E6DFD2; }
 
         .container { max-width: 1200px; margin: 28px auto; padding: 0 28px 48px; }
 
-        .header { margin-bottom: 32px; }
-        .header h1 { font-family: 'Crimson Pro', serif; font-size: 32px; color: var(--primary); margin-bottom: 8px; }
+        .page-heading { margin-bottom: 32px; }
+        .page-heading h1 { font-family: 'Crimson Pro', serif; font-size: 32px; color: var(--primary); margin-bottom: 8px; }
 
         .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .section-title { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 12px; }
@@ -149,35 +160,40 @@
     <link rel="stylesheet" href="sigpo-theme.css">
 </head>
 <body>
-    <div class="navbar">
-        <div class="nav-brand">
-                        <span>Portal de Estudiantes</span>
-        </div>
-        <div class="nav-links">
-            <a href="portal_estudiante_2_dashboard.html" class="nav-link">🏠 Dashboard</a>
-            <a href="portal_estudiante_3_cuotas.html" class="nav-link">💳 Mis Cuotas</a>
-            <a href="portal_estudiante_4_facturacion.html" class="nav-link">📄 Facturación</a>
-            <a href="portal_estudiante_5_historial.html" class="nav-link active">📊 Historial</a>
-            <!-- Campana -->
-            <div class="notif-wrapper" style="position:relative;display:inline-flex;">
-                <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:6px 8px;border-radius:6px;transition:background 0.2s;">
-                    <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                    <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
-                </button>
-                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
-                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                        <h3 style="font-size:15px;font-weight:700;color:#5C1018;">🔔 Notificaciones</h3>
-                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
-                    </div>
-                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
-                </div>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>🎓 Portal de Estudiantes</h1>
+                <p>Facultad de Ciencias Económicas · Universidad Nacional de Cuyo</p>
             </div>
-            <a href="portal_login.html" class="nav-link" onclick="return cerrarSesion(event)">🚪 Salir</a>
+            <div class="header-right">
+                <a href="portal_estudiante_2_dashboard.html" class="header-nav-btn">🏠 Dashboard</a>
+                <a href="portal_estudiante_3_cuotas.html" class="header-nav-btn">💳 Mis Cuotas</a>
+                <a href="portal_estudiante_4_facturacion.html" class="header-nav-btn">📄 Facturación</a>
+                <a href="portal_estudiante_5_historial.html" class="header-nav-btn active">📊 Historial</a>
+                <div class="notif-wrapper">
+                    <button class="notif-bell" onclick="toggleNotif()" title="Notificaciones" aria-label="Notificaciones">
+                        <svg width="26" height="26" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#fff" fill-opacity=".9"/></svg>
+                        <span id="notif-badge" class="notif-badge-dot">0</span>
+                    </button>
+                    <div id="notif-dropdown" class="notif-dropdown">
+                        <div style="padding:16px 20px;border-bottom:1px solid #EFEAE0;display:flex;justify-content:space-between;align-items:center;">
+                            <h3 style="font-size:14px;font-weight:700;color:#5C1018;">🔔 Notificaciones</h3>
+                            <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;font-family:inherit;">Marcar todas como leídas</button>
+                        </div>
+                        <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:13px;">Cargando…</div></div>
+                    </div>
+                </div>
+                <a href="portal_login.html" class="header-btn" onclick="return cerrarSesion(event)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Salir
+                </a>
+            </div>
         </div>
     </div>
 
     <div class="container">
-        <div class="header">
+        <div class="page-heading">
             <h1>📊 Mi Historial de Pagos</h1>
             <p style="color: #666;">Resumen completo de tu actividad financiera en todos los programas</p>
         </div>
