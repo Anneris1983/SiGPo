@@ -52,12 +52,21 @@
         }
 
         .breadcrumb a {
-            color: var(--white);
+            color: white;
             text-decoration: none;
-            opacity: 0.92;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 13px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
         }
 
-        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb a:hover { background: rgba(255,255,255,0.25); }
 
         .header-left h1 {
             font-family: 'Crimson Pro', serif;

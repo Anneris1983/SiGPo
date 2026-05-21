@@ -12,7 +12,9 @@
 
         .header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:20px 32px; box-shadow:0 4px 20px rgba(0,0,0,0.12); }
         .header-inner { max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; }
-        .header-left .breadcrumb { font-size:12px; opacity:0.8; margin-bottom:6px; }
+        .header-left .breadcrumb { font-size:12px; margin-bottom:10px; }
+        .header-left .breadcrumb button { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:6px 13px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; display:inline-flex; align-items:center; gap:5px; transition:background 0.2s; }
+        .header-left .breadcrumb button:hover { background:rgba(255,255,255,0.25); }
         .header-left h1 { font-family:'Crimson Pro',serif; font-size:24px; margin-bottom:3px; }
         .header-left p  { font-size:13px; opacity:0.85; }
         .header-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
@@ -107,7 +109,7 @@
 <div class="header">
     <div class="header-inner">
         <div class="header-left">
-            <div class="breadcrumb" id="breadcrumb">← Volver</div>
+            <div class="breadcrumb"><button id="breadcrumb" onclick="history.back()">← Volver</button></div>
             <h1 id="hdr-nombre">Cargando…</h1>
             <p id="hdr-sub"></p>
         </div>
@@ -122,7 +124,6 @@
                     <div id="notif-list" style="max-height:320px;overflow-y:auto;"><div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;">Cargando…</div></div>
                 </div>
             </div>
-            <button class="btn-back" onclick="history.back()">← Volver</button>
             <button class="btn-logout" onclick="cerrarSesion()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 Cerrar sesión

@@ -41,20 +41,25 @@
         .breadcrumb {
             font-size: 14px;
             margin-bottom: 12px;
-            opacity: 0.9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
         .breadcrumb a {
             color: white;
             text-decoration: none;
-            transition: opacity 0.3s ease;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 13px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
         }
 
         .breadcrumb a:hover {
-            opacity: 0.7;
+            background: rgba(255,255,255,0.25);
         }
 
         .header h1 {
