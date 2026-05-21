@@ -6,17 +6,18 @@
     <title>Historial - Portal Estudiante FCE</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #5C1018; --accent: #C49A2A; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
-        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #5C1018; --accent: #C49A2A; --success: #059669; --warning: #d97706; --danger: #dc2626; --border: #E6DFD2; --border-light: #EFEAE0; --text: #1C1510; --text-2: #594F42; --text-muted: #6B6254; --bg: #F8F6F1; }
+        body { font-family: 'Inter','DM Sans',system-ui,sans-serif; background: var(--bg); color: var(--text); font-size: 14px; -webkit-font-smoothing: antialiased; }
 
-        .navbar { background: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .nav-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--primary); }
-        .nav-links { display: flex; gap: 24px; }
-        .nav-link { text-decoration: none; color: #666; font-weight: 500; padding: 8px 16px; border-radius: 6px; transition: all 0.3s; }
-        .nav-link:hover, .nav-link.active { background: var(--accent); color: white; }
+        .navbar { background: rgba(255,255,255,.95); backdrop-filter: blur(8px); padding: 12px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 0 var(--border-light), 0 2px 8px rgba(10,15,30,.04); }
+        .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--primary); font-size: 15px; }
+        .nav-links { display: flex; gap: 4px; align-items: center; }
+        .nav-link { text-decoration: none; color: var(--text-2); font-weight: 500; font-size: 13.5px; padding: 7px 14px; border-radius: 8px; transition: .15s; }
+        .nav-link:hover { background: var(--border-light); color: var(--text); }
+        .nav-link.active { background: #F6EAEB; color: var(--primary); font-weight: 700; }
 
-        .container { max-width: 1400px; margin: 32px auto; padding: 0 32px; }
+        .container { max-width: 1200px; margin: 28px auto; padding: 0 28px 48px; }
 
         .header { margin-bottom: 32px; }
         .header h1 { font-family: 'Crimson Pro', serif; font-size: 32px; color: var(--primary); margin-bottom: 8px; }
