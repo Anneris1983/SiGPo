@@ -456,7 +456,14 @@
                     }, 0);
 
                     var esBaja = insc.estado_academico === 'BAJA';
-                    var todoAbonado = !esBaja && totalCoh > 0 && abonadasCoh === totalCoh && deudaCoh === 0;
+
+                    // Libre deuda: todas las cuotas abonadas Y ninguna pendiente/a_definir sin resolver
+                    var sinCuotasPendientes = cobrosCoh.every(function(c) {
+                        if (c.no_aplica) return true;
+                        var est = estadoCobro(c);
+                        return est === 'ABONADA' || est === 'NO_APLICA';
+                    });
+                    var todoAbonado = !esBaja && totalCoh > 0 && abonadasCoh === totalCoh && deudaCoh === 0 && sinCuotasPendientes;
 
                     var badge = esBaja
                         ? '<span class="carrera-badge badge-baja">Baja</span>'
