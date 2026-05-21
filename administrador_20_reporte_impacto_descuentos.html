@@ -326,7 +326,7 @@ async function cargarDatos() {
             { label:'>50%', min:50.01, max:100 }
         ];
         var rangoMontos = rangos.map(function(r) {
-            return conDesc.filter(function(c){ var d=Number(c.descuento_porcentaje||0); return d>=r.min && d<=r.max; }).reduce(function(s,c){return s+Number(c.descuento_porcentaje||0);},0);
+            return conDesc.filter(function(c){ var d=Number(c.descuento_porcentaje||0); return d>=r.min && d<=r.max; }).reduce(function(s,c){return s + (Number(c.monto_final||0) * Number(c.descuento_porcentaje||0) / 100);},0);
         });
         var rangoCounts = rangos.map(function(r) {
             var dnis = new Set(conDesc.filter(function(c){ var d=Number(c.descuento_porcentaje||0); return d>=r.min && d<=r.max; }).map(function(c){return c.dni;}));
@@ -347,7 +347,7 @@ async function cargarDatos() {
             }
         });
 
-        var totalDescuento = conDesc.reduce(function(s,c){return s+Number(c.descuento_porcentaje||0);},0);
+        var totalDescuento = conDesc.reduce(function(s,c){return s + (Number(c.monto_final||0) * Number(c.descuento_porcentaje||0) / 100);},0);
         var dnisConDesc = new Set(conDesc.map(function(c){return c.dni;})).size;
         var cards = document.querySelectorAll('.summary-card');
         if (cards[0]) { var sv=cards[0].querySelector('.summary-value'); if(sv) sv.textContent=String(dnisConDesc); }

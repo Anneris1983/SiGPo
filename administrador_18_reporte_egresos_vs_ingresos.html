@@ -472,7 +472,7 @@ async function cargarDatos() {
         // ── Agrupar egresos por mes ──
         var egMap = {};
         egresos.forEach(function(e) {
-            if (e.tipo !== 'EJECUTADO' && e.estado !== 'CANCELADO') return;
+            if (e.tipo !== 'EJECUTADO') return;
             var k = mesKey(e.fecha_pago);
             if (!k) return;
             if (!egMap[k]) egMap[k] = 0;
