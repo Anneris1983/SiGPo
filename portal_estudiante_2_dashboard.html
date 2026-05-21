@@ -63,9 +63,10 @@
         .carrera-nombre { font-weight: 700; color: var(--primary); font-size: 15.5px; }
         .carrera-cohorte { font-size: 11.5px; color: var(--text-muted); font-weight: 500; margin-top: 3px; }
         .carrera-badge { padding: 3px 11px; border-radius: 99px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
-        .badge-activo { background: #d1fae5; color: #065f46; }
-        .badge-mora   { background: #fee2e2; color: #991b1b; }
-        .badge-baja   { background: #F8F6F1; color: #475569; border: 1px solid var(--border); }
+        .badge-activo        { background: #d1fae5; color: #065f46; }
+        .badge-mora          { background: #fee2e2; color: #991b1b; }
+        .badge-baja          { background: #F8F6F1; color: #475569; border: 1px solid var(--border); }
+        .badge-pend-aprob    { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
 
         .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 7px; }
         .progress-fill { height: 100%; background: var(--success); transition: width .5s; border-radius: 3px; }
@@ -413,8 +414,9 @@
                 document.getElementById('alerta-mora').style.display = 'flex';
                 document.getElementById('alerta-aldia').style.display = 'none';
             } else if (cobros.length > 0) {
+                var hayPendiente = cobros.some(function(c) { return estadoCobro(c) === 'PENDIENTE'; });
                 document.getElementById('alerta-mora').style.display = 'none';
-                document.getElementById('alerta-aldia').style.display = 'flex';
+                document.getElementById('alerta-aldia').style.display = hayPendiente ? 'none' : 'flex';
             }
 
             var cobrosMap = {};
@@ -444,9 +446,17 @@
                         return estadoCobro(c) === 'ABONADA';
                     }).length;
 
+                    // EN_MORA from DB + auto-detect: NO_ABONADA or PAGO_PARCIAL with past due date
                     var moraCoh = conMonto.filter(function(c) {
-                        return estadoCobro(c) === 'EN_MORA';
+                        var est = estadoCobro(c);
+                        if (est === 'EN_MORA') return true;
+                        if ((est === 'NO_ABONADA' || est === 'PAGO_PARCIAL') && c.fecha_vencimiento && c.fecha_vencimiento < hoyStr) return true;
+                        return false;
                     }).length;
+
+                    var pendienteAprobCoh = moraCoh === 0 && conMonto.some(function(c) {
+                        return estadoCobro(c) === 'PENDIENTE';
+                    });
 
                     var totalCoh = conMonto.length;
                     var pct = totalCoh > 0 ? Math.round(abonadasCoh / totalCoh * 100) : 0;
@@ -469,7 +479,9 @@
                         ? '<span class="carrera-badge badge-baja">Baja</span>'
                         : moraCoh > 0
                             ? '<span class="carrera-badge badge-mora">En mora</span>'
-                            : '<span class="carrera-badge badge-activo">Al día</span>';
+                            : pendienteAprobCoh
+                                ? '<span class="carrera-badge badge-pend-aprob">Pend. aprobación</span>'
+                                : '<span class="carrera-badge badge-activo">Al día</span>';
 
                     var labelCoh = (getCategoriaPrograma(prog.tipo) === 'Programa') ? 'Cohorte' : 'Edición';
 
