@@ -332,8 +332,6 @@
 
         document.getElementById('hdr-saludo').textContent =
             '👋 Hola, ' + (sesion.nombre || 'Estudiante');
-        document.getElementById('hdr-sub').textContent =
-            (sesion.nombre || 'Estudiante') + ' · Portal de Seguimiento de Cuotas';
 
         try {
             var sb = await getSupabase();
