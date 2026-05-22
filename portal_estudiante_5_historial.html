@@ -198,6 +198,14 @@
             <p style="color: #666;">Resumen completo de tu actividad financiera en todos los programas</p>
         </div>
 
+        <!-- Distribución por programa -->
+        <div class="section">
+            <div class="section-title">🎓 Distribución por Programa</div>
+            <div class="distrib-grid" id="distribGrid">
+                <div style="grid-column:1/-1;text-align:center;color:#aaa;padding:24px;">Cargando...</div>
+            </div>
+        </div>
+
         <!-- Cards resumen global -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -233,14 +241,6 @@
             <div class="chart-container">
                 <div class="bar-chart" id="barChart"></div>
                 <div style="display:flex; gap:8px; margin-top:8px;" id="barLabels"></div>
-            </div>
-        </div>
-
-        <!-- Distribución por programa -->
-        <div class="section">
-            <div class="section-title">🎓 Distribución por Programa</div>
-            <div class="distrib-grid" id="distribGrid">
-                <div style="grid-column:1/-1;text-align:center;color:#aaa;padding:24px;">Cargando...</div>
             </div>
         </div>
 
@@ -475,10 +475,6 @@
         renderChart();
         renderTabla();
 
-        var tabla = document.getElementById('tablaHistorial');
-        if (tabla) {
-            tabla.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
     }
 
     function filtrarTipo(v) {
