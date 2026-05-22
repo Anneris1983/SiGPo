@@ -537,7 +537,7 @@ async function subirComprobante(cobroId, file, fechaTransferencia) {
         comprobante_url: urlData.publicUrl,
         comprobante_fecha: new Date().toISOString()
     };
-    if (fechaTransferencia) updateData.fecha_transferencia = fechaTransferencia;
+    if (fechaTransferencia) updateData.fecha_pago = fechaTransferencia;
 
     const { error: updateErr } = await sb.from('cobros').update(updateData).eq('cobro_id', cobroId);
 
