@@ -1,8 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="15 15 230 230">
-  <circle cx="130" cy="130" r="126" fill="#ffffff"/>
-  <circle cx="130" cy="130" r="115" fill="none" stroke="#e8dfc8" stroke-width="3"/>
-  <circle cx="130" cy="130" r="82"  fill="none" stroke="#C49A2B" stroke-width="10"/>
-  <circle cx="130" cy="130" r="49"  fill="none" stroke="#7B2229" stroke-width="28" stroke-dasharray="227 81"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="40 40 180 180">
+  <circle cx="130" cy="130" r="82"  fill="none" stroke="#C49A2B" stroke-width="12"/>
+  <circle cx="130" cy="130" r="49"  fill="none" stroke="#7B2229" stroke-width="30" stroke-dasharray="227 81"/>
   <circle cx="130" cy="130" r="20"  fill="#7B2229"/>
   <circle cx="130" cy="130" r="7"   fill="#ffffff"/>
 </svg>
