@@ -564,11 +564,10 @@ async function aplicarFiltros() {
 
     // ── Cobros agrupados ──────────────────────────────────
     var qCobros = sb.from('cobros')
-        .select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento');
+        .select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento,fecha_pago');
     if (progId) qCobros = qCobros.eq('programa_id', progId);
     if (cohId)  qCobros = qCobros.eq('cohorte_id',  cohId);
-    if (desde)  qCobros = qCobros.gte('fecha_vencimiento', desde);
-    if (hasta)  qCobros = qCobros.lte('fecha_vencimiento', hasta);
+    // Date filter applied client-side to handle PAGO_PARCIAL split correctly
     var rCobros = await qCobros;
     var cobros = rCobros.data || [];
 
@@ -610,24 +609,50 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
     var cohProgMap = {};
     _cohortes.forEach(function(c){ cohProgMap[c.cohorte_id] = c.programa_id; });
 
-    // ── COBROS: sumas globales ──
-    var ingresoProy   = 0; // monto_final donde estado != NO_APLICA, A_DEFINIR
-    var ingresoEjec   = 0; // lo efectivamente cobrado (monto_final - saldo_pendiente donde ABONADA o PAGO_PARCIAL)
+    // Helpers de rango de fecha
+    function enRangoVenc(f) {
+        if (!f) return true;
+        var d = String(f).substring(0, 10);
+        if (!desdeChk && desde && d < desde) return false;
+        if (hasta && d > hasta) return false;
+        return true;
+    }
+    function enRangoPago(f) {
+        if (!f) return false;
+        var d = String(f).substring(0, 10);
+        if (!desdeChk && desde && d < desde) return false;
+        if (hasta && d > hasta) return false;
+        return true;
+    }
+
+    // ── COBROS: sumas con filtro de fecha separado por semántica ──
+    // ingresoProy → fecha_vencimiento (cuándo estaba programado el cobro)
+    // ingresoEjec → fecha_pago (cuándo ingresó el dinero efectivamente)
+    // PAGO_PARCIAL: parte ejecutada por fecha_pago, parte proyectada por fecha_vencimiento
+    var ingresoProy   = 0;
+    var ingresoEjec   = 0;
     var montoMora     = 0;
     var cuotasEnMora  = 0;
-    var dnisEnMora    = {}; // clave: dni|programa_id (enrollment-based)
+    var dnisEnMora    = {};
 
     cobros.forEach(function(c) {
-        var mf = Number(c.monto_final || 0);
-        var sp = Number(c.saldo_pendiente || 0);
+        var mf  = Number(c.monto_final || 0);
+        var sp  = Number(c.saldo_pendiente || 0);
         var est = c.estado;
-        if (est !== 'NO_APLICA' && est !== 'A_DEFINIR') {
+        if (est === 'NO_APLICA' || est === 'A_DEFINIR') return;
+
+        // Proyectado: cuota programada para este período (por fecha de vencimiento)
+        if (enRangoVenc(c.fecha_vencimiento)) {
             ingresoProy += mf;
         }
-        if (est === 'ABONADA' || est === 'PAGO_PARCIAL') {
+
+        // Ejecutado: dinero recibido en este período (por fecha real de transferencia)
+        if ((est === 'ABONADA' || est === 'PAGO_PARCIAL') && enRangoPago(c.fecha_pago)) {
             ingresoEjec += Math.max(0, mf - sp);
         }
-        if (est === 'EN_MORA') {
+
+        // Mora: por fecha de vencimiento
+        if (est === 'EN_MORA' && enRangoVenc(c.fecha_vencimiento)) {
             montoMora += sp;
             cuotasEnMora++;
             var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id];
