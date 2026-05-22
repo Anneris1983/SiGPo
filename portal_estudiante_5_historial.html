@@ -556,17 +556,27 @@
                 pp[pid] = {
                     nombre: _programas[pid] || 'Sin programa',
                     abonado: 0,
-                    pendiente: 0,
+                    enRevision: 0,
+                    sinPagar: 0,
                     total: 0,
-                    abonadas: 0
+                    abonadas: 0,
+                    enRevisionCount: 0
                 };
             }
 
+            var est = resolveEst(c);
+            var saldo = Number(c.saldo_pendiente) || 0;
             pp[pid].total++;
             pp[pid].abonado += calcAbonado(c);
-            pp[pid].pendiente += Number(c.saldo_pendiente) || 0;
 
-            if (resolveEst(c) === 'ABONADA') {
+            if (est === 'PENDIENTE') {
+                pp[pid].enRevision += saldo;
+                pp[pid].enRevisionCount++;
+            } else if (est !== 'ABONADA' && est !== 'NO_APLICA' && est !== 'A_DEFINIR') {
+                pp[pid].sinPagar += saldo;
+            }
+
+            if (est === 'ABONADA') {
                 pp[pid].abonadas++;
             }
         });
@@ -585,10 +595,22 @@
             var col = PROG_COLORS[i % PROG_COLORS.length];
             var activa = String(pid) === String(_fPrograma);
 
+            var filaRevision = p.enRevision > 0
+                ? '<div class="distrib-row"><span class="distrib-label" style="color:#92400e;">🕐 En revisión (' + p.enRevisionCount + ')</span><span class="distrib-valor" style="color:#92400e;">' + fM(p.enRevision) + '</span></div>'
+                : '';
+            var filaSinPagar = p.sinPagar > 0
+                ? '<div class="distrib-row"><span class="distrib-label" style="color:var(--danger);">⬜ Sin pagar</span><span class="distrib-valor" style="color:var(--danger);">' + fM(p.sinPagar) + '</span></div>'
+                : '';
+            var filaPendienteOk = p.enRevision === 0 && p.sinPagar === 0
+                ? '<div class="distrib-row"><span class="distrib-label">Pendiente</span><span class="distrib-valor" style="color:var(--success);">$0</span></div>'
+                : '';
+
             return '<div class="distrib-card' + (activa ? ' active' : '') + '" onclick="seleccionarProgramaDesdeCard(\'' + pid + '\')" title="Ver historial solo de este programa">' +
                 '<div class="distrib-nombre">' + p.nombre + '</div>' +
                 '<div class="distrib-row"><span class="distrib-label">Pagado</span><span class="distrib-valor" style="color:var(--success)">' + fM(p.abonado) + '</span></div>' +
-                '<div class="distrib-row"><span class="distrib-label">Pendiente</span><span class="distrib-valor" style="color:' + (p.pendiente > 0 ? 'var(--danger)' : 'var(--success)') + '">' + fM(p.pendiente) + '</span></div>' +
+                filaRevision +
+                filaSinPagar +
+                filaPendienteOk +
                 '<div class="distrib-row"><span class="distrib-label">Progreso</span><span class="distrib-valor">' + p.abonadas + '/' + p.total + (p.abonadas === p.total ? ' ✅' : '') + '</span></div>' +
                 '<div class="distrib-progress"><div class="distrib-progress-fill" style="width:' + pct + '%;background:' + col + ';"></div></div>' +
                 '</div>';
