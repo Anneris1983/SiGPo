@@ -1925,17 +1925,18 @@
             };
             const badgeLabel = badgeLabels[cuota.estado] || cuota.estado;
             const esEditable = !['abonada', 'parcial', 'pendiente', 'nodebe'].includes(cuota.estado);
-            const popupInfo = esEditable ? JSON.stringify({
-                cobro_id: cuota.cobroId,
-                nombre: cuota.nombre,
-                mes: cuota.mes,
-                monto: cuota.montoBase,
-                descuento_porcentaje: descuentoPorcentaje || 0,
-                fecha_vencimiento: cuota.fechaVencimiento || null,
-                estado_actual: cuota.estado,
-                no_aplica: cuota.estado === 'nodebe'
-            }).replace(/'/g, '&#39;') : '';
-            const editAttr = esEditable ? ` onclick="event.stopPropagation();abrirCeldaPopupCoop(event,'${popupInfo}')" style="cursor:pointer;"` : '';
+            const editAttr = esEditable
+                ? ' onclick="event.stopPropagation();abrirCeldaPopupCoop(event,' + escapeHtml(JSON.stringify({
+                    cobro_id: cuota.cobroId,
+                    nombre: cuota.nombre,
+                    mes: cuota.mes,
+                    monto: cuota.montoBase,
+                    descuento_porcentaje: descuentoPorcentaje || 0,
+                    fecha_vencimiento: cuota.fechaVencimiento || null,
+                    estado_actual: cuota.estado,
+                    no_aplica: cuota.estado === 'nodebe'
+                  })) + ')" style="cursor:pointer;"'
+                : '';
             const editHint = esEditable ? '<div style="font-size:9px;color:#bbb;margin-top:2px;">✏️ editar</div>' : '';
             return `
                 <td class="${clases}" title="${escapeHtml(tooltip)}"${editAttr}>

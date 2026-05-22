@@ -963,18 +963,19 @@ function renderTabla() {
             else if (c.estado === 'PAGO_PARCIAL') badge = '<span class="est-badge badge-parcial">Pago parcial</span>';
             else if (c.estado === 'PENDIENTE')    badge = '<span class="est-badge badge-pendiente">En revisión</span>';
             const esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(c.estado);
-            const popupInfo = esEditable ? JSON.stringify({
-                cobro_id: c.cobro_id,
-                dni: String(est.dni),
-                concepto: c.concepto,
-                periodo: c.periodo || '',
-                monto: c.monto_original,
-                descuento_porcentaje: est.descuento_porcentaje || c.descuento_porcentaje || 0,
-                fecha_vencimiento: c.fecha_vencimiento || null,
-                estado_actual: c.estado,
-                no_aplica: c.estado === 'NO_APLICA'
-            }).replace(/'/g, '&#39;') : '';
-            const editAttr = esEditable ? ` onclick="event.stopPropagation();abrirCeldaPopup(event,'${popupInfo}')" style="cursor:pointer;"` : '';
+            const editAttr = esEditable
+                ? ' onclick="event.stopPropagation();abrirCeldaPopup(event,' + escapeHtml(JSON.stringify({
+                    cobro_id: c.cobro_id,
+                    dni: String(est.dni),
+                    concepto: c.concepto,
+                    periodo: c.periodo || '',
+                    monto: c.monto_original,
+                    descuento_porcentaje: est.descuento_porcentaje || c.descuento_porcentaje || 0,
+                    fecha_vencimiento: c.fecha_vencimiento || null,
+                    estado_actual: c.estado,
+                    no_aplica: c.estado === 'NO_APLICA'
+                  })) + ')" style="cursor:pointer;"'
+                : '';
             const editHint = esEditable ? '<div style="font-size:9px;color:#bbb;margin-top:2px;">✏️ editar</div>' : '';
             return `<td data-est="${c.estado}" title="${escapeHtml(title)}"${editAttr}>${badge}${txt}${editHint}${links}</td>`;
         }).join('');
