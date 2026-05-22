@@ -286,6 +286,8 @@
         tr.fila-pasiva-cohorte td { opacity:0.6; }
         .btn-baja-coh { background:none; border:1.5px solid #e65100; color:#e65100; border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; }
         .btn-baja-coh:hover { background:#fff8e1; }
+        .btn-desvincular-coh { background:none; border:1.5px solid #7f1d1d; color:#7f1d1d; border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; margin-top:4px; }
+        .btn-desvincular-coh:hover { background:#fef2f2; }
         .btn-alta-coh { background:none; border:1.5px solid #2d7a4f; color:#2d7a4f; border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; }
         .btn-alta-coh:hover { background:#d4edda; }
 
@@ -559,6 +561,21 @@
         <div class="modal-footer">
             <button class="btn-cancel" onclick="cerrar('modal-importar')">Cancelar</button>
             <button class="btn-purple" id="btn-imp" disabled onclick="procesarImport()">📥 Importar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL: DESVINCULAR ESTUDIANTE DE COHORTE ═══ -->
+<div class="modal-overlay" id="modal-desvincular">
+    <div class="modal-box" style="max-width:460px;">
+        <div class="modal-hdr" style="background:linear-gradient(135deg,#7f1d1d 0%,#991b1b 100%);">
+            <div><h2>🗑 Desvincular de esta cohorte</h2><p id="mdv-sub">—</p></div>
+            <button class="modal-close" onclick="cerrar('modal-desvincular')">×</button>
+        </div>
+        <div class="modal-body" id="mdv-cuerpo"></div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="cerrar('modal-desvincular')">Cancelar</button>
+            <button id="mdv-btn" class="btn" style="background:#7f1d1d;color:white;" onclick="ejecutarDesvincular()">🗑 Confirmar desvincular</button>
         </div>
     </div>
 </div>
@@ -1328,6 +1345,7 @@ function renderTabla() {
                 ${esPasivo
                     ? `<button class="btn-alta-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','ACTIVO')">✅ Alta (ACTIVO)</button>`
                     : `<button class="btn-baja-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','BAJA')">⛔ Baja (PASIVO)</button>`}
+                <br><button class="btn-desvincular-coh" onclick="confirmarDesvincular(${est.dni},'${nombreEsc}')">🗑 Desvincular</button>
             </td>
             ${celdas}
             <td class="cell-tot-pagar">${fMonto(totP)}</td>
@@ -1837,6 +1855,80 @@ async function ejecutarCambioEstado() {
     } catch(e) {
         console.error(e);
         toast('Error al procesar el cambio de estado: ' + e.message, 'err');
+    } finally {
+        spin(false);
+    }
+}
+
+/* ══════════════════════════════════════════════════
+   DESVINCULAR ESTUDIANTE DE COHORTE
+══════════════════════════════════════════════════ */
+var _dvDni = null, _dvNombre = '', _dvEstId = null;
+
+function confirmarDesvincular(dni, nombre) {
+    _dvDni = dni; _dvNombre = nombre;
+    var est = V.data.estudiantes.find(function(e) { return String(e.dni) === String(dni); });
+    _dvEstId = est ? est.id : null;
+
+    var cobros = est ? (est.cobros || []) : [];
+    var tienePagos = cobros.some(function(c) {
+        return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL';
+    });
+
+    document.getElementById('mdv-sub').textContent =
+        (V.data ? V.data.programa.nombre + ' · ' + V.data.cohorte.nombre : '');
+
+    var btn = document.getElementById('mdv-btn');
+
+    if (tienePagos) {
+        document.getElementById('mdv-cuerpo').innerHTML =
+            '<p style="font-size:13px;color:#555;">No se puede desvincular a <strong>' + nombre + '</strong> porque tiene cuotas con pagos registrados.</p>'
+            + '<div style="margin-top:12px;background:#fef2f2;border-left:4px solid #dc2626;padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
+            + '🔒 Para desvincularlo, primero hay que revertir o eliminar sus pagos desde la base de datos.</div>';
+        btn.disabled = true;
+        btn.style.opacity = '0.4';
+    } else {
+        var nCobros = cobros.length;
+        document.getElementById('mdv-cuerpo').innerHTML =
+            '<p style="font-size:13px;color:#555;">Va a desvincular completamente a <strong>' + nombre + '</strong> de esta cohorte/edición.</p>'
+            + '<div style="margin-top:12px;background:#fef2f2;border-left:4px solid #dc2626;padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
+            + '<strong>⚠️ Esta acción eliminará:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;">'
+            + '<li>La inscripción del estudiante en esta cohorte</li>'
+            + '<li>' + nCobros + ' registro' + (nCobros !== 1 ? 's' : '') + ' de cobro' + (nCobros !== 1 ? 's' : '') + ' asociados</li>'
+            + '</ul>'
+            + '<br>Esta acción <strong>no se puede deshacer</strong>. Si fue un error de cohorte, volvé a inscribirlo en la correcta.</div>';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+    abrir('modal-desvincular');
+}
+
+async function ejecutarDesvincular() {
+    if (!_dvDni || !_dvEstId) { toast('Error: datos incompletos', 'err'); return; }
+    spin(true);
+    try {
+        var sb = await getSupabase();
+
+        // 1. Eliminar cobros del estudiante en esta cohorte
+        var { error: eCobros } = await sb.from('cobros')
+            .delete()
+            .eq('cohorte_id', COHORTE_ID)
+            .eq('dni', String(_dvDni));
+        if (eCobros) throw eCobros;
+
+        // 2. Eliminar inscripción
+        var { error: eInsc } = await sb.from('inscripciones')
+            .delete()
+            .eq('cohorte_id', COHORTE_ID)
+            .eq('estudiante_id', _dvEstId);
+        if (eInsc) throw eInsc;
+
+        toast(_dvNombre + ' desvinculado de la cohorte ✓', 'ok');
+        cerrar('modal-desvincular');
+        await cargar();
+    } catch(e) {
+        console.error(e);
+        toast('Error al desvincular: ' + e.message, 'err');
     } finally {
         spin(false);
     }
