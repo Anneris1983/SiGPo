@@ -515,7 +515,7 @@ async function obtenerCobros(filtros) {
     return data || [];
 }
 
-async function subirComprobante(cobroId, file) {
+async function subirComprobante(cobroId, file, fechaTransferencia) {
     const sb = await getSupabase();
     const sesion = getSesion();
     if (!sesion) return { ok: false };
@@ -532,11 +532,14 @@ async function subirComprobante(cobroId, file) {
 
     const { data: urlData } = sb.storage.from('comprobantes').getPublicUrl(fileName);
 
-    const { error: updateErr } = await sb.from('cobros').update({
+    const updateData = {
         estado: 'PENDIENTE',
         comprobante_url: urlData.publicUrl,
         comprobante_fecha: new Date().toISOString()
-    }).eq('cobro_id', cobroId);
+    };
+    if (fechaTransferencia) updateData.fecha_transferencia = fechaTransferencia;
+
+    const { error: updateErr } = await sb.from('cobros').update(updateData).eq('cobro_id', cobroId);
 
     if (updateErr) return { ok: false, mensaje: 'Error al actualizar cobro' };
     return { ok: true, url: urlData.publicUrl };
