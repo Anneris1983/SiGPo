@@ -45,10 +45,10 @@
         .stat-sub { font-size: 12px; color: #10b981; margin-top: 4px; font-weight: 500; }
 
         /* Gráfico de barras simple */
-        .chart-container { margin-bottom: 8px; }
+        .chart-container { margin-bottom: 8px; overflow-x: auto; }
         .chart-title { font-size: 14px; font-weight: 600; color: #444; margin-bottom: 16px; }
-        .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
-        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; min-width: max-content; }
+        .bar-col { width: 52px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .bar { width: 100%; border-radius: 4px 4px 0 0; transition: opacity 0.2s; cursor: default; min-height: 4px; }
         .bar:hover { opacity: 0.8; }
         .bar-label { font-size: 11px; color: #888; }
@@ -666,20 +666,36 @@
     function renderChart() {
         var base = getCobrosFiltradosBase();
 
-        var ahora = new Date();
-        var meses = [];
+        // Recolectar todos los meses con cobros (fecha_vencimiento como referencia de rango)
+        var keysSet = {};
+        base.forEach(function(c) {
+            if (c.fecha_vencimiento) keysSet[c.fecha_vencimiento.substring(0, 7)] = true;
+        });
+        var allKeys = Object.keys(keysSet).sort();
 
-        for (var i = 11; i >= 0; i--) {
-            var d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
-            meses.push({
-                key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
-                label: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][d.getMonth()]
-            });
+        var meses = [];
+        if (allKeys.length === 0) {
+            // Sin cobros: mostrar mes actual
+            var hoy = new Date();
+            var k = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
+            allKeys = [k];
         }
 
-        // Título dinámico con rango de años cubierto
-        var añoInicio = meses[0].key.substring(0, 4);
-        var añoFin    = meses[meses.length - 1].key.substring(0, 4);
+        // Expandir desde el primer al último mes con cobros
+        var NOMBRES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        var partes0 = allKeys[0].split('-');
+        var partesN = allKeys[allKeys.length - 1].split('-');
+        var cur = new Date(parseInt(partes0[0]), parseInt(partes0[1]) - 1, 1);
+        var fin = new Date(parseInt(partesN[0]), parseInt(partesN[1]) - 1, 1);
+        while (cur <= fin) {
+            var key = cur.getFullYear() + '-' + String(cur.getMonth() + 1).padStart(2, '0');
+            meses.push({ key: key, label: NOMBRES[cur.getMonth()] + ' ' + cur.getFullYear() });
+            cur.setMonth(cur.getMonth() + 1);
+        }
+
+        // Título dinámico con rango real de la cohorte
+        var añoInicio = allKeys[0].substring(0, 4);
+        var añoFin    = allKeys[allKeys.length - 1].substring(0, 4);
         var tituloAño = añoInicio === añoFin ? añoInicio : añoInicio + '–' + añoFin;
         document.getElementById('chart-titulo').textContent = '📈 Pagos por Mes (' + tituloAño + ')';
 
