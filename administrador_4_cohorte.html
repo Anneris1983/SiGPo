@@ -648,7 +648,7 @@
                     <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Período</div><strong id="apr-periodo">—</strong></div>
                     <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Monto Total</div><strong id="apr-monto-total">—</strong></div>
                     <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Saldo Pendiente</div><strong id="apr-saldo">—</strong></div>
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Fecha Transferencia</div><strong id="apr-fecha-transf">—</strong></div>
+                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Fecha de pago declarada</div><strong id="apr-fecha-transf">—</strong></div>
                     <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Comprobante subido</div><strong id="apr-comp-fecha">—</strong></div>
                 </div>
             </div>
@@ -906,7 +906,7 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
           .eq('cohorte_id', cohorteId)
           .single(),
         sb.from('cobros')
-          .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, estado, no_aplica, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id, fecha_transferencia, comprobante_fecha')
+          .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, estado, no_aplica, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id, fecha_pago, fecha_aprobacion, comprobante_fecha')
           .eq('cohorte_id', cohorteId)
           .eq('programa_id', programaId)
           .order('fecha_vencimiento'),
@@ -2403,8 +2403,8 @@ function abrirAprobacion(cobroId) {
     document.getElementById('apr-periodo').textContent  = cobro.periodo || '—';
     document.getElementById('apr-monto-total').textContent = fMonto(cobro.monto_final);
     document.getElementById('apr-saldo').textContent    = fMonto(cobro.saldo_pendiente);
-    document.getElementById('apr-fecha-transf').textContent = cobro.fecha_transferencia
-        ? cobro.fecha_transferencia.split('T')[0].split('-').reverse().join('/')
+    document.getElementById('apr-fecha-transf').textContent = cobro.fecha_pago
+        ? cobro.fecha_pago.split('T')[0].split('-').reverse().join('/')
         : '— no informada';
     document.getElementById('apr-comp-fecha').textContent = cobro.comprobante_fecha
         ? new Date(cobro.comprobante_fecha).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
@@ -2470,7 +2470,7 @@ async function aprobarCuota() {
             // Regla 2: aprobación total → ABONADA
             var r = await sb.from('cobros').update({
                 estado: 'ABONADA', saldo_pendiente: 0,
-                recibo_url: reciboUrl, fecha_pago: hoy()
+                recibo_url: reciboUrl, fecha_aprobacion: hoy()
             }).eq('cobro_id', _aprCobro.cobro_id);
             if (r.error) throw r.error;
             toast('Cuota aprobada → ABONADA ✓', 'ok');

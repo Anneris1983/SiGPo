@@ -566,7 +566,7 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
         await sb.from('cobros').update({
             estado: 'ABONADA',
             saldo_pendiente: 0,
-            fecha_pago: new Date().toISOString().split('T')[0],
+            fecha_aprobacion: new Date().toISOString().split('T')[0],
             recibo_url: reciboUrl
         }).eq('cobro_id', cobroId);
     } else {
