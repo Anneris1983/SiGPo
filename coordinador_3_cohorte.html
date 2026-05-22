@@ -272,6 +272,10 @@
         .desc-periodo-fila .pct-wrap span { font-weight:700; color:#666; font-size:14px; flex-shrink:0; }
         .btn-agregar-periodo { margin-top:4px; padding:8px 16px; background:var(--primary); color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
         .btn-agregar-periodo:hover { background:#8C1A28; }
+        .btn-editar-cuotas { background: #0891b2; color: white; }
+        .btn-editar-cuotas:hover { background: #0e7490; }
+        .btn-eliminar-global { background: #7f1d1d; color: white; }
+        .btn-eliminar-global:hover { background: #991b1b; }
     </style>
     <link rel="stylesheet" href="sigpo-theme.css">
 </head>
@@ -336,6 +340,8 @@
         </div>
         <div class="actions">
             <button class="btn btn-crear" onclick="abrirCrearCuota()">➕ Crear plan de cuotas</button>
+            <button class="btn btn-editar-cuotas" onclick="abrirEditarCuotas()">✏️ Editar cuotas</button>
+            <button class="btn btn-eliminar-global" onclick="abrirEliminarCuotasGlobal()">🗑 Eliminar cuota</button>
             <button class="btn btn-outline" onclick="abrirCorreo()">✉️ Editar correos de reclamo</button>
             <button class="btn btn-primary" id="btn-reclamar" disabled onclick="reclamarSel()">📧 Reclamar seleccionados</button>
             <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar a Excel</button>
@@ -544,6 +550,61 @@
     </div>
 </div>
 
+
+<!-- ═══ MODAL: EDITAR CUOTAS ═══ -->
+<div class="modal-overlay" id="modal-editar-cuotas">
+    <div class="modal-box" style="max-width:720px;">
+        <div class="modal-hdr" style="background:linear-gradient(135deg,#0891b2 0%,#0e7490 100%);">
+            <div><h2>✏️ Editar Cuotas</h2><p id="ec-sub">—</p></div>
+            <button class="modal-close" onclick="cerrar('modal-editar-cuotas')">×</button>
+        </div>
+        <div class="modal-body" style="padding:0;">
+            <div style="padding:16px 22px;background:#f0f9ff;border-bottom:1px solid #e0f2fe;font-size:12px;color:#0369a1;">
+                ℹ️ Cambios globales: Concepto, Período y Vencimiento se actualizan para <strong>todos los estudiantes</strong> de la cohorte.
+            </div>
+            <div id="ec-lista" style="padding:16px 22px;max-height:460px;overflow-y:auto;"></div>
+        </div>
+        <div class="modal-footer" style="justify-content:space-between;align-items:center;">
+            <div id="ec-resumen" style="font-size:12px;color:#666;"></div>
+            <div style="display:flex;gap:10px;">
+                <button class="btn-cancel" onclick="cerrar('modal-editar-cuotas')">Cancelar</button>
+                <button class="btn-save" style="background:#0891b2;" onclick="guardarEdicionCuotas()">💾 Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL: ELIMINAR CUOTAS GLOBALES ═══ -->
+<div class="modal-overlay" id="modal-eliminar-global">
+    <div class="modal-box" style="max-width:640px;">
+        <div class="modal-hdr" style="background:linear-gradient(135deg,#7f1d1d 0%,#991b1b 100%);">
+            <div><h2>🗑 Eliminar Cuota Global</h2><p id="eg-sub">—</p></div>
+            <button class="modal-close" onclick="cerrar('modal-eliminar-global')">×</button>
+        </div>
+        <div class="modal-body" style="padding:0;">
+            <div style="padding:16px 22px;background:#fef2f2;border-bottom:1px solid #fee2e2;font-size:12px;color:#991b1b;">
+                ⚠️ Solo quedan bloqueadas las cuotas con pagos aprobados (<strong>ABONADA</strong> o <strong>PAGO_PARCIAL</strong>). El resto puede eliminarse sin restricciones.
+            </div>
+            <div style="padding:10px 22px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f0ede6;background:#fafafa;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#374151;">
+                    <input type="checkbox" id="eg-chk-all" onchange="egToggleAll(this)" style="width:15px;height:15px;cursor:pointer;">
+                    Seleccionar todas las eliminables
+                </label>
+            </div>
+            <div id="eg-lista" style="padding:8px 22px;max-height:380px;overflow-y:auto;"></div>
+        </div>
+        <div class="modal-footer" style="justify-content:space-between;align-items:center;">
+            <span id="eg-sel-count" style="font-size:12px;color:#888;"></span>
+            <div style="display:flex;gap:10px;">
+                <button class="btn-cancel" onclick="cerrar('modal-eliminar-global')">Cerrar</button>
+                <button id="btn-elim-sel" onclick="eliminarSeleccionadas()" disabled
+                    style="background:#dc2626;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;padding:9px 18px;cursor:not-allowed;font-family:'DM Sans',sans-serif;opacity:0.4;transition:all 0.2s;">
+                    🗑 Eliminar seleccionadas
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
@@ -1680,6 +1741,151 @@ function obtenerDemoData() {
             }
         ]
     };
+}
+
+function keyCuota(concepto, periodo) { return String(concepto||'')+'||'+String(periodo||''); }
+
+var _ecCuotasEditadas = [];
+
+function abrirEditarCuotas() {
+    if (!V.data || !V.data.columnas.length) { toast('No hay cuotas cargadas', 'err'); return; }
+    _ecCuotasEditadas = V.data.columnas.map(function(col) {
+        var sample = null;
+        V.data.estudiantes.some(function(est) {
+            var f = (est.cobros||[]).find(function(c){ return (c.concepto_base||c.concepto)===col.concepto_base && c.periodo===col.periodo; });
+            if (f) { sample = f; return true; }
+        });
+        return { concepto:col.concepto_base, periodo:col.periodo, _concepto_orig:col.concepto_base, _periodo_orig:col.periodo, fecha_vencimiento:sample?(sample.fecha_vencimiento||''):'' };
+    });
+    document.getElementById('ec-sub').textContent = V.data.programa.nombre+' · '+V.data.cohorte.nombre+' — '+_ecCuotasEditadas.length+' cuota'+(_ecCuotasEditadas.length!==1?'s':'');
+    renderEditarCuotas();
+    actualizarResumenEC();
+    abrir('modal-editar-cuotas');
+}
+
+function renderEditarCuotas() {
+    var cont = document.getElementById('ec-lista');
+    cont.innerHTML = _ecCuotasEditadas.map(function(c,i) {
+        return '<div style="background:#f8fafc;border-radius:10px;padding:12px 14px;margin-bottom:10px;border:2px solid #e0e0e0;">'
+            +'<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;">'
+            +'<div><label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">CONCEPTO</label>'
+            +'<input type="text" value="'+escapeHtml(c.concepto||'')+'" onchange="_ecCuotasEditadas['+i+'].concepto=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;"></div>'
+            +'<div><label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">PERÍODO</label>'
+            +'<input type="text" value="'+escapeHtml(c.periodo||'')+'" onchange="_ecCuotasEditadas['+i+'].periodo=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;"></div>'
+            +'<div><label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">VENCIMIENTO</label>'
+            +'<input type="date" value="'+(c.fecha_vencimiento||'')+'" onchange="_ecCuotasEditadas['+i+'].fecha_vencimiento=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;"></div>'
+            +'</div></div>';
+    }).join('');
+}
+
+function actualizarResumenEC() {
+    var total = _ecCuotasEditadas.length;
+    document.getElementById('ec-resumen').innerHTML = '<strong>'+total+'</strong> cuota'+(total!==1?'s':'')+' a guardar';
+}
+
+async function guardarEdicionCuotas() {
+    spin(true);
+    try {
+        var sb = await getSupabase();
+        var errores = [];
+        for (var j=0; j<_ecCuotasEditadas.length; j++) {
+            var c = _ecCuotasEditadas[j];
+            var res = await sb.from('cobros').update({concepto:c.concepto,periodo:c.periodo,fecha_vencimiento:c.fecha_vencimiento||null})
+                .eq('cohorte_id', COHORTE_ID).eq('concepto', c._concepto_orig).eq('periodo', c._periodo_orig);
+            if (res.error) errores.push(c._concepto_orig+': '+res.error.message);
+            else { c._concepto_orig=c.concepto; c._periodo_orig=c.periodo; }
+        }
+        if (errores.length) { toast('Guardado con observaciones', 'err'); console.error(errores); }
+        else toast(_ecCuotasEditadas.length+' cuota'+(_ecCuotasEditadas.length!==1?'s':'')+' actualizada'+(_ecCuotasEditadas.length!==1?'s':'')+' ✓','ok');
+        cerrar('modal-editar-cuotas');
+        deselAll();
+        await cargar();
+    } catch(e) { toast('Error: '+e.message,'err'); } finally { spin(false); }
+}
+
+function abrirEliminarCuotasGlobal() {
+    if (!V.data || !V.data.columnas.length) { toast('No hay cuotas cargadas','err'); return; }
+    document.getElementById('eg-sub').textContent = V.data.programa.nombre+' · '+V.data.cohorte.nombre;
+    renderEliminarGlobal();
+    abrir('modal-eliminar-global');
+}
+
+function renderEliminarGlobal() {
+    var cont = document.getElementById('eg-lista');
+    var columnas = V.data.columnas, estudiantes = V.data.estudiantes;
+    cont.innerHTML = columnas.map(function(col) {
+        var cobrosCol = [];
+        estudiantes.forEach(function(est) {
+            (est.cobros||[]).forEach(function(c) {
+                if (keyCuota(c.concepto_base||c.concepto,c.periodo)===keyCuota(col.concepto_base,col.periodo)) cobrosCol.push(c);
+            });
+        });
+        var abonadas  = cobrosCol.filter(function(c){ return c.estado==='ABONADA'; }).length;
+        var parciales = cobrosCol.filter(function(c){ return c.estado==='PAGO_PARCIAL'; }).length;
+        var pendientes= cobrosCol.filter(function(c){ return c.estado==='PENDIENTE'; }).length;
+        var abiertas  = cobrosCol.filter(function(c){ return ['NO_ABONADA','EN_MORA','A_DEFINIR','PENDIENTE'].includes(c.estado); }).length;
+        var puedeEliminar = abonadas===0 && parciales===0;
+        var cAttr=escapeHtml(col.concepto_base), pAttr=escapeHtml(col.periodo||'');
+        return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0;opacity:'+(puedeEliminar?'1':'0.55')+';">'
+            +'<div style="flex-shrink:0;width:20px;text-align:center;">'
+            +(puedeEliminar
+                ? '<input type="checkbox" class="eg-chk" data-concepto="'+cAttr+'" data-periodo="'+pAttr+'" onchange="egUpdateSelCount()" style="width:15px;height:15px;cursor:pointer;">'
+                : '<input type="checkbox" disabled style="width:15px;height:15px;opacity:0.35;">')
+            +'</div>'
+            +'<div style="flex:1;">'
+            +'<div style="font-weight:700;font-size:13px;color:#5C1018;">'+escapeHtml(col.concepto_base)+'</div>'
+            +'<div style="font-size:11px;color:#888;margin-top:2px;">'+escapeHtml(col.periodo||'')+' · '+cobrosCol.length+' estudiante'+(cobrosCol.length!==1?'s':'')
+            +(abonadas?' · <span style="color:#15803d;font-weight:600;">'+abonadas+' abonada'+(abonadas>1?'s':'')+'</span>':'')
+            +(parciales?' · <span style="color:#92400e;font-weight:600;">'+parciales+' parcial'+(parciales>1?'es':'')+'</span>':'')
+            +(pendientes?' · <span style="color:#b45309;font-weight:600;">'+pendientes+' pendiente'+(pendientes>1?'s':'')+'</span>':'')
+            +(abiertas?' · <span style="color:#666;">'+abiertas+' sin pago aprobado</span>':'')
+            +'</div></div>'
+            +(!puedeEliminar?'<span style="font-size:11px;color:#aaa;font-style:italic;white-space:nowrap;">🔒 bloqueada</span>':'')
+            +'</div>';
+    }).join('');
+    egUpdateSelCount();
+}
+
+function egUpdateSelCount() {
+    var sel=document.querySelectorAll('.eg-chk:checked').length, total=document.querySelectorAll('.eg-chk').length;
+    var btn=document.getElementById('btn-elim-sel'), span=document.getElementById('eg-sel-count');
+    if (span) span.textContent=sel>0?sel+' cuota'+(sel>1?'s':'')+' seleccionada'+(sel>1?'s':''):'';
+    if (btn) { btn.disabled=sel===0; btn.style.opacity=sel>0?'1':'0.4'; btn.style.cursor=sel>0?'pointer':'not-allowed'; }
+    var all=document.getElementById('eg-chk-all');
+    if (all) { all.indeterminate=sel>0&&sel<total; all.checked=total>0&&sel===total; }
+}
+
+function egToggleAll(cb) {
+    document.querySelectorAll('.eg-chk').forEach(function(c){ c.checked=cb.checked; });
+    egUpdateSelCount();
+}
+
+async function eliminarSeleccionadas() {
+    var checks=Array.from(document.querySelectorAll('.eg-chk:checked'));
+    if (!checks.length) return;
+    var cuotas=checks.map(function(c){ return {concepto:c.dataset.concepto,periodo:c.dataset.periodo}; });
+    var nombres=cuotas.map(function(q){ return '"'+q.concepto+'"'+(q.periodo?' ('+q.periodo+')':''); }).join('\n• ');
+    if (!confirm('¿Eliminar '+cuotas.length+' cuota'+(cuotas.length>1?'s':'')+' de todos los estudiantes?\n\n• '+nombres+'\n\nEsta acción no se puede deshacer.')) return;
+    spin(true);
+    try {
+        var sb=await getSupabase(), eliminadas=0, bloqueadas=[];
+        for (var i=0;i<cuotas.length;i++) {
+            var q=cuotas[i];
+            var cand=await sb.from('cobros').select('cobro_id').eq('cohorte_id',COHORTE_ID).eq('concepto',q.concepto).eq('periodo',q.periodo||'');
+            if (cand.error) { bloqueadas.push(q.concepto); continue; }
+            var ids=(cand.data||[]).map(function(x){ return x.cobro_id; });
+            if (!ids.length) continue;
+            var pagos=await sb.from('pagos').select('cobro_id').in('cobro_id',ids);
+            if ((pagos.data||[]).length>0) { bloqueadas.push(q.concepto+' (pagos)'); continue; }
+            var del=await sb.from('cobros').delete().eq('cohorte_id',COHORTE_ID).eq('concepto',q.concepto).eq('periodo',q.periodo||'');
+            if (del.error) { bloqueadas.push(q.concepto); continue; }
+            eliminadas++;
+        }
+        if (eliminadas>0) toast(eliminadas+' cuota'+(eliminadas>1?'s':'')+' eliminada'+(eliminadas>1?'s':'')+' ✓','ok');
+        if (bloqueadas.length) toast('No se eliminaron: '+bloqueadas.join(', '),'err');
+        cerrar('modal-eliminar-global');
+        await cargar();
+    } catch(e) { toast('Error: '+e.message,'err'); } finally { spin(false); }
 }
 </script>
 

@@ -1149,6 +1149,14 @@
         .desc-hint { font-size:11px; color:#999; margin-top:10px; }
         #modal-descuento-new { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center; }
         #modal-descuento-new.show { display:flex; }
+        .btn-editar-cuotas-coop { background: #0891b2; color: white; border-radius: 12px; }
+        .btn-editar-cuotas-coop:hover { background: #0e7490; }
+        .btn-eliminar-global-coop { background: #7f1d1d; color: white; border-radius: 12px; }
+        .btn-eliminar-global-coop:hover { background: #991b1b; }
+        #modal-editar-cuotas-coop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center; }
+        #modal-editar-cuotas-coop.show { display:flex; }
+        #modal-eliminar-global-coop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center; }
+        #modal-eliminar-global-coop.show { display:flex; }
     </style>
     <link rel="stylesheet" href="sigpo-theme.css">
 </head>
@@ -1214,6 +1222,8 @@
                 <div class="actions">
                     <button class="btn success" type="button" onclick="irAAprobarPagos()">✅ Aprobar pagos</button>
                     <button class="btn warning" type="button" onclick="abrirCrearCuotaCoop()">➕ Crear cuotas</button>
+                    <button class="btn btn-editar-cuotas-coop" type="button" onclick="abrirEditarCuotasCoop()">✏️ Editar cuotas</button>
+                    <button class="btn btn-eliminar-global-coop" type="button" onclick="abrirEliminarCuotasGlobalCoop()">🗑 Eliminar cuota</button>
                     <button class="btn primary" type="button" onclick="exportarExcel()">📤 Exportar Excel</button>
                 </div>
             </div>
@@ -1425,6 +1435,51 @@
                     <a id="verDocDescargar" href="#" target="_blank" class="btn success" style="text-decoration:none;">⬇ Descargar</a>
                     <button class="btn light" type="button" onclick="cerrarVerDoc()">Cerrar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ MODAL: EDITAR CUOTAS (cooperadora) ═══ -->
+    <div id="modal-editar-cuotas-coop">
+        <div class="modal-box" style="max-width:700px;">
+            <div class="modal-hdr">
+                <div><h2>✏️ Editar cuotas</h2><p>Modificá concepto, período y fecha de vencimiento</p></div>
+                <button class="modal-close" onclick="cerrarEditarCuotasCoop()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="background:#e0f2fe;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;font-size:12px;color:#0369a1;margin-bottom:12px;">
+                    ℹ️ Los cambios se aplican a todas las cuotas de la cohorte con el mismo concepto y período.
+                </div>
+                <div id="ec-lista-coop"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel-desc" onclick="cerrarEditarCuotasCoop()">Cancelar</button>
+                <button class="btn-save-desc" onclick="_coopGuardarEdicionCuotas()">💾 Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ MODAL: ELIMINAR CUOTA GLOBAL (cooperadora) ═══ -->
+    <div id="modal-eliminar-global-coop">
+        <div class="modal-box" style="max-width:660px;">
+            <div class="modal-hdr">
+                <div><h2>🗑 Eliminar cuota</h2><p>Eliminá una cuota de toda la cohorte</p></div>
+                <button class="modal-close" onclick="cerrarEliminarCuotasGlobalCoop()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;font-size:12px;color:#991b1b;margin-bottom:12px;">
+                    ⚠️ <strong>Advertencia:</strong> Esta acción eliminará la cuota para todos los estudiantes de la cohorte. No se pueden eliminar cuotas con pagos registrados.
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;font-weight:600;">
+                    <input type="checkbox" id="eg-check-all-coop" onchange="_coopEgToggleAll(this)">
+                    <label for="eg-check-all-coop">Seleccionar todas</label>
+                    <span id="eg-sel-count-coop" style="margin-left:auto;font-size:12px;color:#6b7280;"></span>
+                </div>
+                <div id="eg-lista-coop"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel-desc" onclick="cerrarEliminarCuotasGlobalCoop()">Cancelar</button>
+                <button class="btn-save-desc" id="eg-btn-eliminar-coop" onclick="_coopEliminarSeleccionadas()" disabled style="background:#7f1d1d;">🗑 Eliminar seleccionadas</button>
             </div>
         </div>
     </div>
@@ -3105,6 +3160,160 @@
                 await cargarDetalleCohorte();
             } catch(e) {
                 alert('Error al rechazar: ' + (e.message || e));
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        // EDITAR CUOTAS — cooperadora
+        // ══════════════════════════════════════════════
+        var _coopEcCuotasEditadas = [];
+
+        function _coopGetColumnas() {
+            var vistas = {};
+            (vistaData.estudiantes || []).forEach(function(est) {
+                (est.cuotas || []).forEach(function(c) {
+                    var k = String(c.nombre||'') + '||' + String(c.mes||'');
+                    if (!vistas[k]) vistas[k] = { nombre: c.nombre, mes: c.mes, fechaVencimiento: c.fechaVencimiento || '' };
+                });
+            });
+            return Object.values(vistas);
+        }
+
+        function abrirEditarCuotasCoop() {
+            var cols = _coopGetColumnas();
+            if (!cols.length) { mostrarToast('No hay cuotas definidas en esta cohorte.', 'error'); return; }
+            _coopEcCuotasEditadas = cols.map(function(c) {
+                return { nombre: c.nombre, mes: c.mes, fechaVencimiento: c.fechaVencimiento, _orig_nombre: c.nombre, _orig_mes: c.mes };
+            });
+            _coopRenderEditarCuotas();
+            document.getElementById('modal-editar-cuotas-coop').classList.add('show');
+        }
+
+        function cerrarEditarCuotasCoop() {
+            document.getElementById('modal-editar-cuotas-coop').classList.remove('show');
+        }
+
+        function _coopRenderEditarCuotas() {
+            var cont = document.getElementById('ec-lista-coop');
+            if (!cont) return;
+            if (!_coopEcCuotasEditadas.length) { cont.innerHTML = '<p style="color:#888;font-size:13px;">Sin cuotas.</p>'; return; }
+            var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+            html += '<thead><tr style="background:#f3f4f6;"><th style="padding:8px 10px;text-align:left;">Concepto</th><th style="padding:8px 10px;text-align:left;">Período</th><th style="padding:8px 10px;text-align:left;">Vencimiento</th></tr></thead><tbody>';
+            _coopEcCuotasEditadas.forEach(function(cu, i) {
+                html += '<tr style="border-bottom:1px solid #e5e7eb;">';
+                html += '<td style="padding:6px 10px;"><input type="text" value="'+escapeHtml(cu.nombre||'')+'" oninput="_coopEcUpdate('+i+',\'nombre\',this.value)" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:5px 8px;font-size:12px;"></td>';
+                html += '<td style="padding:6px 10px;"><input type="text" value="'+escapeHtml(cu.mes||'')+'" oninput="_coopEcUpdate('+i+',\'mes\',this.value)" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:5px 8px;font-size:12px;"></td>';
+                html += '<td style="padding:6px 10px;"><input type="date" value="'+escapeHtml(cu.fechaVencimiento||'')+'" oninput="_coopEcUpdate('+i+',\'fechaVencimiento\',this.value)" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:5px 8px;font-size:12px;"></td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            cont.innerHTML = html;
+        }
+
+        function _coopEcUpdate(idx, campo, val) {
+            if (_coopEcCuotasEditadas[idx]) _coopEcCuotasEditadas[idx][campo] = val;
+        }
+
+        async function _coopGuardarEdicionCuotas() {
+            mostrarSpinner(true);
+            try {
+                var sb = await getSupabase();
+                for (var i = 0; i < _coopEcCuotasEditadas.length; i++) {
+                    var cu = _coopEcCuotasEditadas[i];
+                    var patch = { concepto: cu.nombre, periodo: cu.mes };
+                    if (cu.fechaVencimiento) patch.fecha_vencimiento = cu.fechaVencimiento;
+                    var { error } = await sb.from('cobros')
+                        .update(patch)
+                        .eq('cohorte_id', cohorteId)
+                        .eq('concepto', cu._orig_nombre)
+                        .eq('periodo', cu._orig_mes);
+                    if (error) throw error;
+                }
+                cerrarEditarCuotasCoop();
+                mostrarToast('Cuotas actualizadas correctamente.', 'success');
+                await cargarDetalleCohorte();
+            } catch(e) {
+                mostrarToast('Error al guardar: ' + (e.message || e), 'error');
+            } finally {
+                mostrarSpinner(false);
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        // ELIMINAR CUOTA GLOBAL — cooperadora
+        // ══════════════════════════════════════════════
+
+        function abrirEliminarCuotasGlobalCoop() {
+            var cols = _coopGetColumnas();
+            if (!cols.length) { mostrarToast('No hay cuotas definidas en esta cohorte.', 'error'); return; }
+            _coopRenderEliminarGlobal(cols);
+            document.getElementById('modal-eliminar-global-coop').classList.add('show');
+        }
+
+        function cerrarEliminarCuotasGlobalCoop() {
+            document.getElementById('modal-eliminar-global-coop').classList.remove('show');
+        }
+
+        function _coopRenderEliminarGlobal(cols) {
+            var cont = document.getElementById('eg-lista-coop');
+            if (!cont) return;
+            var html = '';
+            cols.forEach(function(cu, i) {
+                var bloqueada = false;
+                (vistaData.estudiantes || []).forEach(function(est) {
+                    (est.cuotas || []).forEach(function(c) {
+                        if (c.nombre === cu.nombre && c.mes === cu.mes && (c.estado === 'abonada' || c.estado === 'parcial')) bloqueada = true;
+                    });
+                });
+                var labelBloq = bloqueada ? ' <span style="color:#e74c3c;font-size:11px;">(tiene pagos — no se puede eliminar)</span>' : '';
+                html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #f3f4f6;">';
+                html += '<input type="checkbox" class="eg-chk-coop" data-nombre="'+escapeHtml(cu.nombre)+'" data-mes="'+escapeHtml(cu.mes)+'" '+(bloqueada?'disabled':'')+' onchange="_coopEgUpdateSelCount()">';
+                html += '<span style="font-size:13px;'+(bloqueada?'color:#9ca3af;':'')+'">'+escapeHtml(cu.nombre)+' — '+escapeHtml(cu.mes)+labelBloq+'</span>';
+                html += '</div>';
+            });
+            cont.innerHTML = html || '<p style="color:#888;font-size:13px;">Sin cuotas.</p>';
+            _coopEgUpdateSelCount();
+        }
+
+        function _coopEgUpdateSelCount() {
+            var checks = document.querySelectorAll('.eg-chk-coop:checked');
+            var total = document.querySelectorAll('.eg-chk-coop:not(:disabled)').length;
+            var btn = document.getElementById('eg-btn-eliminar-coop');
+            var lbl = document.getElementById('eg-sel-count-coop');
+            if (lbl) lbl.textContent = checks.length + ' de ' + total + ' seleccionadas';
+            if (btn) btn.disabled = checks.length === 0;
+        }
+
+        function _coopEgToggleAll(cb) {
+            document.querySelectorAll('.eg-chk-coop:not(:disabled)').forEach(function(c){ c.checked = cb.checked; });
+            _coopEgUpdateSelCount();
+        }
+
+        async function _coopEliminarSeleccionadas() {
+            var seleccionadas = [];
+            document.querySelectorAll('.eg-chk-coop:checked').forEach(function(c){
+                seleccionadas.push({ nombre: c.dataset.nombre, mes: c.dataset.mes });
+            });
+            if (!seleccionadas.length) return;
+            if (!confirm('¿Eliminar ' + seleccionadas.length + ' cuota(s) para todos los estudiantes de la cohorte? Esta acción no se puede deshacer.')) return;
+            mostrarSpinner(true);
+            try {
+                var sb = await getSupabase();
+                for (var i = 0; i < seleccionadas.length; i++) {
+                    var s = seleccionadas[i];
+                    var { data: pagos, error: ep } = await sb.from('pagos').select('pago_id').eq('cohorte_id', cohorteId).eq('concepto', s.nombre).eq('periodo', s.mes).limit(1);
+                    if (ep) throw ep;
+                    if (pagos && pagos.length) { mostrarToast('La cuota "' + s.nombre + '" tiene pagos registrados y no puede eliminarse.', 'error'); continue; }
+                    var { error: ed } = await sb.from('cobros').delete().eq('cohorte_id', cohorteId).eq('concepto', s.nombre).eq('periodo', s.mes);
+                    if (ed) throw ed;
+                }
+                cerrarEliminarCuotasGlobalCoop();
+                mostrarToast('Cuotas eliminadas correctamente.', 'success');
+                await cargarDetalleCohorte();
+            } catch(e) {
+                mostrarToast('Error al eliminar: ' + (e.message || e), 'error');
+            } finally {
+                mostrarSpinner(false);
             }
         }
     </script>
