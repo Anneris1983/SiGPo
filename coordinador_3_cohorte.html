@@ -277,6 +277,54 @@
         .btn-editar-cuotas:hover { background: #0e7490; }
         .btn-eliminar-global { background: #7f1d1d; color: white; }
         .btn-eliminar-global:hover { background: #991b1b; }
+        .cell-popup-overlay {
+            position: fixed; inset: 0; z-index: 3000;
+        }
+        .cell-popup {
+            position: absolute; z-index: 3001;
+            background: white; border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+            border: 1.5px solid #e0e0e0;
+            padding: 14px 16px; min-width: 200px;
+            animation: pop-in 0.15s ease;
+        }
+        @keyframes pop-in { from{opacity:0;transform:scale(0.94) translateY(-6px);} to{opacity:1;transform:scale(1) translateY(0);} }
+        .cell-popup-title {
+            font-size: 11px; font-weight: 700; color: var(--primary);
+            text-transform: uppercase; letter-spacing: 0.4px;
+            margin-bottom: 10px; padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .cell-popup-monto {
+            display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+        }
+        .cell-popup-monto span { font-size: 13px; color: #888; font-weight: 600; }
+        .cell-popup-monto input {
+            width: 120px; padding: 6px 8px; border: 2px solid #e0e0e0;
+            border-radius: 6px; font-size: 13px; font-family: 'DM Sans', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .cell-popup-monto input:focus { outline: none; border-color: var(--primary); }
+        .cell-popup-noapl {
+            display: flex; align-items: center; gap: 7px;
+            font-size: 12px; color: #64748b; margin-bottom: 12px;
+            cursor: pointer; padding: 6px 8px; border-radius: 6px;
+            background: #f8fafc; border: 1.5px solid #e2e8f0;
+            transition: all 0.15s;
+        }
+        .cell-popup-noapl:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .cell-popup-noapl.active { background: #fafafa; border-color: #cbd5e1; color: #94a3b8; font-style: italic; }
+        .cell-popup-noapl input[type=checkbox] { accent-color: var(--primary); width:14px; height:14px; }
+        .cell-popup-btns { display: flex; gap: 6px; justify-content: flex-end; }
+        .cell-popup-btns button {
+            padding: 5px 12px; border-radius: 6px; font-size: 12px;
+            font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif;
+            border: none; transition: background 0.2s;
+        }
+        .cpop-cancel { background: #f1f5f9; color: #64748b; }
+        .cpop-cancel:hover { background: #e2e8f0; }
+        .cpop-save { background: var(--primary); color: white; }
+        .cpop-save:hover { background: #8C1A28; }
     </style>
     <link rel="stylesheet" href="sigpo-theme.css">
 </head>
@@ -607,6 +655,22 @@
     </div>
 </div>
 
+<div id="cell-popup-overlay" class="cell-popup-overlay" style="display:none;" onclick="cerrarCeldaPopup()"></div>
+<div id="cell-popup" class="cell-popup" style="display:none;">
+    <div class="cell-popup-title" id="cpop-title">Editar cuota</div>
+    <div class="cell-popup-monto">
+        <span>$</span>
+        <input type="number" id="cpop-monto" min="0" step="100" placeholder="0">
+    </div>
+    <label class="cell-popup-noapl" id="cpop-noapl-label" onclick="toggleNoAplicaCoord()">
+        <input type="checkbox" id="cpop-noapl" onclick="event.stopPropagation()">
+        <span>No debe pagar esta cuota (NO APLICA)</span>
+    </label>
+    <div class="cell-popup-btns">
+        <button class="cpop-cancel" onclick="cerrarCeldaPopup()">Cancelar</button>
+        <button class="cpop-save" onclick="guardarCeldaPopup()">💾 Guardar</button>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
@@ -898,7 +962,21 @@ function renderTabla() {
             else if (c.estado === 'NO_ABONADA')   badge = '<span class="est-badge badge-noabonada">Por abonar</span>';
             else if (c.estado === 'PAGO_PARCIAL') badge = '<span class="est-badge badge-parcial">Pago parcial</span>';
             else if (c.estado === 'PENDIENTE')    badge = '<span class="est-badge badge-pendiente">En revisión</span>';
-            return `<td data-est="${c.estado}" title="${escapeHtml(title)}">${badge}${txt}${links}</td>`;
+            const esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(c.estado);
+            const popupInfo = esEditable ? JSON.stringify({
+                cobro_id: c.cobro_id,
+                dni: String(est.dni),
+                concepto: c.concepto,
+                periodo: c.periodo || '',
+                monto: c.monto_original,
+                descuento_porcentaje: est.descuento_porcentaje || c.descuento_porcentaje || 0,
+                fecha_vencimiento: c.fecha_vencimiento || null,
+                estado_actual: c.estado,
+                no_aplica: c.estado === 'NO_APLICA'
+            }).replace(/'/g, '&#39;') : '';
+            const editAttr = esEditable ? ` onclick="event.stopPropagation();abrirCeldaPopup(event,'${popupInfo}')" style="cursor:pointer;"` : '';
+            const editHint = esEditable ? '<div style="font-size:9px;color:#bbb;margin-top:2px;">✏️ editar</div>' : '';
+            return `<td data-est="${c.estado}" title="${escapeHtml(title)}"${editAttr}>${badge}${txt}${editHint}${links}</td>`;
         }).join('');
 
         const tr = document.createElement('tr');
@@ -1825,7 +1903,7 @@ function renderEliminarGlobal() {
         var parciales = cobrosCol.filter(function(c){ return c.estado==='PAGO_PARCIAL'; }).length;
         var pendientes= cobrosCol.filter(function(c){ return c.estado==='PENDIENTE'; }).length;
         var abiertas  = cobrosCol.filter(function(c){ return ['NO_ABONADA','EN_MORA','A_DEFINIR','PENDIENTE'].includes(c.estado); }).length;
-        var puedeEliminar = abonadas===0 && parciales===0;
+        var puedeEliminar = abonadas===0 && parciales===0 && pendientes===0;
         var cAttr=escapeHtml(col.concepto_base), pAttr=escapeHtml(col.periodo||'');
         return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0;opacity:'+(puedeEliminar?'1':'0.55')+';">'
             +'<div style="flex-shrink:0;width:20px;text-align:center;">'
@@ -1888,6 +1966,113 @@ async function eliminarSeleccionadas() {
         await cargar();
     } catch(e) { toast('Error: '+e.message,'err'); } finally { spin(false); }
 }
+
+        // ══════════════════════════════════════════════
+        // EDICIÓN INLINE DE CELDA — Coordinador
+        // ══════════════════════════════════════════════
+        var _cpopCobroId = null;
+
+        function abrirCeldaPopup(event, infoJson) {
+            event.stopPropagation();
+            var info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
+            _cpopCobroId = info.cobro_id;
+            window._cpopInfo = info;
+
+            document.getElementById('cpop-title').textContent =
+                (info.concepto || 'Cuota') + (info.periodo ? ' · ' + info.periodo : '');
+
+            var montoActual = (info.monto !== null && info.monto !== undefined && info.monto !== '') ? Number(info.monto) : '';
+            var inputMonto = document.getElementById('cpop-monto');
+            inputMonto.value = montoActual === '' ? '' : montoActual;
+            inputMonto.disabled = false;
+
+            var noAplica = info.no_aplica === true;
+            document.getElementById('cpop-noapl').checked = noAplica;
+            inputMonto.disabled = noAplica;
+            document.getElementById('cpop-noapl-label').classList.toggle('active', noAplica);
+
+            var popup = document.getElementById('cell-popup');
+            popup.style.display = 'block';
+            document.getElementById('cell-popup-overlay').style.display = 'block';
+
+            var rect = event.currentTarget.getBoundingClientRect();
+            var scrollY = window.scrollY || window.pageYOffset;
+            var scrollX = window.scrollX || window.pageXOffset;
+            var top  = rect.bottom + scrollY + 4;
+            var left = rect.left  + scrollX;
+            var popW = 220;
+            if (left + popW > window.innerWidth + scrollX - 16) left = window.innerWidth + scrollX - popW - 16;
+            popup.style.top  = top  + 'px';
+            popup.style.left = left + 'px';
+
+            setTimeout(function() { document.getElementById('cpop-monto').focus(); }, 80);
+        }
+
+        function toggleNoAplicaCoord() {
+            var chk = document.getElementById('cpop-noapl');
+            chk.checked = !chk.checked;
+            document.getElementById('cpop-monto').disabled = chk.checked;
+            document.getElementById('cpop-noapl-label').classList.toggle('active', chk.checked);
+            if (chk.checked) document.getElementById('cpop-monto').value = '';
+        }
+
+        function cerrarCeldaPopup() {
+            document.getElementById('cell-popup').style.display = 'none';
+            document.getElementById('cell-popup-overlay').style.display = 'none';
+            _cpopCobroId = null;
+        }
+
+        async function guardarCeldaPopup() {
+            if (!_cpopCobroId) return;
+            var cobroId  = _cpopCobroId;
+            var cpopInfo = window._cpopInfo || {};
+            var dniEst   = String(cpopInfo.dni || '');
+            if (!dniEst) { toast('Error: DNI no identificado', 'err'); return; }
+
+            var noAplica = document.getElementById('cpop-noapl').checked;
+            var montoStr = document.getElementById('cpop-monto').value.trim();
+            var tieneMonto = montoStr !== '' && !isNaN(parseFloat(montoStr));
+
+            spin(true);
+            cerrarCeldaPopup();
+            try {
+                var sb = await getSupabase();
+                var res;
+
+                if (noAplica) {
+                    res = await sb.from('cobros').update({
+                        monto_original: null, monto_final: null, saldo_pendiente: null,
+                        descuento_porcentaje: 0, estado: 'NO_APLICA', no_aplica: true
+                    }).eq('cobro_id', cobroId).eq('dni', dniEst);
+                } else if (!tieneMonto) {
+                    res = await sb.from('cobros').update({
+                        monto_original: null, monto_final: null, saldo_pendiente: null,
+                        estado: 'A_DEFINIR', no_aplica: false
+                    }).eq('cobro_id', cobroId).eq('dni', dniEst);
+                } else {
+                    var montoOriginal = Math.round(parseFloat(montoStr) * 100) / 100;
+                    var pct = Number(cpopInfo.descuento_porcentaje) || 0;
+                    var montoFinal = pct > 0 ? Math.round(montoOriginal * (1 - pct / 100) * 100) / 100 : montoOriginal;
+                    var fVenc = cpopInfo.fecha_vencimiento || null;
+                    var hoy = new Date().toISOString().split('T')[0];
+                    var nuevoEstado = (fVenc && fVenc < hoy) ? 'EN_MORA' : 'NO_ABONADA';
+                    res = await sb.from('cobros').update({
+                        monto_original: montoOriginal, monto_final: montoFinal,
+                        saldo_pendiente: montoFinal, descuento_porcentaje: pct,
+                        estado: nuevoEstado, no_aplica: false
+                    }).eq('cobro_id', cobroId).eq('dni', dniEst);
+                }
+
+                if (res.error) throw res.error;
+                toast('Cuota actualizada ✓', 'ok');
+                await cargar();
+            } catch(e) {
+                console.error(e);
+                toast('Error al guardar: ' + e.message, 'err');
+            } finally {
+                spin(false);
+            }
+        }
 </script>
 
 </body>
