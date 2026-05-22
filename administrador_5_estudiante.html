@@ -81,15 +81,6 @@
         .btn-comp:hover  { background:#c7d2fe; }
         .btn-recibo:hover{ background:#fde68a; }
 
-        /* EDIT FORM */
-        .mfield { margin-bottom:14px; }
-        .mfield label { display:block; font-weight:600; font-size:12px; color:var(--primary); margin-bottom:5px; }
-        .mfield input, .mfield select, .mfield textarea { width:100%; padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; }
-        .mfield input:focus, .mfield select:focus { outline:none; border-color:var(--primary); }
-        .form-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .btn-save { padding:10px 22px; background:var(--success); color:white; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
-        .btn-save:hover { background:#246441; }
-
         /* SPINNER */
         .spinner-overlay { display:none; position:fixed; inset:0; background:rgba(255,255,255,0.78); z-index:9000; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
         .spinner-overlay.show { display:flex; }
@@ -182,17 +173,6 @@
         </div>
     </div>
 
-    <!-- EDITAR DATOS -->
-    <div class="card">
-        <div class="card-title">✏️ Editar datos personales</div>
-        <div class="form-grid2">
-            <div class="mfield"><label>Nombre</label><input type="text" id="e-nombre"></div>
-            <div class="mfield"><label>Apellido</label><input type="text" id="e-apellido"></div>
-            <div class="mfield"><label>Email</label><input type="email" id="e-email"></div>
-            <div class="mfield"><label>Teléfono</label><input type="text" id="e-telefono"></div>
-        </div>
-        <button class="btn-save" onclick="guardarDatos()">💾 Guardar cambios</button>
-    </div>
 
 </div>
 
@@ -262,12 +242,6 @@ async function cargar() {
         document.getElementById('d-descuento').textContent = rI.data ? (rI.data.descuento_porcentaje || 0) + '%' : '0%';
     }
 
-    // Formulario de edición
-    document.getElementById('e-nombre').value    = _est.nombre    || '';
-    document.getElementById('e-apellido').value  = _est.apellido  || '';
-    document.getElementById('e-email').value     = _est.email     || '';
-    document.getElementById('e-telefono').value  = _est.telefono  || '';
-
     // Cobros
     renderCobros(cobros);
 }
@@ -329,28 +303,6 @@ function renderCobros(cobros) {
     var etqEst = { ABONADA:'✅ Al día', EN_MORA:'⚠️ En mora', PAGO_PARCIAL:'🔶 Pago parcial', PENDIENTE:'🕓 En revisión', NO_ABONADA:'🔵 Sin abonar', A_DEFINIR:'— A definir' };
     document.getElementById('st-estado').textContent = etqEst[peor] || peor;
     document.getElementById('st-saldo').style.color = totS > 0 ? 'var(--danger)' : 'var(--success)';
-}
-
-async function guardarDatos() {
-    spin(true);
-    try {
-        var sb = await getSupabase();
-        var upd = {
-            nombre:   document.getElementById('e-nombre').value.trim(),
-            apellido: document.getElementById('e-apellido').value.trim(),
-            email:    document.getElementById('e-email').value.trim(),
-            telefono: document.getElementById('e-telefono').value.trim()
-        };
-        var { error } = await sb.from('estudiantes').update(upd).eq('dni', DNI);
-        if (error) throw error;
-        document.getElementById('hdr-nombre').textContent = upd.apellido + ', ' + upd.nombre;
-        document.getElementById('banner-nombre').textContent = upd.apellido + ', ' + upd.nombre;
-        document.getElementById('d-nombre').textContent   = upd.nombre;
-        document.getElementById('d-apellido').textContent = upd.apellido;
-        document.getElementById('d-email').textContent    = upd.email;
-        document.getElementById('d-telefono').textContent = upd.telefono;
-        toast('Datos actualizados ✓', 'ok');
-    } catch(e) { toast('Error al guardar: ' + e.message, 'err'); } finally { spin(false); }
 }
 
 function verDoc(url) { window.open(url, '_blank'); }

@@ -33,8 +33,6 @@
         .btn-logout:hover { background:rgba(192,57,43,0.55); }
 
         .container { max-width:1100px; margin:28px auto; padding:0 24px 48px; }
-        .readonly-notice { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:10px 16px; border-radius:8px; margin-bottom:20px; font-size:13px; display:none; }
-
         .card { background:white; border-radius:14px; padding:24px 28px; box-shadow:0 2px 12px rgba(0,0,0,0.06); border:1px solid var(--line); margin-bottom:20px; }
         .card-title { font-family:'Crimson Pro',serif; font-size:20px; color:var(--primary); margin-bottom:18px; padding-bottom:10px; border-bottom:2px solid #e8e4dc; display:flex; justify-content:space-between; align-items:center; gap:12px; }
 
@@ -82,14 +80,6 @@
         .dato-label { font-size:11px; color:#9ca3af; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
         .dato-value { font-size:14px; font-weight:600; color:var(--primary); }
 
-        .mfield { margin-bottom:14px; }
-        .mfield label { display:block; font-weight:600; font-size:12px; color:var(--primary); margin-bottom:5px; }
-        .mfield input { width:100%; padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; }
-        .mfield input:focus { outline:none; border-color:var(--primary); }
-        .form-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .btn-save { padding:10px 22px; background:var(--success); color:white; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
-        .btn-save:hover { background:#246441; }
-
         .spinner-overlay { display:none; position:fixed; inset:0; background:rgba(255,255,255,0.78); z-index:9000; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
         .spinner-overlay.show { display:flex; }
         .spinner { width:42px; height:42px; border:4px solid #e0e0e0; border-top-color:var(--primary); border-radius:50%; animation:spin .8s linear infinite; }
@@ -133,8 +123,6 @@
 </div>
 
 <div class="container">
-    <div class="readonly-notice" id="readonly-notice">👁️ Modo solo lectura — podés ver el detalle del estudiante pero no editar.</div>
-
     <div class="student-banner">
         <div class="student-avatar" id="avatar">?</div>
         <div class="student-info">
@@ -184,16 +172,6 @@
         </div>
     </div>
 
-    <div class="card" id="edit-card" style="display:none;">
-        <div class="card-title">✏️ Editar datos personales</div>
-        <div class="form-grid2">
-            <div class="mfield"><label>Nombre</label><input type="text" id="e-nombre"></div>
-            <div class="mfield"><label>Apellido</label><input type="text" id="e-apellido"></div>
-            <div class="mfield"><label>Email</label><input type="email" id="e-email"></div>
-            <div class="mfield"><label>Teléfono</label><input type="text" id="e-telefono"></div>
-        </div>
-        <button class="btn-save" onclick="guardarDatos()">💾 Guardar cambios</button>
-    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -203,7 +181,6 @@ var QS         = new URLSearchParams(location.search);
 var DNI        = QS.get('dni') || '';
 var COHORTE_ID = parseInt(QS.get('cohorte_id')) || null;
 var _est       = null;
-var ROLES_EDIT = ['ADMINISTRADOR','COORDINADOR'];
 
 function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fM(n)  { var num=parseFloat(n||0); if(isNaN(num))return '$0,00'; return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -228,10 +205,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     var roles_ok = ['ADMINISTRADOR','COORDINADOR','SECRETARIA','PROFESOR'];
     if (!sesion || !roles_ok.includes(sesion.rol)) { window.location.href='portal_login.html'; return; }
     if (!DNI) { toast('DNI no especificado','err'); return; }
-
-    var puedeEditar = ROLES_EDIT.includes(sesion.rol);
-    if (!puedeEditar) document.getElementById('readonly-notice').style.display='block';
-    if (puedeEditar)  document.getElementById('edit-card').style.display='';
 
     if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones(sesion.rol).then(renderNotificaciones);
 
@@ -276,11 +249,6 @@ async function cargar(sesion) {
         var rI = await sb.from('inscripciones').select('descuento_porcentaje').eq('cohorte_id', COHORTE_ID).eq('estudiante_id', _est.id).maybeSingle();
         document.getElementById('d-descuento').textContent = rI.data ? (rI.data.descuento_porcentaje||0)+'%' : '0%';
     }
-
-    document.getElementById('e-nombre').value   = _est.nombre   || '';
-    document.getElementById('e-apellido').value = _est.apellido || '';
-    document.getElementById('e-email').value    = _est.email    || '';
-    document.getElementById('e-telefono').value = _est.telefono || '';
 
     renderCobros(cobros);
 }
@@ -339,22 +307,6 @@ function renderCobros(cobros) {
     document.getElementById('st-estado').textContent = etqGen[peor] || peor;
 }
 
-async function guardarDatos() {
-    spin(true);
-    try {
-        var sb  = await getSupabase();
-        var upd = { nombre:document.getElementById('e-nombre').value.trim(), apellido:document.getElementById('e-apellido').value.trim(), email:document.getElementById('e-email').value.trim(), telefono:document.getElementById('e-telefono').value.trim() };
-        var { error } = await sb.from('estudiantes').update(upd).eq('dni', DNI);
-        if (error) throw error;
-        document.getElementById('hdr-nombre').textContent    = upd.apellido+', '+upd.nombre;
-        document.getElementById('banner-nombre').textContent = upd.apellido+', '+upd.nombre;
-        document.getElementById('d-nombre').textContent      = upd.nombre;
-        document.getElementById('d-apellido').textContent    = upd.apellido;
-        document.getElementById('d-email').textContent       = upd.email;
-        document.getElementById('d-telefono').textContent    = upd.telefono;
-        toast('Datos actualizados ✓','ok');
-    } catch(e) { toast('Error: '+e.message,'err'); } finally { spin(false); }
-}
 </script>
 </body>
 </html>
