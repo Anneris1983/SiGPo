@@ -2315,13 +2315,15 @@ async function _procesarImport(file) {
         var data = await file.arrayBuffer();
         var wb   = XLSX.read(data, { type: 'array', cellDates: true });
         var ws   = wb.Sheets[wb.SheetNames[0]];
-        // Saltar fila de instrucciones (fila 2) — leer desde fila 1 (cabecera) y fila 3+ (datos)
         var allRows = XLSX.utils.sheet_to_json(ws, { defval: '', header: 1 });
-        if (allRows.length < 3) { toast('El archivo no tiene datos (mínimo 3 filas: cabecera + instrucciones + datos)', 'err'); spin(false); return; }
+        if (allRows.length < 2) { toast('El archivo no tiene datos', 'err'); spin(false); return; }
 
-        // Fila 0 = cabeceras, Fila 1 = instrucciones (ignorar), Fila 2+ = datos
+        // Fila 0 = cabeceras. Fila 1 puede ser fila de instrucciones (texto) o ya datos.
+        // Si el primer campo de fila 1 no es un DNI numérico, la saltamos.
         var headers = allRows[0].map(function(h) { return String(h).trim().toLowerCase().replace(/ /g,'_'); });
-        var dataRows = allRows.slice(2).filter(function(r) { return r.some(function(c){ return c !== ''; }); });
+        var primerValor = String(allRows[1] ? allRows[1][0] : '').trim();
+        var startRow = (!isNaN(primerValor) && primerValor !== '') ? 1 : 2;
+        var dataRows = allRows.slice(startRow).filter(function(r) { return r.some(function(c){ return c !== ''; }); });
         if (!dataRows.length) { toast('No hay datos para importar', 'err'); spin(false); return; }
 
         // Convertir a objetos
