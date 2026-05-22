@@ -211,6 +211,7 @@
                 <div class="stat-value" id="stat-pendiente">—</div>
                 <div class="stat-label">Saldo pendiente total</div>
                 <div class="stat-sub" id="stat-pendiente-sub">—</div>
+                <div class="stat-sub" id="stat-pendiente-detalle" style="font-size:11px;margin-top:2px;line-height:1.5;"></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">✅</div>
@@ -228,7 +229,7 @@
 
         <!-- Actividad por mes -->
         <div class="section">
-            <div class="section-title">📈 Pagos por Mes (2025)</div>
+            <div class="section-title" id="chart-titulo">📈 Pagos por Mes</div>
             <div class="chart-container">
                 <div class="bar-chart" id="barChart"></div>
                 <div style="display:flex; gap:8px; margin-top:8px;" id="barLabels"></div>
@@ -396,7 +397,7 @@
             var sb = await getSupabase();
 
             var cobRes = await sb.from('cobros')
-                .select('cobro_id,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,programa_id,cohorte_id')
+                .select('cobro_id,concepto,periodo,fecha_vencimiento,fecha_pago,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,programa_id,cohorte_id')
                 .eq('dni', sesion.dni)
                 .order('fecha_vencimiento', { ascending: false });
 
@@ -513,9 +514,14 @@
             return s + calcAbonado(c);
         }, 0);
 
-        var totalPend = base.reduce(function(s, c) {
-            return s + (Number(c.saldo_pendiente) || 0);
-        }, 0);
+        var totalPend = 0, pendEnRevision = 0, pendSinPagar = 0;
+        base.forEach(function(c) {
+            var est = resolveEst(c);
+            var saldo = Number(c.saldo_pendiente) || 0;
+            totalPend += saldo;
+            if (est === 'PENDIENTE') pendEnRevision += saldo;
+            else if (est !== 'ABONADA' && est !== 'NO_APLICA' && est !== 'A_DEFINIR') pendSinPagar += saldo;
+        });
 
         var nProgs = Object.keys(base.reduce(function(m, c) {
             if (c.programa_id) m[c.programa_id] = 1;
@@ -531,6 +537,11 @@
         document.getElementById('stat-pendiente-sub').textContent = totalPend > 0
             ? '↑ Saldo a regularizar'
             : '✅ Sin deuda pendiente';
+
+        var detalle = '';
+        if (pendEnRevision > 0) detalle += '🕐 En revisión: ' + fM(pendEnRevision);
+        if (pendSinPagar > 0) detalle += (detalle ? '<br>' : '') + '⬜ Sin pagar: ' + fM(pendSinPagar);
+        document.getElementById('stat-pendiente-detalle').innerHTML = detalle;
 
         document.getElementById('stat-cuotas').textContent = abonadas.length + '/' + base.length;
         document.getElementById('stat-cuotas-sub').textContent = 'cuotas completadas';
@@ -666,10 +677,19 @@
             });
         }
 
+        // Título dinámico con rango de años cubierto
+        var añoInicio = meses[0].key.substring(0, 4);
+        var añoFin    = meses[meses.length - 1].key.substring(0, 4);
+        var tituloAño = añoInicio === añoFin ? añoInicio : añoInicio + '–' + añoFin;
+        document.getElementById('chart-titulo').textContent = '📈 Pagos por Mes (' + tituloAño + ')';
+
         var vals = meses.map(function(m) {
             return base.reduce(function(s, c) {
-                if (!c.fecha_vencimiento) return s;
-                return c.fecha_vencimiento.substring(0, 7) === m.key ? s + calcAbonado(c) : s;
+                var est = resolveEst(c);
+                if (est !== 'ABONADA' && est !== 'PAGO_PARCIAL') return s;
+                var fecha = c.fecha_pago || c.fecha_vencimiento;
+                if (!fecha) return s;
+                return fecha.substring(0, 7) === m.key ? s + calcAbonado(c) : s;
             }, 0);
         });
 
