@@ -444,8 +444,8 @@ async function cargarDatos() {
             if (_fCF) {
                 if (_fCF.programa) cobros = cobros.filter(function(c){ return String(c.programa_id) === String(_fCF.programa); });
                 if (_fCF.cohorte)  cobros = cobros.filter(function(c){ return String(c.cohorte_id)  === String(_fCF.cohorte); });
-                if (_fCF.desde && !_fCF.desdeInicio) cobros = cobros.filter(function(c){ return !c.fecha_vencimiento || String(c.fecha_vencimiento) >= _fCF.desde; });
-                if (_fCF.hasta)    cobros = cobros.filter(function(c){ return !c.fecha_vencimiento || String(c.fecha_vencimiento).substring(0,10) <= _fCF.hasta; });
+                if (_fCF.desde && !_fCF.desdeInicio) cobros = cobros.filter(function(c){ var p = c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL'; return p ? (c.fecha_pago && String(c.fecha_pago) >= _fCF.desde) : (!c.fecha_vencimiento || String(c.fecha_vencimiento) >= _fCF.desde); });
+                if (_fCF.hasta)    cobros = cobros.filter(function(c){ var p = c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL'; return p ? (c.fecha_pago && String(c.fecha_pago).substring(0,10) <= _fCF.hasta) : (!c.fecha_vencimiento || String(c.fecha_vencimiento).substring(0,10) <= _fCF.hasta); });
             }
         } catch(_e) {}
 
@@ -478,7 +478,7 @@ async function cargarDatos() {
         if (cards[2]) { cards[2].querySelector('.summary-value').textContent = tasaCobro.toFixed(1) + '%'; cards[2].querySelector('.summary-change').textContent = 'Recaudado / esperado'; }
         if (cards[3]) { cards[3].querySelector('.summary-value').textContent = fM(promPorEst); cards[3].querySelector('.summary-change').textContent = 'Por estudiante activo'; }
 
-        // Monthly chart — group by mes of fecha_vencimiento, per program (top 5)
+        // Monthly chart — group by mes of fecha_pago, per program (top 5)
         // Count recaudado per program
         var recPorProg = {};
         cobros.forEach(function(c) {
@@ -490,12 +490,13 @@ async function cargarDatos() {
         // Top 5 programs by collected amount
         var topProgs = Object.keys(recPorProg).sort(function(a,b){ return recPorProg[b] - recPorProg[a]; }).slice(0, 5);
 
-        // Get months for current year
+        // Get months for current year from fecha_pago of paid cobros
         var mesesSet = {};
         cobros.forEach(function(c) {
-            if (!c.fecha_vencimiento) return;
-            var yr = String(c.fecha_vencimiento).split('T')[0].split('-')[0];
-            if (yr == anoActual) mesesSet[mesLabel(c.fecha_vencimiento)] = c.fecha_vencimiento.substring(0,7);
+            if (c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL') return;
+            if (!c.fecha_pago) return;
+            var yr = String(c.fecha_pago).split('T')[0].split('-')[0];
+            if (yr == anoActual) mesesSet[mesLabel(c.fecha_pago)] = c.fecha_pago.substring(0,7);
         });
         var mesesLabels = Object.keys(mesesSet).sort(function(a,b){
             return mesesSet[a].localeCompare(mesesSet[b]);
@@ -515,7 +516,7 @@ async function cargarDatos() {
                 cobros.forEach(function(c) {
                     if (String(c.programa_id) !== String(pid)) return;
                     if (c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL') return;
-                    if (mesLabel(c.fecha_vencimiento) !== ml) return;
+                    if (!c.fecha_pago || mesLabel(c.fecha_pago) !== ml) return;
                     sum += Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0));
                 });
                 return Math.round(sum / 1000);
