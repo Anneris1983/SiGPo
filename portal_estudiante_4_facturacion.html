@@ -523,6 +523,17 @@ async function guardarDatos() {
         var res = await filtro;
         if (res.error) throw res.error;
 
+        // Notificar a Cooperadora (notificación interna)
+        var nombreEst = (_datosEstudiante && (_datosEstudiante.apellido || _datosEstudiante.nombre))
+            ? ((_datosEstudiante.apellido || '') + ' ' + (_datosEstudiante.nombre || '')).trim()
+            : (sesion.nombre || 'Estudiante');
+        await sb.from('notificaciones').insert({
+            usuario_dni: null,
+            rol_destino: 'COOPERADORA',
+            tipo:        'alerta',
+            mensaje:     'El estudiante ' + nombreEst + ' (DNI: ' + sesion.dni + ') actualizó sus datos de facturación.'
+        }).then(function(){}).catch(function(e){ console.warn('notif facturacion:', e); });
+
         // Actualizar datos locales y refrescar vista
         _datosEstudiante = Object.assign({}, _datosEstudiante, nuevos);
         renderVista(_datosEstudiante);
