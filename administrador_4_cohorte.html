@@ -16,7 +16,7 @@
             --warning: #e67e22;
             --bg:      #f8f6f1;
         }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 0; font-size: 14px; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 0; font-size: 14px; display:flex; flex-direction:column; height:125vh; overflow:hidden; }
 
         /* ── HEADER ── */
         .page-header {
@@ -86,7 +86,7 @@
         .selection-bar.show { display: flex; }
 
         /* ── TABLA ── */
-        .table-wrapper { background: white; overflow: auto; max-height: calc(125vh - 345px); min-height: 280px; }
+        .table-wrapper { background: white; overflow: auto; flex:1; max-height:none; min-height: 280px; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         thead { position: sticky; top: 0; z-index: 10; }
         th {
@@ -334,6 +334,10 @@
         .cbtn-aprobar    { background:#dcfce7; color:#166534; }
         .cbtn-rechazar   { background:#fee2e2; color:#991b1b; }
         .cbtn-ver-recibo { background:#f3f4f6; color:#374151; }
+            #app { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+        .leyenda { flex-shrink:0; }
+        .page-header { flex-shrink:0; }
+        .toolbar { flex-shrink:0; }
     </style>
     <link rel="stylesheet" href="sigpo-theme.css">
     <link rel="stylesheet" href="sigpo-compact.css">
