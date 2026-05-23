@@ -26,8 +26,10 @@
         .notif-head { padding:14px 16px; border-bottom:1px solid #f0f0f0; font-weight:700; color:#5C1018; font-size:14px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
         .notif-head button { background:none; border:none; color:#8C1A28; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
         .container { width:100%; padding: 28px 32px; box-sizing:border-box; }
-        .stats-grid { display:flex; flex-wrap:wrap; gap: 10px; margin-bottom:28px; }
-        .stat-card { background:#F8F6F1; padding:14px 12px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.06); border-left:3px solid var(--accent); flex:1 1 auto; min-width:max-content; }
+        .stats-grid { display:grid; grid-template-columns:repeat(8,1fr); gap: 10px; margin-bottom:28px; }
+        @media(max-width:1100px){ .stats-grid{ grid-template-columns:repeat(4,1fr); } }
+        @media(max-width:640px){ .stats-grid{ grid-template-columns:repeat(2,1fr); } }
+        .stat-card { background:#F8F6F1; padding:14px 12px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.06); border-left:3px solid var(--accent); overflow:visible; }
         .stat-card.success { border-left-color:var(--success); }
         .stat-card.danger  { border-left-color:var(--danger); }
         .stat-card.info    { border-left-color:var(--info); }
