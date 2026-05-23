@@ -1881,32 +1881,33 @@ function confirmarDesvincular(dni, nombre) {
     var tienePagos = cobros.some(function(c) {
         return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL';
     });
+    var nCobros = cobros.length;
+    var nPagos = cobros.filter(function(c) {
+        return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL';
+    }).length;
 
     document.getElementById('mdv-sub').textContent =
         (V.data ? V.data.programa.nombre + ' · ' + V.data.cohorte.nombre : '');
 
     var btn = document.getElementById('mdv-btn');
+    btn.disabled = false;
+    btn.style.opacity = '1';
 
-    if (tienePagos) {
-        document.getElementById('mdv-cuerpo').innerHTML =
-            '<p style="font-size:13px;color:#555;">No se puede desvincular a <strong>' + nombre + '</strong> porque tiene cuotas con pagos registrados.</p>'
-            + '<div style="margin-top:12px;background:#fef2f2;border-left:4px solid #dc2626;padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
-            + '🔒 Para desvincularlo, primero hay que revertir o eliminar sus pagos desde la base de datos.</div>';
-        btn.disabled = true;
-        btn.style.opacity = '0.4';
-    } else {
-        var nCobros = cobros.length;
-        document.getElementById('mdv-cuerpo').innerHTML =
-            '<p style="font-size:13px;color:#555;">Va a desvincular completamente a <strong>' + nombre + '</strong> de esta cohorte/edición.</p>'
-            + '<div style="margin-top:12px;background:#fef2f2;border-left:4px solid #dc2626;padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
-            + '<strong>⚠️ Esta acción eliminará:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;">'
-            + '<li>La inscripción del estudiante en esta cohorte</li>'
-            + '<li>' + nCobros + ' registro' + (nCobros !== 1 ? 's' : '') + ' de cobro' + (nCobros !== 1 ? 's' : '') + ' asociados</li>'
-            + '</ul>'
-            + '<br>Esta acción <strong>no se puede deshacer</strong>. Si fue un error de cohorte, volvé a inscribirlo en la correcta.</div>';
-        btn.disabled = false;
-        btn.style.opacity = '1';
-    }
+    var alertaPagos = tienePagos
+        ? '<div style="margin-top:10px;background:#fef2f2;border-left:4px solid #dc2626;padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
+          + '⚠️ <strong>Atención:</strong> este estudiante tiene ' + nPagos + ' cuota' + (nPagos !== 1 ? 's' : '') + ' con pagos registrados. '
+          + 'Al desvincular se eliminarán igualmente. Esta acción <strong>no se puede deshacer</strong>.</div>'
+        : '';
+
+    document.getElementById('mdv-cuerpo').innerHTML =
+        '<p style="font-size:13px;color:#555;">Va a desvincular completamente a <strong>' + nombre + '</strong> de esta cohorte/edición.</p>'
+        + '<div style="margin-top:12px;background:#fef2f2;border-left:4px solid #dc2626;padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
+        + '<strong>Esta acción eliminará:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;">'
+        + '<li>La inscripción del estudiante en esta cohorte</li>'
+        + '<li>' + nCobros + ' registro' + (nCobros !== 1 ? 's' : '') + ' de cobro' + (nCobros !== 1 ? 's' : '') + ' asociados</li>'
+        + '</ul></div>'
+        + alertaPagos;
+
     abrir('modal-desvincular');
 }
 
