@@ -1216,6 +1216,12 @@
         /* Sobreescribe el gradiente del tema: header uniforme en color claro */
         body > .header { background: var(--primary-2) !important; }
         body > .header .hstats-bar { background: transparent !important; border-top: none !important; }
+        /* Tabla full-width y full-height */
+        body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .page { max-width: 100% !important; padding: 0 !important; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .toolbar { margin: 8px 20px 8px !important; }
+        .table-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; border-radius: 0 !important; }
+        .table-wrapper { flex: 1 !important; max-height: none !important; min-height: 0; }
     </style>
 </head>
 <body>
