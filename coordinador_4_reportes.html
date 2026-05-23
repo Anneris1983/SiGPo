@@ -247,7 +247,13 @@
             </div>
             <div class="field">
                 <label for="selAnio">Año</label>
-                <input type="number" id="selAnio" min="2000" max="2099" style="width:100px;" onkeydown="if(event.key==='Enter') recargarConFiltros()">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" id="selAnio" min="2000" max="2099" style="width:100px;" onkeydown="if(event.key==='Enter') recargarConFiltros()">
+                    <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#594F42;font-weight:600;cursor:pointer;white-space:nowrap;">
+                        <input type="checkbox" id="todosAnios" onchange="toggleTodosAnios(this)" style="width:15px;height:15px;cursor:pointer;accent-color:#5C1018;">
+                        Toda la cohorte
+                    </label>
+                </div>
             </div>
         </div>
         <button class="btn-filter" type="button" onclick="recargarConFiltros()">Actualizar reportes</button>
@@ -413,7 +419,8 @@ async function cargarVista() {
         var selAnio = document.getElementById('selAnio');
         var filtPrograma = (selPrograma && selPrograma.value) || DEFAULT_PROGRAMA_ID;
         var filtCohorte = (selCohorte && selCohorte.value) || DEFAULT_COHORTE_ID;
-        var filtAnio = (selAnio && selAnio.value) || DEFAULT_ANIO;
+        var todosAnios = document.getElementById('todosAnios');
+        var filtAnio = (todosAnios && todosAnios.checked) ? '' : ((selAnio && selAnio.value) || DEFAULT_ANIO);
 
         var sb = await getSupabase();
         var sesion = getSesion();
@@ -740,6 +747,12 @@ function renderEstudiantes() {
     });
 }
 
+function toggleTodosAnios(cb) {
+    var selAnio = document.getElementById('selAnio');
+    selAnio.disabled = cb.checked;
+    selAnio.style.opacity = cb.checked ? '0.4' : '1';
+}
+
 function recargarConFiltros() {
     cargarVista();
 }
@@ -793,7 +806,8 @@ function exportar(tipo) {
         } else if (tipo === 'estudiantes') {
             var filtPrograma = document.getElementById('selPrograma').value;
             var filtCohorte  = document.getElementById('selCohorte').value;
-            var filtAnio     = document.getElementById('selAnio').value;
+            var todosAniosChk = document.getElementById('todosAnios');
+            var filtAnio     = (todosAniosChk && todosAniosChk.checked) ? '' : document.getElementById('selAnio').value;
             var cobF = _cobrosExport.filter(function(c) {
                 if (filtPrograma && String(c.programa_id) !== String(filtPrograma)) return false;
                 if (filtCohorte  && String(c.cohorte_id)  !== String(filtCohorte))  return false;
