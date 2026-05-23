@@ -11,17 +11,14 @@
         :root { --primary: #5C1018; --accent: #C49A2A; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
 
-        .navbar { background: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .nav-brand { font-weight: 700; color: var(--primary); font-size: 16px; }
-        .nav-links { display: flex; gap: 24px; }
-        .nav-link { text-decoration: none; color: #666; font-weight: 500; padding: 8px 16px; border-radius: 6px; transition: all 0.2s; }
-        .nav-link:hover, .nav-link.active { background: var(--accent); color: white; }
-        .nav-user { display: flex; align-items: center; gap: 12px; }
-
+        .header { background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%); color: white; padding: 20px 40px; }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 28px; }
+        .header p { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+        .breadcrumb { font-size: 14px; margin-bottom: 12px; }
+        .breadcrumb a { color: white; text-decoration: none; opacity: 0.9; }
+        .btn-logout { background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.35); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 7px; white-space: nowrap; transition: background 0.2s; }
+        .btn-logout:hover { background: rgba(255,255,255,0.25); }
         .container { max-width: 1400px; margin: 32px auto; padding: 0 32px; }
-        .header { margin-bottom: 28px; }
-        .header h1 { font-family: 'Crimson Pro', serif; font-size: 32px; color: var(--primary); margin-bottom: 8px; }
-        .header p { color: #666; }
 
         .filters { background: white; padding: 24px 28px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; }
         .filter-group { display: flex; flex-direction: column; }
@@ -160,42 +157,44 @@
     <p>Calculando métricas…</p>
 </div>
 
-<!-- NAVBAR -->
-<div class="navbar">
-    <div class="nav-brand">
-                Portal de Cobranzas Posgrado</div>
-    <div class="nav-links">
-        <a href="administrador_2_dashboard.html" class="nav-link">🏠 Dashboard</a>
-        <a href="administrador_8_Cashflow.html"  class="nav-link">📊 Cashflow</a>
-        <a href="administrador_7_reportes_globales.html" class="nav-link active">📈 Planificación</a>
-    </div>
-    <div class="nav-user">
-        <div class="notif-wrapper">
-            <button onclick="toggleNotif()" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
-                <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid white;line-height:1;">0</span>
-            </button>
-            <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
-                <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                    <h3 style="font-size:15px;font-weight:700;color:#5C1018;">🔔 Notificaciones</h3>
-                    <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
-                </div>
-                <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+<!-- HEADER -->
+<div class="header">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+            <div class="breadcrumb"><a href="administrador_2_dashboard.html" onclick="navegar('administrador_2_dashboard.html'); return false;">← Volver al Dashboard</a></div>
+            <div style="display:flex;align-items:center;gap:16px;">
+                <h1>📈 Planificación Financiera — Análisis Estratégico</h1>
+                <button onclick="navegar('administrador_9_categorias_gastos.html')" style="background:rgba(196,154,42,0.9);border:none;padding:10px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;color:white;font-weight:600;font-size:14px;">⚙️ Categorías</button>
             </div>
+            <p>Proyección de liquidez, cobertura de gastos críticos y escenarios de estrés</p>
         </div>
-        <a href="portal_login.html" class="nav-link" onclick="return cerrarSesion(event)">🚪 Cerrar sesión</a>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+            <div class="notif-wrapper" style="position:relative;">
+                <button onclick="toggleNotif()" title="Notificaciones" aria-label="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;transition:background 0.2s;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
+                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
+                </button>
+                <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                    <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:15px;font-weight:700;color:#5C1018;">🔔 Notificaciones</h3>
+                        <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                    </div>
+                    <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                </div>
+            </div>
+            <a href="portal_login.html" class="btn-logout" onclick="return cerrarSesion(event)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar sesión
+            </a>
+        </div>
     </div>
 </div>
 
 <div class="container">
-
-    <div class="header">
-        <div style="display:flex;align-items:center;gap:16px;">
-            <h1>📈 Planificación Financiera — Análisis Estratégico</h1>
-            <button onclick="navegar('administrador_9_categorias_gastos.html')" style="background:var(--accent);border:none;padding:10px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;color:white;font-weight:600;font-size:14px;">⚙️ Categorías</button>
-        </div>
-        <p>Proyección de liquidez, cobertura de gastos críticos y escenarios de estrés</p>
-    </div>
 
     <!-- FILTROS -->
     <div class="filters">
