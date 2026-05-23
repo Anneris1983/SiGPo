@@ -1268,11 +1268,6 @@
     <main class="page">
         <section class="toolbar">
             <div class="toolbar-top">
-                <div class="toolbar-title">
-                    <h3>Estado de pagos de estudiantes</h3>
-                    <p>La cantidad de cuotas, montos, estudiantes y estados se leen de forma dinámica desde la base de datos.</p>
-                </div>
-
                 <div class="actions">
                     <button class="btn success" type="button" onclick="irAAprobarPagos()">✅ Aprobar pagos</button>
                     <button class="btn warning" type="button" onclick="abrirCrearCuotaCoop()">➕ Crear cuotas</button>
@@ -1280,14 +1275,6 @@
                     <button class="btn btn-eliminar-global-coop" type="button" onclick="abrirEliminarCuotasGlobalCoop()">🗑 Eliminar cuota</button>
                     <button class="btn primary" type="button" onclick="exportarExcel()">📤 Exportar Excel</button>
                 </div>
-            </div>
-
-            <div class="filters-row">
-                <span class="filters-label">Estado de pagos:</span>
-                <button class="chip active" type="button" onclick="seleccionarFiltro('todos')">Todos</button>
-                <button class="chip" type="button" onclick="seleccionarFiltro('aldia')">Al día</button>
-                <button class="chip" type="button" onclick="seleccionarFiltro('mora')">Mora</button>
-                <button class="chip" type="button" onclick="seleccionarFiltro('parcial')">Pagos parciales</button>
             </div>
         </section>
 
