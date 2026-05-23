@@ -155,6 +155,7 @@
         <div class="stat-row">
             <div class="stat-item"><div class="stat-label">Al día</div><div class="stat-value" id="s-aldia">—</div></div>
             <div class="stat-item"><div class="stat-label">En mora</div><div class="stat-value" id="s-mora" style="color:#ffc107;">—</div></div>
+            <div class="stat-item"><div class="stat-label">Cuotas en mora</div><div class="stat-value" id="s-mora-cuotas" style="color:#ffc107;">—</div></div>
             <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
             <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado">—</div></div>
             <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;">—</div></div>
@@ -427,6 +428,8 @@ function actualizarStats() {
     var saldo = recaud - egrExec;
     document.getElementById('s-aldia').textContent     = ests.filter(function(e){ return cg(e)==='ABONADA'; }).length;
     document.getElementById('s-mora').textContent      = ests.filter(function(e){ return cg(e)==='EN_MORA'; }).length;
+    var cuotasMora = 0; ests.forEach(function(e){ (e.cobros||[]).forEach(function(c){ if(c.estado==='EN_MORA') cuotasMora++; }); });
+    document.getElementById('s-mora-cuotas').textContent = cuotasMora;
     document.getElementById('s-parcial').textContent   = ests.filter(function(e){ return cg(e)==='PAGO_PARCIAL'; }).length;
     document.getElementById('s-recaudado').textContent = fMillones(recaud);
     document.getElementById('s-egresos').textContent   = fMillones(egrExec);
