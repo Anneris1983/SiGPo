@@ -16,7 +16,7 @@
             --warning: #e67e22;
             --bg:      #f8f6f1;
         }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 0; font-size: 14px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 0; font-size: 14px; }
 
         /* ── HEADER ── */
         .page-header {
@@ -86,8 +86,7 @@
         .selection-bar.show { display: flex; }
 
         /* ── TABLA ── */
-        #app { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .table-wrapper { background: white; overflow: auto; flex: 1; min-height: 0; }
+        .table-wrapper { background: white; overflow: auto; max-height: calc(100vh - 240px); min-height: 280px; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         thead { position: sticky; top: 0; z-index: 10; }
         th {
