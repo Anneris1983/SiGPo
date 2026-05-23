@@ -71,9 +71,12 @@
 <body>
 <div class="header">
     <div class="header-content">
-        <div class="header-left">
-            <h1>Dashboard Profesor</h1>
-            <p id="headerSub">Cargando…</p>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <button class="btn-back" onclick="history.back()">←</button>
+            <div class="header-left">
+                <h1>Dashboard Profesor</h1>
+                <p id="headerSub">Cargando…</p>
+            </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
             <div class="notif-wrapper">
@@ -83,7 +86,6 @@
                     <div id="notif-list" style="max-height:340px;overflow-y:auto;"><div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;">Cargando…</div></div>
                 </div>
             </div>
-            <button class="btn-back" onclick="history.back()">← Volver</button>
             <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
         </div>
     </div>
