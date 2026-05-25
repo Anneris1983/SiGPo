@@ -1975,13 +1975,17 @@
                     if (!mapa.has(key)) {
                         const label = cuota.nombre || (cuota.numeroCuota === 0 ? 'Inscripción' : 'C' + cuota.numeroCuota);
                         const mes = cuota.mes ? ' · ' + cuota.mes : '';
-                        // numero para ordenar: usar nroCuota si existe; si no, parsear del nombre; último recurso: fecha
-                        var numero = cuota.numeroCuota != null ? Number(cuota.numeroCuota) : null;
-                        if (numero === null) {
-                            var mm = (cuota.nombre || '').match(/cuota[\s_]?(\d+)/i);
-                            if (mm) numero = parseInt(mm[1], 10);
-                            else if (/inscripci[oó]n/i.test(cuota.nombre || '')) numero = 0;
-                            else numero = 9999;
+                        // numero para ordenar: parsear del nombre primero (nro_cuota en DB es contador interno, no el nro real)
+                        var numero;
+                        var mmN = (cuota.nombre || '').match(/cuota[\s_]?(\d+)/i);
+                        if (mmN) {
+                            numero = parseInt(mmN[1], 10);
+                        } else if (/inscripci[oó]n/i.test(cuota.nombre || '')) {
+                            numero = 0;
+                        } else if (cuota.numeroCuota != null && Number(cuota.numeroCuota) !== 0) {
+                            numero = Number(cuota.numeroCuota);
+                        } else {
+                            numero = 9999;
                         }
                         mapa.set(key, {
                             key: key,
