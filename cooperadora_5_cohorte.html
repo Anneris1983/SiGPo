@@ -1219,8 +1219,10 @@
         /* Tabla full-width y full-height */
         .page { max-width: 100% !important; padding: 0 !important; flex:1; display:flex; flex-direction:column; min-height:0; }
         .toolbar { margin: 8px 20px 8px !important; flex-shrink:0; }
-        .table-section { border-radius: 0 !important; box-shadow: none !important; flex:1; display:flex; flex-direction:column; min-height:0; }
+        .table-section { border-radius: 0 !important; box-shadow: none !important; overflow: hidden !important; flex:1; display:flex; flex-direction:column; min-height:0; }
+        #tablaContainer { flex:1; display:flex; flex-direction:column; min-height:0; }
         .table-wrapper { flex:1 !important; max-height: none !important; overflow: auto !important; min-height:0; }
+        .legend { flex-shrink:0; }
         body { display:flex; flex-direction:column; height:100vh; overflow:hidden; }
         body > .header { flex-shrink:0; }
     </style>
@@ -1616,7 +1618,10 @@
                         dniMap[dk] = { estudianteId:est.id||dk, dni:dk, nombre:est.nombre||'', apellido:est.apellido||dk, nombreCompleto:((est.apellido||dk)+' '+(est.nombre||'')).trim(), email:est.email||'', estadoAcademico:insc.estado_academico||'ACTIVO', descuentoPorcentaje:Number(insc.descuento_porcentaje||0), descuentoFechaInicio:'', descuentoFechaFin:'', descuentoEtiqueta:insc.descuento_motivo||'', noDebeAbonar:false, cuotas:[] };
                     }
                     var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
-                    var estadoRaw = c.no_aplica ? 'NODEBE' : (c.estado||'NO_ABONADA');
+                    var saldoC = Number(c.saldo_pendiente||0);
+                    var estadoRaw = c.no_aplica ? 'NODEBE'
+                        : (c.recibo_url && saldoC > 0) ? 'PAGO_PARCIAL'
+                        : (c.estado||'NO_ABONADA');
                     dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'', recibo_url:c.recibo_url||'' });
                 });
 
