@@ -16,7 +16,7 @@
             --warning: #e67e22;
             --bg:      #f8f6f1;
         }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 0; font-size: 14px; display:flex; flex-direction:column; height:125vh; overflow:hidden; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 0; font-size: 14px; display:flex; flex-direction:column; min-height:100vh; overflow:auto; }
 
         /* ── HEADER ── */
         .page-header {
@@ -845,6 +845,7 @@ function resolverEstadoCobro(c) {
     if (!tieneMontoDefinido(c)) return 'A_DEFINIR';                     // Regla 6
 
     var estadoDb     = String((c && c.estado) || '').trim().toUpperCase();
+    if (estadoDb === 'A_DEFINIR') return 'A_DEFINIR';                   // Regla 6b: estado explícito en BD
     var saldo        = (c && c.saldo_pendiente !== null && c.saldo_pendiente !== undefined && c.saldo_pendiente !== '')
                        ? redondear2(c.saldo_pendiente) : null;
     var montoFinal   = redondear2(c.monto_final);
