@@ -1035,8 +1035,11 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
 /* ══════════════════════════════════════════════════
    INIT
 ══════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     cargarPlantillasPersistidas();
+    var sb = await getSupabase();
+    var { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion) { window.location.href = 'portal_login.html'; return; }
     if (!COHORTE_ID || !PROGRAMA_ID) {

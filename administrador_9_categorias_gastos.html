@@ -213,6 +213,9 @@
         function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); if (typeof marcarTodasNotificacionesLeidas === 'function') marcarTodasNotificacionesLeidas(); }
         
         async function inicializar() {
+            var sb = await getSupabase();
+            var { data: { session } } = await sb.auth.getSession();
+            if (!session) { window.location.href = 'portal_login.html'; return; }
             var sesion = getSesion();
             if (!sesion) { window.location.href = 'portal_login.html'; return; }
             try {

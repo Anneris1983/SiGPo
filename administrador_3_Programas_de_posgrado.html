@@ -334,7 +334,10 @@ function cargarPrograma() {
 /* ══════════════════════════════════════════════
    INICIALIZAR
    ══════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    var sb = await getSupabase();
+    var { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href='portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion) {
         window.location.href = 'portal_login.html';

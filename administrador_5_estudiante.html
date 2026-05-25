@@ -197,6 +197,9 @@ function spin(v){ document.getElementById('spinner').classList.toggle('show',v);
 function toast(msg,tipo){ var c=document.getElementById('toasts'); var d=document.createElement('div'); d.className='toast '+(tipo||''); d.textContent=msg; c.appendChild(d); setTimeout(function(){d.remove();},3500); }
 
 document.addEventListener('DOMContentLoaded', async function() {
+    var sb = await getSupabase();
+    var { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href='portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion || sesion.rol !== 'ADMINISTRADOR') { window.location.href='portal_login.html'; return; }
     if (!DNI) { toast('DNI no especificado','err'); return; }
