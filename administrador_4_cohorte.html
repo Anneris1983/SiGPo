@@ -1109,28 +1109,19 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
             if (['ABONADA', 'NO_APLICA', 'PENDIENTE'].includes(String(c.estado))) continue;
 
             var tieneReciboCobro = !!(c.recibo_url && String(c.recibo_url).trim() !== '');
-            var saldoCobro       = redondear2(Number(c.saldo_pendiente) || 0);
 
-            // PAGO_PARCIAL vencida: mora sobre saldo_pendiente, preserva estado PAGO_PARCIAL y monto_final aprobado
-            if ((String(c.estado) === 'PAGO_PARCIAL' || String(c.estado) === 'EN_MORA') && tieneReciboCobro && saldoCobro > 0) {
-                var fVencP      = new Date(c.fecha_vencimiento + 'T00:00:00');
-                var mesesP      = Math.floor((fHoy - fVencP) / 86400000) / 30;
-                var nuevoSaldoP = Math.round(saldoCobro * Math.pow(1 + moraPct, mesesP) * 100) / 100;
-                if (Math.abs(nuevoSaldoP - saldoCobro) > 0.01 || String(c.estado) !== 'PAGO_PARCIAL') {
-                    var fechaMoraP = c.fecha_mora || new Date(fVencP.getTime() + 86400000).toISOString().split('T')[0];
-                    var resP = await sb.from('cobros').update({
-                        estado:          'PAGO_PARCIAL',
-                        saldo_pendiente: nuevoSaldoP,
-                        meses_mora:      Math.floor(mesesP),
-                        fecha_mora:      fechaMoraP
-                    }).eq('cobro_id', c.cobro_id);
-                    if (resP.error) console.error('mora parcial update error cobro', c.cobro_id, resP.error);
+            // PAGO_PARCIAL con recibo aprobado: solo asegurar que el estado sea correcto.
+            // NO modificar saldo_pendiente — el monto pagado es un hecho fijo y no debe cambiar.
+            // El saldo restante se muestra tal cual; la mora se refleja visualmente en el color.
+            if (tieneReciboCobro) {
+                if (String(c.estado) !== 'PAGO_PARCIAL') {
+                    var saldoC = redondear2(Number(c.saldo_pendiente) || 0);
+                    var nuevoEstR = saldoC <= 0 ? 'ABONADA' : 'PAGO_PARCIAL';
+                    var resR = await sb.from('cobros').update({ estado: nuevoEstR }).eq('cobro_id', c.cobro_id);
+                    if (resR.error) console.error('estado fix error cobro', c.cobro_id, resR.error);
                 }
                 continue;
             }
-
-            // Para el resto: saltar cuotas con recibo (ABONADA ya excluida arriba)
-            if (tieneReciboCobro) continue;
 
             var fVenc    = new Date(c.fecha_vencimiento + 'T00:00:00');
             var diasMora = Math.floor((fHoy - fVenc) / 86400000);
