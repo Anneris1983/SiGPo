@@ -1216,11 +1216,18 @@
         /* Sobreescribe el gradiente del tema: header uniforme en color claro */
         body > .header { background: var(--primary-2) !important; }
         body > .header .hstats-bar { background: transparent !important; border-top: none !important; }
-        /* Full-width: quitar max-width de header-content y page */
-        .header-content { max-width: 100% !important; padding: 14px 20px !important; }
-        .page { max-width: 100% !important; padding: 0 !important; flex:1; display:flex; flex-direction:column; min-height:0; }
+        /* Full-width y header compacto */
+        .header-content { max-width: 100% !important; padding: 8px 20px !important; gap: 10px !important; }
+        .header-left h1 { font-size: 20px !important; margin-bottom: 2px !important; line-height: 1.2 !important; }
+        .breadcrumb { margin-bottom: 4px !important; }
+        .breadcrumb a { padding: 3px 10px !important; font-size: 11px !important; }
+        .hstat-val { font-size: 14px !important; line-height: 1.1 !important; }
+        .hstat-lbl { font-size: 9px !important; margin-bottom: 1px !important; }
+        .hstats-bar { gap: 4px 14px !important; }
+        .header-right > div:first-child { gap: 8px !important; }
         /* Tabla full-width y full-height */
-        .toolbar { margin: 8px 20px 8px !important; flex-shrink:0; }
+        .page { max-width: 100% !important; padding: 0 !important; flex:1; display:flex; flex-direction:column; min-height:0; }
+        .toolbar { margin: 6px 16px !important; flex-shrink:0; }
         .table-section { border-radius: 0 !important; box-shadow: none !important; overflow: hidden !important; flex:1; display:flex; flex-direction:column; min-height:0; }
         #tablaContainer { flex:1; display:flex; flex-direction:column; min-height:0; }
         .table-wrapper { flex:1 !important; max-height: none !important; overflow: auto !important; min-height:0; }
