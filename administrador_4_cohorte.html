@@ -1019,7 +1019,9 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
     var estudiantesEnriquecidos = estudiantes.map(function(est) {
         var cobrosEst = (cobrosPorDni[String(est.dni)] || []).map(function(c) {
             return Object.assign({}, c, {
-                monto_abonado: Math.max(0, (Number(c.monto_final) || 0) - (Number(c.saldo_pendiente) || 0))
+                monto_abonado: (c.monto_abonado != null && Number(c.monto_abonado) > 0)
+                    ? Number(c.monto_abonado)
+                    : Math.max(0, (Number(c.monto_final) || 0) - (Number(c.saldo_pendiente) || 0))
             });
         });
         return Object.assign({}, est, { cobros: cobrosEst });
