@@ -912,6 +912,14 @@
             });
             y = doc.lastAutoTable.finalY + 6;
 
+            // Si queda poco espacio para el resto del contenido, nueva página
+            var espacioRestante = 297 - y;
+            var espacioNecesario = 10 + 20 + 20 + 38 + 10; // total + texto + leyenda + qr + footer
+            if (espacioRestante < espacioNecesario) {
+                doc.addPage();
+                y = 20;
+            }
+
             // Total abonado
             var totalAbonado = cobros.reduce(function(s, c) { return s + Number(c.monto_final || 0); }, 0);
             doc.setFillColor(92, 16, 24);
