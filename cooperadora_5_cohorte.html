@@ -1600,7 +1600,7 @@
                 var sb = await getSupabase();
                 var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
                     sb.from('cohortes').select('*, programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
-                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,estado,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId),
+                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,monto_transferido,estado,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId),
                     sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico,descuento_motivo').eq('cohorte_id', cohorteId),
                     sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
                     sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', cohorteId)
@@ -1633,7 +1633,7 @@
                     var estadoRaw = c.no_aplica ? 'NODEBE'
                         : (c.recibo_url && saldoC > 0) ? 'PAGO_PARCIAL'
                         : (c.estado||'NO_ABONADA');
-                    dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'', recibo_url:c.recibo_url||'' });
+                    dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, montoTransferido:(c.monto_transferido ? Number(c.monto_transferido) : null), texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'', recibo_url:c.recibo_url||'' });
                 });
 
                 // Agregar estudiantes inscriptos que aún no tienen cobros
@@ -1897,7 +1897,14 @@
             } else if (cuota.estado === 'mora') {
                 sub = 'Vence ' + formatearFechaCorta(cuota.fechaVencimiento);
             } else if (cuota.estado === 'pendiente') {
-                sub = '🕐 En revisión';
+                if (cuota.montoTransferido && cuota.montoTransferido > 0) {
+                    var esParcialPend = cuota.montoTransferido < cuota.montoFinal;
+                    sub = esParcialPend
+                        ? '🕐 Parcial: ' + formatearMoneda(cuota.montoTransferido)
+                        : '🕐 En revisión';
+                } else {
+                    sub = '🕐 En revisión';
+                }
             } else if (cuota.estado === 'abonada') {
                 sub = 'Saldo $0';
             } else if (cuota.estado === 'noabonada') {
@@ -3176,13 +3183,25 @@
             document.getElementById('aprobModalSub').textContent = sub;
 
             var compArea = document.getElementById('aprobComprobanteArea');
+            var montoDecHtml = '';
+            if (cuota && cuota.montoTransferido && cuota.montoTransferido > 0) {
+                var mtd = cuota.montoTransferido;
+                var esParcD = mtd < (cuota.montoFinal || 0);
+                var bgD = esParcD ? '#fff7ed' : '#f0fdf4';
+                var brdD = esParcD ? '#fb923c' : '#86efac';
+                var txtD = esParcD ? '#9a3412' : '#166534';
+                montoDecHtml = '<div style="margin-bottom:10px;padding:9px 13px;background:'+bgD+';border-radius:8px;border:1px solid '+brdD+';font-size:13px;color:'+txtD+';">'
+                    + (esParcD ? '⚠️ Pago <strong>parcial</strong> declarado: <strong>' + apFmt(mtd) + '</strong> de ' + apFmt(cuota.montoFinal||0)
+                               : '✅ Pago <strong>total</strong> declarado: <strong>' + apFmt(mtd) + '</strong>')
+                    + '</div>';
+            }
             if (cuota && cuota.comprobanteUrl) {
-                compArea.innerHTML = '<div style="padding:10px 14px;background:#f0f4ff;border-radius:8px;display:flex;align-items:center;gap:10px;">'
+                compArea.innerHTML = montoDecHtml + '<div style="padding:10px 14px;background:#f0f4ff;border-radius:8px;display:flex;align-items:center;gap:10px;">'
                     + '<span style="font-size:22px;">📄</span>'
                     + '<div><div style="font-weight:700;font-size:13px;">Comprobante adjunto</div>'
                     + '<button onclick="verComprobante(\'' + escapeJs(cuota.comprobanteUrl) + '\')" style="font-size:12px;color:#4338ca;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;">👁️ Ver comprobante</button></div></div>';
             } else {
-                compArea.innerHTML = '<div style="padding:6px 0;color:#aaa;font-size:13px;">Sin comprobante adjunto</div>';
+                compArea.innerHTML = montoDecHtml + '<div style="padding:6px 0;color:#aaa;font-size:13px;">Sin comprobante adjunto</div>';
             }
 
             abrirOverlay('modalAprobacionOverlay');

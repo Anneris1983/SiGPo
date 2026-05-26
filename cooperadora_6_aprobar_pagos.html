@@ -388,7 +388,7 @@
         try {
             var sb = await getSupabase();
             var q = sb.from('cobros')
-                .select('cobro_id, dni, estudiantes!cobros_dni_fkey(nombre, apellido), programa_id, cohorte_id, concepto, nro_cuota, monto_final, saldo_pendiente, monto_abonado, estado, comprobante_url, comprobante_fecha, fecha_vencimiento')
+                .select('cobro_id, dni, estudiantes!cobros_dni_fkey(nombre, apellido), programa_id, cohorte_id, concepto, nro_cuota, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, comprobante_url, comprobante_fecha, fecha_vencimiento')
                 .eq('estado', 'PENDIENTE')
                 .not('comprobante_url', 'is', null);
             if (_cohorteId)  q = q.eq('cohorte_id', _cohorteId);
@@ -483,6 +483,24 @@
             comprobanteHtml = '<div style="padding:12px 0;color:#aaa;font-size:13px;">Sin comprobante adjunto</div>';
         }
 
+        /* Monto declarado por el estudiante */
+        var montoDeclaradoHtml = '';
+        if (c.monto_transferido && Number(c.monto_transferido) > 0) {
+            var mt = Number(c.monto_transferido);
+            var esParcialDeclarado = mt < Number(c.monto_final);
+            var colorBg = esParcialDeclarado ? '#fff7ed' : '#f0fdf4';
+            var colorBorder = esParcialDeclarado ? '#fb923c' : '#86efac';
+            var colorText = esParcialDeclarado ? '#9a3412' : '#166534';
+            var iconoD = esParcialDeclarado ? '⚠️' : '✅';
+            var labelD = esParcialDeclarado
+                ? 'Pago PARCIAL declarado: <strong>' + fMonto(mt) + '</strong> de ' + fMonto(Number(c.monto_final))
+                : 'Pago TOTAL declarado: <strong>' + fMonto(mt) + '</strong>';
+            montoDeclaradoHtml = '<div style="margin-bottom:12px;padding:10px 14px;background:'+colorBg+';border-radius:8px;border:1px solid '+colorBorder+';font-size:13px;color:'+colorText+';">'
+                + iconoD + ' ' + labelD
+                + (esParcialDeclarado ? '<br><span style="font-size:12px;opacity:.8;">Saldo restante a cobrar: <strong>' + fMonto(Math.max(0, Number(c.monto_final) - mt)) + '</strong></span>' : '')
+                + '</div>';
+        }
+
         /* Recibo upload (requerido para aprobar) */
         var reciboHtml = '<div style="margin-top:14px;padding:12px 14px;background:#fffbea;border-radius:8px;border:1px solid #f0d060;">'
             +'<div style="font-size:12px;font-weight:700;color:#7a5c00;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">📎 Recibo oficial (obligatorio para aprobar)</div>'
@@ -499,6 +517,7 @@
 
         cuotasDiv.innerHTML = comprobanteHtml
             +'<div style="margin-top:8px;font-size:13px;color:#555;margin-bottom:8px;">Vencimiento: <strong>'+fFecha(c.fecha_vencimiento)+'</strong></div>'
+            +montoDeclaradoHtml
             +reciboHtml
             +'<div class="cuota-actions" style="margin-top:12px;">'
             +'<button class="btn btn-aprobar" onclick="accionAprobar()">✓ Aprobar pago completo</button>'
