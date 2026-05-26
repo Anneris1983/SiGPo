@@ -735,7 +735,7 @@ async function cargar() {
         var sb = await getSupabase();
         var [rCoh, rCob, rInsc, rEst, rEgr, rProg, rCfg] = await Promise.all([
             sb.from('cohortes').select('*, programas(nombre,gas_url,email_remitente)').eq('cohorte_id', COHORTE_ID).single(),
-            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
+            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,monto_transferido,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
             sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico').eq('cohorte_id', COHORTE_ID),
             sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
             sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', COHORTE_ID),
@@ -775,7 +775,7 @@ async function cargar() {
             var abonado = (c.monto_abonado != null && Number(c.monto_abonado) > 0)
                 ? Number(c.monto_abonado)
                 : Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
-            dniMap[dk].cobros.push({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final != null ? Number(c.monto_final) : null, monto_abonado:abonado, saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'A_DEFINIR':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null });
+            dniMap[dk].cobros.push({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final != null ? Number(c.monto_final) : null, monto_abonado:abonado, monto_transferido:(c.monto_transferido ? Number(c.monto_transferido) : null), saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'A_DEFINIR':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null });
         });
 
         // Agregar estudiantes inscriptos que aún no tienen cobros
@@ -959,7 +959,13 @@ function renderTabla() {
             let txt = '';
             if (c.estado === 'ABONADA') txt = fMonto(c.monto_final);
             else if (c.estado === 'PAGO_PARCIAL') txt = `${fMonto(c.monto_abonado)}/${fMonto(c.monto_final)}`;
-            else if (c.estado === 'PENDIENTE') txt = 'en revisión';
+            else if (c.estado === 'PENDIENTE') {
+                if (c.monto_transferido && c.monto_transferido > 0 && c.monto_transferido < Number(c.monto_final||0)) {
+                    txt = fMonto(c.monto_transferido) + '\nen revisión';
+                } else {
+                    txt = 'en revisión';
+                }
+            }
             else if (c.estado === 'NO_ABONADA') txt = fMonto(c.saldo_pendiente || c.monto_final);
             else if (c.estado === 'EN_MORA') txt = fMonto(c.saldo_pendiente || c.monto_final);
             else if (c.estado === 'A_DEFINIR') txt = 'a definir';
