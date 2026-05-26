@@ -1600,7 +1600,7 @@
                 var sb = await getSupabase();
                 var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
                     sb.from('cohortes').select('*, programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
-                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId),
+                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,estado,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId),
                     sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico,descuento_motivo').eq('cohorte_id', cohorteId),
                     sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
                     sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', cohorteId)
@@ -1626,7 +1626,9 @@
                         var insc = est.id ? (inscByEstId[est.id] || {}) : {};
                         dniMap[dk] = { estudianteId:est.id||dk, dni:dk, nombre:est.nombre||'', apellido:est.apellido||dk, nombreCompleto:((est.apellido||dk)+' '+(est.nombre||'')).trim(), email:est.email||'', estadoAcademico:insc.estado_academico||'ACTIVO', descuentoPorcentaje:Number(insc.descuento_porcentaje||0), descuentoFechaInicio:'', descuentoFechaFin:'', descuentoEtiqueta:insc.descuento_motivo||'', noDebeAbonar:false, cuotas:[] };
                     }
-                    var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
+                    var abonado = (c.monto_abonado != null && Number(c.monto_abonado) > 0)
+                        ? Number(c.monto_abonado)
+                        : Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
                     var saldoC = Number(c.saldo_pendiente||0);
                     var estadoRaw = c.no_aplica ? 'NODEBE'
                         : (c.recibo_url && saldoC > 0) ? 'PAGO_PARCIAL'

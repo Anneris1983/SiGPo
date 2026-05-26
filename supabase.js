@@ -515,7 +515,7 @@ async function obtenerCobros(filtros) {
     return data || [];
 }
 
-async function subirComprobante(cobroId, file, fechaTransferencia) {
+async function subirComprobante(cobroId, file, fechaTransferencia, montoTransferido) {
     const sb = await getSupabase();
     const sesion = getSesion();
     if (!sesion) return { ok: false };
@@ -538,6 +538,7 @@ async function subirComprobante(cobroId, file, fechaTransferencia) {
         comprobante_fecha: new Date().toISOString()
     };
     if (fechaTransferencia) updateData.fecha_pago = fechaTransferencia;
+    if (montoTransferido && Number(montoTransferido) > 0) updateData.monto_transferido = Number(montoTransferido);
 
     const { error: updateErr } = await sb.from('cobros').update(updateData).eq('cobro_id', cobroId);
 
@@ -562,18 +563,20 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
     const { data: cobro } = await sb.from('cobros').select('*').eq('cobro_id', cobroId).single();
     if (!cobro) return { ok: false, mensaje: 'Cobro no encontrado' };
 
-    if (tipo === 'COMPLETO') {
+    if (tipo === 'COMPLETO' || tipo === 'total') {
         await sb.from('cobros').update({
             estado: 'ABONADA',
             saldo_pendiente: 0,
+            monto_abonado: Number(cobro.monto_final),
             fecha_aprobacion: new Date().toISOString().split('T')[0],
             recibo_url: reciboUrl
         }).eq('cobro_id', cobroId);
     } else {
-        var nuevoSaldo = cobro.monto_final - montoAprobado;
+        var nuevoSaldo = Math.round((Number(cobro.monto_final) - Number(montoAprobado)) * 100) / 100;
         await sb.from('cobros').update({
             estado: 'PAGO_PARCIAL',
             saldo_pendiente: nuevoSaldo,
+            monto_abonado: Number(montoAprobado),
             recibo_url: reciboUrl
         }).eq('cobro_id', cobroId);
 

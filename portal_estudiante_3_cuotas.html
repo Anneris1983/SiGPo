@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // 1. Traer cobros del estudiante
         var { data: cobros, error: errCobros } = await sb
             .from('cobros')
-            .select('cobro_id, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, estado, no_aplica, comprobante_url, recibo_url, fecha_pago, cohorte_id, programa_id')
+            .select('cobro_id, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, no_aplica, comprobante_url, recibo_url, fecha_pago, cohorte_id, programa_id')
             .eq('dni', String(dni))
             .order('fecha_vencimiento');
 
@@ -531,7 +531,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                 var montoFinal  = c.monto_final   !== null ? Number(c.monto_final)   : null;
                 var saldoPend   = c.saldo_pendiente !== null ? Number(c.saldo_pendiente) : null;
                 var montoOrig   = c.monto_original  !== null ? Number(c.monto_original)  : null;
-                var montoAbonado = (montoFinal !== null && saldoPend !== null) ? Math.max(0, montoFinal - saldoPend) : 0;
+                var montoAbonado = (c.monto_abonado != null && Number(c.monto_abonado) > 0)
+                    ? Number(c.monto_abonado)
+                    : ((montoFinal !== null && saldoPend !== null) ? Math.max(0, montoFinal - saldoPend) : 0);
+                var montoTransferido = c.monto_transferido ? Number(c.monto_transferido) : null;
                 var estado = c.estado || 'NO_ABONADA';
 
                 // Calcular días de mora
@@ -558,9 +561,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                     estado:     estado,
                     diasMora:   diasMora,
                     intereses:  0,   // el cálculo de intereses lo hace el backend; aquí solo mostramos lo que está en monto_final
-                    comprobante_url: c.comprobante_url || null,
-                    recibo_url:      c.recibo_url     || null,
-                    fechaPago:  c.fecha_pago ? c.fecha_pago.split('T')[0] : null,
+                    comprobante_url:  c.comprobante_url  || null,
+                    recibo_url:       c.recibo_url       || null,
+                    fechaPago:        c.fecha_pago ? c.fecha_pago.split('T')[0] : null,
+                    montoTransferido: montoTransferido,
                 };
             });
 
