@@ -1738,7 +1738,8 @@
                 estado: estado,
                 aDefinir: Boolean(cuota.aDefinir || cuota.a_definir),
                 comprobanteUrl: cuota.comprobante_url || '',
-                reciboUrl: cuota.recibo_url || ''
+                reciboUrl: cuota.recibo_url || '',
+                montoTransferido: cuota.montoTransferido != null ? Number(cuota.montoTransferido) : null
             };
         }
 
