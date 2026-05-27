@@ -1610,11 +1610,12 @@
             mostrarLoadingTabla();
             try {
                 var sb = await getSupabase();
-                var [rCoh, rCob, rInsc, rEgr] = await Promise.all([
+                var [rCoh, rCob, rInsc, rEgr, rCfg] = await Promise.all([
                     sb.from('cohortes').select('cohorte_id,nombre,estado,fecha_inicio,fecha_fin,programa_id,programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
                     sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,monto_transferido,estado,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId),
                     sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico,descuento_motivo').eq('cohorte_id', cohorteId),
-                    sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', cohorteId)
+                    sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', cohorteId),
+                    obtenerConfiguracion()
                 ]);
 
                 var cohorte = rCoh.data || {};
@@ -1622,6 +1623,10 @@
                 var cobros = rCob.data || [];
                 var inscripciones = rInsc.data || [];
                 var egresosRaw = rEgr.data || [];
+                var cfg = rCfg || {};
+                var etiquetasConfig = cfg.etiquetas
+                    ? cfg.etiquetas.split(',').map(function(e) { return e.trim(); }).filter(Boolean)
+                    : [];
                 var inscIds = inscripciones.map(function(i){ return i.estudiante_id; });
                 var rEst = inscIds.length
                     ? await sb.from('estudiantes').select('id,dni,nombre,apellido,email').in('id', inscIds)
@@ -1665,7 +1670,7 @@
                     programa: { programaId:cohorte.programa_id||programaId, nombre:prog.nombre||'Programa', tipo:prog.tipo||'', estado:prog.estado||'ACTIVO' },
                     cohorte: { cohorteId:cohorte.cohorte_id||cohorteId, nombre:cohorte.nombre||'Cohorte', fechaInicio:cohorte.fecha_inicio||'', fechaFin:cohorte.fecha_fin||'', activa:cohorte.estado==='ACTIVO', cantidadCuotasDefault:maxCuota },
                     estudiantes: Object.values(dniMap),
-                    etiquetasDescuento: ['Beca parcial','Docente','Convenio','Pronto pago']
+                    etiquetasDescuento: etiquetasConfig
                 };
                 vistaData = normalizarDetalle(respuesta);
                 vistaData.egresos = egresosRaw;

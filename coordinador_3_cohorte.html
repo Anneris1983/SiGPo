@@ -766,6 +766,9 @@ async function cargar() {
             : { data: [] };
         var estList = rEst.data || [];
         V.config = await obtenerConfiguracion();
+        V.config.motivosDescuento = V.config.etiquetas
+            ? V.config.etiquetas.split(',').map(function(e) { return e.trim(); }).filter(Boolean)
+            : [];
 
         var estByDni = {};
         estList.forEach(function(e){ estByDni[String(e.dni)] = e; });
