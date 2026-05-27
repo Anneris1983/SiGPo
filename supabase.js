@@ -795,18 +795,6 @@ async function eliminarEgreso(egresoId) {
     return { ok: !error };
 }
 
-// ══════════════════════════════════════════════════════════════
-// CONFIGURACIÓN
-// ══════════════════════════════════════════════════════════════
-
-async function obtenerConfiguracion() {
-    const sb = await getSupabase();
-    const { data } = await sb.from('configuracion').select('*');
-    var result = {};
-    (data || []).forEach(function (row) { result[row.clave] = row.valor; });
-    return result;
-}
-
 async function guardarConfiguracion(datos) {
     const sb = await getSupabase();
     for (var clave in datos) {

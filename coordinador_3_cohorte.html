@@ -1246,6 +1246,7 @@ async function guardarDescuento() {
             if (resInsc.error) throw resInsc.error;
         }
 
+        var cobroUpdates = [];
         for (var i = 0; i < est.cobros.length; i++) {
             var c = est.cobros[i];
             if (['ABONADA','PAGO_PARCIAL','PENDIENTE','EN_MORA'].includes(c.estado)) continue;
@@ -1262,7 +1263,7 @@ async function guardarDescuento() {
             }
 
             if (!_descTieneMonto(c)) {
-                await sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobro_id);
+                cobroUpdates.push(sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobro_id));
                 continue;
             }
 
@@ -1272,14 +1273,16 @@ async function guardarDescuento() {
             var nuevoSaldo = _descRedondear2(Math.max(0, nuevoFinal - abonado));
             var nuevoEstado = _descNormEstado(nuevoFinal, nuevoSaldo, c.fecha_vencimiento, c.estado);
 
-            var resCobro = await sb.from('cobros').update({
+            cobroUpdates.push(sb.from('cobros').update({
                 descuento_porcentaje: pctAplicar,
                 monto_final:          nuevoFinal,
                 saldo_pendiente:      nuevoSaldo,
                 estado:               nuevoEstado
-            }).eq('cobro_id', c.cobro_id);
-            if (resCobro.error) throw resCobro.error;
+            }).eq('cobro_id', c.cobro_id));
         }
+        var cobroResults = await Promise.all(cobroUpdates);
+        var cobroErr = cobroResults.find(function(r){ return r.error; });
+        if (cobroErr) throw cobroErr.error;
 
         toast('Descuento actualizado ✓', 'ok');
         cerrar('modal-descuento');

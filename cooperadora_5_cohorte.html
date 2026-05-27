@@ -2222,6 +2222,7 @@
                 }).eq('estudiante_id', est.estudianteId).eq('cohorte_id', vistaData.cohorte.cohorteId);
                 if (resInsc.error) throw resInsc.error;
 
+                var cobroUpdates = [];
                 for (var i = 0; i < est.cuotas.length; i++) {
                     var c = est.cuotas[i];
                     if (['abonada','parcial','pendiente','mora'].includes(c.estado)) continue;
@@ -2238,7 +2239,7 @@
                     }
 
                     if (!c.montoFinal && c.montoFinal !== 0) {
-                        await sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobroId);
+                        cobroUpdates.push(sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobroId));
                         continue;
                     }
 
@@ -2248,12 +2249,17 @@
                     var nuevoSaldo = Math.round(Math.max(0, nuevoFinal - abonado) * 100) / 100;
                     var nuevoEstado = (nuevoSaldo <= 0) ? 'ABONADA' : (fCuota && fCuota < hoyStr ? 'EN_MORA' : 'NO_ABONADA');
 
-                    await sb.from('cobros').update({
+                    cobroUpdates.push(sb.from('cobros').update({
                         descuento_porcentaje: pctAplicar,
                         monto_final:          nuevoFinal,
                         saldo_pendiente:      nuevoSaldo,
                         estado:               nuevoEstado
-                    }).eq('cobro_id', c.cobroId);
+                    }).eq('cobro_id', c.cobroId));
+                }
+                if (cobroUpdates.length) {
+                    var cobroResults = await Promise.all(cobroUpdates);
+                    var cobroErr = cobroResults.find(function(r){ return r.error; });
+                    if (cobroErr) throw cobroErr.error;
                 }
 
                 mostrarToast('Descuento actualizado ✓', 'success');
