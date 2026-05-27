@@ -895,10 +895,10 @@ function normalizarCobro(c) {
 
     if (['A_DEFINIR', 'A DEFINIR', 'NO DEFINIDO', 'NO DEFINIDA'].includes(estadoExplicito) || montoFinal == null) estado = 'A_DEFINIR';
     else if (['ABONADA', 'PAGADA', 'PAGADO'].includes(estadoExplicito) || (montoFinal != null && saldo <= 0 && montoAbonado > 0)) estado = 'ABONADA';
-    else if (['PAGO PARCIAL', 'PARCIAL'].includes(estadoExplicito) || (montoAbonado > 0 && saldo > 0)) estado = 'PAGO_PARCIAL';
+    else if (['PAGO PARCIAL', 'PAGO_PARCIAL', 'PARCIAL'].includes(estadoExplicito) || (montoAbonado > 0 && saldo > 0)) estado = 'PAGO_PARCIAL';
     else if (['PENDIENTE', 'PENDIENTE DE VERIFICACION', 'PENDIENTE DE REVISION'].includes(estadoExplicito)) estado = 'PENDIENTE';
-    else if (['NO ABONADA', 'NO ABONADO'].includes(estadoExplicito)) estado = 'NO_ABONADA';
-    else if (['EN MORA', 'MORA', 'VENCIDA'].includes(estadoExplicito)) estado = 'EN_MORA';
+    else if (['NO ABONADA', 'NO_ABONADA', 'NO ABONADO'].includes(estadoExplicito)) estado = 'NO_ABONADA';
+    else if (['EN MORA', 'EN_MORA', 'MORA', 'VENCIDA'].includes(estadoExplicito)) estado = 'EN_MORA';
     else if (saldo > 0 && fechaVto && fechaVto < hoyStr) estado = 'EN_MORA';
     else if (saldo > 0) estado = 'NO_ABONADA';
     else if (saldo <= 0) estado = 'ABONADA';
@@ -1019,8 +1019,8 @@ function renderTabla() {
         tr.dataset.est = estadoGen;
 
         const btnEstado = est.estado_academico === 'BAJA_COHORTE'
-            ? `<button class="btn-alta-coh" type="button" onclick="event.stopPropagation();confirmarCambioEstado(${est.dni}, '${escapeJs(est.apellido + ', ' + est.nombre)}', 'ACTIVO')">Alta</button>`
-            : `<button class="btn-baja-coh" type="button" onclick="event.stopPropagation();confirmarCambioEstado(${est.dni}, '${escapeJs(est.apellido + ', ' + est.nombre)}', 'BAJA_COHORTE')">Baja</button>`;
+            ? `<button class="btn-alta-coh" type="button" title="Reactivar en esta cohorte" onclick="event.stopPropagation();confirmarCambioEstado(${est.dni}, '${escapeJs(est.apellido + ', ' + est.nombre)}', 'ACTIVO')">↑ Dar alta</button>`
+            : `<button class="btn-baja-coh" type="button" title="Dar de baja en esta cohorte" onclick="event.stopPropagation();confirmarCambioEstado(${est.dni}, '${escapeJs(est.apellido + ', ' + est.nombre)}', 'BAJA_COHORTE')">↓ Dar baja</button>`;
 
         tr.innerHTML = `
           <td style="text-align:center;"><input type="checkbox" class="chk-e" data-dni="${est.dni}" onchange="onChk()"></td>
@@ -1030,8 +1030,10 @@ function renderTabla() {
           </td>
           <td class="cell-email">${escapeHtml(est.email)}</td>
           <td style="text-align:center;border-right:1px solid #ebebeb;">
-            <div style="font-size:11px;margin-bottom:4px;">${est.estado_academico === 'BAJA_COHORTE' ? '⛔ Baja' : '✅ Activo'}</div>
-            ${btnEstado}
+            <div style="display:inline-flex;flex-direction:column;align-items:center;gap:4px;">
+              <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;${est.estado_academico === 'BAJA_COHORTE' ? 'background:#fde8e1;color:#c0392b;' : 'background:#d1fae5;color:#065f46;'}">${est.estado_academico === 'BAJA_COHORTE' ? 'Baja' : 'Activo'}</span>
+              ${btnEstado}
+            </div>
           </td>
           ${celdas}
           <td class="cell-tot-pagar">${fMonto(totP)}</td>
