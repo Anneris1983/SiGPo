@@ -602,7 +602,8 @@ async function subirComprobante(cobroId, file, fechaTransferencia, montoTransfer
 
     if (uploadErr) return { ok: false, mensaje: 'Error al subir archivo: ' + uploadErr.message };
 
-    const { data: urlData } = sb.storage.from('comprobantes').getPublicUrl(fileName);
+    const { data: urlData, error: urlErr } = sb.storage.from('comprobantes').getPublicUrl(fileName);
+    if (urlErr || !urlData || !urlData.publicUrl) return { ok: false, mensaje: 'Error al obtener URL del archivo' };
 
     const updateData = {
         estado: 'PENDIENTE',

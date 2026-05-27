@@ -237,10 +237,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
 <script>
-var SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
-var SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
-var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 var RUTAS = {
     'ESTUDIANTE':          'portal_estudiante_2_dashboard.html',
@@ -286,6 +284,7 @@ async function iniciarSesion() {
     btn.disabled = true;
 
     try {
+        var sb = await getSupabase();
         var { data: loginInfo, error: loginErr } = await sb.rpc('get_login_info', { p_dni: dni });
 
         if (loginErr || !loginInfo) {
@@ -339,6 +338,7 @@ async function recuperarPassword(e) {
         return;
     }
 
+    var sb = await getSupabase();
     var resp = await sb.from('usuarios').select('email').eq('dni', dni).single();
     if (resp.error || !resp.data) {
         alert('Si el DNI está registrado, recibirás un correo con instrucciones para recuperar el acceso.');
@@ -352,6 +352,7 @@ async function recuperarPassword(e) {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+    var sb = await getSupabase();
     await sb.auth.signOut();
     localStorage.removeItem('sigpo_rol');
     localStorage.removeItem('sigpo_nombre');

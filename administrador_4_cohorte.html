@@ -2421,53 +2421,57 @@ async function _procesarImport(file) {
         var dnis = Object.keys(estMap);
         if (!dnis.length) { toast('No se encontraron registros válidos (revisá que la columna dni tenga datos)', 'err'); spin(false); return; }
 
-        var estudiantesCreados = 0, inscripcionesCreadas = 0, cobrosCreados = 0, errores = [];
+        // FASE 1: batch upsert de todos los estudiantes (1 query en vez de N)
+        var estList = dnis.map(function(dni) {
+            var e = estMap[dni];
+            return { dni: e.dni, apellido: e.apellido, nombre: e.nombre, email: e.email, telefono: e.telefono };
+        });
+        var { data: estDataArr, error: estBatchErr } = await sb.from('estudiantes')
+            .upsert(estList, { onConflict: 'dni' })
+            .select('id,dni');
+        if (estBatchErr) {
+            toast('Error al importar estudiantes: ' + estBatchErr.message, 'err');
+            spin(false); return;
+        }
+        var dniToId = {};
+        (estDataArr || []).forEach(function(e) { dniToId[e.dni] = e.id; });
 
-        for (var di = 0; di < dnis.length; di++) {
-            var est = estMap[dnis[di]];
+        // FASE 2: batch upsert de todas las inscripciones (1 query en vez de N)
+        var inscList = dnis.filter(function(dni){ return dniToId[dni]; }).map(function(dni) {
+            var e = estMap[dni];
+            return {
+                estudiante_id:        dniToId[dni],
+                cohorte_id:           COHORTE_ID,
+                descuento_porcentaje: e.descuento_porcentaje,
+                descuento_desde:      e.descuento_desde,
+                descuento_hasta:      e.descuento_hasta,
+                estado_academico:     'ACTIVO'
+            };
+        });
+        var { error: inscBatchErr } = await sb.from('inscripciones')
+            .upsert(inscList, { onConflict: 'estudiante_id,cohorte_id' });
+        if (inscBatchErr) {
+            toast('Error al importar inscripciones: ' + inscBatchErr.message, 'err');
+            spin(false); return;
+        }
 
-            // 1. Upsert estudiante
-            var { data: estData, error: estErr } = await sb.from('estudiantes')
-                .upsert({ dni: est.dni, apellido: est.apellido, nombre: est.nombre, email: est.email, telefono: est.telefono }, { onConflict: 'dni' })
-                .select('id').single();
-            if (estErr) { errores.push('Estudiante ' + est.dni + ': ' + estErr.message); continue; }
-            estudiantesCreados++;
-
-            var estId = estData.id;
-
-            // 2. Upsert inscripción con descuento
-            var { error: inscErr } = await sb.from('inscripciones')
-                .upsert({
-                    estudiante_id:        estId,
-                    cohorte_id:           COHORTE_ID,
-                    descuento_porcentaje: est.descuento_porcentaje,
-                    descuento_desde:      est.descuento_desde,
-                    descuento_hasta:      est.descuento_hasta,
-                    estado_academico:     'ACTIVO'
-                }, { onConflict: 'estudiante_id,cohorte_id' });
-            if (inscErr) { errores.push('Inscripción ' + est.dni + ': ' + inscErr.message); continue; }
-            inscripcionesCreadas++;
-
-            // 3. Insertar cobros
-            var cobrosEst = est.cuotas.map(function(c) {
-                return Object.assign({}, c, {
-                    dni:        est.dni,
-                    programa_id: PROGRAMA_ID,
-                    cohorte_id:  COHORTE_ID
-                });
+        // FASE 3: batch upsert de todos los cobros (1 query en vez de N)
+        var todasCuotas = [];
+        dnis.filter(function(dni){ return dniToId[dni]; }).forEach(function(dni) {
+            estMap[dni].cuotas.forEach(function(c) {
+                todasCuotas.push(Object.assign({}, c, { dni: estMap[dni].dni, programa_id: PROGRAMA_ID, cohorte_id: COHORTE_ID }));
             });
-            var { error: cobErr } = await sb.from('cobros')
-                .upsert(cobrosEst, { onConflict: 'dni,cohorte_id,programa_id,concepto,periodo' });
-            if (cobErr) { errores.push('Cobros ' + est.dni + ': ' + cobErr.message); continue; }
-            cobrosCreados += cobrosEst.length;
+        });
+        var { error: cobBatchErr } = await sb.from('cobros')
+            .upsert(todasCuotas, { onConflict: 'dni,cohorte_id,programa_id,concepto,periodo' });
+        if (cobBatchErr) {
+            toast('Error al importar cobros: ' + cobBatchErr.message, 'err');
+            spin(false); return;
         }
 
-        if (errores.length) {
-            console.error('Errores importación:', errores);
-            toast('Importado con ' + errores.length + ' error' + (errores.length !== 1 ? 'es' : '') + '. Ver consola.', 'err');
-        } else {
-            toast(estudiantesCreados + ' estudiante' + (estudiantesCreados !== 1 ? 's' : '') + ' · ' + cobrosCreados + ' cuota' + (cobrosCreados !== 1 ? 's' : '') + ' importada' + (cobrosCreados !== 1 ? 's' : '') + ' ✓', 'ok');
-        }
+        var estudiantesCreados = (estDataArr || []).length;
+        var cobrosCreados = todasCuotas.length;
+        toast(estudiantesCreados + ' estudiante' + (estudiantesCreados !== 1 ? 's' : '') + ' · ' + cobrosCreados + ' cuota' + (cobrosCreados !== 1 ? 's' : '') + ' importada' + (cobrosCreados !== 1 ? 's' : '') + ' ✓', 'ok');
 
         cerrar('modal-importar');
         document.getElementById('imp-prev').classList.remove('show');
@@ -2648,12 +2652,27 @@ async function verDocumento(rawUrl, tipo, concepto) {
     document.getElementById('doc-sub').textContent    = concepto;
     document.getElementById('doc-descargar').href     = url;
     var cont = document.getElementById('doc-contenido');
+    cont.innerHTML = '';
     if (/\.pdf$/i.test(rawUrl)) {
-        cont.innerHTML = '<iframe src="' + url + '" style="width:100%;height:500px;border:none;border-radius:8px;"></iframe>';
+        var iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.style.cssText = 'width:100%;height:500px;border:none;border-radius:8px;';
+        cont.appendChild(iframe);
     } else {
-        var imgHtml = '<img src="' + url + '" style="max-width:100%;max-height:500px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15);">';
-        var linkHtml = '<p style="margin-top:8px;"><a href="' + url + '" target="_blank" style="font-size:14px;color:#1d4ed8;">Abrir en nueva pestaña →</a></p>';
-        cont.innerHTML = imgHtml + linkHtml;
+        var img = document.createElement('img');
+        img.src = url;
+        img.style.cssText = 'max-width:100%;max-height:500px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15);';
+        var p = document.createElement('p');
+        p.style.marginTop = '8px';
+        var a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.style.cssText = 'font-size:14px;color:#1d4ed8;';
+        a.textContent = 'Abrir en nueva pestaña →';
+        p.appendChild(a);
+        cont.appendChild(img);
+        cont.appendChild(p);
     }
     abrir('modal-ver-doc');
 }
@@ -2983,7 +3002,14 @@ var _cpopCobroId = null;
 
 function abrirCeldaPopup(event, infoJson) {
     event.stopPropagation();
-    var info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
+    var info;
+    try {
+        info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
+    } catch (e) {
+        console.error('abrirCeldaPopup: JSON inválido', e);
+        toast('Error al leer datos de la cuota. Recargá la página.', 'err');
+        return;
+    }
     _cpopCobroId = info.cobro_id;
     // Guardar info completa para no necesitar GET extra al guardar
     window._cpopInfo = info;
