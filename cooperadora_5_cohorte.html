@@ -2959,12 +2959,8 @@
         }
 
         function formatearMoneda(valor) {
-            return Number(valor || 0).toLocaleString('es-AR', {
-                style: 'currency',
-                currency: 'ARS',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+            if (valor === null || valor === undefined) return '–';
+            return '$' + Number(valor).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
         }
 
         function _parseFechaLocal(valor) {

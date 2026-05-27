@@ -1741,7 +1741,7 @@ function toast(msg, tipo='') {
 }
 function fMonto(n) {
     if (n===null||n===undefined) return '–';
-    return '$'+Math.round(Number(n)).toLocaleString('es-AR');
+    return '$'+Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 function fMillones(n) {
     n = Number(n || 0);

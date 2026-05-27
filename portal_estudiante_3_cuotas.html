@@ -428,7 +428,7 @@ function marcarTodasLeidas() {
 // ════════════════════════════════════════════════════
 function fmt(n) {
     if (n === null || n === undefined) return '—';
-    return '$' + Number(n).toLocaleString('es-AR');
+    return '$' + Number(n).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 function spin(v) { document.getElementById('spinner').classList.toggle('show', v); }
 function toast(msg, tipo) {
