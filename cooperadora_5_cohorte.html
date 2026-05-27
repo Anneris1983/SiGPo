@@ -692,7 +692,7 @@
         .ap-info-box { background:#f8f6f1; padding:14px 16px; border-radius:10px; margin-bottom:16px; }
         .ap-info-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
         .ap-info-item { display:flex; flex-direction:column; }
-        .ap-info-lbl { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; }
+        .ap-info-lbl { font-size:11px; color:#767676; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; }
         .ap-info-val { font-size:14px; font-weight:600; color:var(--text); }
         .ap-info-val.big { font-size:20px; color:var(--primary); }
         .ap-sec-title { font-size:14px; font-weight:700; color:var(--primary); margin:16px 0 10px; padding-bottom:6px; border-bottom:2px solid #e0e0e0; }
@@ -1178,7 +1178,7 @@
         .cell-popup-monto {
             display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
         }
-        .cell-popup-monto span { font-size: 13px; color: #888; font-weight: 600; }
+        .cell-popup-monto span { font-size: 13px; color: #767676; font-weight: 600; }
         .cell-popup-monto input {
             width: 120px; padding: 6px 8px; border: 2px solid #e0e0e0;
             border-radius: 6px; font-size: 13px; font-family: 'DM Sans', sans-serif;
@@ -1209,6 +1209,13 @@
         #modal-editar-cuotas-coop.show { display:flex; }
         #modal-eliminar-global-coop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center; }
         #modal-eliminar-global-coop.show { display:flex; }
+
+    /* ── utilidades inline repetidas ── */
+    .u-lbl  { font-size:10px; color:#767676; font-weight:600; text-transform:uppercase; margin-bottom:2px; }
+    .u-lbl-blue { font-size:10px; font-weight:600; color:#0369a1; display:block; margin-bottom:3px; }
+    .u-hint { font-size:9px; color:#bbb; margin-top:2px; }
+    .u-sub  { font-size:11px; color:#767676; margin-top:2px; }
+    .btn-mas { padding:8px 22px; background:#fff; border:1.5px solid #c7d2fe; border-radius:8px; color:#4338ca; font-size:13px; font-weight:600; cursor:pointer; }
     </style>
     <link rel="stylesheet" href="sigpo-theme.css">
     <link rel="stylesheet" href="sigpo-compact.css">
@@ -1442,7 +1449,7 @@
                     <label for="aprobReciboFile" style="cursor:pointer;display:block;">
                         <div style="font-size:32px;margin-bottom:6px;">📎</div>
                         <strong>Click para seleccionar archivo</strong>
-                        <p style="font-size:12px;color:#888;margin-top:4px;">PDF o imagen · Máximo 10 MB</p>
+                        <p style="font-size:12px;color:#767676;margin-top:4px;">PDF o imagen · Máximo 10 MB</p>
                     </label>
                 </div>
                 <div class="ap-file-uploaded" id="apFileUploaded" style="display:none;">
@@ -1965,7 +1972,7 @@
                     no_aplica: cuota.estado === 'nodebe'
                   })) + ')" style="cursor:pointer;"'
                 : '';
-            const editHint = esEditable ? '<div style="font-size:9px;color:#bbb;margin-top:2px;">✏️ editar</div>' : '';
+            const editHint = esEditable ? '<div class="u-hint">✏️ editar</div>' : '';
             return `
                 <td class="${clases}" title="${escapeHtml(tooltip)}"${editAttr}>
                     <span class="cuota-amount">${escapeHtml(top)}</span>
@@ -3312,7 +3319,7 @@
         function _coopRenderEditarCuotas() {
             var cont = document.getElementById('ec-lista-coop');
             if (!cont) return;
-            if (!_coopEcCuotasEditadas.length) { cont.innerHTML = '<p style="color:#888;font-size:13px;">Sin cuotas.</p>'; return; }
+            if (!_coopEcCuotasEditadas.length) { cont.innerHTML = '<p style="color:#767676;font-size:13px;">Sin cuotas.</p>'; return; }
             var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
             html += '<thead><tr style="background:#f3f4f6;"><th style="padding:8px 10px;text-align:left;">Concepto</th><th style="padding:8px 10px;text-align:left;">Período</th><th style="padding:8px 10px;text-align:left;">Vencimiento</th></tr></thead><tbody>';
             _coopEcCuotasEditadas.forEach(function(cu, i) {
@@ -3390,7 +3397,7 @@
                 html += '<span style="font-size:13px;'+(bloqueada?'color:#9ca3af;':'')+'">'+escapeHtml(cu.nombre)+' — '+escapeHtml(cu.mes)+labelBloq+'</span>';
                 html += '</div>';
             });
-            cont.innerHTML = html || '<p style="color:#888;font-size:13px;">Sin cuotas.</p>';
+            cont.innerHTML = html || '<p style="color:#767676;font-size:13px;">Sin cuotas.</p>';
             _coopEgUpdateSelCount();
         }
 

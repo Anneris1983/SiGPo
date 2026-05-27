@@ -302,7 +302,7 @@
         .cell-popup-monto {
             display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
         }
-        .cell-popup-monto span { font-size: 13px; color: #888; font-weight: 600; }
+        .cell-popup-monto span { font-size: 13px; color: #767676; font-weight: 600; }
         .cell-popup-monto input {
             width: 120px; padding: 6px 8px; border: 2px solid #e0e0e0;
             border-radius: 6px; font-size: 13px; font-family: 'DM Sans', sans-serif;
@@ -333,6 +333,13 @@
         .leyenda { flex-shrink:0; }
         .page-header { flex-shrink:0; }
         .toolbar { flex-shrink:0; }
+
+    /* ── utilidades inline repetidas ── */
+    .u-lbl  { font-size:10px; color:#767676; font-weight:600; text-transform:uppercase; margin-bottom:2px; }
+    .u-lbl-blue { font-size:10px; font-weight:600; color:#0369a1; display:block; margin-bottom:3px; }
+    .u-hint { font-size:9px; color:#bbb; margin-top:2px; }
+    .u-sub  { font-size:11px; color:#767676; margin-top:2px; }
+    .btn-mas { padding:8px 22px; background:#fff; border:1.5px solid #c7d2fe; border-radius:8px; color:#4338ca; font-size:13px; font-weight:600; cursor:pointer; }
     </style>
     <link rel="stylesheet" href="sigpo-theme.css">
     <link rel="stylesheet" href="sigpo-compact.css">
@@ -424,7 +431,7 @@
         <div class="empty-state" id="empty"><div style="font-size:48px;margin-bottom:12px;">🔍</div><div style="font-size:15px;font-weight:600;color:#666;">Sin resultados para este filtro</div></div>
     </div>
     <div id="wrap-mas-est" style="text-align:center;padding:12px 0 4px;display:none;">
-        <button id="btn-mas-est" onclick="mostrarMas()" style="padding:8px 22px;background:#fff;border:1.5px solid #c7d2fe;border-radius:8px;color:#4338ca;font-size:13px;font-weight:600;cursor:pointer;">Mostrar más</button>
+        <button id="btn-mas-est" onclick="mostrarMas()" class="btn-mas">Mostrar más</button>
     </div>
 
     <!-- LEYENDA -->
@@ -655,7 +662,7 @@
             <div id="eg-lista" style="padding:8px 22px;max-height:380px;overflow-y:auto;"></div>
         </div>
         <div class="modal-footer" style="justify-content:space-between;align-items:center;">
-            <span id="eg-sel-count" style="font-size:12px;color:#888;"></span>
+            <span id="eg-sel-count" style="font-size:12px;color:#767676;"></span>
             <div style="display:flex;gap:10px;">
                 <button class="btn-cancel" onclick="cerrar('modal-eliminar-global')">Cerrar</button>
                 <button id="btn-elim-sel" onclick="eliminarSeleccionadas()" disabled
@@ -947,7 +954,7 @@ function renderTabla() {
       <th style="min-width:74px;text-align:center;">Desc %</th>
       <th class="col-email">Correo electrónico</th>
       <th style="min-width:88px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>Cohorte</th>
-      ${columnas.map(c=>`<th class="col-cuota">${escapeHtml(c.concepto_base)}<br><span style="font-weight:400;color:#888;font-size:9px;">${escapeHtml(c.periodo || '')}</span></th>`).join('')}
+      ${columnas.map(c=>`<th class="col-cuota">${escapeHtml(c.concepto_base)}<br><span style="font-weight:400;color:#767676;font-size:9px;">${escapeHtml(c.periodo || '')}</span></th>`).join('')}
       <th class="tot-hdr th-pagar">Total a<br>Pagar</th>
       <th class="tot-hdr th-abonado">Total<br>Abonado</th>
       <th class="tot-hdr th-saldo">Saldo<br>Pendiente</th>
@@ -1002,7 +1009,7 @@ function renderTabla() {
                     no_aplica: c.estado === 'NO_APLICA'
                   })) + ')" style="cursor:pointer;"'
                 : '';
-            const editHint = esEditable ? '<div style="font-size:9px;color:#bbb;margin-top:2px;">✏️ editar</div>' : '';
+            const editHint = esEditable ? '<div class="u-hint">✏️ editar</div>' : '';
             return `<td data-est="${c.estado}" title="${escapeHtml(title)}"${editAttr}>${badge}${txt}${editHint}${links}</td>`;
         }).join('');
 
@@ -1885,11 +1892,11 @@ function renderEditarCuotas() {
     cont.innerHTML = _ecCuotasEditadas.map(function(c,i) {
         return '<div style="background:#f8fafc;border-radius:10px;padding:12px 14px;margin-bottom:10px;border:2px solid #e0e0e0;">'
             +'<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;">'
-            +'<div><label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">CONCEPTO</label>'
+            +'<div><label class="u-lbl-blue">CONCEPTO</label>'
             +'<input type="text" value="'+escapeHtml(c.concepto||'')+'" onchange="_ecCuotasEditadas['+i+'].concepto=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;"></div>'
-            +'<div><label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">PERÍODO</label>'
+            +'<div><label class="u-lbl-blue">PERÍODO</label>'
             +'<input type="text" value="'+escapeHtml(c.periodo||'')+'" onchange="_ecCuotasEditadas['+i+'].periodo=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;"></div>'
-            +'<div><label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">VENCIMIENTO</label>'
+            +'<div><label class="u-lbl-blue">VENCIMIENTO</label>'
             +'<input type="date" value="'+(c.fecha_vencimiento||'')+'" onchange="_ecCuotasEditadas['+i+'].fecha_vencimiento=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;"></div>'
             +'</div></div>';
     }).join('');
@@ -1953,7 +1960,7 @@ function renderEliminarGlobal() {
             +'</div>'
             +'<div style="flex:1;">'
             +'<div style="font-weight:700;font-size:13px;color:#5C1018;">'+escapeHtml(col.concepto_base)+'</div>'
-            +'<div style="font-size:11px;color:#888;margin-top:2px;">'+escapeHtml(col.periodo||'')+' · '+cobrosCol.length+' estudiante'+(cobrosCol.length!==1?'s':'')
+            +'<div style="font-size:11px;color:#767676;margin-top:2px;">'+escapeHtml(col.periodo||'')+' · '+cobrosCol.length+' estudiante'+(cobrosCol.length!==1?'s':'')
             +(abonadas?' · <span style="color:#15803d;font-weight:600;">'+abonadas+' abonada'+(abonadas>1?'s':'')+'</span>':'')
             +(parciales?' · <span style="color:#92400e;font-weight:600;">'+parciales+' parcial'+(parciales>1?'es':'')+'</span>':'')
             +(pendientes?' · <span style="color:#b45309;font-weight:600;">'+pendientes+' pendiente'+(pendientes>1?'s':'')+'</span>':'')

@@ -189,7 +189,7 @@
         .cell-popup-monto {
             display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
         }
-        .cell-popup-monto span { font-size: 13px; color: #888; font-weight: 600; }
+        .cell-popup-monto span { font-size: 13px; color: #767676; font-weight: 600; }
         .cell-popup-monto input {
             width: 120px; padding: 6px 8px; border: 2px solid #e0e0e0;
             border-radius: 6px; font-size: 13px; font-family: 'DM Sans', sans-serif;
@@ -338,6 +338,13 @@
         .leyenda { flex-shrink:0; }
         .page-header { flex-shrink:0; }
         .toolbar { flex-shrink:0; }
+
+    /* ── utilidades inline repetidas ── */
+    .u-lbl  { font-size:10px; color:#767676; font-weight:600; text-transform:uppercase; margin-bottom:2px; }
+    .u-lbl-blue { font-size:10px; font-weight:600; color:#0369a1; display:block; margin-bottom:3px; }
+    .u-hint { font-size:9px; color:#bbb; margin-top:2px; }
+    .u-sub  { font-size:11px; color:#767676; margin-top:2px; }
+    .btn-mas { padding:8px 22px; background:#fff; border:1.5px solid #c7d2fe; border-radius:8px; color:#4338ca; font-size:13px; font-weight:600; cursor:pointer; }
     </style>
     <link rel="stylesheet" href="sigpo-theme.css">
     <link rel="stylesheet" href="sigpo-compact.css">
@@ -429,7 +436,7 @@
         <div class="empty-state" id="empty"><div style="font-size:48px;margin-bottom:12px;">🔍</div><div style="font-size:15px;font-weight:600;color:#666;">Sin resultados para este filtro</div></div>
     </div>
     <div id="wrap-mas-est" style="text-align:center;padding:12px 0 4px;display:none;">
-        <button id="btn-mas-est" onclick="mostrarMas()" style="padding:8px 22px;background:#fff;border:1.5px solid #c7d2fe;border-radius:8px;color:#4338ca;font-size:13px;font-weight:600;cursor:pointer;">Mostrar más</button>
+        <button id="btn-mas-est" onclick="mostrarMas()" class="btn-mas">Mostrar más</button>
     </div>
 
     <!-- LEYENDA -->
@@ -570,7 +577,7 @@
                     </div>
                     <div class="imp-preview" id="imp-prev">
                         <span style="font-size:26px;">📊</span>
-                        <div><div id="imp-fn" style="font-weight:700;color:var(--primary);font-size:13px;"></div><div id="imp-fs" style="font-size:11px;color:#888;"></div></div>
+                        <div><div id="imp-fn" style="font-weight:700;color:var(--primary);font-size:13px;"></div><div id="imp-fs" style="font-size:11px;color:#767676;"></div></div>
                     </div>
                 </div>
             </div>
@@ -656,7 +663,7 @@
             <div id="eg-lista" style="padding:8px 22px;max-height:380px;overflow-y:auto;"></div>
         </div>
         <div class="modal-footer" style="justify-content:space-between;align-items:center;">
-            <span id="eg-sel-count" style="font-size:12px;color:#888;"></span>
+            <span id="eg-sel-count" style="font-size:12px;color:#767676;"></span>
             <div style="display:flex;gap:10px;">
                 <button class="btn-cancel" onclick="cerrar('modal-eliminar-global')">Cerrar</button>
                 <button id="btn-elim-sel" onclick="eliminarSeleccionadas()" disabled
@@ -679,12 +686,12 @@
         <div class="modal-body">
             <div style="background:#f8f6f1;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Cuota</div><strong id="apr-concepto">—</strong></div>
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Período</div><strong id="apr-periodo">—</strong></div>
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Monto Total</div><strong id="apr-monto-total">—</strong></div>
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Saldo Pendiente</div><strong id="apr-saldo">—</strong></div>
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Fecha de pago declarada</div><strong id="apr-fecha-transf">—</strong></div>
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Comprobante subido</div><strong id="apr-comp-fecha">—</strong></div>
+                    <div><div class="u-lbl">Cuota</div><strong id="apr-concepto">—</strong></div>
+                    <div><div class="u-lbl">Período</div><strong id="apr-periodo">—</strong></div>
+                    <div><div class="u-lbl">Monto Total</div><strong id="apr-monto-total">—</strong></div>
+                    <div><div class="u-lbl">Saldo Pendiente</div><strong id="apr-saldo">—</strong></div>
+                    <div><div class="u-lbl">Fecha de pago declarada</div><strong id="apr-fecha-transf">—</strong></div>
+                    <div><div class="u-lbl">Comprobante subido</div><strong id="apr-comp-fecha">—</strong></div>
                 </div>
             </div>
             <div id="apr-comp-wrap" style="margin-bottom:14px;">
@@ -695,11 +702,11 @@
                 <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px;">Tipo de aprobación</div>
                 <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;cursor:pointer;">
                     <input type="radio" name="apr-tipo" value="COMPLETO" checked onchange="aprTipoChange()" style="margin-top:3px;accent-color:var(--primary);">
-                    <div style="font-size:13px;">Aprobación total<br><small style="font-size:11px;color:#888;">La cuota pasa a ABONADA (Regla 2)</small></div>
+                    <div style="font-size:13px;">Aprobación total<br><small style="font-size:11px;color:#767676;">La cuota pasa a ABONADA (Regla 2)</small></div>
                 </label>
                 <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
                     <input type="radio" name="apr-tipo" value="PARCIAL" onchange="aprTipoChange()" style="margin-top:3px;accent-color:var(--primary);">
-                    <div style="font-size:13px;">Aprobación parcial<br><small style="font-size:11px;color:#888;">La cuota pasa a PAGO_PARCIAL con saldo (Regla 3)</small></div>
+                    <div style="font-size:13px;">Aprobación parcial<br><small style="font-size:11px;color:#767676;">La cuota pasa a PAGO_PARCIAL con saldo (Regla 3)</small></div>
                 </label>
             </div>
             <div id="apr-monto-parcial-wrap" class="mfield" style="display:none;">
@@ -708,7 +715,7 @@
                 <div class="mhint">Debe ser menor al monto total de la cuota.</div>
             </div>
             <div class="mfield">
-                <label>📄 Recibo <span style="color:#c0392b;font-weight:700;">*</span> <span style="font-weight:400;color:#888;font-size:11px;">(obligatorio — Regla 1)</span></label>
+                <label>📄 Recibo <span style="color:#c0392b;font-weight:700;">*</span> <span style="font-weight:400;color:#767676;font-size:11px;">(obligatorio — Regla 1)</span></label>
                 <input type="file" id="apr-recibo-file" accept=".pdf,.jpg,.jpeg,.png" aria-label="Subir recibo" style="border:1.5px dashed #e0e0e0;border-radius:8px;padding:8px;cursor:pointer;width:100%;">
                 <div class="mhint">Sin recibo no se puede aprobar.</div>
             </div>
@@ -1196,10 +1203,10 @@ function _renderFilaEst(est, celdas, totP, totA, totS, estadoGen) {
     var vig = est.descuento_desde
         ? (ff(est.descuento_desde) + (est.descuento_hasta ? ' → ' + ff(est.descuento_hasta) : '')) : '';
     var descDetalle = (motStr ? '<div style="font-size:9px;color:#555;font-weight:600;text-transform:uppercase;line-height:1.2;">' + motStr + '</div>' : '')
-                    + (vig   ? '<div style="font-size:9px;color:#888;line-height:1.2;">' + vig + '</div>' : '');
+                    + (vig   ? '<div style="font-size:9px;color:#767676;line-height:1.2;">' + vig + '</div>' : '');
     var filaHtml = `
         <td style="text-align:center;"><input type="checkbox" class="chk-e" data-dni="${est.dni}" onchange="onChk()"></td>
-        <td class="cell-name" onclick="irEstudiante(${est.dni})">${escapeHtml(est.apellido + ', ' + est.nombre)}<div style="font-size:10px;font-weight:400;color:#888;margin-top:1px;">DNI ${escapeHtml(String(est.dni))}</div></td>
+        <td class="cell-name" onclick="irEstudiante(${est.dni})">${escapeHtml(est.apellido + ', ' + est.nombre)}<div style="font-size:10px;font-weight:400;color:#767676;margin-top:1px;">DNI ${escapeHtml(String(est.dni))}</div></td>
         <td class="cell-desc" style="color:${est.descuento_porcentaje > 0 ? 'var(--success)' : '#aaa'};">
             <div style="font-weight:700;font-size:13px;">${est.descuento_porcentaje}%</div>
             ${descDetalle}
@@ -1241,7 +1248,7 @@ function renderTabla() {
         + '<th class="col-email">Correo electrónico</th>'
         + '<th style="min-width:76px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>Cohorte</th>'
         + columnas.map(function(c) {
-            return '<th class="col-cuota">' + escapeHtml(c.concepto_base) + '<br><span style="font-weight:400;color:#888;font-size:9px;">' + escapeHtml(c.periodo || '') + '</span></th>';
+            return '<th class="col-cuota">' + escapeHtml(c.concepto_base) + '<br><span style="font-weight:400;color:#767676;font-size:9px;">' + escapeHtml(c.periodo || '') + '</span></th>';
           }).join('')
         + '<th class="tot-hdr th-pagar">Total a<br>Pagar</th>'
         + '<th class="tot-hdr th-abonado">Total<br>Abonado</th>'
@@ -1292,7 +1299,7 @@ function renderTabla() {
                 return '<td data-est="A_DEFINIR" onclick="avisarSinCobro(event,' + encodeAttr(sinCobroInfo) + ')" style="cursor:pointer;" title="Sin cobro generado — recargá la página o contactá al administrador">'
                     + '<div class="cuota-cell-wrap">'
                     + '<div class="cuota-cell-txt" style="color:#f59e0b;font-size:10px;font-style:italic;">A definir</div>'
-                    + '<div style="font-size:9px;color:#bbb;margin-top:2px;">⚠️ sin cobro</div>'
+                    + '<div class="u-hint">⚠️ sin cobro</div>'
                     + '</div></td>';
             }
 
@@ -1366,7 +1373,7 @@ function renderTabla() {
                 + '<div class="cuota-cell-wrap">'
                 + '<div class="cuota-cell-txt">' + txt + '</div>'
                 + (btns ? '<div class="cuota-cell-btns">' + btns + '</div>' : '')
-                + (esEditable ? '<div style="font-size:9px;color:#bbb;margin-top:2px;">✏️ editar</div>' : '')
+                + (esEditable ? '<div class="u-hint">✏️ editar</div>' : '')
                 + '</div></td>';
         }).join('');
 
@@ -2795,15 +2802,15 @@ function renderEditarCuotas() {
         <div style="background:#f8fafc;border-radius:10px;padding:12px 14px;margin-bottom:10px;border:2px solid #e0e0e0;">
             <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;">
                 <div>
-                    <label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">CONCEPTO</label>
+                    <label class="u-lbl-blue">CONCEPTO</label>
                     <input type="text" value="${escapeHtml(c.concepto || '')}" onchange="_ecCuotasEditadas[${i}].concepto=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
                 </div>
                 <div>
-                    <label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">PERÍODO</label>
+                    <label class="u-lbl-blue">PERÍODO</label>
                     <input type="text" value="${escapeHtml(c.periodo || '')}" onchange="_ecCuotasEditadas[${i}].periodo=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
                 </div>
                 <div>
-                    <label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">VENCIMIENTO</label>
+                    <label class="u-lbl-blue">VENCIMIENTO</label>
                     <input type="date" value="${c.fecha_vencimiento || ''}" onchange="_ecCuotasEditadas[${i}].fecha_vencimiento=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
                 </div>
             </div>
@@ -2912,7 +2919,7 @@ function renderEliminarGlobal() {
             </div>
             <div style="flex:1;">
                 <div style="font-weight:700;font-size:13px;color:#5C1018;">${escapeHtml(col.concepto_base)}</div>
-                <div style="font-size:11px;color:#888;margin-top:2px;">
+                <div style="font-size:11px;color:#767676;margin-top:2px;">
                     ${escapeHtml(col.periodo || '')} · ${cobrosCol.length} estudiante${cobrosCol.length !== 1 ? 's' : ''}
                     ${abonadas ? ` · <span style="color:#15803d;font-weight:600;">${abonadas} abonada${abonadas > 1 ? 's' : ''}</span>` : ''}
                     ${parciales ? ` · <span style="color:#92400e;font-weight:600;">${parciales} parcial${parciales > 1 ? 'es' : ''}</span>` : ''}
