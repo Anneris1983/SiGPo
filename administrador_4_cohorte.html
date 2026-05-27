@@ -509,17 +509,17 @@
         </div>
         <div class="modal-body">
             <div class="mfield">
-                <label>Tipo</label>
-                <select id="c-tipo" onchange="cargarPlantilla()">
+                <label for="c-tipo">Tipo</label>
+                <select id="c-tipo" aria-label="Tipo de notificación" onchange="cargarPlantilla()">
                     <option value="recordatorio">📩 Recordatorio de vencimiento próximo</option>
                     <option value="reclamo">🔔 Reclamo por cuota vencida</option>
                     <option value="coordinador">👨‍🏫 Aviso al coordinador</option>
                 </select>
             </div>
-            <div class="mfield"><label>Asunto</label><input type="text" id="c-asunto"></div>
+            <div class="mfield"><label for="c-asunto">Asunto</label><input type="text" id="c-asunto" aria-label="Asunto del correo"></div>
             <div class="mfield">
-                <label>Cuerpo</label>
-                <textarea id="c-cuerpo" style="min-height:130px;resize:vertical;"></textarea>
+                <label for="c-cuerpo">Cuerpo</label>
+                <textarea id="c-cuerpo" aria-label="Cuerpo del correo" style="min-height:130px;resize:vertical;"></textarea>
                 <div class="mhint">Variables: {nombre} {apellido} {dni} {cuota} {periodo} {monto} {vencimiento} {programa} {cbu} {alias}</div>
             </div>
         </div>
@@ -560,7 +560,7 @@
                     <h4>Subí el archivo</h4>
                     <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-imp').click()"
                          ondragover="dOver(event)" ondragleave="dLeave()" ondrop="dDrop(event)">
-                        <input type="file" id="file-imp" accept=".xlsx,.xls" onchange="fileElegido(event)">
+                        <input type="file" id="file-imp" accept=".xlsx,.xls" aria-label="Seleccionar archivo Excel para importar" onchange="fileElegido(event)">
                         <div style="font-size:30px;margin-bottom:6px;">📂</div>
                         <p style="font-size:13px;color:#666;"><strong style="color:#6f42c1;">Clic</strong> o arrastrá el archivo</p>
                         <p style="font-size:11px;color:#aaa;margin-top:4px;">.xlsx · .xls</p>
@@ -686,7 +686,7 @@
             </div>
             <div id="apr-comp-wrap" style="margin-bottom:14px;">
                 <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:6px;">📎 Comprobante del Estudiante</div>
-                <a id="apr-comp-link" href="#" target="_blank" style="font-size:13px;color:#1d4ed8;text-decoration:underline;">Ver comprobante →</a>
+                <a id="apr-comp-link" href="#" target="_blank" rel="noopener noreferrer" style="font-size:13px;color:#1d4ed8;text-decoration:underline;">Ver comprobante →</a>
             </div>
             <div style="background:#f8f6f1;border-radius:10px;padding:14px;margin-bottom:14px;">
                 <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px;">Tipo de aprobación</div>
@@ -700,13 +700,13 @@
                 </label>
             </div>
             <div id="apr-monto-parcial-wrap" class="mfield" style="display:none;">
-                <label>Monto aprobado ($)</label>
-                <input type="number" id="apr-monto-aprobado" min="1" step="0.01" placeholder="0.00">
+                <label for="apr-monto-aprobado">Monto aprobado ($)</label>
+                <input type="number" id="apr-monto-aprobado" min="1" step="0.01" placeholder="0.00" aria-label="Monto aprobado en pesos">
                 <div class="mhint">Debe ser menor al monto total de la cuota.</div>
             </div>
             <div class="mfield">
                 <label>📄 Recibo <span style="color:#c0392b;font-weight:700;">*</span> <span style="font-weight:400;color:#888;font-size:11px;">(obligatorio — Regla 1)</span></label>
-                <input type="file" id="apr-recibo-file" accept=".pdf,.jpg,.jpeg,.png" style="border:1.5px dashed #e0e0e0;border-radius:8px;padding:8px;cursor:pointer;width:100%;">
+                <input type="file" id="apr-recibo-file" accept=".pdf,.jpg,.jpeg,.png" aria-label="Subir recibo" style="border:1.5px dashed #e0e0e0;border-radius:8px;padding:8px;cursor:pointer;width:100%;">
                 <div class="mhint">Sin recibo no se puede aprobar.</div>
             </div>
         </div>
@@ -729,7 +729,7 @@
             <div id="doc-contenido"></div>
         </div>
         <div class="modal-footer">
-            <a id="doc-descargar" href="#" target="_blank" class="btn-save" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">⬇ Descargar</a>
+            <a id="doc-descargar" href="#" target="_blank" rel="noopener noreferrer" class="btn-save" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">⬇ Descargar</a>
             <button class="btn-cancel" onclick="cerrar('modal-ver-doc')">Cerrar</button>
         </div>
     </div>
@@ -742,7 +742,7 @@
     <div class="cell-popup-title" id="cpop-title">Editar cuota</div>
     <div class="cell-popup-monto">
         <span>$</span>
-        <input type="number" id="cpop-monto" min="0" step="100" placeholder="0">
+        <input type="number" id="cpop-monto" min="0" step="100" placeholder="0" aria-label="Monto de la cuota">
     </div>
     <label class="cell-popup-noapl" id="cpop-noapl-label" onclick="toggleNoAplica()">
         <input type="checkbox" id="cpop-noapl" onclick="event.stopPropagation()">
@@ -2646,7 +2646,14 @@ async function _ejecutarRechazo(cobroId) {
    VER DOCUMENTO (comprobante o recibo)
 ══════════════════════════════════════════════════ */
 async function verDocumento(rawUrl, tipo, concepto) {
-    var url = await obtenerUrlFirmadaComprobante(rawUrl);
+    var url;
+    try {
+        url = await obtenerUrlFirmadaComprobante(rawUrl);
+    } catch (e) {
+        console.error('verDocumento:', e);
+        alert('No se pudo obtener el link del documento.');
+        return;
+    }
     if (!url) { alert('No se pudo obtener el link del documento.'); return; }
     document.getElementById('doc-titulo').textContent = '📎 ' + tipo;
     document.getElementById('doc-sub').textContent    = concepto;

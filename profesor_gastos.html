@@ -342,6 +342,9 @@ function renderTabla(data) {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+    var _sb = await getSupabase();
+    var { data: { session: _session } } = await _sb.auth.getSession();
+    if (!_session) { window.location.href = 'portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion || sesion.rol !== 'PROFESOR') { window.location.href = 'portal_login.html'; return; }
     document.getElementById('header-sub').textContent = (sesion.nombre || 'Profesor/a') + ' · Gastos de mis programas y cohortes asignadas';

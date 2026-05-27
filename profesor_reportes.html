@@ -309,6 +309,9 @@ async function cargarVista() {
     document.getElementById('statusBar').textContent = 'Cargando reportes…';
     try {
         var sb = await getSupabase();
+        var _sb = await getSupabase();
+        var { data: { session: _session } } = await _sb.auth.getSession();
+        if (!_session) { window.location.href = 'portal_login.html'; return; }
         var sesion = getSesion();
         if (!sesion) { window.location.href = 'portal_login.html'; return; }
 
@@ -606,7 +609,7 @@ function marcarTodasLeidas() {
     if (typeof marcarTodasNotificacionesLeidas==='function') marcarTodasNotificacionesLeidas();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     var sesion = getSesion();
     if (!sesion || sesion.rol !== 'PROFESOR') { window.location.href = 'portal_login.html'; return; }
     document.getElementById('selAnio').value = DEFAULT_ANIO;

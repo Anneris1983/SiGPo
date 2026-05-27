@@ -235,13 +235,13 @@
 
     <!-- FILTROS -->
     <div class="filters-bar">
-        <select class="filter-select" id="selPrograma" onchange="onProgramaChange()">
+        <select class="filter-select" id="selPrograma" aria-label="Filtrar por programa" onchange="onProgramaChange()">
             <option value="">Todos los programas</option>
         </select>
-        <select class="filter-select" id="selCohorte" onchange="render()">
+        <select class="filter-select" id="selCohorte" aria-label="Filtrar por cohorte" onchange="render()">
             <option value="">Todas las cohortes</option>
         </select>
-        <select class="filter-select" id="selEstado" onchange="render()">
+        <select class="filter-select" id="selEstado" aria-label="Filtrar por estado de cuota" onchange="render()">
             <option value="">Todos los estados</option>
             <option value="NO_ABONADA">No abonada</option>
             <option value="PENDIENTE">Pendiente de revisión</option>
@@ -283,7 +283,7 @@
                     <small style="color:#bbb;margin-top:4px;display:block;">PDF, JPG o PNG · Máx. 10 MB</small>
                 </div>
             </div>
-            <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="onFileSelect(event)">
+            <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" aria-label="Seleccionar comprobante de pago" onchange="onFileSelect(event)">
             <div class="file-preview" id="filePreview">
                 <span style="font-size:20px;">📄</span>
                 <span class="file-preview-name" id="filePreviewName"></span>
@@ -296,23 +296,23 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label">Fecha de la transferencia <span class="req">*</span></label>
-            <input type="date" class="form-input" id="inputFechaTransf">
+            <label class="form-label" for="inputFechaTransf">Fecha de la transferencia <span class="req">*</span></label>
+            <input type="date" class="form-input" id="inputFechaTransf" aria-label="Fecha de la transferencia">
         </div>
 
         <div class="form-group">
-            <label class="form-label">N° de operación / referencia <span class="req">*</span></label>
-            <input type="text" class="form-input" id="inputNroOp" placeholder="Ej: 123456789">
+            <label class="form-label" for="inputNroOp">N° de operación / referencia <span class="req">*</span></label>
+            <input type="text" class="form-input" id="inputNroOp" placeholder="Ej: 123456789" aria-label="Número de operación o referencia">
         </div>
 
         <div class="form-group">
-            <label class="form-label">Monto transferido (ARS) <span class="req">*</span></label>
-            <input type="number" class="form-input" id="inputMonto" placeholder="Ej: 90000" min="1">
+            <label class="form-label" for="inputMonto">Monto transferido (ARS) <span class="req">*</span></label>
+            <input type="number" class="form-input" id="inputMonto" placeholder="Ej: 90000" min="1" aria-label="Monto transferido en pesos">
         </div>
 
         <div class="form-group">
-            <label class="form-label">Observaciones <span style="color:#aaa;font-weight:400;">(opcional)</span></label>
-            <textarea class="form-input" id="inputObs" rows="2" placeholder="Ej: Pago parcial acordado con la administración…" style="resize:vertical;"></textarea>
+            <label class="form-label" for="inputObs">Observaciones <span style="color:#aaa;font-weight:400;">(opcional)</span></label>
+            <textarea class="form-input" id="inputObs" rows="2" placeholder="Ej: Pago parcial acordado con la administración…" style="resize:vertical;" aria-label="Observaciones opcionales"></textarea>
         </div>
 
         <div class="info-note">

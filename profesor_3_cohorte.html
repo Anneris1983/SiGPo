@@ -237,6 +237,9 @@ function marcarTodasLeidas(){_notifs.forEach(function(n){n.leida=true;});renderN
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', async function() {
+    var _sb = await getSupabase();
+    var { data: { session: _session } } = await _sb.auth.getSession();
+    if (!_session) { window.location.href = 'portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion || sesion.rol !== 'PROFESOR') { window.location.href = 'portal_login.html'; return; }
     if (!COHORTE_ID) { alert('Cohorte no especificada.'); history.back(); return; }

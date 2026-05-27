@@ -273,7 +273,10 @@
     }
 
     /* ══ INIT ══ */
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+        var _sb = await getSupabase();
+        var { data: { session: _session } } = await _sb.auth.getSession();
+        if (!_session) { window.location.href = 'portal_login.html'; return; }
         var sesion = getSesion();
         if (!sesion) { navegar('portal_login.html'); return; }
 

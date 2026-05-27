@@ -202,6 +202,9 @@ function renderNotificaciones(datos) {
 function marcarTodasLeidas(){_notifs.forEach(function(n){n.leida=true;});renderNotificaciones(_notifs);}
 
 document.addEventListener('DOMContentLoaded', async function() {
+    var _sb = await getSupabase();
+    var { data: { session: _session } } = await _sb.auth.getSession();
+    if (!_session) { window.location.href = 'portal_login.html'; return; }
     var sesion = getSesion();
     var roles_ok = ['ADMINISTRADOR','COORDINADOR','SECRETARIA','PROFESOR'];
     if (!sesion || !roles_ok.includes(sesion.rol)) { window.location.href='portal_login.html'; return; }
