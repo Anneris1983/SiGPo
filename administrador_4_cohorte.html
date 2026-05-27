@@ -818,20 +818,7 @@ function encodeAttr(str) {
         .replace(/>/g, '&gt;');
 }
 
-function redondear2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
-function keyCuota(concepto, periodo) { return String(concepto || '') + '||' + String(periodo || ''); }
-function calcMontoAbonado(c) {
-    if (c && c.monto_abonado != null && Number(c.monto_abonado) > 0) return redondear2(Number(c.monto_abonado));
-    return redondear2(Math.max(0, (Number(c && c.monto_final) || 0) - (Number(c && c.saldo_pendiente) || 0)));
-}
 function fechaISO(d) { return d ? new Date(d).toISOString().split('T')[0] : null; }
-function vencioCuota(c) {
-    if (!c || !c.fecha_vencimiento) return false;
-    return String(c.fecha_vencimiento) < hoy();
-}
-function tieneMontoDefinido(c) {
-    return !(c == null || c.monto_final === null || c.monto_final === undefined || c.monto_final === '' || isNaN(Number(c.monto_final)));
-}
 function resolverEstadoCobro(c) {
     /* ──────────────────────────────────────────────────────
      * Implementa las 7 reglas del sistema de cuotas:
@@ -2694,26 +2681,7 @@ function volverAPrograma() {
 function abrir(id)  { document.getElementById(id).classList.add('show'); }
 function cerrar(id) { document.getElementById(id).classList.remove('show'); }
 function spin(v)    { document.getElementById('spinner').classList.toggle('show', v); }
-function hoy()      { return new Date().toISOString().split('T')[0]; }
-
-function toast(msg, tipo) {
-    var c = document.getElementById('toasts');
-    var d = document.createElement('div');
-    d.className = 'toast ' + (tipo || '');
-    d.textContent = msg;
-    c.appendChild(d);
-    setTimeout(function() { if (d.parentNode) d.remove(); }, 3500);
-}
-
-function fMonto(n) {
-    if (n === null || n === undefined) return '–';
-    return '$' + Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-function fMillones(n) {
-    var num = parseFloat(n);
-    if (isNaN(num)) return '$0,00';
-    return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
+var fMillones = fMontoConSigno;
 
 
 /* ══════════════════════════════════════════════════
@@ -3006,10 +2974,6 @@ async function _ejecutarEliminarGlobal(concepto, periodo) {
     } finally {
         spin(false);
     }
-}
-
-function escapeHtml(str) {
-    return String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 }
 
 /* ══════════════════════════════════════════════════

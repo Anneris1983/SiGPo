@@ -589,9 +589,7 @@ async function verFacturaEst(url) {
     }
 }
 
-function escapeHtmlF(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+var escapeHtmlF = escapeHtml;
 function escapeJsF(s) {
     return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 }

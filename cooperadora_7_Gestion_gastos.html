@@ -409,13 +409,7 @@
 <script>
 var G = { egresos: [], programas: [], gastoAEjecutar: null, editing: null, tabActiva: 'proyectados' };
 
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function fMonto(n) {
-    if (n===null||n===undefined||n==='') return '—';
-    var num = parseFloat(n);
-    if (isNaN(num)) return '—';
-    return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
+var fMonto = fMontoConSigno;
 function fFechaCorta(f) {
     if (!f) return '—';
     var p = String(f).split('T')[0].split('-');

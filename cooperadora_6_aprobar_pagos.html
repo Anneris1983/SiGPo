@@ -349,19 +349,7 @@
     var _cobros = [];
     var _cobroActivo = null;
 
-    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
-    function fMonto(n) {
-        if (n===null||n===undefined||n==='') return '—';
-        var v = Math.round(Number(n));
-        if (v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
-        if (v>=1000) return '$'+Math.round(v/1000)+'k';
-        return '$'+v.toLocaleString('es-AR');
-    }
-    function fFecha(f) {
-        if (!f) return '—';
-        var p = String(f).split('T')[0].split('-');
-        return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : f;
-    }
+    var fMonto = fMillones;
 
     /* ── INIT ── */
     var _params = new URLSearchParams(location.search);

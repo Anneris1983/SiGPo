@@ -426,10 +426,7 @@ function marcarTodasLeidas() {
 // ════════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════════
-function fmt(n) {
-    if (n === null || n === undefined) return '—';
-    return '$' + Number(n).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
+var fmt = fMonto;
 function spin(v) { document.getElementById('spinner').classList.toggle('show', v); }
 function toast(msg, tipo) {
     var t = document.getElementById('toast');
@@ -438,7 +435,6 @@ function toast(msg, tipo) {
     clearTimeout(t._to);
     t._to = setTimeout(function() { t.className = 'toast'; }, 4500);
 }
-function hoy() { return new Date().toISOString().split('T')[0]; }
 
 // ════════════════════════════════════════════════════
 // FILTROS DESDE DASHBOARD
@@ -1056,12 +1052,7 @@ document.getElementById('modalDoc').addEventListener('click', function(e) {
 });
 
 // ════════════════════════════════════════════════════
-// UTILS
 // ════════════════════════════════════════════════════
-function esc(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
 </script>
 </body>
 </html>

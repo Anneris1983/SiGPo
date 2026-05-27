@@ -2958,10 +2958,7 @@
             return mapa[tipo] || tipo;
         }
 
-        function formatearMoneda(valor) {
-            if (valor === null || valor === undefined) return '–';
-            return '$' + Number(valor).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-        }
+        var formatearMoneda = fMonto;
 
         function _parseFechaLocal(valor) {
             // Parsear YYYY-MM-DD como fecha local para evitar corrimiento de timezone
@@ -3021,15 +3018,6 @@
             const fecha = new Date(fechaIso);
             if (isNaN(fecha.getTime())) return '';
             return fecha.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' }).toUpperCase();
-        }
-
-        function escapeHtml(valor) {
-            return String(valor == null ? '' : valor)
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '&lt;')
-                .replaceAll('>', '&gt;')
-                .replaceAll('"', '&quot;')
-                .replaceAll("'", '&#39;');
         }
 
         function escapeJs(valor) {

@@ -1729,26 +1729,7 @@ async function marcarTodasLeidas() {
 function abrir(id){ document.getElementById(id).classList.add('show'); }
 function cerrar(id){ document.getElementById(id).classList.remove('show'); }
 function spin(v){ document.getElementById('spinner').classList.toggle('show', !!v); }
-function hoy(){ return new Date().toISOString().split('T')[0]; }
 function delay(ms){ return new Promise(r=>setTimeout(r, ms)); }
-function toast(msg, tipo='') {
-    const c = document.getElementById('toasts');
-    const d = document.createElement('div');
-    d.className = `toast ${tipo}`;
-    d.textContent = msg;
-    c.appendChild(d);
-    setTimeout(()=>d.remove(), 3500);
-}
-function fMonto(n) {
-    if (n===null||n===undefined) return '–';
-    return '$'+Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
-}
-function fMillones(n) {
-    n = Number(n || 0);
-    if (n>=1000000) return '$'+(n/1000000).toFixed(1)+'M';
-    if (n>=1000)    return '$'+(n/1000).toFixed(0)+'k';
-    return fMonto(n);
-}
 async function verArchivo(url) {
     if (!url) return;
     try {
@@ -1760,9 +1741,6 @@ async function verArchivo(url) {
         }
         window.open(url, '_blank');
     } catch(e) { window.open(url, '_blank'); }
-}
-function escapeHtml(valor) {
-    return String(valor == null ? '' : valor).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'", '&#39;');
 }
 function escapeAttr(valor) { return escapeHtml(valor); }
 function escapeJs(valor) {
@@ -1839,8 +1817,6 @@ function obtenerDemoData() {
         ]
     };
 }
-
-function keyCuota(concepto, periodo) { return String(concepto||'')+'||'+String(periodo||''); }
 
 var _ecCuotasEditadas = [];
 

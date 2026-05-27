@@ -241,20 +241,7 @@
     var GAS_SECRET = 'SIGPO_KEY_FCE_2025';
     var GAS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxtDIAY6yhpTJF5OK3k0-VK9GHK4UxputJrW-I_1ihT-ABYEEzpVPGcKwLF9k6nQW6iHw/exec';
 
-    function fM(n) {
-        if (n === null || n === undefined) return '–';
-        return '$' + Number(n).toLocaleString('es-AR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    }
-
-    function fFechaCorta(iso) {
-        if (!iso) return '—';
-        var p = String(iso).split('T')[0].split('-');
-        var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-        return parseInt(p[2]) + ' ' + meses[parseInt(p[1]) - 1];
-    }
+    var fM = fMonto;
 
     function estadoCobro(c) {
         if (c.no_aplica) return 'NO_APLICA';

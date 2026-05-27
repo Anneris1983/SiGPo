@@ -289,6 +289,78 @@ function fFecha(fecha) {
     return partes[2] + '/' + partes[1] + '/' + partes[0];
 }
 
+// ══════════════════════════════════════════════════════════════
+// UTILIDADES COMPARTIDAS DE NEGOCIO
+// Disponibles en todos los HTML que incluyan supabase.js
+// ══════════════════════════════════════════════════════════════
+
+function hoy() { return new Date().toISOString().split('T')[0]; }
+
+function redondear2(n) { return Math.round((Number(n)||0)*100)/100; }
+
+function keyCuota(c, p) { return String(c||'')+'||'+String(p||''); }
+
+function tieneMontoDefinido(c) {
+    return !(c==null||c.monto_final===null||c.monto_final===undefined||c.monto_final===''||isNaN(Number(c.monto_final)));
+}
+
+function vencioCuota(c) {
+    if (!c||!c.fecha_vencimiento) return false;
+    return String(c.fecha_vencimiento) < hoy();
+}
+
+function calcMontoAbonado(c) {
+    if (c && c.monto_abonado != null && Number(c.monto_abonado) > 0)
+        return redondear2(Number(c.monto_abonado));
+    return redondear2(Math.max(0,(Number(c&&c.monto_final)||0)-(Number(c&&c.saldo_pendiente)||0)));
+}
+
+/** Formato estándar: $90.000,50 */
+function fMonto(n) {
+    if (n===null||n===undefined) return '–';
+    return '$'+Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+/** Formato abreviado para dashboards: $1,5M · $90k · $500,00 */
+function fMillones(n) {
+    if (n===null||n===undefined||n==='') return '—';
+    var v = Math.round(Number(n)||0);
+    if (v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
+    if (v>=1000) return '$'+Math.round(v/1000)+'k';
+    return fMonto(n);
+}
+
+/** Formato con signo para egresos/flujos: -$5.000,00 */
+function fMontoConSigno(n) {
+    if (n===null||n===undefined) return '–';
+    var num = parseFloat(n);
+    if (isNaN(num)) return '–';
+    return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+/** Fecha corta: "15 May" */
+function fFechaCorta(str) {
+    if (!str) return '—';
+    var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    var p = String(str).split('T')[0].split('-');
+    if (p.length!==3) return str;
+    return p[2]+' '+meses[parseInt(p[1],10)-1];
+}
+
+/** Alias de escapeHtml para compatibilidad con archivos que usan esc() */
+var esc = escapeHtml;
+
+/** Toast de notificación unificado. tipo: 'ok' | 'err' | '' */
+function toast(msg, tipo) {
+    var cont = document.getElementById('toasts') || document.getElementById('toast');
+    if (!cont) return;
+    var d = document.createElement('div');
+    d.className = 'toast'+(tipo==='err'?' toast-err':tipo==='ok'?' toast-ok':'');
+    d.textContent = msg;
+    cont.appendChild(d);
+    setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); }, 3500);
+}
+
 function tiempoRelativo(fecha) {
     var ahora = new Date();
     var diff = ahora - new Date(fecha);
