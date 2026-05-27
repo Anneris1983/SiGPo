@@ -1134,7 +1134,7 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
             // Precio base sin descuento (monto_original es siempre el precio real)
             var precioBase = Number(c.monto_original) || Number(c.monto_final) || 0;
 
-            var nuevoMonto, nuevoSaldo, nuevoDescPct;
+            var nuevoMonto, nuevoSaldo;
             var descPct = Number(c.descuento_porcentaje) || 0;
 
             if (tieneDescuentoInsc || descPct > 0) {
@@ -1143,19 +1143,16 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
                     // PRIMER MES: solo pierde el descuento, sin intereses
                     nuevoMonto  = precioBase;       // vuelve al precio sin descuento
                     nuevoSaldo  = precioBase;
-                    nuevoDescPct = 0;
                 } else {
                     // DESDE EL SEGUNDO MES: interés compuesto sobre precio base
                     var mesesConInteres = mesesMora - 1;
                     nuevoSaldo  = Math.round(precioBase * Math.pow(1 + moraPct, mesesConInteres) * 100) / 100;
                     nuevoMonto  = nuevoSaldo;
-                    nuevoDescPct = 0;
                 }
             } else {
                 // ── Estudiante SIN descuento: interés desde el día 1 ──
                 nuevoSaldo  = Math.round(precioBase * Math.pow(1 + moraPct, mesesMora) * 100) / 100;
                 nuevoMonto  = nuevoSaldo;
-                nuevoDescPct = 0;
             }
 
             // Solo actualizar si hay cambio real
@@ -1168,12 +1165,11 @@ async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
             if (hayDiff) {
                 var fechaMora = c.fecha_mora || new Date(fVenc.getTime() + 86400000).toISOString().split('T')[0];
                 var res = await sb.from('cobros').update({
-                    estado:               'EN_MORA',
-                    monto_final:          nuevoMonto,
-                    saldo_pendiente:      nuevoSaldo,
-                    descuento_porcentaje: nuevoDescPct,
-                    meses_mora:           Math.floor(mesesMora),
-                    fecha_mora:           fechaMora
+                    estado:          'EN_MORA',
+                    monto_final:     nuevoMonto,
+                    saldo_pendiente: nuevoSaldo,
+                    meses_mora:      Math.floor(mesesMora),
+                    fecha_mora:      fechaMora
                 }).eq('cobro_id', c.cobro_id);
                 if (res.error) console.error('mora update error cobro', c.cobro_id, res.error);
             }
