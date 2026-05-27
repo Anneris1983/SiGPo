@@ -428,6 +428,7 @@
 <!-- ══════════════════════════════════════════════════════════
      SCRIPTS
 ══════════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
@@ -854,23 +855,25 @@ function renderTabla(d1, d2) {
 function exportarExcel() {
     const p1 = document.getElementById('periodo1').value;
     const p2 = document.getElementById('periodo2').value;
-    if (typeof google !== 'undefined') {
-        google.script.run
-            .withSuccessHandler(url => { if (url) window.open(url, '_blank'); })
-            .exportarComparativoExcel({ p1, p2, ...(window.FILTROS_ACTIVOS || {}) });
-        alert(`Exportando comparativo ${p1} vs ${p2} a Excel…\n(Disponible en Google Apps Script)`);
-    }
+    var d1 = getDato(p1);
+    var d2 = getDato(p2);
+    var rows = [
+        { 'Métrica': 'Período 1', 'Valor P1': p1, 'Valor P2': p2, 'Variación $': '', 'Variación %': '' },
+        { 'Métrica': 'Ingresos',            'Valor P1': d1.ingresos,    'Valor P2': d2.ingresos,    'Variación $': d1.ingresos - d2.ingresos,    'Variación %': d2.ingresos    ? Math.round((d1.ingresos    - d2.ingresos)    / Math.abs(d2.ingresos)    * 100) + '%' : '—' },
+        { 'Métrica': 'Egresos',             'Valor P1': d1.egresos,     'Valor P2': d2.egresos,     'Variación $': d1.egresos  - d2.egresos,     'Variación %': d2.egresos     ? Math.round((d1.egresos     - d2.egresos)     / Math.abs(d2.egresos)     * 100) + '%' : '—' },
+        { 'Métrica': 'Balance Neto',        'Valor P1': d1.balance,     'Valor P2': d2.balance,     'Variación $': d1.balance  - d2.balance,     'Variación %': d2.balance     ? Math.round((d1.balance     - d2.balance)     / Math.abs(d2.balance)     * 100) + '%' : '—' },
+        { 'Métrica': 'Estudiantes activos', 'Valor P1': d1.estudiantes, 'Valor P2': d2.estudiantes, 'Variación $': d1.estudiantes - d2.estudiantes, 'Variación %': d2.estudiantes ? Math.round((d1.estudiantes - d2.estudiantes) / Math.abs(d2.estudiantes) * 100) + '%' : '—' },
+        { 'Métrica': 'Morosidad total',     'Valor P1': d1.morosidad,   'Valor P2': d2.morosidad,   'Variación $': d1.morosidad - d2.morosidad,  'Variación %': d2.morosidad   ? Math.round((d1.morosidad   - d2.morosidad)   / Math.abs(d2.morosidad)   * 100) + '%' : '—' },
+    ];
+    if (!rows.length) { alert('No hay datos para exportar.'); return; }
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, 'Comparativo');
+    XLSX.writeFile(wb, 'reporte_comparativo_' + p1.replace(/\s+/g,'-') + '_vs_' + p2.replace(/\s+/g,'-') + '.xlsx');
 }
 
 function exportarPDF() {
-    const p1 = document.getElementById('periodo1').value;
-    const p2 = document.getElementById('periodo2').value;
-    if (typeof google !== 'undefined') {
-        google.script.run
-            .withSuccessHandler(url => { if (url) window.open(url, '_blank'); })
-            .exportarComparativoPDF({ p1, p2, ...(window.FILTROS_ACTIVOS || {}) });
-        alert(`Exportando comparativo ${p1} vs ${p2} a PDF…\n(Disponible en Google Apps Script)`);
-    }
+    window.print();
 }
 </script>
 

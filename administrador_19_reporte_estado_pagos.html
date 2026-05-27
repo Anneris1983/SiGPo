@@ -256,6 +256,7 @@
 
 </div><!-- /container -->
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
@@ -312,6 +313,7 @@
                     if (_fCF.hasta)    cobros = cobros.filter(function(c){ return !c.fecha_vencimiento||String(c.fecha_vencimiento).substring(0,10)<=_fCF.hasta; });
                 }
             } catch(_e) {}
+            _cobrosCache = cobros;
 
             // ── Clasificar cobros ──
             var alDia       = cobros.filter(function(c) { return c.estado === 'ABONADA'; });
@@ -423,11 +425,33 @@
     });
 
     // ── Exportar ──
+    var _cobrosCache = [];   // se llena en cargarDatos() para que export lo use
+
     function exportarExcel() {
-        alert('Exportar a Excel no disponible en esta versión.');
+        if (!_cobrosCache.length) { alert('No hay datos para exportar.'); return; }
+        var rows = _cobrosCache.map(function(c) {
+            return {
+                'DNI':              c.dni || '',
+                'Programa':         (c.programas && c.programas.nombre) ? c.programas.nombre : (c.programa_id || ''),
+                'Cohorte':          (c.cohortes  && c.cohortes.nombre)  ? c.cohortes.nombre  : (c.cohorte_id  || ''),
+                'Concepto':         c.concepto || '',
+                'Periodo':          c.periodo  || '',
+                'Fecha Vencimiento':c.fecha_vencimiento ? String(c.fecha_vencimiento).split('T')[0] : '',
+                'Fecha Pago':       c.fecha_pago        ? String(c.fecha_pago).split('T')[0]        : '',
+                'Estado':           c.estado   || '',
+                'Monto Final':      Number(c.monto_final        || 0),
+                'Saldo Pendiente':  Number(c.saldo_pendiente    || 0),
+                'Descuento':        Number(c.descuento_aplicado || 0)
+            };
+        });
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.json_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, 'Estado de Pagos');
+        XLSX.writeFile(wb, 'estado_pagos_' + new Date().toISOString().split('T')[0] + '.xlsx');
     }
+
     function exportarPDF() {
-        alert('Exportar a PDF no disponible en esta versión.');
+        window.print();
     }
 </script>
 
