@@ -290,8 +290,11 @@
             programas.forEach(function(p) { progNomMap[p.programa_id] = p.nombre; });
 
             var dnisTotal = new Set(cobros.map(function(c) { return c.dni; }));
-            var dnisAlDia = new Set(cobros.filter(function(c) { return c.estado === 'ABONADA'; }).map(function(c) { return c.dni; }));
+            // Un estudiante está "en mora" si tiene AL MENOS UNA cuota EN_MORA.
+            // Un estudiante está "al día" si NO tiene ninguna cuota EN_MORA.
+            // La misma cuota no puede contar en ambos grupos.
             var dnisEnMora = new Set(cobros.filter(function(c) { return c.estado === 'EN_MORA'; }).map(function(c) { return c.dni; }));
+            var dnisAlDia  = new Set([...dnisTotal].filter(function(dni) { return !dnisEnMora.has(dni); }));
             var recaudado = cobros.filter(function(c) { return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
                                   .reduce(function(s,c) { return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
 
@@ -314,16 +317,17 @@
 
             var cohortesStats = cohortes.map(function(c) {
                 var cobs = cobros.filter(function(x) { return x.cohorte_id === c.cohorte_id; });
-                var alD = new Set(cobs.filter(function(x) { return x.estado === 'ABONADA'; }).map(function(x) { return x.dni; })).size;
-                var mor = new Set(cobs.filter(function(x) { return x.estado === 'EN_MORA'; }).map(function(x) { return x.dni; })).size;
+                var morSet = new Set(cobs.filter(function(x) { return x.estado === 'EN_MORA'; }).map(function(x) { return x.dni; }));
+                var dnisCoh = new Set(cobs.map(function(x) { return x.dni; }));
+                var mor = morSet.size;
+                var alD = [...dnisCoh].filter(function(dni) { return !morSet.has(dni); }).length;
                 var rec = cobs.filter(function(x) { return x.estado === 'ABONADA' || x.estado === 'PAGO_PARCIAL'; })
                               .reduce(function(s,x) { return s + Math.max(0, Number(x.monto_final||0) - Number(x.saldo_pendiente||0)); }, 0);
-                var dnis = new Set(cobs.map(function(x) { return x.dni; }));
                 return {
                     cohorteId: c.cohorte_id, nombre: c.nombre || 'Cohorte',
                     programa: progNomMap[c.programa_id] || '',
                     estado: c.estado === 'ACTIVO' ? 'Activa' : 'Cerrada',
-                    estudiantes: dnis.size, alDia: alD, mora: mor,
+                    estudiantes: dnisCoh.size, alDia: alD, mora: mor,
                     recaudado: '$' + Number(rec).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}),
                     fechaInicio: c.fecha_inicio || '', fechaFin: c.fecha_fin || '',
                     destino: 'coordinador_3_cohorte.html?cohorte_id=' + c.cohorte_id

@@ -470,10 +470,11 @@ async function cargarVista() {
         cohortes.forEach(function(c){ cohProgMap[c.cohorte_id] = c.programa_id; });
         // Summary — conteo por enrollment (dni × programa): estudiante en 2 programas = 2 unidades
         function enrollKey(c){ var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id]; return c.dni + '|' + pid; }
-        var dnisAlDia = new Set(cobF.filter(function(c){return c.estado==='ABONADA';}).map(enrollKey));
-        var dnisEnMora = new Set(cobF.filter(function(c){return c.estado==='EN_MORA';}).map(enrollKey));
-        var dnisParcial = new Set(cobF.filter(function(c){return c.estado==='PAGO_PARCIAL';}).map(enrollKey));
-        var dnisTotal = new Set(cobF.map(enrollKey));
+        // Estado por enrollment: en mora si tiene AL MENOS UNA cuota EN_MORA (mutuamente excluyente)
+        var dnisEnMora  = new Set(cobF.filter(function(c){return c.estado==='EN_MORA';}).map(enrollKey));
+        var dnisTotal   = new Set(cobF.map(enrollKey));
+        var dnisAlDia   = new Set([...dnisTotal].filter(function(k){ return !dnisEnMora.has(k); }));
+        var dnisParcial = new Set(cobF.filter(function(c){return c.estado==='PAGO_PARCIAL';}).map(enrollKey).filter(function(k){ return !dnisEnMora.has(k); }));
         var recaudado = cobF.filter(function(c){return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL';}).reduce(function(s,c){return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0));},0);
         var tasaPago = dnisTotal.size > 0 ? Math.round(dnisAlDia.size / dnisTotal.size * 100) : 0;
 
