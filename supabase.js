@@ -947,117 +947,43 @@ async function darDeAlta(usuarioId) {
 
 async function obtenerDashboardAdmin() {
     const sb = await getSupabase();
+    const { data, error } = await sb.rpc('dashboard_stats_admin');
+    if (error) throw error;
 
-    const [progRes, cohRes, inscRes, cobRes, egrRes] = await Promise.all([
-        sb.from('programas').select('*'),
-        sb.from('cohortes').select('*'),
-        sb.from('inscripciones').select('estudiante_id,cohorte_id'),
-        sb.from('cobros').select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,comprobante_url'),
-        sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,monto_pagado,monto_original')
-    ]);
-
-    var programas     = progRes.data  || [];
-    var cohortes      = cohRes.data   || [];
-    var inscripciones = inscRes.data  || [];
-    var cobros        = cobRes.data   || [];
-    var egresos       = egrRes.data   || [];
-
-    // Mapa: cohorte_id → programa_id
-    var cohProgMap = {};
-    cohortes.forEach(function(c) { cohProgMap[c.cohorte_id] = c.programa_id; });
-
-    // Estudiantes activos: por enrollment (estudiante × programa), no por persona única.
-    // Un estudiante inscripto en 2 programas = 2 unidades de seguimiento distintas
-    // (cobros distintos, deuda distinta, saldo distinto).
-    var totalEstActivos = new Set(
-        inscripciones.map(function(i){
-            return i.estudiante_id + '|' + (cohProgMap[i.cohorte_id] || '');
-        })
-    ).size;
-
-    var totalRecaudado = cobros
-        .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
-        .reduce(function (s, c) { return s + Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)); }, 0);
-    var totalEgresos = egresos
-        .filter(function(e){ return e.tipo === 'EJECUTADO'; })
-        .reduce(function (s, e) { return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
-
-    // Mora global: por enrollment (dni × programa) — mismo criterio que el conteo de activos
-    var dnisConMora = new Set(
-        cobros.filter(function(c){ return c.estado === 'EN_MORA'; })
-              .map(function(c){
-                  var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id];
-                  return c.dni + '|' + pid;
-              })
-    );
-    var cuotasEnMora = cobros.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
-
-    var totalProgramasPosgrado = programas.filter(function(p){ return getCategoriaPrograma(p.tipo) === 'Programa'; }).length;
-    var totalCursos            = programas.filter(function(p){ return getCategoriaPrograma(p.tipo) === 'Curso'; }).length;
+    var r = data; // JSON returned by the RPC
+    var totalInscriptos = Number(r.totalInscriptos || 0);
+    var totalEnMora     = Number(r.totalEnMora     || 0);
 
     return {
-        totalProgramas:          programas.length,
-        totalProgramasPosgrado:  totalProgramasPosgrado,
-        totalCursos:             totalCursos,
-        estudiantesActivos:      totalEstActivos,
-        alDia:                   Math.max(0, totalEstActivos - dnisConMora.size),
-        enMora:                  dnisConMora.size,
-        cuotasEnMora:            cuotasEnMora,
-        recaudado:               totalRecaudado,
-        egresos:                 totalEgresos,
-        saldo:                   totalRecaudado - totalEgresos,
-        programas: programas.map(function(p) {
-            var cohsProg   = cohortes.filter(function(c){ return String(c.programa_id) === String(p.programa_id); });
-            var cohIdsProg = cohsProg.map(function(c){ return c.cohorte_id; });
-
-            // Estudiantes del programa: inscriptos en sus cohortes (igual que secretaría)
-            var estProg = new Set(
-                inscripciones
-                    .filter(function(i){ return cohIdsProg.indexOf(i.cohorte_id) >= 0; })
-                    .map(function(i){ return i.estudiante_id; })
-            );
-
-            var cobrosProg = cobros.filter(function(c){
-                var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id];
-                return String(pid) === String(p.programa_id);
-            });
-            var egresosProg = egresos.filter(function(e){
-                var pid = e.programa_id != null ? e.programa_id : cohProgMap[e.cohorte_id];
-                return String(pid) === String(p.programa_id);
-            });
-
-            var dnisConMoraProg = new Set(
-                cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).map(function(c){ return c.dni; })
-            );
-            var cuotasMoraProg    = cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
-            var pendCooperadora   = cobrosProg.filter(function(c){ return c.comprobante_url && c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL'; }).length;
-
-            var recaudadoProg = cobrosProg
-                .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
-                .reduce(function(s, c){ return s + Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)); }, 0);
-            var egresosPagadosProg = egresosProg
-                .filter(function(e){ return e.tipo === 'EJECUTADO'; })
-                .reduce(function(s, e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
-
-            var totalEstProg = estProg.size;
-            var enMoraProg   = dnisConMoraProg.size;
-
+        totalProgramas:         (r.programas || []).length,
+        totalProgramasPosgrado: Number(r.totalProgramasPosgrado || 0),
+        totalCursos:            Number(r.totalCursos            || 0),
+        estudiantesActivos:     totalInscriptos,
+        alDia:                  Math.max(0, totalInscriptos - totalEnMora),
+        enMora:                 totalEnMora,
+        cuotasEnMora:           Number(r.totalCuotasEnMora  || 0),
+        recaudado:              Number(r.totalIngresos      || 0),
+        egresos:                Number(r.totalEgresos       || 0),
+        saldo:                  Number(r.saldoNeto          || 0),
+        programas: (r.programas || []).map(function(p) {
+            var inscriptos = Number(p.inscriptos || 0);
+            var enMora     = Number(p.enMora     || 0);
             return {
                 id:                p.programa_id,
                 nombre:            p.nombre,
                 tipo:              p.tipo,
                 estado:            p.estado,
-                categoria:         getCategoriaPrograma(p.tipo),
+                categoria:         p.categoria,
                 labelNomenclatura: getLabelNomenclaturaPlural(p.tipo),
-                estudiantes:       totalEstProg,
-                cohortes:          cohsProg.length,
-                alDia:             Math.max(0, totalEstProg - enMoraProg),
-                enMora:            enMoraProg,
-                cuotasEnMora:      cuotasMoraProg,
-                pendCooperadora:   pendCooperadora,
-                recaudado:         recaudadoProg,
-                egresos:           egresosPagadosProg,
-                saldo:             recaudadoProg - egresosPagadosProg
+                estudiantes:       inscriptos,
+                cohortes:          Number(p.numCohortes      || 0),
+                alDia:             Math.max(0, inscriptos - enMora),
+                enMora:            enMora,
+                cuotasEnMora:      Number(p.cuotasEnMora     || 0),
+                pendCooperadora:   Number(p.pendCooperadora  || 0),
+                recaudado:         Number(p.ingresosEstimados|| 0),
+                egresos:           Number(p.egresosTotales   || 0),
+                saldo:             Number(p.saldoNeto        || 0)
             };
         })
     };
