@@ -783,8 +783,9 @@ body > .header .header-left p,
 body > .header .header-top-left p,
 #app > .page-header .header-left p,
 #app > .page-header p { color: rgba(255,255,255,.85) !important; }
-
-/* Stats integrados en el header (vista cohorte / tabla) */
+/* Excepciones: dropdown de notificaciones tiene fondo blanco */
+#notif-dropdown p,
+#notif-list p { color: #374151 !important; }
 body > .header .stat-label,
 #app > .page-header .stat-label { color: rgba(255,255,255,.72) !important; }
 body > .header .stat-value,
