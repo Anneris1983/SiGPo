@@ -274,7 +274,10 @@
 
         <!-- SECCI&#211;N COMPROBANTES -->
         <div>
-        <h2 class="section-title">Comprobantes que requieren aprobaci&#243;n</h2>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <h2 class="section-title" style="margin-bottom:0;">Comprobantes que requieren aprobaci&#243;n</h2>
+            <button class="btn btn-success" onclick="exportarExcel()" style="font-size:13px;padding:9px 18px;">&#x1F4E5; Exportar Excel</button>
+        </div>
 
         <div id="comprobantes-lista">
         <!-- Contenido din&#225;mico -->
@@ -462,6 +465,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
@@ -803,6 +807,31 @@
         _paginaActual = pagina;
         _renderPagina();
         document.getElementById('comprobantes-lista').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    /* == EXPORTAR EXCEL == */
+    function exportarExcel() {
+        if (!_todosComprobantes || !_todosComprobantes.length) {
+            alert('No hay comprobantes pendientes para exportar.');
+            return;
+        }
+        var filas = [['Estudiante', 'DNI', 'Programa', 'Cuota', 'Monto', 'Vencimiento', 'Estado', 'Subido el']];
+        _todosComprobantes.forEach(function(c) {
+            var est = c.estudiantes || {};
+            var nombre = ((est.apellido || '') + ', ' + (est.nombre || '')).trim().replace(/^,\s*|,\s*$/g, '') || c.dni || '—';
+            var programa = c.programas ? c.programas.nombre : '';
+            var cuota = c.concepto || (c.nro_cuota ? 'Cuota ' + c.nro_cuota : '');
+            var monto = Number(c.monto_final || c.monto_cuota || 0);
+            var estadoMap = { EN_MORA:'En Mora', NO_ABONADA:'No Abonada', PENDIENTE:'Pendiente', ABONADA:'Abonada', PAGO_PARCIAL:'Pago Parcial' };
+            var estado = estadoMap[c.estado] || c.estado || '';
+            var subido = (c.comprobante_fecha || c.updated_at || '').split('T')[0];
+            filas.push([nombre, est.dni || c.dni || '', programa, cuota, monto, c.fecha_vencimiento || '', estado, subido]);
+        });
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.aoa_to_sheet(filas);
+        ws['!cols'] = [{wch:30},{wch:12},{wch:32},{wch:22},{wch:14},{wch:14},{wch:14},{wch:14}];
+        XLSX.utils.book_append_sheet(wb, ws, 'Comprobantes');
+        XLSX.writeFile(wb, 'comprobantes_pendientes_' + new Date().toISOString().split('T')[0] + '.xlsx');
     }
 
     /* == INIT == */

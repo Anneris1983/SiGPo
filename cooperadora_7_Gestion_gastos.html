@@ -180,7 +180,7 @@
                     </select>
                     <button class="btn btn-success" onclick="nuevoGasto('proyectados')">+ Nuevo Gasto</button>
                     <button class="btn btn-warning" onclick="importarProyectados()">📥 Importar Proyectados</button>
-                    <button class="btn btn-success">📊 Exportar</button>
+                    <button class="btn btn-success" onclick="exportarExcelTab('proyectados')">📊 Exportar Excel</button>
                 </div>
 
                 <div class="table-container">
@@ -238,7 +238,7 @@
                     </select>
                     <button class="btn btn-success" onclick="nuevoGasto('ejecutados')">+ Nuevo Gasto</button>
                     <button class="btn btn-danger" onclick="importarEjecutados()">📥 Importar Ejecutados</button>
-                    <button class="btn btn-success">📊 Exportar</button>
+                    <button class="btn btn-success" onclick="exportarExcelTab('ejecutados')">📊 Exportar Excel</button>
                 </div>
 
                 <div class="table-container">
@@ -404,6 +404,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
@@ -603,6 +604,32 @@ function procesarExcel(file) { if (!file) return; cerrarModal('modalImportar'); 
 function buscar(texto, tipo) { renderTabla(tipo); }
 function filtrarCategoria(cat, tipo) { renderTabla(tipo); }
 function filtrarPrograma(prog, tipo) { renderTabla(tipo); }
+
+function exportarExcelTab(tipo) {
+    var esEjec = tipo === 'ejecutados';
+    var lista = esEjec
+        ? G.egresos.filter(esEjecutado)
+        : G.egresos.filter(function(e){ return !esEjecutado(e); });
+    if (!lista.length) { alert('No hay datos para exportar en esta pestaña.'); return; }
+    var headers = [
+        esEjec ? 'Fecha de Pago' : 'Fecha Estimada',
+        'Categoría', 'Concepto', 'Programa', 'Cohorte/Edición',
+        esEjec ? 'Monto Pagado' : 'Monto Proyectado',
+        'Proveedor', 'N° Comprobante', 'Estado'
+    ];
+    var filas = [headers];
+    lista.forEach(function(e) {
+        var fecha = (esEjec ? (e.fecha_pago || '') : (e.fecha_estimada || '')).split('T')[0];
+        var monto = esEjec ? Number(e.monto_pagado || e.monto_original || 0) : Number(e.monto_original || 0);
+        var estado = esEjec ? 'Ejecutado' : (esParcial(e) ? 'Pago Parcial' : 'Proyectado');
+        filas.push([fecha, e.categoria || '', e.concepto || '', nomProg(e.programa_id), e.periodo || '', monto, e.proveedor || '', e.nro_comprobante || '', estado]);
+    });
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(filas);
+    ws['!cols'] = [{wch:14},{wch:24},{wch:32},{wch:28},{wch:16},{wch:16},{wch:20},{wch:16},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws, esEjec ? 'Ejecutados' : 'Proyectados');
+    XLSX.writeFile(wb, 'gastos_' + tipo + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
+}
 
 async function cargarDatos() {
     try {

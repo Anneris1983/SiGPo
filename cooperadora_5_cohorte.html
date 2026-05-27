@@ -1569,6 +1569,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script>
@@ -2734,74 +2735,50 @@
         }
 
         function exportarExcel() {
-            const payload = {
-                programaId: vistaData.programa.programaId,
-                cohorteId: vistaData.cohorte.cohorteId,
-                filtro: filtroActivo
-            };
-
-            if (estaEnAppsScript()) {
-                google.script.run
-                    .withSuccessHandler(function (respuesta) {
-                        if (respuesta && respuesta.url) {
-                            window.open(respuesta.url, '_blank');
-                        }
-                    })
-                    .withFailureHandler(function (error) {
-                        alert(obtenerMensajeError(error, 'No se pudo exportar el Excel.'));
-                    })
-                    .exportarEstadoPagosCohorte(payload);
-                descargarCSVLocal();
-            }
-        }
-
-        function descargarCSVLocal() {
+            if (!vistaData || !vistaData.estudiantes) { alert('No hay datos cargados para exportar.'); return; }
             const cuotaDefs = obtenerCuotaDefs();
             const lista = vistaData.estudiantes.filter(function (est) { return coincideFiltro(est, filtroActivo); });
+            if (!lista.length) { alert('No hay estudiantes para exportar con el filtro actual.'); return; }
 
-            const rows = [];
-            const headers = ['Estudiante', 'DNI', 'Email', 'Descuento'].concat(cuotaDefs.map(function (q) { return q.label; })).concat(['Total a pagar', 'Abonado', 'Saldo']);
-            rows.push(headers);
+            const estadoLabel = { mora:'En Mora', parcial:'Pago Parcial', aldia:'Al día', nodebe:'No debe', A_DEFINIR:'A definir', NO_ABONADA:'No abonada', ABONADA:'Abonada', PAGO_PARCIAL:'Pago Parcial', EN_MORA:'En Mora' };
+
+            const headers = ['Estudiante', 'DNI', 'Email', 'Descuento']
+                .concat(cuotaDefs.map(function (q) { return q.label; }))
+                .concat(['Total a pagar', 'Abonado', 'Saldo']);
+            const filas = [headers];
 
             lista.forEach(function (est) {
                 const totales = calcularTotalesEstudiante(est);
-                const row = [
+                const fila = [
                     est.nombreCompleto,
                     est.dni,
                     est.email,
-                    est.noDebeAbonar ? 'No debe abonar' : (est.descuentoPorcentaje + '%')
+                    est.noDebeAbonar ? 'No debe abonar' : (est.descuentoPorcentaje ? est.descuentoPorcentaje + '%' : '0%')
                 ];
-
                 cuotaDefs.forEach(function (q) {
                     const cuota = obtenerCuotaEstudiante(est, q.key);
                     if (!cuota || cuota.estado === 'nodebe' || est.noDebeAbonar) {
-                        row.push('no debe abonar');
+                        fila.push('No debe');
                     } else if (cuota.aDefinir) {
-                        row.push('A definir');
-                        row.push((cuota.texto || formatearMoneda(cuota.montoFinal || cuota.montoBase || 0)) + ' (' + cuota.estado + ')');
+                        fila.push('A definir');
+                    } else {
+                        const monto = Number(cuota.montoFinal || cuota.montoBase || 0);
+                        const label = estadoLabel[cuota.estado] || cuota.estado || '';
+                        fila.push(monto + (label ? ' (' + label + ')' : ''));
                     }
                 });
-
-                row.push(formatearMoneda(totales.totalPagar), formatearMoneda(totales.totalAbonado), formatearMoneda(totales.saldo));
-                rows.push(row);
+                fila.push(totales.totalPagar, totales.totalAbonado, totales.saldo);
+                filas.push(fila);
             });
 
-            const csv = rows.map(function (row) {
-                return row.map(function (cell) {
-                    const value = String(cell == null ? '' : cell).replaceAll('"', '""');
-                    return '"' + value + '"';
-                }).join(',');
-            }).join('\n');
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'estado_pagos_' + vistaData.cohorte.nombre.replaceAll(' ', '_') + '.csv';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(url);
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(filas);
+            const baseCols = [{wch:30},{wch:12},{wch:28},{wch:12}];
+            const cuotaCols = cuotaDefs.map(function(){ return {wch:18}; });
+            ws['!cols'] = baseCols.concat(cuotaCols).concat([{wch:14},{wch:14},{wch:14}]);
+            const nombreCohorte = (vistaData.cohorte.nombre || 'cohorte').replace(/[^a-zA-Z0-9_\-]/g, '_');
+            XLSX.utils.book_append_sheet(wb, ws, 'Estado de Pagos');
+            XLSX.writeFile(wb, 'estado_pagos_' + nombreCohorte + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
         function volverACohortes(event) {
