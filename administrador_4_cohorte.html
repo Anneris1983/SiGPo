@@ -428,6 +428,9 @@
         </table>
         <div class="empty-state" id="empty"><div style="font-size:48px;margin-bottom:12px;">🔍</div><div style="font-size:15px;font-weight:600;color:#666;">Sin resultados para este filtro</div></div>
     </div>
+    <div id="wrap-mas-est" style="text-align:center;padding:12px 0 4px;display:none;">
+        <button id="btn-mas-est" onclick="mostrarMas()" style="padding:8px 22px;background:#fff;border:1.5px solid #c7d2fe;border-radius:8px;color:#4338ca;font-size:13px;font-weight:600;cursor:pointer;">Mostrar más</button>
+    </div>
 
     <!-- LEYENDA -->
     <div class="leyenda">
@@ -902,6 +905,7 @@ const V = {
     data:       null,   // { programa, cohorte, estudiantes, columnas }
     config:     {},     // { cbu, alias } — cargado desde tabla configuracion
     filtro:     'todos',
+    page:       1,     // paginación: cuántas páginas visibles
     descTarget: null,
     busy:       false,  // mutex para operaciones async — evita doble submit
 };
@@ -1224,6 +1228,7 @@ function _renderFilaEst(est, celdas, totP, totA, totS, estadoGen) {
    RENDER TABLA
 ══════════════════════════════════════════════════ */
 function renderTabla() {
+    V.page = 1;
     var columnas    = V.data.columnas;
     var estudiantes = V.data.estudiantes;
     var thead = document.getElementById('t-head');
@@ -1427,14 +1432,35 @@ function initFiltros() {
     });
 }
 
+var _PAGE_SIZE = 30;
+
 function aplicarFiltro() {
-    var vis = 0;
+    V.page = 1;
+    _aplicarFiltroYPag();
+}
+
+function _aplicarFiltroYPag() {
+    var vis = 0, ocultas = 0;
     document.querySelectorAll('.fila-est').forEach(function(tr) {
         var ok = V.filtro === 'todos' || tr.dataset.est === V.filtro;
-        tr.classList.toggle('oculta', !ok);
-        if (ok) vis++;
+        if (!ok) { tr.classList.add('oculta'); return; }
+        vis++;
+        var enPag = vis <= V.page * _PAGE_SIZE;
+        tr.classList.toggle('oculta', !enPag);
+        if (!enPag) ocultas++;
     });
     document.getElementById('empty').classList.toggle('show', vis === 0);
+    var wrap = document.getElementById('wrap-mas-est');
+    var btn  = document.getElementById('btn-mas-est');
+    if (wrap && btn) {
+        wrap.style.display = ocultas > 0 ? '' : 'none';
+        btn.textContent = 'Mostrar ' + Math.min(ocultas, _PAGE_SIZE) + ' más (' + ocultas + ' restantes)';
+    }
+}
+
+function mostrarMas() {
+    V.page++;
+    _aplicarFiltroYPag();
 }
 
 /* ══════════════════════════════════════════════════
@@ -2442,7 +2468,7 @@ async function _procesarImport(file) {
             .select('id,dni');
         if (estBatchErr) {
             toast('Error al importar estudiantes: ' + estBatchErr.message, 'err');
-            spin(false); return;
+            return;
         }
         var dniToId = {};
         (estDataArr || []).forEach(function(e) { dniToId[e.dni] = e.id; });
@@ -2463,7 +2489,7 @@ async function _procesarImport(file) {
             .upsert(inscList, { onConflict: 'estudiante_id,cohorte_id' });
         if (inscBatchErr) {
             toast('Error al importar inscripciones: ' + inscBatchErr.message, 'err');
-            spin(false); return;
+            return;
         }
 
         // FASE 3: batch upsert de todos los cobros (1 query en vez de N)
@@ -2477,7 +2503,7 @@ async function _procesarImport(file) {
             .upsert(todasCuotas, { onConflict: 'dni,cohorte_id,programa_id,concepto,periodo' });
         if (cobBatchErr) {
             toast('Error al importar cobros: ' + cobBatchErr.message, 'err');
-            spin(false); return;
+            return;
         }
 
         var estudiantesCreados = (estDataArr || []).length;
@@ -2990,7 +3016,7 @@ async function _ejecutarEliminarGlobal(concepto, periodo) {
             .eq('periodo', periodo || '');
         if (pagosCandidatos.error) throw pagosCandidatos.error;
         var ids = (pagosCandidatos.data || []).map(function(x) { return x.cobro_id; });
-        if (!ids.length) { toast('No se encontraron cuotas para eliminar', 'err'); spin(false); return; }
+        if (!ids.length) { toast('No se encontraron cuotas para eliminar', 'err'); return; }
 
         var pagosRes = await sb.from('pagos').select('cobro_id').in('cobro_id', ids);
         if (pagosRes.error) throw pagosRes.error;
@@ -3091,7 +3117,7 @@ async function guardarCeldaPopup() {
     var cobroId  = _cpopCobroId;
     var cpopInfo = window._cpopInfo || {};
     var dniEst   = String(cpopInfo.dni || '');
-    if (!dniEst) { toast('Error: DNI no identificado', 'err'); spin(false); return; }
+    if (!dniEst) { toast('Error: DNI no identificado', 'err'); return; }
 
     var noAplica = document.getElementById('cpop-noapl').checked;
     var montoStr = document.getElementById('cpop-monto').value.trim();

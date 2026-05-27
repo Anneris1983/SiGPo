@@ -423,6 +423,9 @@
         </table>
         <div class="empty-state" id="empty"><div style="font-size:48px;margin-bottom:12px;">🔍</div><div style="font-size:15px;font-weight:600;color:#666;">Sin resultados para este filtro</div></div>
     </div>
+    <div id="wrap-mas-est" style="text-align:center;padding:12px 0 4px;display:none;">
+        <button id="btn-mas-est" onclick="mostrarMas()" style="padding:8px 22px;background:#fff;border:1.5px solid #c7d2fe;border-radius:8px;color:#4338ca;font-size:13px;font-weight:600;cursor:pointer;">Mostrar más</button>
+    </div>
 
     <!-- LEYENDA -->
     <div class="leyenda">
@@ -495,17 +498,17 @@
         </div>
         <div class="modal-body">
             <div class="mfield">
-                <label>Tipo</label>
-                <select id="c-tipo" onchange="cargarPlantilla()">
+                <label for="c-tipo">Tipo</label>
+                <select id="c-tipo" aria-label="Tipo de correo" onchange="cargarPlantilla()">
                     <option value="recordatorio">📩 Recordatorio de vencimiento próximo</option>
                     <option value="reclamo">🔔 Reclamo por cuota vencida</option>
                     <option value="coordinador">👨‍🏫 Aviso al coordinador</option>
                 </select>
             </div>
-            <div class="mfield"><label>Asunto</label><input type="text" id="c-asunto"></div>
+            <div class="mfield"><label for="c-asunto">Asunto</label><input type="text" id="c-asunto" aria-label="Asunto del correo"></div>
             <div class="mfield">
-                <label>Cuerpo</label>
-                <textarea id="c-cuerpo" style="min-height:130px;resize:vertical;"></textarea>
+                <label for="c-cuerpo">Cuerpo</label>
+                <textarea id="c-cuerpo" aria-label="Cuerpo del correo" style="min-height:130px;resize:vertical;"></textarea>
                 <div class="mhint">Variables: {nombre} {apellido} {dni} {cuota} {periodo} {monto} {vencimiento} {programa} {cbu} {alias}</div>
             </div>
         </div>
@@ -581,7 +584,7 @@
                     <div id="drop-zone" class="drop-zone" onclick="document.getElementById('file-imp').click()" ondragover="dOver(event)" ondragleave="dLeave()" ondrop="dDrop(event)">
                         <div style="font-size:28px;margin-bottom:6px;">📊</div>
                         <div style="font-size:13px;color:#666;">Arrastrá el archivo acá o <strong>hacé clic</strong> para seleccionarlo</div>
-                        <input type="file" id="file-imp" accept=".xlsx,.xls" onchange="fileElegido(event)">
+                        <input type="file" id="file-imp" accept=".xlsx,.xls" aria-label="Archivo de importación (.xlsx)" onchange="fileElegido(event)">
                     </div>
                     <div id="imp-prev" class="imp-preview">
                         <span style="font-size:18px;">📄</span>
@@ -669,7 +672,7 @@
     <div class="cell-popup-title" id="cpop-title">Editar cuota</div>
     <div class="cell-popup-monto">
         <span>$</span>
-        <input type="number" id="cpop-monto" min="0" step="100" placeholder="0">
+        <input type="number" id="cpop-monto" min="0" step="100" placeholder="0" aria-label="Monto de la cuota">
     </div>
     <label class="cell-popup-noapl" id="cpop-noapl-label" onclick="toggleNoAplicaCoord()">
         <input type="checkbox" id="cpop-noapl" onclick="event.stopPropagation()">
@@ -707,6 +710,7 @@ const PLANTILLAS_DEF = {
 const V = {
     data: null,
     filtro: 'todos',
+    page: 1,
     descTarget: null,
     notifications: [],
     plantillas: (function(){ try { var s=localStorage.getItem('sigpo_plantillas_coord_'+PROGRAMA_ID); return s ? JSON.parse(s) : JSON.parse(JSON.stringify(PLANTILLAS_DEF)); } catch(e){ return JSON.parse(JSON.stringify(PLANTILLAS_DEF)); } })(),
@@ -932,12 +936,13 @@ function renderHeader() {
 }
 
 function renderTabla() {
+    V.page = 1;
     const { columnas, estudiantes } = V.data;
     const thead = document.getElementById('t-head');
     const tbody = document.getElementById('t-body');
 
     thead.innerHTML = `<tr>
-      <th class="col-check"><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>
+      <th class="col-check"><input type="checkbox" id="chk-all" onchange="toggleAll(this)" aria-label="Seleccionar todos los estudiantes"></th>
       <th class="col-name">Apellido y Nombre</th>
       <th style="min-width:74px;text-align:center;">Desc %</th>
       <th class="col-email">Correo electrónico</th>
@@ -1075,14 +1080,35 @@ function initFiltros() {
     });
 }
 
+var _PAGE_SIZE = 30;
+
 function aplicarFiltro() {
-    let vis = 0;
+    V.page = 1;
+    _aplicarFiltroYPag();
+}
+
+function _aplicarFiltroYPag() {
+    let vis = 0, ocultas = 0;
     document.querySelectorAll('.fila-est').forEach(tr => {
         const ok = V.filtro==='todos' || tr.dataset.est===V.filtro;
-        tr.classList.toggle('oculta', !ok);
-        if (ok) vis++;
+        if (!ok) { tr.classList.add('oculta'); return; }
+        vis++;
+        const enPag = vis <= V.page * _PAGE_SIZE;
+        tr.classList.toggle('oculta', !enPag);
+        if (!enPag) ocultas++;
     });
     document.getElementById('empty').classList.toggle('show', vis===0);
+    const wrap = document.getElementById('wrap-mas-est');
+    const btn  = document.getElementById('btn-mas-est');
+    if (wrap && btn) {
+        wrap.style.display = ocultas > 0 ? '' : 'none';
+        btn.textContent = 'Mostrar ' + Math.min(ocultas, _PAGE_SIZE) + ' más (' + ocultas + ' restantes)';
+    }
+}
+
+function mostrarMas() {
+    V.page++;
+    _aplicarFiltroYPag();
 }
 
 function toggleAll(cb) {
