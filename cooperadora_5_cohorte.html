@@ -1568,6 +1568,7 @@
         let programaId = '';
         let cohorteId = '';
         let filtroActivo = 'todos';
+        let _coopBusy = false; // mutex — evita doble submit
         let vistaData = {
             programa: null,
             cohorte: null,
@@ -2187,6 +2188,8 @@
                 if (!p.desde) { mostrarToast('Período ' + (pi+1) + ': indicá la fecha de inicio', 'error'); return; }
                 if (p.hasta && p.hasta < p.desde) { mostrarToast('Período ' + (pi+1) + ': la fecha fin debe ser posterior al inicio', 'error'); return; }
             }
+            if (_coopBusy) return;
+            _coopBusy = true;
             mostrarSpinner(true);
             try {
                 var sb = await getSupabase();
@@ -2247,6 +2250,7 @@
                 console.error(e);
                 mostrarToast('Error al guardar: ' + (e.message||''), 'error');
             } finally {
+                _coopBusy = false;
                 mostrarSpinner(false);
             }
         }
@@ -2377,6 +2381,8 @@
                 (est.cuotas || []).forEach(function(c) { maxNroExist = Math.max(maxNroExist, Number(c.numeroCuota || 0)); });
             });
 
+            if (_coopBusy) return;
+            _coopBusy = true;
             mostrarSpinner(true);
             try {
                 var sb = await getSupabase();
@@ -2416,6 +2422,7 @@
                 console.error(e);
                 mostrarToast('Error al crear el plan: ' + (e.message || ''), 'error');
             } finally {
+                _coopBusy = false;
                 mostrarSpinner(false);
             }
         }
@@ -3324,6 +3331,8 @@
         }
 
         async function _coopGuardarEdicionCuotas() {
+            if (_coopBusy) return;
+            _coopBusy = true;
             mostrarSpinner(true);
             try {
                 var sb = await getSupabase();
@@ -3344,6 +3353,7 @@
             } catch(e) {
                 mostrarToast('Error al guardar: ' + (e.message || e), 'error');
             } finally {
+                _coopBusy = false;
                 mostrarSpinner(false);
             }
         }
@@ -3405,6 +3415,8 @@
             });
             if (!seleccionadas.length) return;
             if (!confirm('¿Eliminar ' + seleccionadas.length + ' cuota(s) para todos los estudiantes de la cohorte? Esta acción no se puede deshacer.')) return;
+            if (_coopBusy) return;
+            _coopBusy = true;
             mostrarSpinner(true);
             try {
                 var sb = await getSupabase();
@@ -3422,6 +3434,7 @@
             } catch(e) {
                 mostrarToast('Error al eliminar: ' + (e.message || e), 'error');
             } finally {
+                _coopBusy = false;
                 mostrarSpinner(false);
             }
         }
@@ -3490,6 +3503,8 @@
             var montoStr  = document.getElementById('cpop-monto').value.trim();
             var tieneMonto = montoStr !== '' && !isNaN(parseFloat(montoStr));
 
+            if (_coopBusy) return;
+            _coopBusy = true;
             mostrarSpinner(true);
             cerrarCeldaPopupCoop();
             try {
@@ -3527,6 +3542,7 @@
                 console.error(e);
                 mostrarToast('Error al guardar: ' + (e.message || e), 'error');
             } finally {
+                _coopBusy = false;
                 mostrarSpinner(false);
             }
         }

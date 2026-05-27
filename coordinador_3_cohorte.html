@@ -711,7 +711,8 @@ const V = {
     notifications: [],
     plantillas: (function(){ try { var s=localStorage.getItem('sigpo_plantillas_coord_'+PROGRAMA_ID); return s ? JSON.parse(s) : JSON.parse(JSON.stringify(PLANTILLAS_DEF)); } catch(e){ return JSON.parse(JSON.stringify(PLANTILLAS_DEF)); } })(),
     config: {},
-    importFile: null
+    importFile: null,
+    busy:       false,  // mutex — evita doble submit
 };
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -1183,6 +1184,8 @@ async function guardarDescuento() {
         if (!p.desde) { toast('Período ' + (pi+1) + ': indicá la fecha de inicio', 'err'); return; }
         if (p.hasta && p.hasta < p.desde) { toast('Período ' + (pi+1) + ': la fecha fin debe ser posterior al inicio', 'err'); return; }
     }
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb = await getSupabase();
@@ -1247,6 +1250,7 @@ async function guardarDescuento() {
         console.error(e);
         toast('Error al guardar el descuento: ' + (e.message||''), 'err');
     } finally {
+        V.busy = false;
         spin(false);
     }
 }
@@ -1373,6 +1377,8 @@ async function guardarCuotas() {
     const dnis = V.data.estudiantes.map(e => e.dni);
     if (!dnis.length) { toast('No hay estudiantes en esta cohorte', 'err'); return; }
 
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         const sb = await getSupabase();
@@ -1431,6 +1437,7 @@ async function guardarCuotas() {
         console.error(e);
         toast('Error al crear el plan: ' + (e.message || ''), 'err');
     } finally {
+        V.busy = false;
         spin(false);
     }
 }
@@ -1465,6 +1472,8 @@ function confirmarCambioEstado(dni, nombre, nuevoEstado) {
     abrir('modal-baja-cohorte');
 }
 async function ejecutarCambioEstado() {
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         if (estaEnAppsScript()) await gs('cambiarEstadoEstudianteEnCohorte', { dni:_bcDni, cohorteId:COHORTE_ID, programaId:PROGRAMA_ID, estadoAcademico:_bcNuevoEstado });
@@ -1495,6 +1504,8 @@ function guardarPlantilla() {
 async function reclamarSel() {
     var sel = getSel();
     if (!sel.length) { toast('Seleccioná al menos un estudiante', 'err'); return; }
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb      = await getSupabase();
@@ -1581,6 +1592,8 @@ async function enviarEmailGas(gasUrl, to, subject, body, replyTo) {
 }
 async function exportarExcel() {
     if (!V.data) { toast('Sin datos para exportar','err'); return; }
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         if (!window.XLSX) {
@@ -1662,6 +1675,8 @@ function mostrarArch(f) {
 }
 async function procesarImport() {
     if (!V.importFile) { toast('Seleccioná un archivo Excel','err'); return; }
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         const archivo = await leerArchivoBase64(V.importFile);
@@ -1860,6 +1875,8 @@ function actualizarResumenEC() {
 }
 
 async function guardarEdicionCuotas() {
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb = await getSupabase();
@@ -1942,6 +1959,8 @@ async function eliminarSeleccionadas() {
     var cuotas=checks.map(function(c){ return {concepto:c.dataset.concepto,periodo:c.dataset.periodo}; });
     var nombres=cuotas.map(function(q){ return '"'+q.concepto+'"'+(q.periodo?' ('+q.periodo+')':''); }).join('\n• ');
     if (!confirm('¿Eliminar '+cuotas.length+' cuota'+(cuotas.length>1?'s':'')+' de todos los estudiantes?\n\n• '+nombres+'\n\nEsta acción no se puede deshacer.')) return;
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb=await getSupabase(), eliminadas=0, bloqueadas=[];
