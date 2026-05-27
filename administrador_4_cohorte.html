@@ -1214,10 +1214,13 @@ function _renderFilaEst(est, celdas, totP, totA, totS, estadoGen) {
         </td>
         <td class="cell-email">${escapeHtml(est.email || '—')}</td>
         <td style="text-align:center;border-right:1px solid #ebebeb;">
-            ${esPasivo
-                ? `<button class="btn-alta-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','ACTIVO')">✅ Alta (ACTIVO)</button>`
-                : `<button class="btn-baja-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','BAJA')">⛔ Baja (PASIVO)</button>`}
-            <br><button class="btn-desvincular-coh" onclick="confirmarDesvincular(${est.dni},'${nombreEsc}')">🗑 Desvincular</button>
+            <div style="display:inline-flex;flex-direction:column;align-items:center;gap:4px;">
+              <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;${esPasivo ? 'background:#fde8e1;color:#c0392b;' : 'background:#d1fae5;color:#065f46;'}">${esPasivo ? 'Pasivo' : 'Activo'}</span>
+              ${esPasivo
+                ? `<button class="btn-alta-coh" title="Reactivar en esta cohorte" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','ACTIVO')">↑ Dar alta</button>`
+                : `<button class="btn-baja-coh" title="Dar de baja en esta cohorte" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','BAJA')">↓ Dar baja</button>`}
+              <button class="btn-desvincular-coh" onclick="confirmarDesvincular(${est.dni},'${nombreEsc}')">🗑 Desvincular</button>
+            </div>
         </td>
         ${celdas}
         <td class="cell-tot-pagar">${fMonto(totP)}</td>
