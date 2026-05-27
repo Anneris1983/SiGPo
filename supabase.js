@@ -51,12 +51,9 @@ async function getSupabase() {
 async function login(dni, password) {
     const sb = await getSupabase();
 
-    // Primero buscar el email real del usuario por DNI
+    // Lookup por DNI via RPC (SECURITY DEFINER): evita exponer tabla usuarios a anon
     const { data: usuarioPre, error: errPre } = await sb
-        .from('usuarios')
-        .select('rol, apellido, nombre, nombre_completo, email, programa_id, dni, activo')
-        .eq('dni', String(dni))
-        .single();
+        .rpc('get_login_data', { user_dni: String(dni) });
 
     if (errPre || !usuarioPre) {
         return { ok: false, mensaje: 'DNI o contraseña incorrectos' };
@@ -1053,7 +1050,45 @@ var _gasFunctions = {
 
     // Dashboard
     obtenerDashboardAdmin:       obtenerDashboardAdmin,
-    obtenerDashboardCoordinador: async function() { return obtenerDashboardAdmin(); },
+    obtenerDashboardCoordinador: async function() {
+        const sb = await getSupabase();
+        const { data, error } = await sb.rpc('dashboard_stats_coordinador');
+        if (error) throw error;
+        var r = data;
+        var totalInscriptos = Number(r.totalInscriptos || 0);
+        var totalEnMora     = Number(r.totalEnMora     || 0);
+        return {
+            totalProgramas:        (r.programas || []).length,
+            estudiantesActivos:    totalInscriptos,
+            alDia:                 Math.max(0, totalInscriptos - totalEnMora),
+            enMora:                totalEnMora,
+            cuotasEnMora:          Number(r.totalCuotasEnMora || 0),
+            recaudado:             Number(r.totalIngresos     || 0),
+            egresos:               Number(r.totalEgresos      || 0),
+            saldo:                 Number(r.saldoNeto         || 0),
+            programas: (r.programas || []).map(function(p) {
+                var inscriptos = Number(p.inscriptos || 0);
+                var enMora     = Number(p.enMora     || 0);
+                return {
+                    id:                p.programa_id,
+                    nombre:            p.nombre,
+                    tipo:              p.tipo,
+                    estado:            p.estado,
+                    categoria:         p.categoria,
+                    labelNomenclatura: getLabelNomenclaturaPlural(p.tipo),
+                    estudiantes:       inscriptos,
+                    cohortes:          Number(p.numCohortes      || 0),
+                    alDia:             Math.max(0, inscriptos - enMora),
+                    enMora:            enMora,
+                    cuotasEnMora:      Number(p.cuotasEnMora     || 0),
+                    pendCooperadora:   Number(p.pendCooperadora  || 0),
+                    recaudado:         Number(p.ingresosEstimados|| 0),
+                    egresos:           Number(p.egresosTotales   || 0),
+                    saldo:             Number(p.saldoNeto        || 0)
+                };
+            })
+        };
+    },
 
     // Programas / Cohortes
     obtenerDetallePrograma: obtenerDetallePrograma,
