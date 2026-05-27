@@ -571,6 +571,31 @@ async function obtenerDetallePrograma(programaId) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// CONFIGURACIÓN (con caché de sesión — 5 minutos)
+// ══════════════════════════════════════════════════════════════
+
+var _cfgCache = null;
+var _cfgCacheTs = 0;
+var _CFG_TTL = 5 * 60 * 1000;
+
+async function obtenerConfiguracion() {
+    var now = Date.now();
+    if (_cfgCache && (now - _cfgCacheTs) < _CFG_TTL) return _cfgCache;
+    var sb = await getSupabase();
+    var { data } = await sb.from('configuracion').select('clave,valor');
+    var cfg = {};
+    (data || []).forEach(function(r) { cfg[r.clave] = r.valor; });
+    cfg.moraPct = parseFloat(cfg.mora_porcentaje) || 5;
+    _cfgCache = cfg;
+    _cfgCacheTs = now;
+    return cfg;
+}
+
+function invalidarConfiguracion() {
+    _cfgCache = null;
+    _cfgCacheTs = 0;
+}
+
 // COBROS (CUOTAS)
 // ══════════════════════════════════════════════════════════════
 

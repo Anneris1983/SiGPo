@@ -490,6 +490,7 @@ async function guardar(seccion, btn) {
         // guardarConfiguracion está en supabase.js — hace upsert clave a clave
         // con el cliente autenticado (getSupabase() retorna el cliente con sesión)
         var r = await guardarConfiguracion(datos);
+        if (r.ok) invalidarConfiguracion(); // limpia caché para que otras páginas lean config actualizada
         mostrarMsg(seccion, r.ok,
             r.ok ? '✅ Guardado correctamente.' : '❌ Error al guardar. Verificá que tengas permisos de Administrador.');
     } catch(e) {
