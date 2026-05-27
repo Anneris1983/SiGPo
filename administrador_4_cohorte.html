@@ -270,6 +270,9 @@
         .plan-fila .monto-wrap::before { content:'$'; position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:12px; color:#999; pointer-events:none; }
         .plan-fila .btn-del { background:none; border:none; cursor:pointer; color:#e74c3c; font-size:17px; padding:4px; border-radius:6px; transition:background 0.2s; line-height:1; align-self:end; margin-bottom:2px; }
         .plan-fila .btn-del:hover { background:#fdecea; }
+        .plan-fila .readmision-chk { display:flex; align-items:center; gap:5px; margin-top:5px; font-size:10px; font-weight:600; color:#6f42c1; cursor:pointer; white-space:nowrap; }
+        .plan-fila .readmision-chk input { width:13px; height:13px; accent-color:#6f42c1; cursor:pointer; }
+        .badge-readmision { display:inline-block; background:#ede9fe; color:#6f42c1; font-size:9px; font-weight:700; padding:1px 5px; border-radius:4px; letter-spacing:0.3px; line-height:1.6; white-space:nowrap; }
         .btn-agregar-cuota { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:#2d7a4f; color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
         .btn-agregar-cuota:hover { background:#246441; }
         /* Descuento multi-periodo */
@@ -939,7 +942,7 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
           .eq('cohorte_id', cohorteId)
           .single(),
         sb.from('cobros')
-          .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, no_aplica, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id, fecha_pago, fecha_aprobacion, comprobante_fecha')
+          .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, no_aplica, es_readmision, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id, fecha_pago, fecha_aprobacion, comprobante_fecha')
           .eq('cohorte_id', cohorteId)
           .eq('programa_id', programaId)
           .order('fecha_vencimiento'),
@@ -1374,6 +1377,7 @@ function renderTabla() {
 
             return '<td data-est="' + estado + '" title="' + title + '"' + editAttr + '>'
                 + '<div class="cuota-cell-wrap">'
+                + (c.es_readmision ? '<span class="badge-readmision">Readmisión</span>' : '')
                 + '<div class="cuota-cell-txt">' + txt + '</div>'
                 + (btns ? '<div class="cuota-cell-btns">' + btns + '</div>' : '')
                 + (esEditable ? '<div class="u-hint">✏️ editar</div>' : '')
@@ -1685,8 +1689,8 @@ function abrirCrearCuota() {
     if (!maxVenc) {
         // Sin cuotas previas: proponer Inscripción + Cuota 1
         planFilas = [
-            { nombre: 'Inscripción', periodo: planPeriodoSiguiente(0), monto: '', vencimiento: planFechaDefault(0) },
-            { nombre: 'Cuota 1',     periodo: planPeriodoSiguiente(1), monto: '', vencimiento: planFechaDefault(1) },
+            { nombre: 'Inscripción', periodo: planPeriodoSiguiente(0), monto: '', vencimiento: planFechaDefault(0), es_readmision: false },
+            { nombre: 'Cuota 1',     periodo: planPeriodoSiguiente(1), monto: '', vencimiento: planFechaDefault(1), es_readmision: false },
         ];
     } else {
         // Continuar desde el mes siguiente a la última cuota existente
@@ -1694,7 +1698,7 @@ function abrirCrearCuota() {
         var nextNum = maxNum + 1;
         var label = !yaHayInscripcion ? 'Inscripción' : 'Cuota ' + nextNum;
         planFilas = [
-            { nombre: label, periodo: planPeriodoDeDate(sig), monto: '', vencimiento: sig.toISOString().split('T')[0] }
+            { nombre: label, periodo: planPeriodoDeDate(sig), monto: '', vencimiento: sig.toISOString().split('T')[0], es_readmision: false }
         ];
     }
 
@@ -1737,7 +1741,8 @@ function planRenderFilas() {
         div.className = 'plan-fila' + (!f.monto ? ' fila-irregular' : '');
         div.innerHTML =
             '<div class="plan-fila-num">' + (i + 1) + '</div>'
-            + '<div><label>Nombre de la cuota</label><input type="text" value="' + f.nombre + '" placeholder="Cuota ' + (i + 1) + '" onchange="planFilas[' + i + '].nombre=this.value;planActualizarResumen();"></div>'
+            + '<div><label>Nombre de la cuota</label><input type="text" value="' + f.nombre + '" placeholder="Cuota ' + (i + 1) + '" onchange="planFilas[' + i + '].nombre=this.value;planActualizarResumen();">'
+            + '<label class="readmision-chk"><input type="checkbox"' + (f.es_readmision ? ' checked' : '') + ' onchange="planFilas[' + i + '].es_readmision=this.checked;"> Readmisión</label></div>'
             + '<div><label>Período</label><input type="text" value="' + f.periodo + '" placeholder="Mar 2026" onchange="planFilas[' + i + '].periodo=this.value;"></div>'
             + '<div class="monto-wrap"><label>Monto</label><input type="number" value="' + f.monto + '" placeholder="0" oninput="planFilas[' + i + '].monto=this.value;planCheckAlerta();planActualizarResumen();this.closest(\'.plan-fila\').classList.toggle(\'fila-irregular\',!this.value||parseFloat(this.value)===0);"></div>'
             + '<div><label>Vencimiento</label><input type="date" value="' + f.vencimiento + '" onchange="planFilas[' + i + '].vencimiento=this.value;"></div>'
@@ -1751,7 +1756,7 @@ function planAgregar() {
     var sig   = planAvanzarMes(last ? last.vencimiento : planFechaDefault(0));
     var m     = last && (last.nombre || '').match(/cuota[\s_]?(\d+)/i);
     var nextNum = m ? parseInt(m[1], 10) + 1 : planFilas.length + 1;
-    planFilas.push({ nombre: 'Cuota ' + nextNum, periodo: planPeriodoDeDate(sig), monto: '', vencimiento: sig.toISOString().split('T')[0] });
+    planFilas.push({ nombre: 'Cuota ' + nextNum, periodo: planPeriodoDeDate(sig), monto: '', vencimiento: sig.toISOString().split('T')[0], es_readmision: false });
     planRenderFilas(); planActualizarResumen(); planCheckAlerta();
 }
 function planEliminar(i) {
@@ -1835,7 +1840,8 @@ async function guardarCuotas() {
                     descuento_porcentaje: pctAplicar,
                     monto_final:          montoFinal,
                     saldo_pendiente:      montoFinal,
-                    estado:               estado
+                    estado:               estado,
+                    es_readmision:        f.es_readmision || false
                 });
             });
         });
@@ -2307,7 +2313,7 @@ function _dlPlantilla() {
     var cabecera = [
         'dni','apellido','nombre','email','telefono',
         'descuento_porcentaje','descuento_desde','descuento_hasta',
-        'concepto','periodo','fecha_vencimiento','monto_original','monto_abonado','fecha_pago','estado'
+        'concepto','periodo','fecha_vencimiento','monto_original','monto_abonado','fecha_pago','estado','es_readmision'
     ];
     var instrucciones = [
         'Obligatorio','Obligatorio','Obligatorio','Obligatorio','Opcional',
@@ -2315,17 +2321,18 @@ function _dlPlantilla() {
         'DD/MM/AAAA (vacío = aplica a todas las cuotas)','DD/MM/AAAA (opcional)',
         'Ej: Inscripción / Cuota 1','Ej: Abril de 2026','DD/MM/AAAA',
         'Precio base sin descuento','0 si no pagó nada','DD/MM/AAAA (solo si monto_abonado > 0)',
-        'Opcional: ABONADA / EN_MORA / PAGO_PARCIAL / NO_ABONADA / A_DEFINIR / NO_APLICA (si se omite se calcula automáticamente)'
+        'Opcional: ABONADA / EN_MORA / PAGO_PARCIAL / NO_ABONADA / A_DEFINIR / NO_APLICA (si se omite se calcula automáticamente)',
+        'SI o 1 si es cuota de readmisión, vacío o NO si es cuota normal'
     ];
     var ejemplo = [
         '30123456','González','María','maria@email.com','2616000000',
         '5','01/04/2026','',
-        'Inscripción','Abril de 2026','15/04/2026','90000','0','','NO_APLICA'
+        'Readmisión','Abril de 2026','15/04/2026','90000','0','','NO_ABONADA','SI'
     ];
     var ejemplo2 = [
         '30123456','González','María','maria@email.com','2616000000',
         '5','01/04/2026','',
-        'Cuota 1','Mayo de 2026','15/05/2026','90000','90000','15/05/2026','ABONADA'
+        'Cuota 1','Mayo de 2026','15/05/2026','90000','90000','15/05/2026','ABONADA',''
     ];
 
     var ws = XLSX.utils.aoa_to_sheet([cabecera, instrucciones, ejemplo, ejemplo2]);
@@ -2439,6 +2446,7 @@ function _impBuildEstMap(rows) {
                     : (abonado > 0 ? 'PAGO_PARCIAL'
                         : normalizarEstadoCuota(montoFinal, saldo, fechaVto, 'NO_ABONADA'))));
         var esNoAplica = estado === 'NO_APLICA';
+        var esReadmision = /^(si|sí|1|yes|true)$/i.test(String(r.es_readmision || '').trim());
         estMap[dni].cuotas.push({
             concepto:             String(r.concepto || '').trim(),
             periodo:              String(r.periodo || '').trim(),
@@ -2449,7 +2457,8 @@ function _impBuildEstMap(rows) {
             saldo_pendiente:      esNoAplica ? null : saldo,
             estado:               estado,
             no_aplica:            esNoAplica,
-            fecha_pago:           _impParseFecha(r.fecha_pago)
+            fecha_pago:           _impParseFecha(r.fecha_pago),
+            es_readmision:        esReadmision
         });
     });
     return { estMap: estMap, dnis: Object.keys(estMap) };
