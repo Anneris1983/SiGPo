@@ -1202,7 +1202,7 @@ function abrirDescuento(info, btn) {
     abrir('modal-descuento');
 }
 
-function _descRedondear2(n) { return Math.round((Number(n)||0)*100)/100; }
+function _descRedondear2(n) { return redondear2(n); }
 function _descCalcAbonado(c) { return _descRedondear2(Math.max(0,(Number(c.monto_final)||0)-(Number(c.saldo_pendiente)||0))); }
 function _descTieneMonto(c) { return !(c==null||c.monto_final===null||c.monto_final===undefined||c.monto_final===''||isNaN(Number(c.monto_final))); }
 function _descNormEstado(montoFinal, saldo, fechaVenc, estadoActual) {

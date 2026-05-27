@@ -266,17 +266,6 @@ function toast(msg, tipo) {
     document.getElementById('toasts').appendChild(d);
     setTimeout(function() { if(d.parentNode) d.remove(); }, 3500);
 }
-function fMonto(n) {
-    if (n===null||n===undefined||n==='') return '—';
-    var num = parseFloat(n);
-    if (isNaN(num)) return '—';
-    return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-function fFecha(f) {
-    if (!f) return '—';
-    var p = String(f).split('T')[0].split('-');
-    return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : f;
-}
 function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
 
 /* ── CARGAR ── */

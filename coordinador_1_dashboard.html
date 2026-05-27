@@ -483,7 +483,7 @@
         });
     }
     function estaEnAppsScript() { return typeof google !== 'undefined' && google.script && google.script.run; }
-    function escapeHtml(valor) { return String(valor==null?'':valor).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#39;"); }
+
     function escapeJs(valor) { return String(valor==null?'':valor).replaceAll('\\','\\\\').replaceAll("'","\\'"); }
     </script>
 </body>

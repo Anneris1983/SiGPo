@@ -316,7 +316,7 @@ document.querySelectorAll('.modal-overlay').forEach(function(m) {
     m.addEventListener('click', function(e){ if(e.target===m) cerrarModal(m.id); });
 });
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fMonto(n) { return '$'+Math.round(Number(n)||0).toLocaleString('es-AR'); }
+
 
 function iconoTipo(t) {
     return {DOCTORADO:'🎓',MAESTRIA:'📊',ESPECIALIZACION:'💼',DIPLOMADO:'📖',DIPLOMATURA:'📖',MICRO_MAESTRIA:'📖',CURSO:'📖'}[t]||'📖';

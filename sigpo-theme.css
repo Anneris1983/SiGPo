@@ -1074,3 +1074,51 @@ code, pre, kbd, samp, tt,
 .metrica-formula,
 [style*="monospace"],
 [style*="Courier"] { font-family: var(--font-mono) !important; }
+
+/* ══════════════════════════════════════════════════════════════════
+   15. FILTROS Y PILLS DE STATS (comunes en todas las vistas de cohorte)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Botón de filtro rápido */
+.filter-btn {
+  padding:       6px 13px;
+  border:        2px solid #e0e0e0;
+  background:    white;
+  border-radius: 6px;
+  font-size:     12px;
+  font-family:   var(--font-sans);
+  cursor:        pointer;
+  transition:    all .2s;
+  white-space:   nowrap;
+}
+.filter-btn:hover  { border-color: var(--clr-brand); }
+.filter-btn.active { background: var(--clr-brand); color: #fff; border-color: var(--clr-brand); }
+
+/* Pill de estadística (dashboards) */
+.rpill {
+  background:    #F8F6F1;
+  border-radius: 10px;
+  padding:       14px 12px;
+  border-left:   3px solid #E6DFD2;
+  transition:    box-shadow .14s;
+}
+.rpill:hover       { box-shadow: 0 2px 8px rgba(10,15,30,.07); }
+.rpill-label {
+  font-size:      10px;
+  font-weight:    700;
+  color:          #6B6254;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom:  6px;
+  line-height:    1.3;
+}
+.rpill-value {
+  font-family:    var(--font-serif);
+  font-size:      22px;
+  font-weight:    700;
+  color:          var(--clr-brand);
+  line-height:    1;
+  letter-spacing: -.02em;
+}
+.rpill.c-prog   { border-left-color: var(--clr-brand); }
+.rpill.c-cursos { border-left-color: #4F46E5; }

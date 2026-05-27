@@ -333,14 +333,6 @@ function toast(msg, tipo='') {
     setTimeout(() => d.remove(), 3200);
 }
 
-function escapeHtml(v) {
-    return String(v == null ? '' : v)
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'", '&#39;');
-}
 
 function formatCurrency(value) {
     return Number(value || 0).toLocaleString('es-AR', {

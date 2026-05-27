@@ -1139,14 +1139,6 @@
             return 'g_' + Math.random().toString(36).slice(2, 10);
         }
 
-        function escapeHtml(valor) {
-            return String(valor == null ? '' : valor)
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '&lt;')
-                .replaceAll('>', '&gt;')
-                .replaceAll('"', '&quot;')
-                .replaceAll("'", '&#39;');
-        }
 
         function escapeJs(valor) {
             return String(valor == null ? '' : valor)
