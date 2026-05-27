@@ -229,6 +229,7 @@
             <div class="rpill-adm c-recaud"><div class="rpill-adm-label">Recaudado</div>        <div class="rpill-adm-value" id="stat-recaudado">—</div></div>
             <div class="rpill-adm c-egres"> <div class="rpill-adm-label">Egresos</div>          <div class="rpill-adm-value" id="stat-egresos">—</div></div>
             <div class="rpill-adm c-saldo"> <div class="rpill-adm-label">Saldo</div>            <div class="rpill-adm-value" id="stat-saldo">—</div></div>
+            <div class="rpill-adm" style="border-left-color:#6f42c1;"><div class="rpill-adm-label">Readmisiones</div><div class="rpill-adm-value" id="stat-readmisiones" style="color:#6f42c1;">—</div><div id="stat-readmisiones-pend" style="font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.3;"></div></div>
         </div>
     </div>
 
@@ -353,6 +354,12 @@ function renderDashboard(data) {
     var saldoEl = document.getElementById('stat-saldo');
     saldoEl.textContent = fMillones(data.saldo);
     saldoEl.style.color = (data.saldo || 0) < 0 ? 'var(--danger)' : '';
+    var rEl = document.getElementById('stat-readmisiones');
+    if (rEl) {
+        rEl.textContent = data.totalReadmisiones || 0;
+        var rPend = document.getElementById('stat-readmisiones-pend');
+        if (rPend && data.totalReadmisionesPendientes) rPend.textContent = data.totalReadmisionesPendientes + ' pendientes';
+    }
 
     if (data.nombreAdmin) {
         document.getElementById('btn-admin-name').textContent = data.nombreAdmin;

@@ -395,6 +395,7 @@
                 <div class="stat-item"><div class="stat-label">Al día</div><div class="stat-value" id="s-aldia">—</div></div>
                 <div class="stat-item"><div class="stat-label">En mora</div><div class="stat-value" id="s-mora" style="color:#ffc107;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Readmisión</div><div class="stat-value" id="s-readmision" style="color:#6f42c1;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado">—</div></div>
                 <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Saldo</div><div class="stat-value" id="s-saldo">—</div></div>
@@ -413,6 +414,7 @@
             <button class="filter-btn" data-f="PENDIENTE">Pendiente</button>
             <button class="filter-btn" data-f="NO_ABONADA">No abonada</button>
             <button class="filter-btn" data-f="A_DEFINIR">A definir</button>
+            <button class="filter-btn" data-f="READMISION" style="border-color:#6f42c1;color:#6f42c1;">Readmisión</button>
         </div>
         <div class="actions">
             <button class="btn btn-outline" onclick="abrirCorreo()">✉️ Editar correos de reclamo</button>
@@ -1233,6 +1235,7 @@ function _renderFilaEst(est, celdas, totP, totA, totS, estadoGen) {
     tr.className = 'fila-est' + (esPasivo ? ' fila-pasiva-cohorte' : '');
     tr.dataset.dni = est.dni;
     tr.dataset.est = estadoGen;
+    tr.dataset.readmision = est.cobros.some(function(c){ return c.es_readmision; }) ? '1' : '0';
     tr.innerHTML = filaHtml;
     return tr;
 }
@@ -1411,9 +1414,10 @@ function actualizarStats() {
     var egrExec = (V.data.egresos || []).filter(function(e){ return e.tipo === 'EJECUTADO'; })
                                         .reduce(function(s,e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
     var saldo = recaud - egrExec;
-    document.getElementById('s-aldia').textContent   = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'ABONADA'; }).length;
-    document.getElementById('s-mora').textContent    = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'EN_MORA'; }).length;
-    document.getElementById('s-parcial').textContent = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'PAGO_PARCIAL'; }).length;
+    document.getElementById('s-aldia').textContent      = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'ABONADA'; }).length;
+    document.getElementById('s-mora').textContent       = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'EN_MORA'; }).length;
+    document.getElementById('s-parcial').textContent    = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'PAGO_PARCIAL'; }).length;
+    document.getElementById('s-readmision').textContent = ests.filter(function(e) { return e.cobros.some(function(c){ return c.es_readmision; }); }).length;
     document.getElementById('s-recaudado').textContent = fMillones(recaud);
     document.getElementById('s-egresos').textContent  = fMillones(egrExec);
     var sEl = document.getElementById('s-saldo');
@@ -1426,11 +1430,15 @@ function actualizarFiltros() {
     var labels = {
         todos: 'Todos', ABONADA: 'Al día', EN_MORA: 'En mora',
         PAGO_PARCIAL: 'Pago parcial', PENDIENTE: 'Pendiente',
-        NO_ABONADA: 'No abonada', A_DEFINIR: 'A definir'
+        NO_ABONADA: 'No abonada', A_DEFINIR: 'A definir', READMISION: 'Readmisión'
     };
     document.querySelectorAll('.filter-btn').forEach(function(b) {
         var f = b.dataset.f;
-        var n = f === 'todos' ? ests.length : ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === f; }).length;
+        var n = f === 'todos'
+            ? ests.length
+            : f === 'READMISION'
+                ? ests.filter(function(e){ return e.cobros.some(function(c){ return c.es_readmision; }); }).length
+                : ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === f; }).length;
         b.textContent = labels[f] + ' (' + n + ')';
     });
 }
@@ -1456,7 +1464,11 @@ function aplicarFiltro() {
 function _aplicarFiltroYPag() {
     var vis = 0, ocultas = 0;
     document.querySelectorAll('.fila-est').forEach(function(tr) {
-        var ok = V.filtro === 'todos' || tr.dataset.est === V.filtro;
+        var ok = V.filtro === 'todos'
+            ? true
+            : V.filtro === 'READMISION'
+                ? tr.dataset.readmision === '1'
+                : tr.dataset.est === V.filtro;
         if (!ok) { tr.classList.add('oculta'); return; }
         vis++;
         var enPag = vis <= V.page * _PAGE_SIZE;

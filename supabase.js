@@ -959,6 +959,8 @@ async function obtenerDashboardAdmin() {
         alDia:                  Math.max(0, totalInscriptos - totalEnMora),
         enMora:                 totalEnMora,
         cuotasEnMora:           Number(r.totalCuotasEnMora  || 0),
+        totalReadmisiones:      Number(r.totalReadmisiones  || 0),
+        totalReadmisionesPendientes: Number(r.totalReadmisionesPendientes || 0),
         recaudado:              Number(r.totalIngresos      || 0),
         egresos:                Number(r.totalEgresos       || 0),
         saldo:                  Number(r.saldoNeto          || 0),
