@@ -948,7 +948,7 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
           .eq('cohorte_id', cohorteId)
           .eq('programa_id', programaId)
           .order('fecha_vencimiento'),
-        sb.from('egresos').select('tipo, monto_pagado, monto_original').eq('cohorte_id', cohorteId)
+        obtenerEgresosResumenPorCohorte(cohorteId)
     ]);
 
     if (progRes.error || cohRes.error) return null;
@@ -1034,7 +1034,7 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
         cohorte:     cohorte,
         columnas:    columnas,
         estudiantes: estudiantesEnriquecidos,
-        egresos:     egrRes.data || []
+        egresos:     egrRes || []
     };
 }
 

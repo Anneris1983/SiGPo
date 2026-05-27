@@ -327,10 +327,10 @@ async function cargarDatos() {
     try {
         var sb = await getSupabase();
 
-        var rCobros = await sb.from('cobros').select('*');
-        var rProgramas = await sb.from('programas').select('programa_id,nombre,tipo');
-
-        var cobros = (rCobros.data || []);
+        var [cobros, rProgramas] = await Promise.all([
+            obtenerCobros(),
+            obtenerProgramasCatalogo()
+        ]);
         // ── Aplicar filtros desde Cashflow ──
         try {
             var _fRaw = sessionStorage.getItem('sigpo_filtros_cashflow');
@@ -342,7 +342,7 @@ async function cargarDatos() {
                 if (_fCF.hasta)    cobros = cobros.filter(function(c){ return !c.fecha_vencimiento || String(c.fecha_vencimiento).substring(0,10) <= _fCF.hasta; });
             }
         } catch(_e) {}
-        var programas = (rProgramas.data || []);
+        var programas = rProgramas;
 
         // Map programa_id -> nombre
         var progMap = {};

@@ -256,14 +256,14 @@ async function cargar() {
         var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
             sb.from('cohortes').select('*, programas(nombre)').eq('cohorte_id', COHORTE_ID).single(),
             sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
-            sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico').eq('cohorte_id', COHORTE_ID),
+            obtenerInscripcionesPorCohorte(COHORTE_ID, 'estudiante_id, descuento_porcentaje, estado_academico'),
             sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
-            sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', COHORTE_ID)
+            obtenerEgresosResumenPorCohorte(COHORTE_ID)
         ]);
 
         var cohorte = rCoh.data || {};
         var cobros  = rCob.data || [];
-        var inscripciones = rInsc.data || [];
+        var inscripciones = rInsc;
         var estList = rEst.data || [];
 
         var estByDni = {};
@@ -297,7 +297,7 @@ async function cargar() {
             cohorte:  { cohorteId: COHORTE_ID, nombre: cohorte.nombre || 'Cohorte', fecha_inicio: cohorte.fecha_inicio||'', fecha_fin: cohorte.fecha_fin||'' },
             columnas: derivarColumnas(Object.values(dniMap)),
             estudiantes: Object.values(dniMap),
-            egresos: rEgr.data || []
+            egresos: rEgr || []
         };
         renderHeader();
         renderTabla();

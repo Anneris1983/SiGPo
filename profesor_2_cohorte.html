@@ -157,14 +157,14 @@ async function cargar(sesion, cohorteId) {
     var [cohRes, cobRes, egrRes, inscRes] = await Promise.all([
         sb.from('cohortes').select('cohorte_id,nombre,programa_id,estado,fecha_inicio,fecha_fin').eq('cohorte_id', cohorteId).single(),
         sb.from('cobros').select('dni,concepto,periodo,fecha_vencimiento,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', cohorteId).order('fecha_vencimiento'),
-        sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', cohorteId),
-        sb.from('inscripciones').select('estudiante_id,cohorte_id,estado_academico').eq('cohorte_id', cohorteId)
+        obtenerEgresosResumenPorCohorte(cohorteId),
+        obtenerInscripcionesPorCohorte(cohorteId, 'estudiante_id, cohorte_id, estado_academico')
     ]);
 
     var coh    = cohRes.data;
     var cobros = cobRes.data || [];
-    var egres  = egrRes.data || [];
-    var insc   = inscRes.data || [];
+    var egres  = egrRes;
+    var insc   = inscRes;
 
     if (!coh) { mostrarError('Cohorte no encontrada.'); return; }
 

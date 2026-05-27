@@ -334,10 +334,10 @@ function exportarPDF() { window.print(); }
 
 async function cargarDatos() {
     try {
-        var sb = await getSupabase();
-        var rC = await sb.from('cobros').select('programa_id,cohorte_id,dni,estado,fecha_vencimiento,monto_final,saldo_pendiente');
-        var rP = await sb.from('programas').select('programa_id,nombre');
-        var cobros = rC.data || [];
+        var [cobros, programas] = await Promise.all([
+            obtenerCobrosParaDesercion(),
+            obtenerProgramasCatalogo('programa_id, nombre')
+        ]);
         // ── Aplicar filtros desde Cashflow ──
         try {
             var _fRaw = sessionStorage.getItem('sigpo_filtros_cashflow');
@@ -349,7 +349,6 @@ async function cargarDatos() {
                 if (_fCF.hasta)    cobros = cobros.filter(function(c){ return !c.fecha_vencimiento || String(c.fecha_vencimiento).substring(0,10) <= _fCF.hasta; });
             }
         } catch(_e) {}
-        var programas = rP.data || [];
         var progMap = {};
         programas.forEach(function(p) { progMap[p.programa_id] = p.nombre; });
 

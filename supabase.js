@@ -773,6 +773,47 @@ async function obtenerEgresos(filtros) {
     return data || [];
 }
 
+// Resumen ligero de egresos de una cohorte (tipo, monto_pagado, monto_original)
+// Idéntico en: administrador_4_cohorte, cooperadora_5_cohorte, coordinador_3_cohorte,
+//              profesor_2_cohorte, Secretaria_4_Tabla, secretaria_3_detalle_cohorte
+async function obtenerEgresosResumenPorCohorte(cohorteId) {
+    const sb = await getSupabase();
+    const { data, error } = await sb.from('egresos')
+        .select('tipo, monto_pagado, monto_original')
+        .eq('cohorte_id', cohorteId);
+    if (error) throw error;
+    return data || [];
+}
+
+// Inscripciones de una cohorte. campos: string de columnas para SELECT (opcional)
+async function obtenerInscripcionesPorCohorte(cohorteId, campos) {
+    const sb = await getSupabase();
+    const select = campos || 'estudiante_id, descuento_porcentaje, estado_academico, descuento_motivo, descuento_desde, descuento_hasta';
+    const { data, error } = await sb.from('inscripciones')
+        .select(select)
+        .eq('cohorte_id', cohorteId);
+    if (error) throw error;
+    return data || [];
+}
+
+// Cobros para reportes de tasa de deserción (campo fijo, todos los programas)
+async function obtenerCobrosParaDesercion() {
+    const sb = await getSupabase();
+    const { data, error } = await sb.from('cobros')
+        .select('programa_id, cohorte_id, dni, estado, fecha_vencimiento, monto_final, saldo_pendiente');
+    if (error) throw error;
+    return data || [];
+}
+
+// Catálogo de programas con campos configurables
+async function obtenerProgramasCatalogo(campos) {
+    const sb = await getSupabase();
+    const select = campos || 'programa_id, nombre, tipo';
+    const { data, error } = await sb.from('programas').select(select).order('nombre');
+    if (error) throw error;
+    return data || [];
+}
+
 async function guardarEgreso(datos) {
     const sb = await getSupabase();
     if (datos.egreso_id) {
@@ -1081,8 +1122,12 @@ var _gasFunctions = {
     },
 
     // Programas / Cohortes
-    obtenerDetallePrograma: obtenerDetallePrograma,
-    getProgramas:           obtenerProgramas,
+    obtenerDetallePrograma:            obtenerDetallePrograma,
+    getProgramas:                      obtenerProgramas,
+    obtenerProgramasCatalogo:          obtenerProgramasCatalogo,
+    obtenerEgresosResumenPorCohorte:   obtenerEgresosResumenPorCohorte,
+    obtenerInscripcionesPorCohorte:    obtenerInscripcionesPorCohorte,
+    obtenerCobrosParaDesercion:        obtenerCobrosParaDesercion,
     cambiarEstadoCohorte:   async function(id, estado) {
         var sb = await getSupabase();
         var r = await sb.from('cohortes').update({ estado: estado }).eq('cohorte_id', id);
