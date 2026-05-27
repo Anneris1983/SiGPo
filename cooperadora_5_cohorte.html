@@ -1598,11 +1598,10 @@
             mostrarLoadingTabla();
             try {
                 var sb = await getSupabase();
-                var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
-                    sb.from('cohortes').select('*, programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
+                var [rCoh, rCob, rInsc, rEgr] = await Promise.all([
+                    sb.from('cohortes').select('cohorte_id,nombre,estado,fecha_inicio,fecha_fin,programa_id,activa,cantidad_cuotas_default,programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
                     sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,monto_transferido,estado,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId),
                     sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico,descuento_motivo').eq('cohorte_id', cohorteId),
-                    sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
                     sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', cohorteId)
                 ]);
 
@@ -1610,8 +1609,12 @@
                 var prog = cohorte.programas || {};
                 var cobros = rCob.data || [];
                 var inscripciones = rInsc.data || [];
-                var estList = rEst.data || [];
                 var egresosRaw = rEgr.data || [];
+                var inscIds = inscripciones.map(function(i){ return i.estudiante_id; });
+                var rEst = inscIds.length
+                    ? await sb.from('estudiantes').select('id,dni,nombre,apellido,email').in('id', inscIds)
+                    : { data: [] };
+                var estList = rEst.data || [];
 
                 var estByDni = {};
                 estList.forEach(function(e){ estByDni[String(e.dni)] = e; });
