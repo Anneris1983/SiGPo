@@ -558,7 +558,7 @@
                 <div class="istep-num">1</div>
                 <div>
                     <h4>Descargá la plantilla</h4>
-                    <p>Columnas: <code>dni · apellido · nombre · email · telefono · descuento_porcentaje · concepto · periodo · fecha_vencimiento · monto_original · monto_abonado · fecha_pago</code></p>
+                    <p>Columnas: <code>dni · apellido · nombre · email · descuento_porcentaje · descuento_desde · descuento_hasta · concepto · periodo · fecha_vencimiento · monto_original · monto_abonado · fecha_pago · estado · es_readmision</code></p>
                     <button class="btn btn-outline" style="border-color:#6f42c1;color:#6f42c1;margin-top:8px;" onclick="dlPlantilla()">📄 Descargar plantilla .xlsx</button>
                 </div>
             </div>
@@ -2323,12 +2323,12 @@ function _dlPlantilla() {
     // Fila 2: instrucciones
     // Fila 3: ejemplo
     var cabecera = [
-        'dni','apellido','nombre','email','telefono',
+        'dni','apellido','nombre','email',
         'descuento_porcentaje','descuento_desde','descuento_hasta',
         'concepto','periodo','fecha_vencimiento','monto_original','monto_abonado','fecha_pago','estado','es_readmision'
     ];
     var instrucciones = [
-        'Obligatorio','Obligatorio','Obligatorio','Obligatorio','Opcional',
+        'Obligatorio','Obligatorio','Obligatorio','Obligatorio',
         'Obligatorio (0 si no tiene)',
         'DD/MM/AAAA (vacío = aplica a todas las cuotas)','DD/MM/AAAA (opcional)',
         'Ej: Inscripción / Cuota 1','Ej: Abril de 2026','DD/MM/AAAA',
@@ -2337,12 +2337,12 @@ function _dlPlantilla() {
         'SI o 1 si es cuota de readmisión, vacío o NO si es cuota normal'
     ];
     var ejemplo = [
-        '30123456','González','María','maria@email.com','2616000000',
+        '30123456','González','María','maria@email.com',
         '5','01/04/2026','',
         'Readmisión','Abril de 2026','15/04/2026','90000','0','','NO_ABONADA','SI'
     ];
     var ejemplo2 = [
-        '30123456','González','María','maria@email.com','2616000000',
+        '30123456','González','María','maria@email.com',
         '5','01/04/2026','',
         'Cuota 1','Mayo de 2026','15/05/2026','90000','90000','15/05/2026','ABONADA',''
     ];
@@ -2428,7 +2428,6 @@ function _impBuildEstMap(rows) {
                 apellido:              String(r.apellido || '').trim(),
                 nombre:                String(r.nombre || '').trim(),
                 email:                 String(r.email || '').trim(),
-                telefono:              String(r.telefono || '').trim() || null,
                 descuento_porcentaje:  redondear2(parseFloat(r.descuento_porcentaje) || 0),
                 descuento_desde:       _impParseFecha(r.descuento_desde),
                 descuento_hasta:       _impParseFecha(r.descuento_hasta),
@@ -2466,6 +2465,7 @@ function _impBuildEstMap(rows) {
             monto_original:       esNoAplica ? null : montoOrig,
             descuento_porcentaje: esNoAplica ? 0 : (aplicaDescuento ? pct : 0),
             monto_final:          esNoAplica ? null : montoFinal,
+            monto_abonado:        esNoAplica ? 0 : abonado,
             saldo_pendiente:      esNoAplica ? null : saldo,
             estado:               estado,
             no_aplica:            esNoAplica,
@@ -2492,7 +2492,7 @@ async function _procesarImport(file) {
         // FASE 1: batch upsert de todos los estudiantes (1 query en vez de N)
         var estList = dnis.map(function(dni) {
             var e = estMap[dni];
-            return { dni: e.dni, apellido: e.apellido, nombre: e.nombre, email: e.email, telefono: e.telefono };
+            return { dni: e.dni, apellido: e.apellido, nombre: e.nombre, email: e.email };
         });
         var { data: estDataArr, error: estBatchErr } = await sb.from('estudiantes')
             .upsert(estList, { onConflict: 'dni' })
