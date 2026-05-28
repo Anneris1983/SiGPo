@@ -297,8 +297,7 @@
 
 <script src="supabase.js?v=20250529"></script>
 <script>
-var EDGE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co/functions/v1/crear-usuario';
-var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZXZ5cGRvd2RocWF4dmZpeXd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzM3NTIsImV4cCI6MjA2MDUwOTc1Mn0.VXZFGGfj96H0AMbq9qRHLlYRqJr0CJCXPKkuLYkVKiM';
+var EDGE_URL = SUPABASE_URL + '/functions/v1/crear-usuario';
 var _us=[],_pr=[],_cohProg={},_frol='TODOS',_aid=null,_anm='',_impF=null,_coordAsigs=[],_estInsc=[];
 
 document.addEventListener('DOMContentLoaded',async function(){
@@ -545,7 +544,7 @@ async function guardarU(){
             var token=sess.data.session?sess.data.session.access_token:'';
             var resp=await fetch(EDGE_URL,{
                 method:'POST',
-                headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':ANON_KEY},
+                headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_KEY},
                 body:JSON.stringify({email:em,password:pw,apellido:ap,nombre:no,nombre_completo:nc,dni:dn,rol:rol,asignaciones:asigs,inscripciones:insc})
             });
             var result=await resp.json();

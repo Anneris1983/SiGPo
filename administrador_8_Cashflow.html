@@ -625,7 +625,7 @@ function renderNotificaciones(datos) {
     }).join('');
 }
 function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
-function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); marcarTodasNotificacionesLeidas(); }
 
 document.addEventListener('DOMContentLoaded', async function() {
     var sb = await getSupabase();

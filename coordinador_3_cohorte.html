@@ -1781,7 +1781,7 @@ function leerNotif(i) {
 async function marcarTodasLeidas() {
     V.notifications = (V.notifications || []).map(n => ({ ...n, leida:true }));
     renderNotificaciones();
-    if (estaEnAppsScript()) { try { await gs('marcarNotificacionesCoordinadorLeidas'); } catch(e) {} }
+    marcarTodasNotificacionesLeidas();
 }
 
 

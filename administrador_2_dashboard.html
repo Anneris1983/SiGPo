@@ -349,10 +349,10 @@ function renderDashboard(data) {
     document.getElementById('stat-mora').textContent        = data.enMora || 0;
     var cuotasEl = document.getElementById('stat-mora-cuotas');
     if (cuotasEl) cuotasEl.textContent = data.cuotasEnMora ? data.cuotasEnMora + ' cuotas en mora' : '';
-    document.getElementById('stat-recaudado').textContent   = fMillones(data.recaudado);
-    document.getElementById('stat-egresos').textContent     = fMillones(data.egresos);
+    document.getElementById('stat-recaudado').textContent   = fMonto(data.recaudado);
+    document.getElementById('stat-egresos').textContent     = fMonto(data.egresos);
     var saldoEl = document.getElementById('stat-saldo');
-    saldoEl.textContent = fMillones(data.saldo);
+    saldoEl.textContent = fMonto(data.saldo);
     saldoEl.style.color = (data.saldo || 0) < 0 ? 'var(--danger)' : '';
     var rEl = document.getElementById('stat-readmisiones');
     if (rEl) {
@@ -398,9 +398,9 @@ function renderTarjeta(p) {
         + '<div class="program-stat"><span>' + label + ':</span><strong>' + (p.cohortes || 0) + '</strong></div>'
         + '<div class="program-stat"><span>Al día:</span><strong style="color:' + colorAlDia + ';">' + (p.alDia || 0) + '</strong></div>'
         + '<div class="program-stat"><span>En mora:</span><strong style="color:#c0392b;">' + (p.enMora || 0) + (p.cuotasEnMora ? ' est. (' + p.cuotasEnMora + ' cuotas)' : '') + '</strong></div>'
-        + '<div class="program-stat"><span>Recaudado:</span><strong>' + fMillones(p.recaudado) + '</strong></div>'
-        + '<div class="program-stat"><span>Egresos:</span><strong style="color:#e67e22;">' + fMillones(p.egresos) + '</strong></div>'
-        + '<div class="program-stat"><span>Saldo:</span><strong style="color:' + colorSaldo + ';">' + fMillones(p.saldo) + '</strong></div>'
+        + '<div class="program-stat"><span>Recaudado:</span><strong>' + fMonto(p.recaudado) + '</strong></div>'
+        + '<div class="program-stat"><span>Egresos:</span><strong style="color:#e67e22;">' + fMonto(p.egresos) + '</strong></div>'
+        + '<div class="program-stat"><span>Saldo:</span><strong style="color:' + colorSaldo + ';">' + fMonto(p.saldo) + '</strong></div>'
         + '</div></div>';
 }
 

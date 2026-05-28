@@ -473,7 +473,7 @@
         document.getElementById('notif-panel').classList.remove('open');
     }
     function leerNotif(index) { if (!notificaciones[index]) return; notificaciones[index].leida = true; renderNotificaciones(notificaciones); }
-    function marcarTodasLeidas() { notificaciones = notificaciones.map(function(n) { n.leida=true; return n; }); renderNotificaciones(notificaciones); }
+    function marcarTodasLeidas() { notificaciones = notificaciones.map(function(n) { n.leida=true; return n; }); renderNotificaciones(notificaciones); marcarTodasNotificacionesLeidas(); }
 
     async function leerArchivoBase64(archivo) {
         return new Promise(function(resolve, reject) {
