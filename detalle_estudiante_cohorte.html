@@ -273,7 +273,7 @@ function resolverEstado(c) {
 }
 
 function renderCobros(cobros) {
-    var etq = { ABONADA:'Abonada', EN_MORA:'En mora', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'En revisión', NO_ABONADA:'Por abonar', A_DEFINIR:'A definir', NO_APLICA:'No aplica' };
+    var etq = { ABONADA:'Abonada', EN_MORA:'En mora', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'En revisión', NO_ABONADA:'No abonada', A_DEFINIR:'A definir', NO_APLICA:'No aplica' };
     var cls = { ABONADA:'badge-abonada', EN_MORA:'badge-mora', PAGO_PARCIAL:'badge-parcial', PENDIENTE:'badge-pendiente', NO_ABONADA:'badge-noabonada', A_DEFINIR:'badge-adefinir', NO_APLICA:'badge-adefinir' };
     var peso = { EN_MORA:6, PAGO_PARCIAL:5, PENDIENTE:4, NO_ABONADA:3, A_DEFINIR:2, ABONADA:1 };
     var tbody = document.getElementById('cobros-body');

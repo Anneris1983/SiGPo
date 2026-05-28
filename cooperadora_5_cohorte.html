@@ -1962,7 +1962,7 @@
 
             const badgeLabels = {
                 abonada: 'Abonada', parcial: 'Parcial', mora: 'En mora',
-                pendiente: 'Revisión', noabonada: 'Por abonar', adefinir: 'A definir'
+                pendiente: 'Revisión', noabonada: 'No abonada', adefinir: 'A definir'
             };
             const badgeLabel = badgeLabels[cuota.estado] || cuota.estado;
             const esEditable = !['abonada', 'parcial', 'pendiente', 'nodebe'].includes(cuota.estado);
