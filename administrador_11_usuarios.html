@@ -279,6 +279,7 @@
                 <strong>Columnas requeridas (fila 1 = cabecera):</strong>
                 <div style="margin-top:6px;font-family:monospace;font-size:12px;background:#fff;padding:8px;border-radius:6px;">apellido · nombre · dni · email · password · rol</div>
                 <div style="margin-top:6px;font-size:12px;"><strong>Roles:</strong> ADMINISTRADOR · SECRETARIA · COOPERADORA · COORDINADOR · PROFESOR · ESTUDIANTE</div>
+                <button onclick="dlPlantillaUsuarios()" style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#0284c7;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">📄 Descargar plantilla .xlsx</button>
             </div>
             <div class="mf" style="margin-top:14px;">
                 <label>Archivo .xlsx</label>
@@ -582,6 +583,22 @@ async function ejErase(){
     catch(e){toast('Error: '+e.message,'err');}finally{spin(false);}
 }
 
+async function dlPlantillaUsuarios(){
+    if(!window.XLSX){spin(true);await new Promise(function(res,rej){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});spin(false);}
+    var cabecera=['apellido','nombre','dni','email','password','rol'];
+    var ejemplos=[
+        ['García','Luis','12345678','luis.garcia@ejemplo.com','ClaveSegura1!','SECRETARIA'],
+        ['Martínez','Ana','23456789','ana.martinez@ejemplo.com','ClaveSegura2!','COORDINADOR'],
+        ['López','Carlos','34567890','carlos.lopez@ejemplo.com','ClaveSegura3!','PROFESOR'],
+        ['Rodríguez','María','45678901','maria.rodriguez@ejemplo.com','ClaveSegura4!','COOPERADORA'],
+        ['Pérez','Juan','56789012','juan.perez@ejemplo.com','ClaveSegura5!','ESTUDIANTE']
+    ];
+    var ws=XLSX.utils.aoa_to_sheet([cabecera].concat(ejemplos));
+    ws['!cols']=[{wch:20},{wch:15},{wch:12},{wch:30},{wch:18},{wch:14}];
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,'Usuarios',ws);
+    XLSX.writeFile(wb,'plantilla_usuarios_SiGPo.xlsx');
+}
 function abrirImp(){_impF=null;document.getElementById('imp-f').value='';document.getElementById('imp-prev').style.display='none';document.getElementById('btn-imp').disabled=true;abrM('m-imp');}
 function onImpFile(inp){
     var f=inp.files[0];if(!f)return;
