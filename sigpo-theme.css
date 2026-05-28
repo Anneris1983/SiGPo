@@ -765,12 +765,13 @@ body > .header,
   margin-bottom: 0 !important;
 }
 
-/* Título del header en blanco serif (como el certificado) */
-body > .header h1,
-body > .header .header-left h1,
-body > .header .header-top-left h1,
-#app > .page-header h1,
-#app > .page-header .header-left h1 {
+/* Título del header en blanco serif — cubre todas las variantes de estructura */
+.header h1,
+.header .header-left h1,
+.header .header-top-left h1,
+header.header h1,
+.page-header h1,
+.page-header .header-left h1 {
   font-family:    var(--font-serif) !important;
   font-size:      12px !important;
   font-weight:    600 !important;
@@ -781,10 +782,11 @@ body > .header .header-top-left h1,
 }
 
 /* Subtítulo y textos secundarios del header */
-body > .header .header-left p,
-body > .header .header-top-left p,
-#app > .page-header .header-left p,
-#app > .page-header p { color: rgba(255,255,255,.85) !important; }
+.header .header-left p,
+.header .header-top-left p,
+header.header p,
+.page-header .header-left p,
+.page-header p { color: rgba(255,255,255,.85) !important; }
 /* Excepciones: dropdown de notificaciones tiene fondo blanco */
 #notif-dropdown p,
 #notif-list p { color: #374151 !important; }
@@ -1006,12 +1008,12 @@ hr,
 @media (max-width: 768px) {
   .container { padding: 0 var(--s-4) !important; margin: var(--s-5) auto !important; }
 
-  body > .header,
-  #app > .page-header,
+  .header,
+  .page-header,
   .navbar { padding: 0 var(--s-4) !important; }
 
-  body > .header h1,
-  #app > .page-header h1 { font-size: 14px !important; }
+  .header h1,
+  .page-header h1 { font-size: 12px !important; }
 
   .grid-8,
   .grid-6,
