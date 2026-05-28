@@ -1763,7 +1763,7 @@ function renderNotificaciones() {
     }
     cont.innerHTML = V.notifications.map((n, i) => `
         <div class="notif-item ${n.leida ? '' : 'unread'}" onclick="leerNotif(${i})">
-            <div style="font-weight:600;color:#5C1018;">${escapeHtml(n.titulo || 'Notificación')}</div>
+            <div style="font-weight:600;color:#5C1018;">${escapeHtml(n.tipo || 'Notificación')}</div>
             <div style="margin-top:2px;">${escapeHtml(n.mensaje || '')}</div>
             <small>${escapeHtml(n.tiempo || '')}</small>
         </div>

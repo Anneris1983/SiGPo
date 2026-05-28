@@ -461,7 +461,7 @@
         if (!notificaciones.length) { lista.innerHTML = '<div class="loading-block">No hay notificaciones.</div>'; return; }
         lista.innerHTML = notificaciones.map(function(n, i) {
             return '<div class="notif-item ' + (n.leida ? '' : 'unread') + '" onclick="leerNotif(' + i + ')">' +
-                '<strong>' + escapeHtml(n.titulo || 'Notificación') + '</strong>' +
+                '<strong>' + escapeHtml(n.tipo || 'Notificación') + '</strong>' +
                 '<div>' + escapeHtml(n.mensaje || '') + '</div>' +
                 '<small>' + escapeHtml(n.tiempo || '') + '</small></div>';
         }).join('');
