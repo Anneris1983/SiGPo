@@ -772,7 +772,7 @@ body > .header .header-top-left h1,
 #app > .page-header h1,
 #app > .page-header .header-left h1 {
   font-family:    var(--font-serif) !important;
-  font-size:      9px !important;
+  font-size:      12px !important;
   font-weight:    600 !important;
   color:          #fff !important;
   letter-spacing: -.01em !important;
