@@ -1406,10 +1406,10 @@ function actualizarStats() {
     document.getElementById('s-mora').textContent       = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'EN_MORA'; }).length;
     document.getElementById('s-parcial').textContent    = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'PAGO_PARCIAL'; }).length;
     document.getElementById('s-readmision').textContent = ests.filter(function(e) { return e.cobros.some(function(c){ return c.es_readmision; }); }).length;
-    document.getElementById('s-recaudado').textContent = fMillones(recaud);
-    document.getElementById('s-egresos').textContent  = fMillones(egrExec);
+    document.getElementById('s-recaudado').textContent = fMonto(recaud);
+    document.getElementById('s-egresos').textContent  = fMonto(egrExec);
     var sEl = document.getElementById('s-saldo');
-    sEl.textContent = fMillones(saldo);
+    sEl.textContent = fMonto(saldo);
     sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
 }
 
