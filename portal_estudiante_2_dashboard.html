@@ -96,6 +96,8 @@
         .est-proxima   { background: #dbeafe; color: #1e40af; }
         .est-noabonada { background: #e0e7ff; color: #3730a3; }
         .est-adefinir  { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+        .est-abonada   { background: #d1fae5; color: #065f46; }
+        .est-parcial   { background: #fff8e1; color: #78350f; border: 1px solid #fde68a; }
 
         .banco-box { background: var(--bg); padding: 14px 16px; border-radius: 10px; font-size: 13.5px; line-height: 1.9; border: 1px solid var(--border-light); }
         .banco-box strong { color: #5C1018; }
@@ -283,6 +285,14 @@
 
         if (estado === 'NO_APLICA') {
             return '<span class="cuota-estado est-adefinir">NO APLICA</span>';
+        }
+
+        if (estado === 'ABONADA') {
+            return '<span class="cuota-estado est-abonada">ABONADA</span>';
+        }
+
+        if (estado === 'PAGO_PARCIAL') {
+            return '<span class="cuota-estado est-parcial">PAGO PARCIAL</span>';
         }
 
         return '<span class="cuota-estado est-proxima">' + estado.replace('_', ' ') + '</span>';
@@ -681,7 +691,7 @@
             };
             var filasCuotas = cobros.filter(function(c) { return !c.no_aplica; }).map(function(c) {
                 var est = _ESTADOS[c.estado] || c.estado || '—';
-                var color = c.estado === 'EN_MORA' ? '#fee2e2' : c.estado === 'ABONADA' ? '#d1fae5' : '#fff';
+                var color = c.estado === 'EN_MORA' ? '#fee2e2' : c.estado === 'ABONADA' ? '#d1fae5' : c.estado === 'PAGO_PARCIAL' ? '#fff8e1' : c.estado === 'PENDIENTE' ? '#dbeafe' : '#fff';
                 return '<tr style="background:' + color + ';">' +
                     '<td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;">' + (c.concepto || '—') + '</td>' +
                     '<td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;">' + (c.periodo || '—') + '</td>' +

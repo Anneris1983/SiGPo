@@ -793,7 +793,10 @@ async function obtenerInscripcionesPorCohorte(cohorteId, campos) {
         .select(select)
         .eq('cohorte_id', cohorteId);
     if (error) throw error;
-    return data || [];
+    // Normalizar campos opcionales para evitar 'undefined' en la UI
+    return (data || []).map(function(r) {
+        return Object.assign({ descuento_motivo: null, descuento_desde: null, descuento_hasta: null }, r);
+    });
 }
 
 // Cobros para reportes de tasa de deserción (campo fijo, todos los programas)
@@ -1056,6 +1059,20 @@ document.addEventListener('DOMContentLoaded', async function () {
         var notifs = await obtenerNotificaciones(sesion.rol);
         renderNotificaciones(notifs);
     }
+});
+
+// Cierre de modales con tecla ESC — funciona en todos los archivos
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    // Buscar modal visible (.modal-overlay.show o [id^="modal-"].show)
+    var abierto = document.querySelector('.modal-overlay.show');
+    if (abierto) {
+        abierto.classList.remove('show');
+        return;
+    }
+    // Alternativa: paneles tipo sidebar con clase .show
+    var panel = document.querySelector('.panel.show, .drawer.show');
+    if (panel) panel.classList.remove('show');
 });
 
 // ══════════════════════════════════════════════════════════════
