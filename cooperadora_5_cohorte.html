@@ -143,6 +143,7 @@
         .notif-panel {
             display: none;
             position: absolute;
+            z-index: 1000;
             top: calc(100% + 10px);
             right: 0;
             width: min(420px, 92vw);
@@ -2853,7 +2854,7 @@
 
         function cargarNotificaciones() {
             obtenerNotificaciones('COOPERADORA').then(function(datos) {
-                notificaciones = Array.isArray(datos) ? datos.map(function(n){ return { titulo:n.tipo||'Notificación', mensaje:n.mensaje||'', fechaRelativa:'', leida:!!n.leida, urlDestino:'' }; }) : [];
+                notificaciones = Array.isArray(datos) ? datos.map(function(n){ return { titulo:n.tipo||'Notificación', mensaje:n.mensaje||'', fechaRelativa:n.tiempo||'', leida:!!n.leida, urlDestino:'' }; }) : [];
                 renderNotificaciones();
             }).catch(function() {
                 notificaciones = [];
