@@ -2880,14 +2880,15 @@
                 return;
             }
 
+            var tipoLabel = { pago:'Pago', solicitud:'Solicitud', baja:'Solicitud de baja', descuento:'Descuento', cuota:'Cuota', mora:'En mora', aprobado:'Aprobado', rechazado:'Rechazado' };
             lista.innerHTML = notificaciones.map(function (n, index) {
-                return `
-                    <div class="notif-item ${n.leida ? '' : 'unread'}" onclick="abrirNotificacion(${index})">
-                        <h4>${escapeHtml(n.titulo || 'Notificación')}</h4>
-                        <p>${escapeHtml(n.mensaje || '')}</p>
-                        <small>${escapeHtml(n.fechaRelativa || '')}</small>
-                    </div>
-                `;
+                var titulo = tipoLabel[n.titulo] || (n.titulo ? n.titulo.charAt(0).toUpperCase() + n.titulo.slice(1) : 'Notificación');
+                var msgHtml = n.mensaje ? '<p>' + escapeHtml(n.mensaje) + '</p>' : '';
+                return '<div class="notif-item ' + (n.leida ? '' : 'unread') + '" onclick="abrirNotificacion(' + index + ')">' +
+                    '<h4>' + escapeHtml(titulo) + '</h4>' +
+                    msgHtml +
+                    '<small>' + escapeHtml(n.fechaRelativa || '') + '</small>' +
+                    '</div>';
             }).join('');
         }
 
