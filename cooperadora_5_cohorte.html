@@ -140,78 +140,6 @@
             justify-content: center;
         }
 
-        .notif-panel {
-            display: none;
-            position: absolute;
-            z-index: 1000;
-            top: calc(100% + 10px);
-            right: 0;
-            width: min(420px, 92vw);
-            background: #fff !important;
-            border: 1px solid #e5e7eb;
-            border-radius: 16px;
-            box-shadow: 0 18px 50px rgba(0,0,0,0.18);
-            overflow: hidden;
-            color: #1a1a1a !important;
-        }
-        .notif-item h4 { color: #5C1018 !important; }
-        .notif-item p  { color: #000 !important; }
-        .notif-item small { color: #6b7280 !important; }
-        .notif-header h3 { color: #1a1a1a !important; }
-        .notif-header button { color: #5C1018 !important; }
-
-        .notif-panel.open { display: block; }
-
-        .notif-header {
-            padding: 16px 18px;
-            border-bottom: 1px solid var(--line);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .notif-header h3 {
-            font-size: 16px;
-            color: var(--primary);
-        }
-
-        .notif-header button {
-            border: none;
-            background: none;
-            color: var(--accent);
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .notif-list { max-height: 420px; overflow-y: auto; }
-
-        .notif-item {
-            padding: 14px 18px;
-            border-bottom: 1px solid #f2f2f2;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .notif-item:hover { background: #faf8f3; }
-        .notif-item:last-child { border-bottom: none; }
-        .notif-item.unread { background: #fff9ec; }
-        .notif-item h4 {
-            font-size: 14px;
-            color: var(--primary);
-            margin-bottom: 5px;
-        }
-        .notif-item p {
-            font-size: 13px;
-            color: #000;
-            line-height: 1.45;
-            margin-bottom: 6px;
-        }
-        .notif-item small {
-            color: #9ca3af;
-            font-size: 12px;
-        }
-
         .page {
             max-width: 1600px;
             margin: 0 auto;
@@ -1265,23 +1193,17 @@
 
             <div class="header-right">
                 <div style="display:flex;align-items:center;gap:12px;">
-                    <div style="position: relative;" id="notifWrapper">
-                        <button class="icon-btn" type="button" onclick="toggleNotificaciones()" aria-label="Notificaciones">
+                    <div class="notif-wrapper" style="position:relative;" id="notifWrapper">
+                        <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                             🔔
-                            <span class="notif-badge" id="notifBadge">0</span>
+                            <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
                         </button>
-
-                        <div class="notif-panel" id="notifPanel">
-                            <div class="notif-header">
-                                <h3>Notificaciones</h3>
-                                <button type="button" onclick="marcarTodasLeidas()">Marcar todas como leídas</button>
+                        <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:1000;border:1px solid #e5e7eb;color:#111;">
+                            <div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;">
+                                <span style="font-weight:700;color:#5C1018;font-size:14px;">Notificaciones</span>
+                                <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
                             </div>
-                            <div class="notif-list" id="notifList">
-                                <div class="loading-block">
-                                    <div class="loading-spinner"></div>
-                                    <div>Cargando notificaciones...</div>
-                                </div>
-                            </div>
+                            <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
                         </div>
                     </div>
                     <button class="btn-logout" type="button" onclick="cerrarSesion()">Cerrar sesión</button>
@@ -1599,7 +1521,7 @@
             if (!session) { window.location.href = 'portal_login.html'; return; }
             var sesion = getSesion();
             if (!sesion) { window.location.href = 'portal_login.html'; return; }
-            document.addEventListener('click', cerrarPanelNotificacionesSiCorresponde);
+            document.addEventListener('click', function(e){ var w=document.getElementById('notifWrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';}});
             document.addEventListener('keydown', manejarEscape);
 
             programaId = obtenerParametroUrl('programaId') || obtenerParametroUrl('programa_id') || '';
@@ -1609,7 +1531,7 @@
 
         function cargarVista() {
             cargarDetalleCohorte();
-            cargarNotificaciones();
+            obtenerNotificaciones('COOPERADORA').then(renderNotificaciones);
         }
 
         async function cargarDetalleCohorte() {
@@ -2843,7 +2765,7 @@
                 cerrarModalDescuento();
                 return;
             }
-            document.getElementById('notifPanel').classList.remove('open');
+            var _dd=document.getElementById('notif-dropdown');if(_dd)_dd.style.display='none';
         }
 
         function mostrarMensaje(id, texto, tipo) {
@@ -2857,74 +2779,8 @@
             box.textContent = texto;
         }
 
-        function cargarNotificaciones() {
-            obtenerNotificaciones('COOPERADORA').then(function(datos) {
-                notificaciones = Array.isArray(datos) ? datos.map(function(n){ return { titulo:n.tipo||'Notificación', mensaje:n.mensaje||'', fechaRelativa:n.tiempo||'', leida:!!n.leida, urlDestino:'' }; }) : [];
-                renderNotificaciones();
-            }).catch(function() {
-                notificaciones = [];
-                renderNotificaciones();
-            });
-        }
-
-        function renderNotificaciones() {
-            const badge = document.getElementById('notifBadge');
-            const lista = document.getElementById('notifList');
-            const sinLeer = notificaciones.filter(function (n) { return !n.leida; }).length;
-
-            badge.textContent = sinLeer;
-            badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-
-            if (!notificaciones.length) {
-                lista.innerHTML = `
-                    <div class="loading-block" style="padding:28px 18px;">
-                        <div style="font-size:38px; margin-bottom:10px; opacity:0.35;">🔕</div>
-                        <div>No hay notificaciones por ahora.</div>
-                    </div>
-                `;
-                return;
-            }
-
-            var tipoLabel = { pago:'Pago', solicitud:'Solicitud', baja:'Solicitud de baja', descuento:'Descuento', cuota:'Cuota', mora:'En mora', aprobado:'Aprobado', rechazado:'Rechazado' };
-            lista.innerHTML = notificaciones.map(function (n, index) {
-                var titulo = tipoLabel[n.titulo] || (n.titulo ? n.titulo.charAt(0).toUpperCase() + n.titulo.slice(1) : 'Notificación');
-                var msgHtml = n.mensaje ? '<p>' + escapeHtml(n.mensaje) + '</p>' : '';
-                return '<div class="notif-item ' + (n.leida ? '' : 'unread') + '" onclick="abrirNotificacion(' + index + ')">' +
-                    '<h4>' + escapeHtml(titulo) + '</h4>' +
-                    msgHtml +
-                    '<small>' + escapeHtml(n.fechaRelativa || '') + '</small>' +
-                    '</div>';
-            }).join('');
-        }
-
-        function abrirNotificacion(index) {
-            const notif = notificaciones[index];
-            if (!notif) return;
-
-            notif.leida = true;
-            renderNotificaciones();
-
-            if (notif.urlDestino) {
-                if (estaEnAppsScript()) window.top.location.href = notif.urlDestino;
-                else window.location.href = notif.urlDestino;
-            }
-        }
-
-        function toggleNotificaciones() {
-            document.getElementById('notifPanel').classList.toggle('open');
-        }
-
-        function cerrarPanelNotificacionesSiCorresponde(evento) {
-            const wrapper = document.getElementById('notifWrapper');
-            if (!wrapper || wrapper.contains(evento.target)) return;
-            document.getElementById('notifPanel').classList.remove('open');
-        }
-
-        function marcarTodasLeidas() {
-            notificaciones = notificaciones.map(function (n) { n.leida = true; return n; });
-            renderNotificaciones();
-            if (typeof marcarTodasNotificacionesLeidas === 'function') marcarTodasNotificacionesLeidas();
-        }
+        function toggleNotif() { var dd=document.getElementById('notif-dropdown'); dd.style.display=dd.style.display==='block'?'none':'block'; }
+        function marcarTodasLeidas() { _notifs.forEach(function(n){n.leida=true;}); renderNotificaciones(_notifs); marcarTodasNotificacionesLeidas(); }
 
         function mostrarLoadingTabla() {
             document.getElementById('tablaContainer').innerHTML = `
