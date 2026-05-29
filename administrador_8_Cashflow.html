@@ -548,7 +548,51 @@ function exportarExcel() {
             XLSX.writeFile(wb, nombre + '.xlsx');
         }).catch(function(e) { alert('Error al exportar: ' + (e.message || e)); });
     }
-function exportarTodoExcel() { alert('Exportando todo a Excel...'); }
+function exportarTodoExcel() {
+    var loadXLSX = window.XLSX
+        ? Promise.resolve()
+        : new Promise(function(res, rej) {
+            var s = document.createElement('script');
+            s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+          });
+    loadXLSX.then(function() {
+        if (!_allCobros.length && !_allEgresos.length) {
+            alert('No hay datos cargados para exportar.'); return;
+        }
+        var progMap = {}, cohMap = {};
+        _allCohortes.forEach(function(c) { cohMap[c.cohorte_id] = c.nombre; });
+        var selProg = document.getElementById('filtroPrograma');
+        if (selProg) Array.from(selProg.options).forEach(function(o) { if (o.value) progMap[o.value] = o.text; });
+
+        var wb = XLSX.utils.book_new();
+
+        var rowsCob = _allCobros.map(function(c) { return {
+            Programa:       progMap[c.programa_id] || c.programa_id || '',
+            Cohorte:        cohMap[c.cohorte_id]   || c.cohorte_id  || '',
+            DNI:            c.dni || '',
+            Vencimiento:    c.fecha_vencimiento || '',
+            Monto:          Number(c.monto_final       || 0),
+            'Saldo pend.':  Number(c.saldo_pendiente   || 0),
+            Estado:         c.estado || ''
+        }; });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsCob), 'Ingresos');
+
+        var rowsEgr = _allEgresos.map(function(e) { return {
+            Programa:       progMap[e.programa_id] || e.programa_id || '',
+            Tipo:           e.tipo    || '',
+            Estado:         e.estado  || '',
+            'Fecha pago':   e.fecha_pago      || '',
+            'Fecha estim.': e.fecha_estimada  || '',
+            'Monto pagado': Number(e.monto_pagado    || 0),
+            'Monto orig.':  Number(e.monto_original  || 0)
+        }; });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsEgr), 'Egresos');
+
+        XLSX.writeFile(wb, 'cashflow_completo_' + new Date().toISOString().split('T')[0] + '.xlsx');
+    }).catch(function(e) { alert('Error al exportar: ' + (e.message || e)); });
+}
 function generarPDF() { window.print(); }
 
 function _setEstado(txt) {
