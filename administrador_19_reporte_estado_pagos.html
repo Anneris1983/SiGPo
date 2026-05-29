@@ -114,7 +114,7 @@
             font-family: 'DM Sans', sans-serif; transition: all .18s;
         }
         .btn-action:active { transform: scale(.97); }
-        .btn-excel { background: #16a34a; color: #fff; }
+        .btn-excel { background: var(--clr-success); color: #fff; }
         .btn-excel:hover { background: #15803d; }
         .btn-pdf   { background: #5C1018; color: #fff; }
         .btn-pdf:hover   { background: #163050; }
@@ -153,7 +153,7 @@
                 <div class="notif-wrapper" style="position:relative;">
                     <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                         <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
+                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:var(--clr-danger);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
                     </button>
                     <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                         <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -190,13 +190,13 @@
             <div class="summary-label">Total Cobros</div>
             <div class="summary-value" id="sc-total">—</div>
         </div>
-        <div class="summary-card" style="border-left: 4px solid #16a34a;">
+        <div class="summary-card" style="border-left: 4px solid var(--clr-success);">
             <div class="summary-label">Al Día</div>
-            <div class="summary-value" id="sc-aldia" style="color: #16a34a;">—</div>
+            <div class="summary-value" id="sc-aldia" style="color: var(--clr-success);">—</div>
         </div>
-        <div class="summary-card" style="border-left: 4px solid #dc2626;">
+        <div class="summary-card" style="border-left: 4px solid var(--clr-danger);">
             <div class="summary-label">En Mora</div>
-            <div class="summary-value" id="sc-mora" style="color: #dc2626;">—</div>
+            <div class="summary-value" id="sc-mora" style="color: var(--clr-danger);">—</div>
         </div>
         <div class="summary-card" style="border-left: 4px solid #2563eb;">
             <div class="summary-label">Con Descuento</div>
@@ -337,7 +337,7 @@
                 data: {
                     labels: ['Al Día', 'En Mora', 'Con Descuento'],
                     datasets: [{ data: [alDia.length, enMora.length, conDescuento.length],
-                                 backgroundColor: ['#16a34a','#dc2626','#2563eb'],
+                                 backgroundColor: ['var(--clr-success)','var(--clr-danger)','#2563eb'],
                                  borderColor: '#fff', borderWidth: 3 }]
                 },
                 options: {
@@ -369,7 +369,7 @@
                 data: {
                     labels: moraLabels.length > 0 ? moraLabels : ['Sin datos'],
                     datasets: [{ label: 'En mora', data: moraData.length > 0 ? moraData : [0],
-                                 backgroundColor: 'rgba(220,38,38,0.80)', borderColor: '#dc2626',
+                                 backgroundColor: 'rgba(220,38,38,0.80)', borderColor: 'var(--clr-danger)',
                                  borderWidth: 1.5, borderRadius: 7 }]
                 },
                 options: {
@@ -401,8 +401,8 @@
                 data: {
                     labels: cohLabels.length > 0 ? cohLabels : ['Sin datos'],
                     datasets: [
-                        { label: 'Cuotas al día',  data: cohAlDia, backgroundColor: 'rgba(22,163,74,0.80)',  borderColor: '#16a34a', borderWidth: 1.5, borderRadius: 6 },
-                        { label: 'Cuotas en mora', data: cohMora,  backgroundColor: 'rgba(220,38,38,0.75)', borderColor: '#dc2626', borderWidth: 1.5, borderRadius: 6 }
+                        { label: 'Cuotas al día',  data: cohAlDia, backgroundColor: 'rgba(22,163,74,0.80)',  borderColor: 'var(--clr-success)', borderWidth: 1.5, borderRadius: 6 },
+                        { label: 'Cuotas en mora', data: cohMora,  backgroundColor: 'rgba(220,38,38,0.75)', borderColor: 'var(--clr-danger)', borderWidth: 1.5, borderRadius: 6 }
                     ]
                 },
                 options: {
