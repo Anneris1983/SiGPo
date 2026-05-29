@@ -646,7 +646,10 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
 
     let reciboUrl = null;
     if (reciboFile) {
-        const fileName = 'recibos/' + cobroId + '/' + Date.now() + '_' + reciboFile.name;
+        const safeName = reciboFile.name
+            .normalize('NFD').replace(/[̀-ͯ]/g, '')
+            .replace(/[^a-zA-Z0-9._-]/g, '_');
+        const fileName = 'recibos/' + cobroId + '/' + Date.now() + '_' + safeName;
         const { error: uploadErr } = await sb.storage.from('comprobantes').upload(fileName, reciboFile);
         if (uploadErr) return { ok: false, mensaje: 'Error al subir recibo' };
         const { data: urlData } = sb.storage.from('comprobantes').getPublicUrl(fileName);
