@@ -856,8 +856,8 @@ function resolverEstadoCobro(c) {
     // EN_MORA sobre saldo parcial: recibo parcial vencido, saldo en mora, sin nuevo comprobante
     if (estadoDb === 'EN_MORA' && tieneRecibo && saldo !== null && saldo > 0 && montoAbonado > 0 && !tieneComp) return 'EN_MORA';
 
-    // PAGO_PARCIAL: recibo parcial, saldo > 0 (Regla 3)
-    if (tieneRecibo && saldo !== null && saldo > 0 && montoAbonado > 0) return 'PAGO_PARCIAL';
+    // PAGO_PARCIAL: monto abonado con saldo pendiente, con o sin recibo (admin puede aprobar sin recibo)
+    if (saldo !== null && saldo > 0 && montoAbonado > 0) return 'PAGO_PARCIAL';
 
     // EN_MORA: apenas vence sin pago aprobado y sin comprobante válido en revisión (Regla 5)
     // La BD puede tener EN_MORA (ya procesado) o puede ser nueva (recién venció)
