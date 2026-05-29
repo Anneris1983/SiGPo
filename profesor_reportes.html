@@ -401,7 +401,12 @@ async function cargarVista() {
             var fecha = c.fecha_pago || c.fecha_vencimiento;
             return fecha && fecha.startsWith(k);
         }).reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0); });
+        var cfIngresosProyec = meses.map(function(k){ return cobF.filter(function(c){
+            if (c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL') return false;
+            return c.fecha_vencimiento && c.fecha_vencimiento.startsWith(k);
+        }).reduce(function(s,c){ return s + Number(c.saldo_pendiente||c.monto_final||0); }, 0); });
         var cfEgresos  = meses.map(function(k){ return egrF.filter(function(e){ var d = e.fecha_pago||e.fecha_estimada||''; return e.tipo==='EJECUTADO' && d.startsWith(k); }).reduce(function(s,e){ return s + Number(e.monto_pagado||0); }, 0); });
+        var cfEgresosProyec = meses.map(function(k){ return egrF.filter(function(e){ var d = e.fecha_estimada||e.fecha_pago||''; return e.tipo!=='EJECUTADO' && d.startsWith(k); }).reduce(function(s,e){ return s + Number(e.monto_pagado||0); }, 0); });
 
         // Estados por cohorte
         var cohortesF = _cohortes.filter(function(c){
@@ -433,8 +438,10 @@ async function cargarVista() {
         destroyCharts();
 
         renderBarChart('cashflow', cfLabels, [
-            { label: 'Ingresos', data: cfIngresos, backgroundColor: 'rgba(45,122,79,0.80)', borderColor: '#2d7a4f' },
-            { label: 'Egresos',  data: cfEgresos,  backgroundColor: 'rgba(192,57,43,0.75)', borderColor: '#c0392b' }
+            { label: 'Ingresos ejecutados',  data: cfIngresos,       backgroundColor: 'rgba(45,122,79,0.85)',  borderColor: '#2d7a4f' },
+            { label: 'Ingresos proyectados', data: cfIngresosProyec, backgroundColor: 'rgba(45,122,79,0.30)',  borderColor: '#2d7a4f', borderDash: [4,3] },
+            { label: 'Egresos ejecutados',   data: cfEgresos,        backgroundColor: 'rgba(192,57,43,0.80)', borderColor: '#c0392b' },
+            { label: 'Egresos proyectados',  data: cfEgresosProyec,  backgroundColor: 'rgba(192,57,43,0.28)', borderColor: '#c0392b', borderDash: [4,3] }
         ], { y: { ticks: { callback: function(v){ return '$' + Math.round(v/1000) + 'k'; } } } });
 
         renderBarChart('estados', ecLabels, [
@@ -520,7 +527,18 @@ function exportar(tipo) {
             var cf = charts['cashflow'] ? charts['cashflow'].data : null;
             if (!cf || !cf.labels.length) { toast('Sin datos de cashflow para exportar.', 'err'); return; }
             var filas = cf.labels.map(function(lbl, i){
-                return { 'Mes': lbl, 'Ingresos ($)': cf.datasets[0].data[i]||0, 'Egresos ($)': cf.datasets[1].data[i]||0, 'Saldo ($)': (cf.datasets[0].data[i]||0)-(cf.datasets[1].data[i]||0) };
+                var ingEjec   = cf.datasets[0].data[i]||0;
+                var ingProyec = cf.datasets[1].data[i]||0;
+                var egrEjec   = cf.datasets[2].data[i]||0;
+                var egrProyec = cf.datasets[3].data[i]||0;
+                return {
+                    'Mes': lbl,
+                    'Ingresos ejecutados ($)':  ingEjec,
+                    'Ingresos proyectados ($)': ingProyec,
+                    'Egresos ejecutados ($)':   egrEjec,
+                    'Egresos proyectados ($)':  egrProyec,
+                    'Saldo ejecutado ($)':      ingEjec - egrEjec
+                };
             });
             var ws = XLSX.utils.json_to_sheet(filas);
             XLSX.utils.book_append_sheet(wb, ws, 'Cashflow');
