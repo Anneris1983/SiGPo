@@ -21,7 +21,7 @@
         .icon-btn:hover { background: rgba(255,255,255,0.28); }
         .logout-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; font-family: inherit; transition: .15s; }
         .logout-btn:hover { background: rgba(255,255,255,0.28); }
-        .notif-badge { position: absolute; top: -4px; right: -4px; background: #dc2626; color: #fff; border-radius: 50%; min-width: 17px; height: 17px; font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 3px; border: 2px solid #fff; }
+        .notif-badge { position: absolute; top: -4px; right: -4px; background: var(--clr-danger); color: #fff; border-radius: 50%; min-width: 17px; height: 17px; font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 3px; border: 2px solid #fff; }
         .notif-panel { display: none; position: absolute; right: 0; top: calc(100% + 8px); width: 320px; background: #fff; border-radius: 14px; box-shadow: 0 8px 32px rgba(10,15,30,.14); z-index: 500; overflow: hidden; color: #1C1510; border: 1px solid #EFEAE0; }
         .notif-panel.open { display: block; }
         .notif-head { padding: 14px 16px; border-bottom: 1px solid #EFEAE0; font-weight: 700; color: #5C1018; font-size: 13.5px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -110,7 +110,7 @@
         .excel-structure { margin-top: 10px; background: #F8F6F1; border-radius: 9px; padding: 12px 14px; font-size: 12px; color: #594F42; line-height: 1.8; }
         .excel-chip { display: inline-block; background: #fff; border: 1px solid #E6DFD2; border-radius: 4px; padding: 2px 8px; margin: 2px; }
         .alert-box { display: none; border-radius: 9px; padding: 11px 14px; font-size: 13px; margin-bottom: 14px; line-height: 1.45; }
-        .alert-box.error { background: #fff1f1; border: 1px solid #fecaca; color: #991b1b; border-left: 4px solid #dc2626; }
+        .alert-box.error { background: #fff1f1; border: 1px solid #fecaca; color: #991b1b; border-left: 4px solid var(--clr-danger); }
         .alert-box.success { background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; font-weight: 600; }
         .modal-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 20px; }
         .btn-modal { padding: 10px 22px; border-radius: 9px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: .15s; }
@@ -215,13 +215,13 @@
         <div class="modal-box">
             <div class="modal-top"><h2>🎓 Solicitar Programa/Curso</h2><button type="button" onclick="cerrarModalSolicitud()">×</button></div>
             <p class="modal-desc">Esta solicitud se enviará al administrador del sistema junto con el archivo Excel del listado de estudiantes.</p>
-            <div class="field"><label>Programa/Curso <span style="color:#ef4444;">*</span></label><input id="sol-programa" type="text" placeholder="Ej: Especialización en Costos y Gestión Empresarial"></div>
-            <div class="field"><label>Cohorte/Edición <span style="color:#ef4444;">*</span></label><input id="sol-cohorte" type="text" placeholder="Ej: Cohorte 2026-2027 / 8ª Edición 2026"></div>
-            <div class="field"><label>Cantidad de cuotas <span style="color:#ef4444;">*</span></label><input id="sol-cuotas" type="number" min="1" max="60" placeholder="Ej: 12"></div>
-            <div class="field"><label>Mes de la primera cuota/inscripción <span style="color:#ef4444;">*</span></label><input id="sol-mes" type="text" placeholder="Ej: Marzo 2026 / 01/03/2026"></div>
+            <div class="field"><label>Programa/Curso <span style="color:var(--clr-danger);">*</span></label><input id="sol-programa" type="text" placeholder="Ej: Especialización en Costos y Gestión Empresarial"></div>
+            <div class="field"><label>Cohorte/Edición <span style="color:var(--clr-danger);">*</span></label><input id="sol-cohorte" type="text" placeholder="Ej: Cohorte 2026-2027 / 8ª Edición 2026"></div>
+            <div class="field"><label>Cantidad de cuotas <span style="color:var(--clr-danger);">*</span></label><input id="sol-cuotas" type="number" min="1" max="60" placeholder="Ej: 12"></div>
+            <div class="field"><label>Mes de la primera cuota/inscripción <span style="color:var(--clr-danger);">*</span></label><input id="sol-mes" type="text" placeholder="Ej: Marzo 2026 / 01/03/2026"></div>
             <div class="field"><label>💬 Comentarios</label><textarea id="sol-comentarios" placeholder="Información adicional, observaciones o aclaraciones para el administrador..."></textarea></div>
             <div class="field">
-                <label>📎 Listado de estudiantes (Excel) <span style="color:#ef4444;">*</span></label>
+                <label>📎 Listado de estudiantes (Excel) <span style="color:var(--clr-danger);">*</span></label>
                 <div id="sol-drop" class="drop-zone" onclick="document.getElementById('sol-archivo').click()" ondragover="onDragSolicitud(event)" ondragleave="offDragSolicitud(event)" ondrop="onDropSolicitud(event)">
                     <div style="font-size:28px;margin-bottom:6px;">📊</div>
                     <div style="font-size:13px;color:#666;">Arrastrá o <span style="color:#5C1018;font-weight:600;">hacé clic</span> para seleccionar el archivo</div>
