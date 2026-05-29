@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     } catch(err) {
         console.error(err);
-        document.getElementById('tabla-body').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#ef4444;padding:40px;">Error al cargar datos</td></tr>';
+        document.getElementById('tabla-body').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--clr-danger);padding:40px;">Error al cargar datos</td></tr>';
     }
 });
 </script>
