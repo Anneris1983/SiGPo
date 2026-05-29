@@ -173,7 +173,7 @@
             </div>
             <div class="upload-form">
                 <div class="upload-field">
-                    <label>Descripción <span style="color:#ef4444;">*</span></label>
+                    <label>Descripción <span style="color:var(--clr-danger);">*</span></label>
                     <input type="text" id="upDesc" placeholder="Ej: Factura cuota Enero 2026">
                 </div>
                 <div class="upload-field">
@@ -399,7 +399,7 @@ function spin(on) { document.getElementById('spinner').classList.toggle('show', 
 function escHtml(v) { return String(v==null?'':v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
 function toast(msg, type) {
     var t = document.createElement('div');
-    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:' + (type==='err'?'#c0392b':'#2d7a4f') + ';color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:9999;max-width:340px;';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:' + (type==='err'?'var(--clr-danger)':'var(--clr-success)') + ';color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:9999;max-width:340px;';
     t.textContent = msg;
     document.body.appendChild(t);
     setTimeout(function() { t.remove(); }, 3500);
