@@ -88,6 +88,7 @@
   --indigo-dark:    #3730A3;
   --cyan:           #0891B2;
   --gray:           #6B7280;
+  --muted:          var(--gray);   /* alias legacy → #6B7280 */
 
   /* ── Superficies — crema institucional cálido (certificado oficial) ── */
   --clr-bg:           #F7F5F0;   /* fondo de página crema cálido */
