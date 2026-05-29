@@ -297,7 +297,11 @@ function setEmptyState(key, show) {
 }
 
 function destroyCharts() {
-    Object.keys(charts).forEach(function(k){ if (charts[k]) charts[k].destroy(); });
+    Object.keys(charts).forEach(function(k){
+        if (charts[k]) charts[k].destroy();
+        var tt = document.getElementById('tt-' + k);
+        if (tt) tt.style.display = 'none';
+    });
     charts = {};
 }
 
@@ -481,18 +485,16 @@ function renderBarChart(key, labels, datasets, extraScales, tooltipLabel) {
     if (empty) return;
     var ctx = document.getElementById('chart-' + key).getContext('2d');
     var scales = Object.assign({ x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f0f0f0' } } }, extraScales);
-    var tooltipCfg = { mode: 'index', intersect: true };
-    if (tooltipLabel) tooltipCfg.callbacks = { label: tooltipLabel };
     charts[key] = new Chart(ctx, {
         type: 'bar',
         data: { labels: labels, datasets: datasets.map(function(d){ return Object.assign({ borderWidth: 1.5, borderRadius: 6 }, d); }) },
         options: {
             responsive: true, maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: true },
-            plugins: { legend: { position: 'top' }, tooltip: tooltipCfg },
+            plugins: { legend: { position: 'top' }, tooltip: { enabled: false } },
             scales: scales
         }
     });
+    _attachCatTooltip(key, tooltipLabel);
 }
 
 function renderLineChart(key, labels, datasets) {
@@ -505,11 +507,11 @@ function renderLineChart(key, labels, datasets) {
         data: { labels: labels, datasets: datasets.map(function(d){ return Object.assign({ borderWidth: 2.5, pointRadius: 5, tension: 0.3 }, d); }) },
         options: {
             responsive: true, maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false, axis: 'x' },
-            plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false, axis: 'x' } },
+            plugins: { legend: { position: 'top' }, tooltip: { enabled: false } },
             scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f0f0f0' } } }
         }
     });
+    _attachCatTooltip(key, null);
 }
 
 function renderDoughnut(key, labels, valores) {
@@ -535,6 +537,43 @@ function renderDoughnut(key, labels, valores) {
             }
         }
     });
+}
+
+function _attachCatTooltip(key, formatLabel) {
+    var canvas = document.getElementById('chart-' + key);
+    if (!canvas || canvas.dataset.ttAttached) return;
+    canvas.dataset.ttAttached = '1';
+
+    var tt = document.createElement('div');
+    tt.id = 'tt-' + key;
+    tt.style.cssText = 'position:fixed;background:rgba(28,28,28,0.93);color:#fff;padding:10px 14px;border-radius:8px;font-size:12px;font-family:"DM Sans",sans-serif;pointer-events:none;display:none;z-index:9999;line-height:1.8;box-shadow:0 4px 18px rgba(0,0,0,0.28);';
+    document.body.appendChild(tt);
+
+    canvas.addEventListener('mousemove', function(e) {
+        var chart = charts[key];
+        if (!chart || !chart.data.labels || !chart.data.labels.length) { tt.style.display = 'none'; return; }
+        var rect = canvas.getBoundingClientRect();
+        var relX  = e.clientX - rect.left;
+        var nCats = chart.data.labels.length;
+        var idx   = Math.floor(relX / rect.width * nCats);
+        if (idx < 0 || idx >= nCats) { tt.style.display = 'none'; return; }
+        var label = chart.data.labels[idx];
+        var html  = '<div style="font-weight:700;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.18);">' + label + '</div>';
+        chart.data.datasets.forEach(function(ds) {
+            var val = (ds.data[idx] !== undefined && ds.data[idx] !== null) ? ds.data[idx] : 0;
+            var disp = formatLabel ? formatLabel({ dataset: ds, parsed: { y: val } }) : (' ' + (ds.label || '') + ': ' + val);
+            var bg = (Array.isArray(ds.backgroundColor) ? ds.backgroundColor[idx] : ds.backgroundColor) || ds.borderColor || '#888';
+            html += '<div style="display:flex;align-items:center;gap:7px;white-space:nowrap;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + bg + ';flex-shrink:0;"></span>' + disp + '</div>';
+        });
+        tt.innerHTML = html;
+        tt.style.display = 'block';
+        var tx = e.clientX + 14, ty = e.clientY - 10;
+        tt.style.left = tx + 'px'; tt.style.top = ty + 'px';
+        var ttR = tt.getBoundingClientRect();
+        if (ttR.right  > window.innerWidth  - 10) tt.style.left = (e.clientX - ttR.width  - 14) + 'px';
+        if (ttR.bottom > window.innerHeight - 10) tt.style.top  = (e.clientY - ttR.height - 10) + 'px';
+    });
+    canvas.addEventListener('mouseleave', function() { tt.style.display = 'none'; });
 }
 
 function exportar(tipo) {
