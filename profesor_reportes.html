@@ -673,7 +673,7 @@ async function exportarPDF() {
         pdf.rect(0, 0, pW, 18, 'F');
         pdf.setTextColor(255, 255, 255);
         pdf.setFontSize(14); pdf.setFont(undefined, 'bold');
-        pdf.text('SiGPo — Reportes Profesor', marg, 11);
+        pdf.text('Reportes Profesor', marg, 11);
         pdf.setFontSize(9); pdf.setFont(undefined, 'normal');
         pdf.text(document.getElementById('headerSubtitle').textContent + '  •  ' + new Date().toLocaleDateString('es-AR'), pW - marg, 11, { align: 'right' });
 
