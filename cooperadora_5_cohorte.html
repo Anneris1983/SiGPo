@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SiGPo - Detalle de Cohorte</title>
+    <title>Detalle de Cohorte</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1683,7 +1683,7 @@
         }
 
         function renderEncabezado() {
-            document.title = 'SiGPo - ' + vistaData.programa.nombre;
+            document.title = vistaData.programa.nombre;
             document.getElementById('headerCohorte').textContent = vistaData.programa.nombre;
             document.getElementById('hdrCohorteNombre').textContent = vistaData.cohorte.nombre;
             document.getElementById('headerPrograma').textContent = formatearRangoFechas(vistaData.cohorte.fechaInicio, vistaData.cohorte.fechaFin);
