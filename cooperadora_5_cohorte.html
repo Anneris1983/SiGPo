@@ -1797,7 +1797,7 @@
                     <div class="legend-item"><div class="legend-color" style="background:#fef3c7;border-color:#f59e0b;"></div><span>Pendiente de revisión</span></div>
                     <div class="legend-item"><div class="legend-color" style="background:#e0e7ff;border-color:#6366f1;"></div><span>No abonada</span></div>
                     <div class="legend-item"><div class="legend-color" style="background:#f3f4f6;border-color:#9ca3af;"></div><span>A definir</span></div>
-                    <div class="legend-item"><div class="legend-color nodebe"></div><span>No debe abonar</span></div>
+                    <div class="legend-item"><div class="legend-color nodebe"></div><span>No aplica</span></div>
                 </div>
             `;
         }
@@ -1832,7 +1832,7 @@
 
         function renderCeldaCuota(cuota, noDebeAbonar, descuentoPorcentaje) {
             if (!cuota || cuota.estado === 'nodebe' || noDebeAbonar) {
-                return `<td class="cuota-cell cuota-nodebe">no debe<br />abonar</td>`;
+                return `<td class="cuota-cell cuota-nodebe">No aplica</td>`;
             }
 
             const clases = 'cuota-cell cuota-' + cuota.estado;

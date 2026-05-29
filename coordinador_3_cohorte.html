@@ -443,7 +443,7 @@
         <div class="ley-item"><span class="ley-box ley-pendiente"></span> Pendiente</div>
         <div class="ley-item"><span class="ley-box ley-noabonada"></span> No abonada</div>
         <div class="ley-item"><span class="ley-box ley-adefinir"></span> A definir</div>
-        <div class="ley-item"><span class="ley-box ley-nodebe"></span> No debe abonar</div>
+        <div class="ley-item"><span class="ley-box ley-nodebe"></span> No aplica</div>
     </div>
 </div>
 
@@ -968,7 +968,7 @@ function renderTabla() {
     estudiantes.forEach(est => {
         const estadoGen = calcEstadoGeneral(est.cobros);
         let totP = 0, totA = 0, totS = 0;
-        est.cobros.forEach(c => { if(c){ totP += Number(c.monto_final || 0); totA += Number(c.monto_abonado || 0); totS += Number(c.saldo_pendiente || 0); }});
+        est.cobros.forEach(c => { if(c && c.estado !== 'NO_APLICA'){ totP += Number(c.monto_final || 0); totA += Number(c.monto_abonado || 0); totS += Number(c.saldo_pendiente || 0); }});
 
         const cobrosMap = {};
         est.cobros.forEach(c => { if (c) cobrosMap[(c.concepto_base || c.concepto) + '||' + (c.periodo || '')] = c; });
@@ -988,7 +988,8 @@ function renderTabla() {
             }
             else if (c.estado === 'NO_ABONADA') txt = fMonto(c.saldo_pendiente || c.monto_final);
             else if (c.estado === 'EN_MORA') txt = fMonto(c.saldo_pendiente || c.monto_final);
-            else if (c.estado === 'A_DEFINIR') txt = 'a definir';
+            else if (c.estado === 'A_DEFINIR')  txt = 'a definir';
+            else if (c.estado === 'NO_APLICA')  txt = 'No aplica';
             else txt = fMonto(c.monto_final);
             const title = `${c.concepto} · ${c.periodo || ''} | Estado: ${c.estado} | Abonado: ${fMonto(c.monto_abonado)} | Saldo: ${fMonto(c.saldo_pendiente)}${c.fecha_vencimiento ? ' | Vence: '+c.fecha_vencimiento : ''}`;
             const btnComp   = c.comprobante_url ? `<button class="clink clink-comp"   onclick="event.stopPropagation();verArchivo('${escapeJs(c.comprobante_url)}')" title="Ver comprobante del estudiante">📎 Comp.</button>` : '';
@@ -999,7 +1000,8 @@ function renderTabla() {
             else if (c.estado === 'NO_ABONADA')   badge = '<span class="est-badge badge-noabonada">No abonada</span>';
             else if (c.estado === 'PAGO_PARCIAL') badge = '<span class="est-badge badge-parcial">Pago parcial</span>';
             else if (c.estado === 'PENDIENTE')    badge = '<span class="est-badge badge-pendiente">En revisión</span>';
-            const esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(c.estado);
+            else if (c.estado === 'NO_APLICA')    badge = '';
+            const esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE','NO_APLICA'].includes(c.estado);
             const editAttr = esEditable
                 ? ' onclick="event.stopPropagation();abrirCeldaPopup(event,' + escapeHtml(JSON.stringify({
                     cobro_id: c.cobro_id,
@@ -1658,7 +1660,7 @@ async function exportarExcel() {
             const cobrosMap = {};
             est.cobros.forEach(c => { if(c) cobrosMap[(c.concepto_base||c.concepto)+'||'+(c.periodo||'')] = c; });
             let totP = 0, totA = 0, totS = 0;
-            est.cobros.forEach(c => { if(c){ totP += Number(c.monto_final||0); totA += Number(c.monto_abonado||0); totS += Number(c.saldo_pendiente||0); }});
+            est.cobros.forEach(c => { if(c && c.estado !== 'NO_APLICA'){ totP += Number(c.monto_final||0); totA += Number(c.monto_abonado||0); totS += Number(c.saldo_pendiente||0); }});
             const estadoGen = calcEstadoGeneral(est.cobros);
             const fila = [
                 est.apellido, est.nombre, est.dni, est.email,
@@ -1670,7 +1672,8 @@ async function exportarExcel() {
                 const c = cobrosMap[col.concepto_base+'||'+(col.periodo||'')];
                 if (!c) { fila.push(''); return; }
                 // Valor numérico de la cuota según estado
-                if (c.estado === 'ABONADA')      fila.push(Number(c.monto_final||0));
+                if (c.estado === 'NO_APLICA')    fila.push('No aplica');
+                else if (c.estado === 'ABONADA') fila.push(Number(c.monto_final||0));
                 else if (c.estado === 'PAGO_PARCIAL') fila.push(Number(c.monto_abonado||0));
                 else if (c.estado === 'A_DEFINIR' || c.monto_final == null) fila.push('A definir');
                 else fila.push(Number(c.monto_final||0));
