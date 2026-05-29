@@ -994,7 +994,7 @@
             var sb = await getSupabase();
             var { error: uploadErr } = await sb.storage
                 .from('libre-deudas')
-                .upload(storagePath, pdfBlob, { contentType: 'application/pdf', upsert: true });
+                .upload(storagePath, pdfBlob, { contentType: 'application/pdf' });
             if (uploadErr) throw new Error('Error subiendo PDF: ' + uploadErr.message);
 
             // ── 5. Registrar en base de datos ─────────────────────────────
