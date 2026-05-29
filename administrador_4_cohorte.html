@@ -94,8 +94,8 @@
         th.col-cuota { min-width: 82px; }
         th.tot-hdr   { color: white; font-size: 10px; min-width: 100px; }
         th.th-pagar   { background: #3730a3; }
-        th.th-abonado { background: #2d7a4f; }
-        th.th-saldo   { background: #c0392b; }
+        th.th-abonado { background: var(--clr-success); }
+        th.th-saldo   { background: var(--clr-danger); }
         /* Columnas fijas en el cuerpo */
         #t-body tr td:nth-child(1) { position: sticky; left: 0; z-index: 2; background: white; }
         #t-body tr td.cell-name    { position: sticky; left: 32px; z-index: 2; background: white; box-shadow: 2px 0 4px rgba(0,0,0,0.07); }
@@ -119,7 +119,7 @@
            NO_APLICA                       → blanco punteado (no corresponde)        */
         td[data-est="ABONADA"]      { background: #d4edda; color: #1a6e35; text-align:center; font-weight:700; }
         td[data-est="PAGO_PARCIAL"] { background: #fff8e1; color: #78350f; text-align:center; font-weight:600; font-size:11px; }
-        td[data-est="EN_MORA"]      { background: #fee2e2; color: #b91c1c; text-align:center; font-weight:700; }
+        td[data-est="EN_MORA"]      { background: #fee2e2; color: var(--clr-danger); text-align:center; font-weight:700; }
         td[data-est="NO_ABONADA"]   { background: #f1f5f9; color: #64748b; text-align:center; font-weight:500; }
         td[data-est="PENDIENTE"]    { background: #fef9c3; color: #854d0e; text-align:center; font-weight:600; }
         td[data-est="A_DEFINIR"]    { background: #f5f3ff; color: #7c3aed; text-align:center; font-weight:500; font-size:11px; font-style:italic; }
@@ -128,7 +128,7 @@
 
         .cell-tot-pagar   { background:#eef2ff; color:#5C1018; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
         .cell-tot-abonado { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
-        .cell-saldo-pos   { background:#f8d7da; color:#c0392b; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+        .cell-saldo-pos   { background:#f8d7da; color:var(--clr-danger); font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
         .cell-saldo-cero  { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
 
         .edit-btn {
@@ -249,7 +249,7 @@
         .plan-paso-titulo { font-size:13px; font-weight:700; color:var(--primary); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.4px; }
         .plan-fila { display:grid; grid-template-columns:auto 1fr 110px 110px 130px auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; transition:border-color 0.2s; }
         .plan-fila:focus-within { border-color:var(--accent); }
-        .plan-fila.fila-irregular { border-color:#e67e22; background:#fffbf5; }
+        .plan-fila.fila-irregular { border-color:var(--clr-warning); background:#fffbf5; }
         .plan-fila-num { width:26px; height:26px; border-radius:50%; background:var(--primary); color:white; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:2px; }
         .plan-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
         .plan-fila input, .plan-fila select { width:100%; padding:7px 9px; border:1.5px solid #ddd; border-radius:7px; font-size:12px; font-family:'DM Sans',sans-serif; transition:border-color 0.2s; background:white; }
@@ -262,7 +262,7 @@
         .plan-fila .readmision-chk { display:flex; align-items:center; gap:5px; margin-top:5px; font-size:10px; font-weight:600; color:#6f42c1; cursor:pointer; white-space:nowrap; }
         .plan-fila .readmision-chk input { width:13px; height:13px; accent-color:#6f42c1; cursor:pointer; }
         .badge-readmision { display:inline-block; background:#ede9fe; color:#6f42c1; font-size:9px; font-weight:700; padding:1px 5px; border-radius:4px; letter-spacing:0.3px; line-height:1.6; white-space:nowrap; }
-        .btn-agregar-cuota { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:#2d7a4f; color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
+        .btn-agregar-cuota { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:var(--clr-success); color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
         .btn-agregar-cuota:hover { background:#246441; }
         /* Descuento multi-periodo */
         .desc-periodo-fila { display:grid; grid-template-columns:26px 90px 130px 130px 1fr auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; }
@@ -285,7 +285,7 @@
         .btn-baja-coh:hover { background:#fff8e1; }
         .btn-desvincular-coh { background:none; border:1.5px solid #7f1d1d; color:#7f1d1d; border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; margin-top:4px; }
         .btn-desvincular-coh:hover { background:#fef2f2; }
-        .btn-alta-coh { background:none; border:1.5px solid #2d7a4f; color:#2d7a4f; border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+        .btn-alta-coh { background:none; border:1.5px solid var(--clr-success); color:var(--clr-success); border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; }
         .btn-alta-coh:hover { background:#d4edda; }
 
         /* Import */
@@ -368,7 +368,7 @@
                 <div class="notif-wrapper" style="position:relative;">
                     <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:4px;border-radius:8px;transition:background 0.2s;">
                         <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                        <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #5C1018;line-height:1;">0</span>
+                        <span id="notif-badge" style="position:absolute;top:0;right:0;background:var(--clr-danger);color:#fff;font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #5C1018;line-height:1;">0</span>
                     </button>
                     <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                         <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -386,7 +386,7 @@
                 <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Readmisión</div><div class="stat-value" id="s-readmision" style="color:#6f42c1;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado">—</div></div>
-                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:var(--clr-warning);">—</div></div>
                 <div class="stat-item"><div class="stat-label">Saldo</div><div class="stat-value" id="s-saldo">—</div></div>
             </div>
         </div>
@@ -518,7 +518,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="cerrar('modal-correo')">Cancelar</button>
-            <button class="btn-save" style="background:#e67e22;" onclick="guardarPlantilla()">💾 Guardar plantilla</button>
+            <button class="btn-save" style="background:var(--clr-warning);" onclick="guardarPlantilla()">💾 Guardar plantilla</button>
             <button id="btn-enviar-notif" class="btn-save" style="display:none;" onclick="enviarNotificaciones()">🔔 Enviar notificación</button>
         </div>
     </div>
@@ -650,7 +650,7 @@
             <div style="display:flex;gap:10px;">
                 <button class="btn-cancel" onclick="cerrar('modal-eliminar-global')">Cerrar</button>
                 <button id="btn-elim-sel" onclick="eliminarSeleccionadas()" disabled
-                    style="background:#dc2626;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;padding:9px 18px;cursor:not-allowed;font-family:'DM Sans',sans-serif;opacity:0.4;transition:all 0.2s;">
+                    style="background:var(--clr-danger);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;padding:9px 18px;cursor:not-allowed;font-family:'DM Sans',sans-serif;opacity:0.4;transition:all 0.2s;">
                     🗑 Eliminar seleccionadas
                 </button>
             </div>
@@ -698,14 +698,14 @@
                 <div class="mhint">Debe ser menor al monto total de la cuota.</div>
             </div>
             <div class="mfield">
-                <label>📄 Recibo <span style="color:#c0392b;font-weight:700;">*</span> <span style="font-weight:400;color:#767676;font-size:11px;">(obligatorio — Regla 1)</span></label>
+                <label>📄 Recibo <span style="color:var(--clr-danger);font-weight:700;">*</span> <span style="font-weight:400;color:#767676;font-size:11px;">(obligatorio — Regla 1)</span></label>
                 <input type="file" id="apr-recibo-file" accept=".pdf,.jpg,.jpeg,.png" aria-label="Subir recibo" style="border:1.5px dashed #e0e0e0;border-radius:8px;padding:8px;cursor:pointer;width:100%;">
                 <div class="mhint">Sin recibo no se puede aprobar.</div>
             </div>
         </div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="cerrar('modal-aprobacion')">Cancelar</button>
-            <button style="padding:9px 18px;background:#c0392b;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;" onclick="rechazarCuota()">✕ Rechazar</button>
+            <button style="padding:9px 18px;background:var(--clr-danger);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;" onclick="rechazarCuota()">✕ Rechazar</button>
             <button class="btn-save" onclick="aprobarCuota()">✔ Aprobar</button>
         </div>
     </div>
@@ -1199,7 +1199,7 @@ function _renderFilaEst(est, celdas, totP, totA, totS, estadoGen) {
         <td class="cell-email">${escapeHtml(est.email || '—')}</td>
         <td style="text-align:center;border-right:1px solid #ebebeb;">
             <div style="display:inline-flex;flex-direction:column;align-items:center;gap:4px;">
-              <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;${esPasivo ? 'background:#fde8e1;color:#c0392b;' : 'background:#d1fae5;color:#065f46;'}">${esPasivo ? 'Pasivo' : 'Activo'}</span>
+              <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;${esPasivo ? 'background:#fde8e1;color:var(--clr-danger);' : 'background:#d1fae5;color:#065f46;'}">${esPasivo ? 'Pasivo' : 'Activo'}</span>
               ${esPasivo
                 ? `<button class="btn-alta-coh" title="Reactivar en esta cohorte" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','ACTIVO')">↑ Dar alta</button>`
                 : `<button class="btn-baja-coh" title="Dar de baja en esta cohorte" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','BAJA')">↓ Dar baja</button>`}
@@ -1286,7 +1286,7 @@ function renderTabla() {
                 });
                 return '<td data-est="A_DEFINIR" onclick="avisarSinCobro(event,' + encodeAttr(sinCobroInfo) + ')" style="cursor:pointer;" title="Sin cobro generado — recargá la página o contactá al administrador">'
                     + '<div class="cuota-cell-wrap">'
-                    + '<div class="cuota-cell-txt" style="color:#f59e0b;font-size:10px;font-style:italic;">A definir</div>'
+                    + '<div class="cuota-cell-txt" style="color:var(--clr-warning);font-size:10px;font-style:italic;">A definir</div>'
                     + '<div class="u-hint">⚠️ sin cobro</div>'
                     + '</div></td>';
             }
@@ -1401,7 +1401,7 @@ function actualizarStats() {
     document.getElementById('s-egresos').textContent  = fMonto(egrExec);
     var sEl = document.getElementById('s-saldo');
     sEl.textContent = fMonto(saldo);
-    sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
+    sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
 }
 
 function actualizarFiltros() {
@@ -1871,13 +1871,13 @@ function confirmarCambioEstado(dni, nombre, nuevoEstado) {
     document.getElementById('mbc-sub').textContent    = V.data ? V.data.programa.nombre + ' · ' + V.data.cohorte.nombre : '';
     var btn = document.getElementById('mbc-btn');
     btn.textContent       = esBaja ? '⛔ Confirmar Baja' : '✅ Confirmar Alta';
-    btn.style.background  = esBaja ? '#ea580c' : '#2d7a4f';
+    btn.style.background  = esBaja ? '#ea580c' : 'var(--clr-success)';
     document.getElementById('mbc-cuerpo').innerHTML = esBaja
         ? '<p style="font-size:13px;color:#555;">Va a dar de baja a <strong>' + nombre + '</strong> solo en esta cohorte/edición.</p>'
-          + '<div style="margin-top:12px;background:#fff8e1;border-left:4px solid #f59e0b;padding:12px;border-radius:8px;font-size:12px;color:#78350f;">'
+          + '<div style="margin-top:12px;background:#fff8e1;border-left:4px solid var(--clr-warning);padding:12px;border-radius:8px;font-size:12px;color:#78350f;">'
           + '<strong>Efectos:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;"><li>Deja de generar deuda nueva en esta cohorte.</li><li>El historial de pagos queda intacto.</li><li>Puede reactivarse con el botón <strong>Alta</strong>.</li></ul></div>'
         : '<p style="font-size:13px;color:#555;">Va a reactivar a <strong>' + nombre + '</strong> en esta cohorte/edición.</p>'
-          + '<div style="margin-top:12px;background:#d4edda;border-left:4px solid #2d7a4f;padding:12px;border-radius:8px;font-size:12px;color:#155724;">'
+          + '<div style="margin-top:12px;background:#d4edda;border-left:4px solid var(--clr-success);padding:12px;border-radius:8px;font-size:12px;color:#155724;">'
           + '<strong>Efectos:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;"><li>Vuelve a estado <strong>ACTIVO</strong> en esta cohorte.</li><li>Se reanudan los cálculos de cuotas.</li></ul></div>';
     abrir('modal-baja-cohorte');
 }
@@ -1938,14 +1938,14 @@ function confirmarDesvincular(dni, nombre) {
     btn.style.opacity = '1';
 
     var alertaPagos = tienePagos
-        ? '<div style="margin-top:10px;background:#fef2f2;border-left:4px solid #dc2626;padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
+        ? '<div style="margin-top:10px;background:#fef2f2;border-left:4px solid var(--clr-danger);padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
           + '⚠️ <strong>Atención:</strong> este estudiante tiene ' + nPagos + ' cuota' + (nPagos !== 1 ? 's' : '') + ' con pagos registrados. '
           + 'Al desvincular se eliminarán igualmente. Esta acción <strong>no se puede deshacer</strong>.</div>'
         : '';
 
     document.getElementById('mdv-cuerpo').innerHTML =
         '<p style="font-size:13px;color:#555;">Va a desvincular completamente a <strong>' + nombre + '</strong> de esta cohorte/edición.</p>'
-        + '<div style="margin-top:12px;background:#fef2f2;border-left:4px solid #dc2626;padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
+        + '<div style="margin-top:12px;background:#fef2f2;border-left:4px solid var(--clr-danger);padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
         + '<strong>Esta acción eliminará:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;">'
         + '<li>La inscripción del estudiante en esta cohorte</li>'
         + '<li>' + nCobros + ' registro' + (nCobros !== 1 ? 's' : '') + ' de cobro' + (nCobros !== 1 ? 's' : '') + ' asociados</li>'
