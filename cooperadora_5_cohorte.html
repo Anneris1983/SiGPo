@@ -116,7 +116,7 @@
             height: 20px;
             border-radius: 10px;
             padding: 0 6px;
-            background: #ef4444;
+            background: var(--clr-danger);
             color: var(--white);
             font-size: 11px;
             font-weight: 700;
@@ -339,8 +339,8 @@
         th.discount-col { min-width: 120px; }
         th.cuota-header { text-align: center; min-width: 98px; }
         th.tot-pagar { background: #3730a3; color: #fff; text-align: center; min-width: 118px; }
-        th.tot-abonado { background: #2d7a4f; color: #fff; text-align: center; min-width: 118px; }
-        th.tot-saldo { background: #c0392b; color: #fff; text-align: center; min-width: 118px; }
+        th.tot-abonado { background: var(--clr-success); color: #fff; text-align: center; min-width: 118px; }
+        th.tot-saldo { background: var(--clr-danger); color: #fff; text-align: center; min-width: 118px; }
 
         td {
             padding: 10px 8px;
@@ -462,7 +462,7 @@
 
         .td-tot-abonado {
             background: #d4edda;
-            color: #2d7a4f;
+            color: var(--clr-success);
             font-weight: 700;
             text-align: center;
             white-space: nowrap;
@@ -470,7 +470,7 @@
 
         .td-saldo-pend {
             background: #f8d7da;
-            color: #c0392b;
+            color: var(--clr-danger);
             font-weight: 700;
             text-align: center;
             white-space: nowrap;
@@ -478,7 +478,7 @@
 
         .td-saldo-ok {
             background: #d4edda;
-            color: #2d7a4f;
+            color: var(--clr-success);
             font-weight: 700;
             text-align: center;
             white-space: nowrap;
@@ -629,14 +629,14 @@
         .ap-calc-box { background:linear-gradient(135deg,#e8f4f8,#d1ecf1); padding:12px 16px; border-radius:8px; border-left:4px solid #0c5460; margin-top:12px; }
         .ap-calc-row { display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
         .ap-calc-row.total { font-weight:700; border-top:1px solid #aecdd5; margin-top:4px; padding-top:7px; }
-        .ap-alert { background:#fff3cd; border-left:4px solid #e67e22; padding:10px 14px; border-radius:8px; margin-top:12px; font-size:12px; color:#856404; }
+        .ap-alert { background:#fff3cd; border-left:4px solid var(--clr-warning); padding:10px 14px; border-radius:8px; margin-top:12px; font-size:12px; color:#856404; }
         .ap-upload-box { border:3px dashed #d0d0d0; border-radius:10px; padding:22px; text-align:center; background:#f8f6f1; cursor:pointer; transition:all 0.2s; }
         .ap-upload-box:hover { border-color:var(--accent,#C49A2A); background:#fff9e6; }
-        .ap-file-uploaded { background:#d4edda; border:2px solid #2d7a4f; border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; }
+        .ap-file-uploaded { background:#d4edda; border:2px solid var(--clr-success); border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; }
         .ap-warn-nofile { background:#fff3cd; border-left:4px solid #ffc107; padding:8px 12px; border-radius:8px; margin-top:8px; font-size:12px; color:#856404; font-weight:600; }
         .ap-rechazo-sec { display:none; margin-top:14px; }
         .ap-rechazo-sec.active { display:block; }
-        .ap-rechazo-sec textarea { width:100%; padding:10px; border:2px solid var(--danger,#c0392b); border-radius:8px; font-size:13px; font-family:inherit; resize:vertical; min-height:70px; }
+        .ap-rechazo-sec textarea { width:100%; padding:10px; border:2px solid var(--clr-danger); border-radius:8px; font-size:13px; font-family:inherit; resize:vertical; min-height:70px; }
         .ap-footer-normal { display:flex; }
         .ap-footer-rechazo { display:none; }
 
@@ -812,7 +812,7 @@
 
         .cuota-delete {
             background: #fee2e2;
-            color: #dc2626;
+            color: var(--clr-danger);
             border: none;
             width: 30px;
             height: 30px;
@@ -1028,7 +1028,7 @@
         .pcuota-paso { font-size:13px; font-weight:700; color:#5C1018; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.4px; }
         .pcuota-fila { display:grid; grid-template-columns:auto 1fr 110px 110px 130px auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; transition:border-color 0.2s; }
         .pcuota-fila:focus-within { border-color:#C49A2A; }
-        .pcuota-fila.fila-irreg { border-color:#e67e22; background:#fffbf5; }
+        .pcuota-fila.fila-irreg { border-color:var(--clr-warning); background:#fffbf5; }
         .pcuota-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
         .pcuota-fila input { width:100%; padding:7px 9px; border:1.5px solid #ddd; border-radius:7px; font-size:12px; font-family:'DM Sans',sans-serif; transition:border-color 0.2s; background:white; box-sizing:border-box; }
         .pcuota-fila input:focus { outline:none; border-color:#5C1018; }
@@ -1038,7 +1038,7 @@
         .pcuota-monto::before { content:'$'; position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:12px; color:#999; pointer-events:none; }
         .pcuota-del { background:none; border:none; cursor:pointer; color:#e74c3c; font-size:17px; padding:4px; border-radius:6px; transition:background 0.2s; line-height:1; align-self:end; margin-bottom:2px; }
         .pcuota-del:hover { background:#fdecea; }
-        .btn-pcuota-agregar { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:#2d7a4f; color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-pcuota-agregar { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:var(--clr-success); color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
         .btn-pcuota-agregar:hover { background:#246441; }
         .pcuota-destino { background:#f0f8ff; border:1.5px solid #b3d4f0; border-radius:10px; padding:14px 16px; }
 
@@ -1054,7 +1054,7 @@
         #modal-descuento-new .modal-footer { padding:14px 22px; border-top:1px solid #f0ede6; display:flex; justify-content:flex-end; gap:10px; }
         .btn-cancel-desc { padding:9px 18px; background:white; border:2px solid #ddd; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; color:#666; font-family:'DM Sans',sans-serif; }
         .btn-cancel-desc:hover { background:#f0f0f0; }
-        .btn-save-desc { padding:9px 18px; background:#10b981; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-save-desc { padding:9px 18px; background:var(--clr-success); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
         .btn-save-desc:hover { background:#0d9268; }
         .desc-periodo-fila { display:grid; grid-template-columns:26px 90px 130px 130px 1fr auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; }
         .desc-periodo-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
@@ -1180,7 +1180,7 @@
                     <div class="notif-wrapper" style="position:relative;" id="notifWrapper">
                         <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                             🔔
-                            <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
+                            <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:var(--clr-danger);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
                         </button>
                         <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:1000;border:1px solid #e5e7eb;color:#111;">
                             <div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;">
@@ -1376,11 +1376,11 @@
 
                 <!-- Sección de rechazo -->
                 <div class="ap-rechazo-sec" id="apRechazoSec">
-                    <div class="ap-sec-title" style="color:var(--danger,#c0392b);border-bottom-color:var(--danger,#c0392b);">✕ Motivo de Rechazo</div>
+                    <div class="ap-sec-title" style="color:var(--clr-danger);border-bottom-color:var(--clr-danger);">✕ Motivo de Rechazo</div>
                     <textarea id="apRechazoMotivo" placeholder="Ingrese el motivo del rechazo (opcional)…"></textarea>
                 </div>
 
-                <div id="aprobMsgBox" style="margin-top:10px;font-size:13px;color:var(--danger,#c0392b);"></div>
+                <div id="aprobMsgBox" style="margin-top:10px;font-size:13px;color:var(--clr-danger);"></div>
             </div>
             <div class="modal-footer ap-footer-normal" id="apFooterNormal">
                 <div class="footer-buttons">
@@ -1717,7 +1717,7 @@
             document.getElementById('statEgresos').textContent  = formatearMoneda(egrExec);
             var sEl = document.getElementById('statSaldo');
             sEl.textContent = formatearMoneda(saldo);
-            sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
+            sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
         }
 
         function renderTabla() {
@@ -1778,7 +1778,7 @@
                     <div class="legend-item"><div class="legend-color abonada"></div><span>Abonada</span></div>
                     <div class="legend-item"><div class="legend-color parcial"></div><span>Pago parcial</span></div>
                     <div class="legend-item"><div class="legend-color mora"></div><span>En mora</span></div>
-                    <div class="legend-item"><div class="legend-color" style="background:#fef3c7;border-color:#f59e0b;"></div><span>Pendiente de revisión</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#fef3c7;border-color:var(--clr-warning);"></div><span>Pendiente de revisión</span></div>
                     <div class="legend-item"><div class="legend-color" style="background:#e0e7ff;border-color:#6366f1;"></div><span>No abonada</span></div>
                     <div class="legend-item"><div class="legend-color" style="background:#f3f4f6;border-color:#9ca3af;"></div><span>A definir</span></div>
                     <div class="legend-item"><div class="legend-color nodebe"></div><span>No aplica</span></div>
@@ -2030,7 +2030,7 @@
             }
             var t = document.createElement('div');
             t.style.cssText = 'padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;color:white;box-shadow:0 8px 24px rgba(0,0,0,0.2);max-width:340px;';
-            t.style.background = tipo === 'error' ? '#ef4444' : tipo === 'success' ? '#10b981' : '#5C1018';
+            t.style.background = tipo === 'error' ? 'var(--clr-danger)' : tipo === 'success' ? 'var(--clr-success)' : '#5C1018';
             t.textContent = msg;
             tw.appendChild(t);
             setTimeout(function(){ if (t.parentNode) t.parentNode.removeChild(t); }, 3500);
