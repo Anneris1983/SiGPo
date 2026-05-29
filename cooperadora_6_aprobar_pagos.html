@@ -342,8 +342,6 @@
     var _cobros = [];
     var _cobroActivo = null;
 
-    var fMonto = fMillones;
-
     /* ── INIT ── */
     var _params = new URLSearchParams(location.search);
     var _cohorteId  = _params.get('cohorteId')  || _params.get('cohorte_id')  || '';
@@ -391,7 +389,7 @@
         var pend = _cobros.length;
         document.querySelector('.summary-card.pend .summary-value').textContent = pend;
         var totalSaldo = _cobros.reduce(function(s,c){ return s+(Number(c.saldo_pendiente)||0); }, 0);
-        document.querySelectorAll('.summary-card')[1].querySelector('.summary-value').textContent = fMonto(totalSaldo);
+        document.querySelectorAll('.summary-card')[1].querySelector('.summary-value').textContent = fMillones(totalSaldo);
     }
 
     /* ── RENDER LISTA ── */
@@ -419,7 +417,7 @@
                 + '</div>'
                 + '<div class="student-totales">'
                 +   '<div class="tot-label">Saldo pendiente</div>'
-                +   '<div class="tot-deuda">' + fMonto(c.saldo_pendiente) + '</div>'
+                +   '<div class="tot-deuda">' + fMillones(c.saldo_pendiente) + '</div>'
                 + '</div>'
                 + '<div class="arrow">›</div>'
                 + '</div>';
@@ -438,13 +436,13 @@
         var cuotaLabel = c.nro_cuota ? 'Cuota ' + c.nro_cuota : (c.concepto || '—');
         document.getElementById('modal-nombre').textContent = nombreMostrado;
         document.getElementById('modal-sub').textContent = 'DNI: ' + (c.dni || '—') + ' · ' + cuotaLabel;
-        document.getElementById('modal-total-pagar').textContent = fMonto(c.monto_final);
-        document.getElementById('modal-total-abonado').textContent = fMonto(
+        document.getElementById('modal-total-pagar').textContent = fMillones(c.monto_final);
+        document.getElementById('modal-total-abonado').textContent = fMillones(
             (c.monto_abonado != null && Number(c.monto_abonado) > 0)
                 ? Number(c.monto_abonado)
                 : Math.max(0, (Number(c.monto_final)||0) - (Number(c.saldo_pendiente)||0))
         );
-        document.getElementById('modal-saldo').textContent = fMonto(c.saldo_pendiente);
+        document.getElementById('modal-saldo').textContent = fMillones(c.saldo_pendiente);
 
         /* Cuotas area → comprobante y acciones */
         var cuotasDiv = document.getElementById('modal-cuotas');
@@ -477,11 +475,11 @@
             var colorText = esParcialDeclarado ? '#9a3412' : '#166534';
             var iconoD = esParcialDeclarado ? '⚠️' : '✅';
             var labelD = esParcialDeclarado
-                ? 'Pago PARCIAL declarado: <strong>' + fMonto(mt) + '</strong> de ' + fMonto(Number(c.monto_final))
-                : 'Pago TOTAL declarado: <strong>' + fMonto(mt) + '</strong>';
+                ? 'Pago PARCIAL declarado: <strong>' + fMillones(mt) + '</strong> de ' + fMillones(Number(c.monto_final))
+                : 'Pago TOTAL declarado: <strong>' + fMillones(mt) + '</strong>';
             montoDeclaradoHtml = '<div style="margin-bottom:12px;padding:10px 14px;background:'+colorBg+';border-radius:8px;border:1px solid '+colorBorder+';font-size:13px;color:'+colorText+';">'
                 + iconoD + ' ' + labelD
-                + (esParcialDeclarado ? '<br><span style="font-size:12px;opacity:.8;">Saldo restante a cobrar: <strong>' + fMonto(Math.max(0, Number(c.monto_final) - mt)) + '</strong></span>' : '')
+                + (esParcialDeclarado ? '<br><span style="font-size:12px;opacity:.8;">Saldo restante a cobrar: <strong>' + fMillones(Math.max(0, Number(c.monto_final) - mt)) + '</strong></span>' : '')
                 + '</div>';
         }
 
@@ -527,7 +525,7 @@
         if (!_cobroActivo) return;
         var reciboFile = getReciboFile();
         if (!reciboFile) { alert('Debés adjuntar el recibo oficial antes de aprobar.'); return; }
-        if (!confirm('¿Aprobar el pago completo de '+fMonto(_cobroActivo.monto_final)+'?')) return;
+        if (!confirm('¿Aprobar el pago completo de '+fMillones(_cobroActivo.monto_final)+'?')) return;
         try {
             var res = await aprobarPago(_cobroActivo.cobro_id, 'total', _cobroActivo.monto_final, reciboFile);
             if (!res.ok) { alert('Error: ' + (res.mensaje || 'No se pudo aprobar')); return; }
@@ -545,7 +543,7 @@
         if (!monto || monto <= 0) { alert('Ingresá un monto válido'); return; }
         var reciboFile = getReciboFile();
         if (!reciboFile) { alert('Debés adjuntar el recibo oficial antes de aprobar.'); return; }
-        if (!confirm('¿Aprobar pago parcial de '+fMonto(monto)+'?')) return;
+        if (!confirm('¿Aprobar pago parcial de '+fMillones(monto)+'?')) return;
         try {
             var res = await aprobarPago(_cobroActivo.cobro_id, 'parcial', monto, reciboFile);
             if (!res.ok) { alert('Error: ' + (res.mensaje || 'No se pudo aprobar')); return; }
