@@ -90,8 +90,8 @@
         th.col-cuota { min-width: 82px; }
         th.tot-hdr   { color: white; font-size: 10px; min-width: 100px; }
         th.th-pagar   { background: #3730a3; }
-        th.th-abonado { background: #2d7a4f; }
-        th.th-saldo   { background: #c0392b; }
+        th.th-abonado { background: var(--clr-success); }
+        th.th-saldo   { background: var(--clr-danger); }
         #t-body tr td:nth-child(1) { position: sticky; left: 0; z-index: 2; background: white; }
         #t-body tr td.cell-name    { position: sticky; left: 32px; z-index: 2; background: white; box-shadow: 2px 0 4px rgba(0,0,0,0.07); }
         td {
@@ -107,7 +107,7 @@
 
         td[data-est="ABONADA"]      { background: #d4edda; color: #1e7e44; text-align:center; font-weight:600; }
         td[data-est="PAGO_PARCIAL"] { background: #fff3cd; color: #856404; text-align:center; font-weight:600; font-size:10px; }
-        td[data-est="EN_MORA"]      { background: #f8d7da; color: #c0392b; text-align:center; font-weight:600; }
+        td[data-est="EN_MORA"]      { background: #f8d7da; color: var(--clr-danger); text-align:center; font-weight:600; }
         td[data-est="PENDIENTE"]    { background: #f0f0f0; color: #666;    text-align:center; font-weight:600; }
         td[data-est="NO_APLICA"]    { background: #fafafa; color: #ccc; font-style:italic; font-size:10px;
                                       border: 1px dashed #e0e0e0; text-align:center; }
@@ -126,7 +126,7 @@
 
         .cell-tot-pagar   { background:#eef2ff; color:#5C1018; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
         .cell-tot-abonado { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
-        .cell-saldo-pos   { background:#f8d7da; color:#c0392b; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+        .cell-saldo-pos   { background:#f8d7da; color:var(--clr-danger); font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
         .cell-saldo-cero  { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
 
         .edit-btn {
@@ -217,7 +217,7 @@
         .plan-paso-titulo { font-size:13px; font-weight:700; color:var(--primary); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.4px; }
         .plan-fila { display:grid; grid-template-columns:auto 1fr 110px 110px 130px auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; transition:border-color 0.2s; }
         .plan-fila:focus-within { border-color:var(--accent); }
-        .plan-fila.fila-irregular { border-color:#e67e22; background:#fffbf5; }
+        .plan-fila.fila-irregular { border-color:var(--clr-warning); background:#fffbf5; }
         .plan-fila-num { width:26px; height:26px; border-radius:50%; background:var(--primary); color:white; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:2px; }
         .plan-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
         .plan-fila input, .plan-fila select { width:100%; padding:7px 9px; border:1.5px solid #ddd; border-radius:7px; font-size:12px; font-family:'DM Sans',sans-serif; transition:border-color 0.2s; background:white; }
@@ -227,7 +227,7 @@
         .plan-fila .monto-wrap::before { content:'$'; position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:12px; color:#999; pointer-events:none; }
         .plan-fila .btn-del { background:none; border:none; cursor:pointer; color:#e74c3c; font-size:17px; padding:4px; border-radius:6px; transition:background 0.2s; line-height:1; align-self:end; margin-bottom:2px; }
         .plan-fila .btn-del:hover { background:#fdecea; }
-        .btn-agregar-cuota { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:#2d7a4f; color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
+        .btn-agregar-cuota { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:var(--clr-success); color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
         .btn-agregar-cuota:hover { background:#246441; }
         .plan-destino-box { background:#f0f8ff; border:1.5px solid #b3d4f0; border-radius:10px; padding:14px 16px; }
         .plan-radio-opcion { display:flex; gap:12px; align-items:flex-start; cursor:pointer; }
@@ -250,7 +250,7 @@
         }
         .btn-baja-coh:hover { background:#fff8e1; }
         .btn-alta-coh {
-            background:none; border:1.5px solid #2d7a4f; color:#2d7a4f;
+            background:none; border:1.5px solid var(--clr-success); color:var(--clr-success);
             border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px;
             cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap;
         }
@@ -355,7 +355,7 @@
                 <div style="position:relative;" id="notif-wrapper">
                     <button onclick="toggleNotif()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 12px;border-radius:8px;font-size:18px;cursor:pointer;position:relative;" title="Notificaciones">
                         🔔
-                        <span id="notif-badge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;border-radius:50%;min-width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;">0</span>
+                        <span id="notif-badge" style="position:absolute;top:-4px;right:-4px;background:var(--clr-danger);color:white;border-radius:50%;min-width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;">0</span>
                     </button>
                     <div id="notif-panel" style="display:none;position:absolute;right:0;top:48px;width:320px;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:500;overflow:hidden;">
                         <div style="padding:14px 16px;border-bottom:1px solid #f0f0f0;font-weight:700;color:#5C1018;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;">
@@ -374,7 +374,7 @@
                 <div class="stat-item"><div class="stat-label">En mora</div><div class="stat-value" id="s-mora" style="color:#ffc107;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado" style="font-size:15px;">—</div></div>
-                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;font-size:15px;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:var(--clr-warning);font-size:15px;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Saldo</div><div class="stat-value" id="s-saldo" style="font-size:15px;">—</div></div>
             </div>
         </div>
@@ -655,7 +655,7 @@
             <div style="display:flex;gap:10px;">
                 <button class="btn-cancel" onclick="cerrar('modal-eliminar-global')">Cerrar</button>
                 <button id="btn-elim-sel" onclick="eliminarSeleccionadas()" disabled
-                    style="background:#dc2626;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;padding:9px 18px;cursor:not-allowed;font-family:'DM Sans',sans-serif;opacity:0.4;transition:all 0.2s;">
+                    style="background:var(--clr-danger);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;padding:9px 18px;cursor:not-allowed;font-family:'DM Sans',sans-serif;opacity:0.4;transition:all 0.2s;">
                     🗑 Eliminar seleccionadas
                 </button>
             </div>
@@ -1026,7 +1026,7 @@ function renderTabla() {
           <td class="cell-email">${escapeHtml(est.email)}</td>
           <td style="text-align:center;border-right:1px solid #ebebeb;">
             <div style="display:inline-flex;flex-direction:column;align-items:center;gap:4px;">
-              <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;${est.estado_academico === 'BAJA_COHORTE' ? 'background:#fde8e1;color:#c0392b;' : 'background:#d1fae5;color:#065f46;'}">${est.estado_academico === 'BAJA_COHORTE' ? 'Baja' : 'Activo'}</span>
+              <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;${est.estado_academico === 'BAJA_COHORTE' ? 'background:#fde8e1;color:var(--clr-danger);' : 'background:#d1fae5;color:#065f46;'}">${est.estado_academico === 'BAJA_COHORTE' ? 'Baja' : 'Activo'}</span>
               ${btnEstado}
             </div>
           </td>
@@ -1062,7 +1062,7 @@ function actualizarStats() {
     document.getElementById('s-egresos').textContent   = fMonto(egrExec);
     const sEl = document.getElementById('s-saldo');
     sEl.textContent = fMonto(saldo);
-    sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
+    sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
 }
 
 function actualizarFiltros() {
@@ -1485,10 +1485,10 @@ function confirmarCambioEstado(dni, nombre, nuevoEstado) {
     document.getElementById('mbc-titulo').textContent = esBaja ? '⛔ Baja en esta cohorte' : '✅ Alta en esta cohorte';
     document.getElementById('mbc-sub').textContent = V.data ? V.data.programa.nombre + ' · ' + V.data.cohorte.nombre : '';
     btn.textContent = esBaja ? '⛔ Confirmar Baja' : '✅ Confirmar Alta';
-    btn.style.background = esBaja ? '#ea580c' : '#2d7a4f';
+    btn.style.background = esBaja ? '#ea580c' : 'var(--clr-success)';
     document.getElementById('mbc-cuerpo').innerHTML = esBaja
         ? `<p style="font-size:13px;color:#555;">Va a dar de baja a <strong>${escapeHtml(nombre)}</strong> solo en esta cohorte/edición.</p>
-           <div style="margin-top:12px;background:#fff8e1;border-left:4px solid #f59e0b;padding:12px;border-radius:8px;font-size:12px;color:#78350f;">
+           <div style="margin-top:12px;background:#fff8e1;border-left:4px solid var(--clr-warning);padding:12px;border-radius:8px;font-size:12px;color:#78350f;">
              <strong>Efectos:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;">
                <li>Deja de generar deuda nueva en esta cohorte.</li>
                <li>El historial de pagos se conserva.</li>
@@ -1496,7 +1496,7 @@ function confirmarCambioEstado(dni, nombre, nuevoEstado) {
              </ul>
            </div>`
         : `<p style="font-size:13px;color:#555;">Va a reactivar a <strong>${escapeHtml(nombre)}</strong> en esta cohorte/edición.</p>
-           <div style="margin-top:12px;background:#d4edda;border-left:4px solid #2d7a4f;padding:12px;border-radius:8px;font-size:12px;color:#155724;">
+           <div style="margin-top:12px;background:#d4edda;border-left:4px solid var(--clr-success);padding:12px;border-radius:8px;font-size:12px;color:#155724;">
              <strong>Efectos:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;">
                <li>El estudiante vuelve a estado ACTIVO en esta cohorte.</li>
                <li>Se reanudan los cálculos de cuotas y deuda.</li>
