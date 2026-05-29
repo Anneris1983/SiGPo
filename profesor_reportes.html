@@ -471,14 +471,14 @@ function renderBarChart(key, labels, datasets, extraScales, tooltipLabel) {
     if (empty) return;
     var ctx = document.getElementById('chart-' + key).getContext('2d');
     var scales = Object.assign({ x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f0f0f0' } } }, extraScales);
-    var tooltipCfg = { mode: 'index', intersect: false };
+    var tooltipCfg = { mode: 'index', intersect: false, axis: 'x' };
     if (tooltipLabel) tooltipCfg.callbacks = { label: tooltipLabel };
     charts[key] = new Chart(ctx, {
         type: 'bar',
         data: { labels: labels, datasets: datasets.map(function(d){ return Object.assign({ borderWidth: 1.5, borderRadius: 6 }, d); }) },
         options: {
             responsive: true, maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
+            interaction: { mode: 'index', intersect: false, axis: 'x' },
             plugins: { legend: { position: 'top' }, tooltip: tooltipCfg },
             scales: scales
         }
