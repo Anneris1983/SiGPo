@@ -262,6 +262,7 @@ function resolverEstado(c) {
     var saldo   = Number(c.saldo_pendiente||0);
     var hoy     = new Date().toISOString().split('T')[0];
     if (c.monto_final == null) return 'A_DEFINIR';
+    if (Number(c.monto_final) === 0) return 'NO_APLICA';
     if (['ABONADA','PAGADA'].includes(s) || (saldo <= 0 && abonado > 0)) return 'ABONADA';
     if (['PAGO_PARCIAL','PARCIAL'].includes(s) || (abonado > 0 && saldo > 0)) return 'PAGO_PARCIAL';
     if (s === 'PENDIENTE') return 'PENDIENTE';

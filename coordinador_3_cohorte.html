@@ -793,7 +793,7 @@ async function cargar() {
             var abonado = (c.monto_abonado != null && Number(c.monto_abonado) > 0)
                 ? Number(c.monto_abonado)
                 : Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
-            dniMap[dk].cobros.push({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final != null ? Number(c.monto_final) : null, monto_abonado:abonado, monto_transferido:(c.monto_transferido ? Number(c.monto_transferido) : null), saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'A_DEFINIR':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null });
+            dniMap[dk].cobros.push({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final != null ? Number(c.monto_final) : null, monto_abonado:abonado, monto_transferido:(c.monto_transferido ? Number(c.monto_transferido) : null), saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'NO_APLICA':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null });
         });
 
         // Agregar estudiantes inscriptos que aún no tienen cobros
@@ -897,6 +897,7 @@ function normalizarCobro(c) {
     const hoyStr = new Date().toISOString().split('T')[0];
 
     if (['A_DEFINIR', 'A DEFINIR', 'NO DEFINIDO', 'NO DEFINIDA'].includes(estadoExplicito) || montoFinal == null) estado = 'A_DEFINIR';
+    else if (['NO_APLICA', 'NO APLICA', 'NO_DEBE', 'NO DEBE'].includes(estadoExplicito) || montoFinal === 0) estado = 'NO_APLICA';
     else if (['ABONADA', 'PAGADA', 'PAGADO'].includes(estadoExplicito) || (montoFinal != null && saldo <= 0 && montoAbonado > 0)) estado = 'ABONADA';
     else if (['PAGO PARCIAL', 'PAGO_PARCIAL', 'PARCIAL'].includes(estadoExplicito) || (montoAbonado > 0 && saldo > 0)) estado = 'PAGO_PARCIAL';
     else if (['PENDIENTE', 'PENDIENTE DE VERIFICACION', 'PENDIENTE DE REVISION'].includes(estadoExplicito)) estado = 'PENDIENTE';
