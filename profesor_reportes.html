@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -151,6 +153,7 @@
         </div>
         <div class="header-actions">
             <button class="header-btn" type="button" onclick="exportar('resumen')">📥 Exportar resumen</button>
+            <button class="header-btn" type="button" onclick="exportarPDF()" id="btnPdf">📄 Exportar PDF</button>
             <div style="position:relative;">
                 <button onclick="toggleNotif()" title="Notificaciones" style="background:rgba(255,255,255,0.14);border:1.5px solid rgba(255,255,255,0.38);border-radius:8px;padding:7px 10px;cursor:pointer;display:flex;align-items:center;position:relative;">
                     <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="white"/></svg>
@@ -604,6 +607,64 @@ function exportar(tipo) {
     } catch(e) {
         console.error(e);
         toast('No se pudo generar el Excel.', 'err');
+    }
+}
+
+async function exportarPDF() {
+    if (!Object.keys(charts).length) { toast('Cargá los datos antes de exportar.', 'err'); return; }
+    var btn = document.getElementById('btnPdf');
+    btn.disabled = true; btn.textContent = '⏳ Generando…';
+    toast('Generando PDF, por favor esperá…');
+    try {
+        var { jsPDF } = window.jspdf;
+        var pdf  = new jsPDF('l', 'mm', 'a4');
+        var pW   = pdf.internal.pageSize.getWidth();
+        var pH   = pdf.internal.pageSize.getHeight();
+        var marg = 10;
+
+        // Encabezado del PDF
+        pdf.setFillColor(92, 16, 24);
+        pdf.rect(0, 0, pW, 18, 'F');
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(14); pdf.setFont(undefined, 'bold');
+        pdf.text('SiGPo — Reportes Profesor', marg, 11);
+        pdf.setFontSize(9); pdf.setFont(undefined, 'normal');
+        pdf.text(document.getElementById('headerSubtitle').textContent + '  •  ' + new Date().toLocaleDateString('es-AR'), pW - marg, 11, { align: 'right' });
+
+        var y = 22;
+
+        // Métricas resumen
+        var sumEl = document.getElementById('summaryGrid');
+        var sumC  = await html2canvas(sumEl, { scale: 2, backgroundColor: '#f8f6f1', logging: false, useCORS: true });
+        var sumH  = (sumC.height / sumC.width) * (pW - 2 * marg);
+        pdf.addImage(sumC.toDataURL('image/png'), 'PNG', marg, y, pW - 2 * marg, sumH);
+        y += sumH + 6;
+
+        // Los 4 gráficos en grilla 2×2
+        var cards = Array.from(document.querySelectorAll('.report-grid .card'));
+        var cardW = (pW - 2 * marg - 6) / 2;
+
+        for (var i = 0; i < cards.length; i += 2) {
+            var c1 = await html2canvas(cards[i], { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
+            var c2 = (i + 1 < cards.length) ? await html2canvas(cards[i + 1], { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true }) : null;
+            var h1 = (c1.height / c1.width) * cardW;
+            var h2 = c2 ? (c2.height / c2.width) * cardW : 0;
+            var rowH = Math.max(h1, h2);
+
+            if (y + rowH > pH - marg) { pdf.addPage(); y = marg; }
+
+            pdf.addImage(c1.toDataURL('image/png'), 'PNG', marg, y, cardW, h1);
+            if (c2) pdf.addImage(c2.toDataURL('image/png'), 'PNG', marg + cardW + 6, y, cardW, h2);
+            y += rowH + 6;
+        }
+
+        pdf.save('reporte_profesor_' + new Date().toISOString().slice(0, 10) + '.pdf');
+        toast('PDF descargado correctamente.', 'ok');
+    } catch(e) {
+        console.error(e);
+        toast('No se pudo generar el PDF.', 'err');
+    } finally {
+        btn.disabled = false; btn.textContent = '📄 Exportar PDF';
     }
 }
 
