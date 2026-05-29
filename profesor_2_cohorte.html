@@ -11,7 +11,7 @@
 
         body { font-family:'DM Sans',sans-serif; background:var(--bg); color:#2c2c2c; font-size: 14px; }
         .header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:20px 40px; box-shadow:0 4px 20px rgba(0,0,0,.1); }
-        .header-content { max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+        .header-content { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
         .header-left h1 { font-family:'Crimson Pro',serif; font-size:22px; margin-bottom:3px; }
         .header-left p  { opacity:.85; font-size:13px; }
         .header-btns { display:flex; gap:10px; }
@@ -76,6 +76,7 @@
 <div class="header">
     <div class="header-content">
         <div class="header-left">
+            <button class="btn-back" onclick="navegar('profesor_1_dashboard.html')">← Volver</button>
             <h1 id="cohTitle">Cargando…</h1>
             <p id="cohSub">—</p>
         </div>
@@ -87,7 +88,6 @@
                     <div id="notif-list" style="max-height:340px;overflow-y:auto;"><div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;">Cargando…</div></div>
                 </div>
             </div>
-            <button class="btn-back" onclick="navegar('profesor_1_dashboard.html')">← Volver</button>
             <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
         </div>
     </div>
