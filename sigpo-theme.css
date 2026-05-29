@@ -593,8 +593,7 @@ td {
 tbody tr:nth-child(even) td { background: var(--clr-surface-alt) !important; }
 tbody tr:last-child td { border-bottom: none !important; }
 
-tbody tr { transition: background var(--dur-1) var(--ease) !important; }
-tbody tr:hover td { background: var(--clr-brand-subtle) !important; }
+tbody tr { transition: none !important; }
 
 /* Tabla contenida en card */
 .table-wrap {
