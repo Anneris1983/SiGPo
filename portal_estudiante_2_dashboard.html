@@ -861,14 +861,10 @@
             // Sección: cohorte
             doc.setFillColor(240, 237, 232);
             doc.roundedRect(ml, y, cw, 12, 2, 2, 'F');
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(9);
-            doc.setTextColor(92, 16, 24);
-            var labelCoh = (prog.tipo && prog.tipo.toLowerCase().includes('curso')) ? 'Edición' : 'Cohorte';
-            doc.text(labelCoh + ':  ', ml + 4, y + 8);
             doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
             doc.setTextColor(28, 21, 16);
-            doc.text(coh.nombre || '—', ml + 4 + doc.getTextWidth(labelCoh + ':  '), y + 8);
+            doc.text(coh.nombre || '—', ml + 4, y + 8);
             y += 18;
 
             // Tabla de cuotas
