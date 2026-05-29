@@ -1,6 +1,6 @@
 /**
  * ══════════════════════════════════════════════════════════════
- * SiGPo — supabase.js
+ * supabase.js
  * Cliente Supabase + funciones de API para todas las vistas
  * ══════════════════════════════════════════════════════════════
  */
