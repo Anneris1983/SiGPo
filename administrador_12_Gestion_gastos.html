@@ -52,7 +52,7 @@
         .btn-success { background: var(--success); color: white; }
         .btn-success:hover { background: #246441; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:hover { background: #b91c1c; }
+        .btn-danger:hover { background: var(--clr-danger); }
         .btn-warning { background: var(--warning); color: white; }
         .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
         .btn-outline:hover { background: var(--primary); color: white; }
@@ -109,7 +109,7 @@
             <div class="notif-wrapper">
                 <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                     <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
+                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:var(--clr-danger);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
                 </button>
                 <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                     <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -126,9 +126,9 @@
 
 <div class="container">
     <div class="stats-grid">
-        <div class="stat-box" style="border-color:#dc2626;"><div class="stat-value" style="color:#dc2626;" id="stat-ejecutado">—</div><div class="stat-label">Gastos Ejecutados</div></div>
-        <div class="stat-box" style="border-color:#f59e0b;"><div class="stat-value" style="color:#f59e0b;" id="stat-proyectado">—</div><div class="stat-label">Gastos Proyectados</div></div>
-        <div class="stat-box" style="border-color:#2d7a4f;"><div class="stat-value" style="color:#2d7a4f;" id="stat-total">—</div><div class="stat-label">Total Gastos</div></div>
+        <div class="stat-box" style="border-color:var(--clr-danger);"><div class="stat-value" style="color:var(--clr-danger);" id="stat-ejecutado">—</div><div class="stat-label">Gastos Ejecutados</div></div>
+        <div class="stat-box" style="border-color:var(--clr-warning);"><div class="stat-value" style="color:var(--clr-warning);" id="stat-proyectado">—</div><div class="stat-label">Gastos Proyectados</div></div>
+        <div class="stat-box" style="border-color:var(--clr-success);"><div class="stat-value" style="color:var(--clr-success);" id="stat-total">—</div><div class="stat-label">Total Gastos</div></div>
         <div class="stat-box" style="border-color:#6f42c1;"><div class="stat-value" style="color:#6f42c1;" id="stat-cantidad">—</div><div class="stat-label">Registros</div></div>
     </div>
 
