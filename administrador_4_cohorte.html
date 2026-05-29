@@ -848,8 +848,10 @@ function resolverEstadoCobro(c) {
     // PENDIENTE: comprobante subido, esperando revisión cooperadora
     if (estadoDb === 'PENDIENTE' || (tieneComp && !tieneRecibo && montoAbonado <= 0)) return 'PENDIENTE';
 
-    // ABONADA: recibo+saldo=0, o importado con estado ABONADA, o monto_final=$0 (nada que cobrar)
-    if (saldo !== null && saldo <= 0 && (tieneRecibo || estadoDb === 'ABONADA' || Number(c.monto_final) === 0)) return 'ABONADA';
+    // NO_APLICA: monto_final=$0 significa que no debe pagar esa cuota
+    if (saldo !== null && saldo <= 0 && Number(c.monto_final) === 0) return 'NO_APLICA';
+    // ABONADA: recibo cargado + saldo = 0, o estado en BD ya es ABONADA con saldo = 0 (datos importados)
+    if (saldo !== null && saldo <= 0 && (tieneRecibo || estadoDb === 'ABONADA')) return 'ABONADA';
 
     // EN_MORA sobre saldo parcial: recibo parcial vencido, saldo en mora, sin nuevo comprobante
     if (estadoDb === 'EN_MORA' && tieneRecibo && saldo !== null && saldo > 0 && montoAbonado > 0 && !tieneComp) return 'EN_MORA';
@@ -2443,6 +2445,8 @@ function _impBuildEstMap(rows) {
         var saldo   = montoFinal === null ? null : redondear2(Math.max(0, montoFinal - abonado));
         var estadosValidos = ['ABONADA','EN_MORA','PAGO_PARCIAL','NO_ABONADA','A_DEFINIR','NO_APLICA','PENDIENTE'];
         var estadoExplicito = String(r.estado || '').trim().toUpperCase();
+        // monto_final=$0 sin estado explícito = no debe pagar esa cuota
+        if (!estadosValidos.includes(estadoExplicito) && montoFinal === 0) estadoExplicito = 'NO_APLICA';
         var estado = estadosValidos.includes(estadoExplicito)
             ? estadoExplicito
             : (montoFinal === null ? 'A_DEFINIR'

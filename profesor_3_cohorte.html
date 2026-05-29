@@ -321,7 +321,8 @@ function normalizarCobro(c) {
     var hoyStr        = new Date().toISOString().split('T')[0];
     var estado = 'NO_ABONADA';
     if (['A_DEFINIR','A DEFINIR','NO DEFINIDO'].includes(estadoExpl) || montoFinal == null) estado = 'A_DEFINIR';
-    else if (['ABONADA','PAGADA','PAGADO'].includes(estadoExpl) || (montoFinal != null && saldo <= 0 && (montoAbonado > 0 || montoFinal === 0))) estado = 'ABONADA';
+    else if (montoFinal === 0) estado = 'NO_APLICA';
+    else if (['ABONADA','PAGADA','PAGADO'].includes(estadoExpl) || (montoFinal != null && saldo <= 0 && montoAbonado > 0)) estado = 'ABONADA';
     else if (['PAGO PARCIAL','PARCIAL'].includes(estadoExpl) || (montoAbonado > 0 && saldo > 0)) estado = 'PAGO_PARCIAL';
     else if (['PENDIENTE'].includes(estadoExpl)) estado = 'PENDIENTE';
     else if (['EN MORA','MORA','VENCIDA'].includes(estadoExpl)) estado = 'EN_MORA';
