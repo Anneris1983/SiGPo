@@ -182,9 +182,22 @@ async function cargar(sesion, cohorteId) {
     document.getElementById('cohTitle').textContent = coh.nombre || 'Cohorte';
     document.getElementById('cohSub').textContent   = progNom + (coh.fecha_inicio ? ' · ' + coh.fecha_inicio.substring(0,7) : '') + (coh.fecha_fin ? ' → ' + coh.fecha_fin.substring(0,7) : '');
 
+    // Agrupar cobros por DNI (necesario para stats y tabla)
+    var porDni = {};
+    cobros.forEach(function(c) {
+        if (!porDni[c.dni]) porDni[c.dni] = [];
+        porDni[c.dni].push(c);
+    });
+
     // Stats
     var totalEst = new Set(insc.map(function(i){ return i.estudiante_id; })).size;
     var dnisConMora = new Set(cobros.filter(function(c){ return c.estado==='EN_MORA'; }).map(function(c){ return c.dni; }));
+    var alDiaCount = dnis.filter(function(dni) {
+        var cobs = porDni[dni] || [];
+        if (cobs.some(function(c){ return c.estado==='EN_MORA'; })) return false;
+        var deuda = cobs.reduce(function(s,c){ if(c.estado==='ABONADA') return s; return s+Number(c.saldo_pendiente||c.monto_final||0); }, 0);
+        return deuda === 0;
+    }).length;
     var recaudado   = cobros.filter(function(c){ return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL'; })
                             .reduce(function(s,c){ return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0)); },0);
     var egrExec     = egres.filter(function(e){ return e.tipo==='EJECUTADO'; })
@@ -192,7 +205,7 @@ async function cargar(sesion, cohorteId) {
     var saldo = recaudado - egrExec;
 
     document.getElementById('s-est').textContent   = totalEst;
-    document.getElementById('s-aldia').textContent = totalEst - dnisConMora.size;
+    document.getElementById('s-aldia').textContent = alDiaCount;
     document.getElementById('s-mora').textContent  = dnisConMora.size;
     document.getElementById('s-rec').textContent   = fM(recaudado);
     document.getElementById('s-egr').textContent   = fM(egrExec);
@@ -200,13 +213,7 @@ async function cargar(sesion, cohorteId) {
     sEl.textContent = fM(saldo);
     sEl.className   = 'stat-value ' + (saldo < 0 ? 'danger' : 'success');
 
-    // Construir tabla de estudiantes: agrupar cobros por DNI
-    var porDni = {};
-    cobros.forEach(function(c) {
-        if (!porDni[c.dni]) porDni[c.dni] = [];
-        porDni[c.dni].push(c);
-    });
-
+    // Construir tabla de estudiantes
     _estudiantes = dnis.map(function(dni) {
         var usu   = usuMap[dni] || {};
         var cobs  = porDni[dni] || [];
