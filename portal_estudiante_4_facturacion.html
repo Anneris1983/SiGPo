@@ -26,7 +26,7 @@
         .notif-bell { background: none; border: none; cursor: pointer; position: relative; padding: 8px; border-radius: 8px; transition: background .15s; }
         .notif-bell:hover { background: rgba(255,255,255,.15); }
         .notif-wrapper { position: relative; display: inline-flex; align-items: center; }
-        .notif-badge-dot { position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid transparent; line-height: 1; }
+        .notif-badge-dot { position: absolute; top: 2px; right: 2px; background: var(--clr-danger); color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid transparent; line-height: 1; }
         .notif-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; width: 380px; max-height: 460px; overflow-y: auto; background: #fff; border-radius: 14px; box-shadow: 0 16px 48px rgba(10,15,30,.14); z-index: 999; border: 1px solid #E6DFD2; }
 
         /* ── LAYOUT ── */
@@ -570,7 +570,7 @@ async function cargarFacturas(dni) {
         renderFacturas(res.data || []);
     } catch(e) {
         console.error('Error cargando facturas:', e);
-        document.getElementById('facturas-list').innerHTML = '<p style="color:#ef4444;font-size:13px;">Error al cargar facturas.</p>';
+        document.getElementById('facturas-list').innerHTML = '<p style="color:var(--clr-danger);font-size:13px;">Error al cargar facturas.</p>';
     }
 }
 
