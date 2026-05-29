@@ -47,7 +47,7 @@
         .rpill-adm.c-cursos { border-left-color: #4F46E5; }
         .rpill-adm.c-est    { border-left-color: #C49A2A; }
         .rpill-adm.c-aldia  { border-left-color: #1a7a4a; }
-        .rpill-adm.c-mora   { border-left-color: #c0392b; }
+        .rpill-adm.c-mora   { border-left-color: var(--clr-danger); }
         .rpill-adm.c-recaud { border-left-color: #0891B2; }
         .rpill-adm.c-egres  { border-left-color: #b45309; }
         .rpill-adm.c-saldo  { border-left-color: #7c3aed; }
@@ -84,7 +84,7 @@
 
         /* ── Notif dropdown ── */
         .notif-wrapper { position: relative; }
-        .notif-badge { position: absolute; top: 2px; right: 2px; background: #dc2626; color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid #fff; line-height: 1; }
+        .notif-badge { position: absolute; top: 2px; right: 2px; background: var(--clr-danger); color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid #fff; line-height: 1; }
         .notif-badge:empty, .notif-badge[data-count="0"] { display: none; }
 
         .notif-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; width: 360px; max-height: 440px; overflow-y: auto; background: #fff; border-radius: 14px; box-shadow: 0 16px 48px rgba(10,15,30,.14); z-index: 999; border: 1px solid #E6DFD2; }
@@ -385,10 +385,10 @@ function renderDashboard(data) {
 function renderTarjeta(p) {
     var icono = getIconoTipo(p.tipo);
     var label = p.labelNomenclatura || 'Cohortes';
-    var colorAlDia = '#2d7a4f';
-    if (p.estudiantes > 0 && (p.alDia / p.estudiantes) < 0.7) colorAlDia = '#e67e22';
-    if (p.estudiantes > 0 && (p.alDia / p.estudiantes) < 0.5) colorAlDia = '#c0392b';
-    var colorSaldo = (p.saldo || 0) >= 0 ? '#2d7a4f' : '#c0392b';
+    var colorAlDia = 'var(--clr-success)';
+    if (p.estudiantes > 0 && (p.alDia / p.estudiantes) < 0.7) colorAlDia = 'var(--clr-warning)';
+    if (p.estudiantes > 0 && (p.alDia / p.estudiantes) < 0.5) colorAlDia = 'var(--clr-danger)';
+    var colorSaldo = (p.saldo || 0) >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
 
     return '<div class="program-card" onclick="navegar(\'administrador_3_Programas_de_posgrado.html?id=' + p.id + '\')">'
         + '<div class="program-icon">' + icono + '</div>'
@@ -397,9 +397,9 @@ function renderTarjeta(p) {
         + '<div class="program-stat"><span>Estudiantes:</span><strong>' + (p.estudiantes || 0) + '</strong></div>'
         + '<div class="program-stat"><span>' + label + ':</span><strong>' + (p.cohortes || 0) + '</strong></div>'
         + '<div class="program-stat"><span>Al día:</span><strong style="color:' + colorAlDia + ';">' + (p.alDia || 0) + '</strong></div>'
-        + '<div class="program-stat"><span>En mora:</span><strong style="color:#c0392b;">' + (p.enMora || 0) + (p.cuotasEnMora ? ' est. (' + p.cuotasEnMora + ' cuotas)' : '') + '</strong></div>'
+        + '<div class="program-stat"><span>En mora:</span><strong style="color:var(--clr-danger);">' + (p.enMora || 0) + (p.cuotasEnMora ? ' est. (' + p.cuotasEnMora + ' cuotas)' : '') + '</strong></div>'
         + '<div class="program-stat"><span>Recaudado:</span><strong>' + fMonto(p.recaudado) + '</strong></div>'
-        + '<div class="program-stat"><span>Egresos:</span><strong style="color:#e67e22;">' + fMonto(p.egresos) + '</strong></div>'
+        + '<div class="program-stat"><span>Egresos:</span><strong style="color:var(--clr-warning);">' + fMonto(p.egresos) + '</strong></div>'
         + '<div class="program-stat"><span>Saldo:</span><strong style="color:' + colorSaldo + ';">' + fMonto(p.saldo) + '</strong></div>'
         + '</div></div>';
 }
@@ -415,7 +415,7 @@ function cargarDashboard() {
     }).catch(function(err) {
         console.error('Error cargando dashboard:', err);
         var banner = document.createElement('div');
-        banner.style.cssText = 'background:#fee2e2;border:1px solid #dc2626;color:#991b1b;padding:12px 20px;border-radius:8px;margin:16px;font-size:14px;';
+        banner.style.cssText = 'background:#fee2e2;border:1px solid var(--clr-danger);color:#991b1b;padding:12px 20px;border-radius:8px;margin:16px;font-size:14px;';
         banner.innerHTML = '<strong>Error al cargar el dashboard:</strong> ' + (err.message || String(err));
         document.querySelector('.container') && document.querySelector('.container').prepend(banner);
         ['stat-programas','stat-cursos','stat-estudiantes','stat-aldia','stat-mora','stat-recaudado','stat-egresos','stat-saldo']
