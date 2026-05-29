@@ -978,7 +978,7 @@ function renderTabla() {
             if (!c) return `<td data-est="NO_APLICA">no debe<br>abonar</td>`;
             let txt = '';
             if (c.estado === 'ABONADA') txt = fMonto(c.monto_final);
-            else if (c.estado === 'PAGO_PARCIAL') txt = `${fMonto(c.monto_abonado)}/${fMonto(c.monto_final)}`;
+            else if (c.estado === 'PAGO_PARCIAL') txt = `${fMonto(c.monto_abonado)}<br><small style="font-size:9px;opacity:.8;">de ${fMonto(c.monto_final)}</small>`;
             else if (c.estado === 'PENDIENTE') {
                 if (c.monto_transferido && c.monto_transferido > 0 && c.monto_transferido < Number(c.monto_final||0)) {
                     txt = fMonto(c.monto_transferido) + '\nen revisión';

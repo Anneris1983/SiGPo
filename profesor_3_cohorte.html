@@ -204,7 +204,7 @@
     <div class="ley-item"><span class="ley-box ley-pendiente"></span> Pendiente</div>
     <div class="ley-item"><span class="ley-box ley-noabonada"></span> No abonada</div>
     <div class="ley-item"><span class="ley-box ley-adefinir"></span> A definir</div>
-    <div class="ley-item"><span class="ley-box ley-nodebe"></span> No debe abonar</div>
+    <div class="ley-item"><span class="ley-box ley-nodebe"></span> No aplica</div>
 </div>
 
 </div><!-- #app -->
@@ -280,7 +280,7 @@ async function cargar() {
                 dniMap[dk] = { id:est.id||null, dni:c.dni, apellido:est.apellido||dk, nombre:est.nombre||'', email:est.email||'', descuento_porcentaje:insc.descuento_porcentaje||0, estado_academico:insc.estado_academico||'ACTIVO', cobros:[] };
             }
             var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
-            dniMap[dk].cobros.push(normalizarCobro({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final!=null?Number(c.monto_final):null, monto_abonado:abonado, saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'A_DEFINIR':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null }));
+            dniMap[dk].cobros.push(normalizarCobro({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final!=null?Number(c.monto_final):null, monto_abonado:abonado, saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'NO_APLICA':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null }));
         });
 
         inscripciones.forEach(function(insc){

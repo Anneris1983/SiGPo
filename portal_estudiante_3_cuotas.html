@@ -49,10 +49,11 @@
         .filter-select:focus { outline: none; border-color: var(--primary); }
 
         /* RESUMEN */
-        .resumen-bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 20px; }
+        .resumen-bar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 20px; }
         .resumen-pill { background: white; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid transparent; }
         .resumen-pill.r-total     { border-color: var(--primary); }
         .resumen-pill.r-abonada   { border-color: var(--success); }
+        .resumen-pill.r-parcial   { border-color: #f59e0b;         }
         .resumen-pill.r-mora      { border-color: var(--danger);  }
         .resumen-pill.r-pendiente  { border-color: var(--warning); }
         .resumen-pill.r-indefinida { border-color: var(--gray);    }
@@ -378,6 +379,7 @@ var RESUMEN_META = [
     { key:'total',       label:'Total',       cls:'r-total',      icon:'📋' },
     { key:'ABONADA',     label:'Abonadas',    cls:'r-abonada',    icon:'✅' },
     { key:'NO_ABONADA',  label:'No abonadas', cls:'r-noabonada',  icon:'🔲' },
+    { key:'PAGO_PARCIAL',label:'Pago parcial',cls:'r-parcial',    icon:'🔶' },
     { key:'EN_MORA',     label:'En mora',     cls:'r-mora',       icon:'🔴' },
     { key:'PENDIENTE',   label:'Pendientes',  cls:'r-pendiente',  icon:'🕐' },
     { key:'A_DEFINIR',   label:'A definir',   cls:'r-indefinida', icon:'⚙️' },
