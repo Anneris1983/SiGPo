@@ -695,6 +695,9 @@ tbody tr { transition: none !important; }
   box-shadow:    var(--shadow-lg) !important;
   overflow:      hidden !important;
 }
+.notif-dropdown {
+  overflow-y:    auto !important;
+}
 
 /* ══════════════════════════════════════════════════════════════════
    11. NAVEGACIÓN
