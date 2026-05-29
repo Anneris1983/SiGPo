@@ -1226,6 +1226,7 @@ function exportarExcel() {
     var wb = XLSX.utils.book_new();
     var ws = XLSX.utils.json_to_sheet(rows);
     XLSX.utils.book_append_sheet(wb, ws, 'Planificación Financiera');
+    XLSX.writeFile(wb, 'reporte_planificacion_' + new Date().toISOString().split('T')[0] + '.xlsx');
 }
 </script>
 </body>
