@@ -13,8 +13,8 @@
 
         /* HEADER */
         .header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:20px 32px; box-shadow:0 4px 20px rgba(0,0,0,0.12); }
-        .header-inner { max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; }
-        .header-left .breadcrumb { font-size:12px; opacity:0.8; margin-bottom:6px; }
+        .header-inner { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+        .header-left .breadcrumb { font-size:12px; opacity:0.8; margin-bottom:6px; cursor:pointer; }
         .header-left h1 { font-family:'Crimson Pro',serif; font-size:24px; margin-bottom:3px; }
         .header-left p { font-size:13px; opacity:0.85; }
         .header-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
@@ -110,12 +110,11 @@
 <div class="header">
     <div class="header-inner">
         <div class="header-left">
-            <div class="breadcrumb" id="breadcrumb">← Volver a cohorte</div>
+            <div class="breadcrumb" id="breadcrumb" onclick="history.back()">← Volver a cohorte</div>
             <h1 id="hdr-nombre">Cargando…</h1>
             <p id="hdr-sub"></p>
         </div>
         <div class="header-right">
-            <button class="btn-back" onclick="history.back()">← Volver</button>
             <button class="btn-logout" onclick="cerrarSesion()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 Cerrar sesión
