@@ -442,7 +442,8 @@ async function cargarVista() {
             { label: 'Ingresos proyectados', data: cfIngresosProyec, backgroundColor: 'rgba(45,122,79,0.30)',  borderColor: '#2d7a4f', borderDash: [4,3] },
             { label: 'Egresos ejecutados',   data: cfEgresos,        backgroundColor: 'rgba(192,57,43,0.80)', borderColor: '#c0392b' },
             { label: 'Egresos proyectados',  data: cfEgresosProyec,  backgroundColor: 'rgba(192,57,43,0.28)', borderColor: '#c0392b', borderDash: [4,3] }
-        ], { y: { ticks: { callback: function(v){ return '$' + Math.round(v/1000) + 'k'; } } } });
+        ], { y: { ticks: { callback: function(v){ return '$' + Math.round(v/1000) + 'k'; } } } },
+        function(ctx) { return ' ' + ctx.dataset.label + ': ' + fM(ctx.parsed.y); });
 
         renderBarChart('estados', ecLabels, [
             { label: 'Al día',       data: ecAlDia,   backgroundColor: 'rgba(45,122,79,0.80)', borderColor: '#2d7a4f' },
@@ -464,16 +465,23 @@ async function cargarVista() {
     }
 }
 
-function renderBarChart(key, labels, datasets, extraScales) {
+function renderBarChart(key, labels, datasets, extraScales, tooltipLabel) {
     var empty = !labels.length;
     setEmptyState(key, empty);
     if (empty) return;
     var ctx = document.getElementById('chart-' + key).getContext('2d');
     var scales = Object.assign({ x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f0f0f0' } } }, extraScales);
+    var tooltipCfg = { mode: 'index', intersect: false };
+    if (tooltipLabel) tooltipCfg.callbacks = { label: tooltipLabel };
     charts[key] = new Chart(ctx, {
         type: 'bar',
         data: { labels: labels, datasets: datasets.map(function(d){ return Object.assign({ borderWidth: 1.5, borderRadius: 6 }, d); }) },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: scales }
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'top' }, tooltip: tooltipCfg },
+            scales: scales
+        }
     });
 }
 
@@ -485,7 +493,12 @@ function renderLineChart(key, labels, datasets) {
     charts[key] = new Chart(ctx, {
         type: 'line',
         data: { labels: labels, datasets: datasets.map(function(d){ return Object.assign({ borderWidth: 2.5, pointRadius: 5, tension: 0.3 }, d); }) },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f0f0f0' } } } }
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } },
+            scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f0f0f0' } } }
+        }
     });
 }
 
@@ -500,7 +513,17 @@ function renderDoughnut(key, labels, valores) {
             labels: labels,
             datasets: [{ data: valores, backgroundColor: ['#2d7a4f','#c0392b','#2563eb','#9ca3af'], borderColor: '#fff', borderWidth: 3 }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 13 }, boxWidth: 14, padding: 16 } } } }
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { font: { size: 13 }, boxWidth: 14, padding: 16 } },
+                tooltip: { callbacks: { label: function(ctx) {
+                    var total = ctx.dataset.data.reduce(function(a,b){ return a+b; }, 0);
+                    var pct = total > 0 ? Math.round(ctx.parsed / total * 100) : 0;
+                    return ' ' + ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+                } } }
+            }
+        }
     });
 }
 
