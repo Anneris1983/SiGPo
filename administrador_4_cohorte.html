@@ -2532,7 +2532,50 @@ async function _procesarImport(file) {
 
         var estudiantesCreados = (estDataArr || []).length;
         var cobrosCreados = todasCuotas.length;
-        toast(estudiantesCreados + ' estudiante' + (estudiantesCreados !== 1 ? 's' : '') + ' · ' + cobrosCreados + ' cuota' + (cobrosCreados !== 1 ? 's' : '') + ' importada' + (cobrosCreados !== 1 ? 's' : '') + ' ✓', 'ok');
+
+        // FASE 4: crear usuarios ESTUDIANTE (acceso al portal) para los que no tienen cuenta
+        var usuariosCreados = 0, usuariosErr = 0;
+        var dnisParaUsuario = dnis.filter(function(dni){ return dniToId[dni]; });
+        if (dnisParaUsuario.length) {
+            var { data: usExist } = await sb.from('usuarios').select('dni').in('dni', dnisParaUsuario);
+            var dnisConUsuario = new Set((usExist||[]).map(function(u){ return String(u.dni); }));
+            var dnisNuevos = dnisParaUsuario.filter(function(dni){ return !dnisConUsuario.has(String(dni)); });
+            if (dnisNuevos.length) {
+                var _sess = await sb.auth.getSession();
+                var _tok  = _sess.data.session ? _sess.data.session.access_token : '';
+                var _edge = SUPABASE_URL + '/functions/v1/crear-usuario';
+                for (var _i = 0; _i < dnisNuevos.length; _i++) {
+                    var _dni = dnisNuevos[_i];
+                    var _e   = estMap[_dni];
+                    try {
+                        var _r = await fetch(_edge, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _tok, 'apikey': SUPABASE_KEY },
+                            body: JSON.stringify({
+                                email:           _e.email,
+                                password:        String(_dni),
+                                apellido:        _e.apellido,
+                                nombre:          _e.nombre,
+                                nombre_completo: _e.apellido + ', ' + _e.nombre,
+                                dni:             String(_dni),
+                                rol:             'ESTUDIANTE',
+                                asignaciones:    [],
+                                inscripciones:   []
+                            })
+                        });
+                        _r.ok ? usuariosCreados++ : usuariosErr++;
+                    } catch(_ex) { usuariosErr++; }
+                }
+            }
+        }
+
+        var _msgP = [
+            estudiantesCreados + ' estudiante' + (estudiantesCreados !== 1 ? 's' : ''),
+            cobrosCreados + ' cuota' + (cobrosCreados !== 1 ? 's' : '') + ' importada' + (cobrosCreados !== 1 ? 's' : '')
+        ];
+        if (usuariosCreados > 0) _msgP.push(usuariosCreados + ' usuario' + (usuariosCreados !== 1 ? 's' : '') + ' portal creado' + (usuariosCreados !== 1 ? 's' : '') + ' (clave=DNI)');
+        toast(_msgP.join(' · ') + ' ✓', 'ok');
+        if (usuariosErr > 0) toast(usuariosErr + ' usuario' + (usuariosErr !== 1 ? 's' : '') + ' no pudieron crearse (email inválido o ya existe en Auth). Crear manualmente desde Usuarios.', 'err');
 
         cerrar('modal-importar');
         document.getElementById('imp-prev').classList.remove('show');

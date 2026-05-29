@@ -633,7 +633,7 @@ async function doImp(){
             if(!rolesOK.includes(rl2)){errs.push('Fila '+(i+2)+': rol inválido "'+rl2+'"');continue;}
             var sess2=await sb.auth.getSession();
             var tok2=sess2.data.session?sess2.data.session.access_token:'';
-            var resp2=await fetch(EDGE_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok2,'apikey':ANON_KEY},body:JSON.stringify({email:em2,password:pw2,apellido:ap2,nombre:no2,nombre_completo:ap2+' '+no2,dni:dn2,rol:rl2,asignaciones:[],inscripciones:[]})});
+            var resp2=await fetch(EDGE_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok2,'apikey':SUPABASE_KEY},body:JSON.stringify({email:em2,password:pw2,apellido:ap2,nombre:no2,nombre_completo:ap2+' '+no2,dni:dn2,rol:rl2,asignaciones:[],inscripciones:[]})});
             var j2=await resp2.json();
             if(!resp2.ok||j2.error){errs.push('Fila '+(i+2)+' ('+dn2+'): '+(j2.error||'Error'));continue;}
             ok++;
