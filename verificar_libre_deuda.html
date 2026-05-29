@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Libre Deuda · FCE UNCUYO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="sigpo-theme.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        .verify-header {
+            background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%);
+            color: #fff;
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .verify-header .logo-text {
+            font-family: 'Crimson Pro', Georgia, serif;
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .verify-header .logo-sub {
+            font-size: 12px;
+            opacity: 0.85;
+            margin-top: 2px;
+            font-weight: 400;
+        }
+        .verify-header .sep {
+            width: 1px;
+            height: 36px;
+            background: rgba(255,255,255,0.3);
+            margin: 0 4px;
+        }
+        .verify-header .page-title {
+            font-size: 15px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .verify-main {
+            min-height: calc(100vh - 68px);
+            background: var(--clr-bg);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 48px 16px 64px;
+        }
+
+        .verify-card {
+            background: var(--clr-surface);
+            border-radius: var(--r);
+            box-shadow: var(--shadow-md);
+            padding: 40px 40px 36px;
+            width: 100%;
+            max-width: 560px;
+        }
+
+        .verify-card h1 {
+            font-family: 'Crimson Pro', Georgia, serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--clr-brand);
+            margin-bottom: 6px;
+        }
+        .verify-card .subtitle {
+            font-size: 13.5px;
+            color: var(--clr-text-muted);
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .input-row input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid var(--clr-border);
+            border-radius: var(--r-sm);
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--clr-bg);
+            color: var(--clr-text);
+            transition: border-color .15s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-row input:focus {
+            outline: none;
+            border-color: var(--clr-brand);
+            background: #fff;
+        }
+        .input-row input::placeholder { text-transform: none; letter-spacing: 0; }
+        .btn-verificar {
+            padding: 10px 20px;
+            background: var(--clr-brand);
+            color: #fff;
+            border: none;
+            border-radius: var(--r-sm);
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background .15s;
+        }
+        .btn-verificar:hover { background: var(--clr-brand-hover); }
+        .btn-verificar:disabled { background: var(--clr-border); color: var(--clr-text-muted); cursor: not-allowed; }
+
+        /* Resultado */
+        #resultado { display: none; }
+
+        .resultado-valido {
+            border: 1.5px solid var(--clr-success-border);
+            background: var(--clr-success-bg);
+            border-radius: var(--r-sm);
+            padding: 20px 22px;
+        }
+        .resultado-invalido {
+            border: 1.5px solid var(--clr-danger-border);
+            background: var(--clr-danger-bg);
+            border-radius: var(--r-sm);
+            padding: 20px 22px;
+        }
+
+        .resultado-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 14px;
+        }
+        .resultado-badge.valido  { color: var(--clr-success-text); }
+        .resultado-badge.invalido { color: var(--clr-danger-text); }
+
+        .resultado-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 13.5px;
+        }
+        .resultado-row .lbl {
+            color: var(--clr-text-muted);
+            min-width: 120px;
+            flex-shrink: 0;
+        }
+        .resultado-row .val {
+            color: var(--clr-text);
+            font-weight: 600;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--clr-border-light);
+            margin: 20px 0;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--clr-text-muted);
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .verify-card { padding: 28px 20px 24px; }
+            .input-row { flex-direction: column; }
+            .btn-verificar { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="verify-header">
+    <div>
+        <div class="logo-text">FCE UNCUYO</div>
+        <div class="logo-sub">Secretaría de Posgrado</div>
+    </div>
+    <div class="sep"></div>
+    <div class="page-title">Verificación de Libre Deuda</div>
+</header>
+
+<main class="verify-main">
+    <div class="verify-card">
+        <h1>Verificar Libre Deuda</h1>
+        <p class="subtitle">
+            Ingresá el código que figura en el certificado para confirmar su autenticidad.
+            El código tiene el formato <strong>LD-XX-XXXXXXXX-XXXXXXXX</strong>.
+        </p>
+
+        <div class="input-row">
+            <input
+                type="text"
+                id="input-codigo"
+                placeholder="Ej: LD-10-33445566-MPQY6KJN"
+                maxlength="60"
+                autocomplete="off"
+                spellcheck="false"
+            >
+            <button class="btn-verificar" id="btn-verificar" onclick="verificar()">Verificar</button>
+        </div>
+
+        <div id="resultado"></div>
+
+        <hr class="divider">
+        <p class="hint">
+            SiGPo · Secretaría de Posgrado · Facultad de Ciencias Económicas · UNCUYO
+        </p>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+    var SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
+    var SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
+    var _sb = null;
+
+    function getSB() {
+        if (_sb) return _sb;
+        _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        return _sb;
+    }
+
+    function esc(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function formatFecha(isoStr) {
+        if (!isoStr) return '—';
+        var d = new Date(isoStr);
+        return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+    }
+
+    async function verificar() {
+        var input  = document.getElementById('input-codigo');
+        var btn    = document.getElementById('btn-verificar');
+        var divRes = document.getElementById('resultado');
+
+        var codigo = (input.value || '').trim().toUpperCase();
+        if (!codigo) { input.focus(); return; }
+
+        btn.disabled = true;
+        btn.textContent = 'Consultando…';
+        divRes.style.display = 'none';
+        divRes.innerHTML = '';
+
+        try {
+            var sb = getSB();
+            var { data, error } = await sb.rpc('verificar_libre_deuda', { p_codigo: codigo });
+
+            if (error) throw error;
+
+            var row = (data && data.length > 0) ? data[0] : null;
+            var valido = row && row.valido === true;
+
+            divRes.style.display = 'block';
+
+            if (valido) {
+                divRes.innerHTML =
+                    '<div class="resultado-valido">' +
+                        '<div class="resultado-badge valido">✔ Certificado válido</div>' +
+                        '<div class="resultado-row"><span class="lbl">Estudiante</span><span class="val">' + esc(row.estudiante_nombre) + '</span></div>' +
+                        '<div class="resultado-row"><span class="lbl">Programa</span><span class="val">'    + esc(row.programa_nombre)   + '</span></div>' +
+                        '<div class="resultado-row"><span class="lbl">Cohorte / Edición</span><span class="val">' + esc(row.cohorte_nombre) + '</span></div>' +
+                        '<div class="resultado-row"><span class="lbl">Fecha de emisión</span><span class="val">' + formatFecha(row.fecha_emision) + '</span></div>' +
+                        '<div class="resultado-row"><span class="lbl">Código</span><span class="val" style="font-family:monospace;font-size:12px">' + esc(codigo) + '</span></div>' +
+                    '</div>';
+            } else {
+                divRes.innerHTML =
+                    '<div class="resultado-invalido">' +
+                        '<div class="resultado-badge invalido">✘ Certificado no encontrado</div>' +
+                        '<p style="font-size:13px;color:var(--clr-danger-text);line-height:1.5">' +
+                            'El código <strong>' + esc(codigo) + '</strong> no corresponde a ningún certificado registrado. ' +
+                            'Verificá que lo ingresaste correctamente.' +
+                        '</p>' +
+                    '</div>';
+            }
+        } catch(err) {
+            divRes.style.display = 'block';
+            divRes.innerHTML =
+                '<div class="resultado-invalido">' +
+                    '<div class="resultado-badge invalido">Error al consultar</div>' +
+                    '<p style="font-size:13px;color:var(--clr-danger-text)">' + esc(err.message) + '</p>' +
+                '</div>';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Verificar';
+        }
+    }
+
+    // Auto-verificar si viene ?codigo= en la URL
+    (function() {
+        var params = new URLSearchParams(window.location.search);
+        var codigo = params.get('codigo');
+        if (codigo) {
+            document.getElementById('input-codigo').value = codigo.trim().toUpperCase();
+            verificar();
+        }
+    })();
+
+    // Enter en el input dispara verificación
+    document.getElementById('input-codigo').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') verificar();
+    });
+</script>
+
+</body>
+</html>
