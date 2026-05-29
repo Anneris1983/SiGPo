@@ -1657,7 +1657,7 @@
             const estadoOriginal = (cuota.estado || '').toString().toUpperCase().trim();
             let estado = 'noabonada'; // default: sin comprobante, no venció
 
-            if (estadoOriginal === 'ABONADA' || estadoOriginal === 'PAGADA') estado = 'abonada';
+            if (estadoOriginal === 'ABONADA' || estadoOriginal === 'PAGADA' || (cuota.monto_final != null && Number(cuota.monto_final) === 0)) estado = 'abonada';
             else if (estadoOriginal === 'PAGO_PARCIAL' || estadoOriginal === 'PARCIAL') estado = 'parcial';
             else if (estadoOriginal === 'VENCIDA' || estadoOriginal === 'MORA' || estadoOriginal === 'EN MORA' || estadoOriginal === 'EN_MORA') estado = 'mora';
             else if (estadoOriginal === 'PENDIENTE') estado = 'pendiente';
