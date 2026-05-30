@@ -1045,7 +1045,7 @@ async function cargar(aplicarMora) {
         }
         // aplicarMora solo en el primer load, NO en recargas post-guardado
         if (aplicarMora) {
-            await aplicarMoraCohorteJS(V.data.estudiantes, COHORTE_ID);
+            await aplicarMoraCohorteJS(COHORTE_ID);
             V.data = await obtenerCohorteDetalle(COHORTE_ID, PROGRAMA_ID);
         }
         renderHeader();
@@ -1067,94 +1067,9 @@ async function cargar(aplicarMora) {
     }
 }
 
-/**
- * Aplica reglas de mora a todos los cobros vencidos de la cohorte.
- * Regla 1 (mes 1): pierde el descuento (monto_final = monto_original)
- * Regla 2 (mes 2+): 5% compuesto sobre monto_original desde mes 2
- * Actualiza directamente en Supabase solo si hay cambios.
- */
-async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
+async function aplicarMoraCohorteJS(cohorteId) {
     var sb = await getSupabase();
-    var hoyStr = new Date().toISOString().split('T')[0];
-    var fHoy   = new Date(hoyStr + 'T00:00:00');
-    var moraPct = (V.config.moraPct || 5) / 100;   // desde configuracion
-
-    var moraUpdates = [];
-    for (var ie = 0; ie < estudiantes.length; ie++) {
-        var est = estudiantes[ie];
-        var tieneDescuentoInsc = Number(est.descuento_porcentaje) > 0;
-
-        for (var ic = 0; ic < est.cobros.length; ic++) {
-            var c = est.cobros[ic];
-
-            // Solo cobros con monto definido, vencidos
-            if (!tieneMontoDefinido(c)) continue;
-            if (!c.fecha_vencimiento) continue;
-            if (c.fecha_vencimiento >= hoyStr) continue;
-            if (c.no_aplica === true) continue;
-            if (['ABONADA', 'NO_APLICA', 'PENDIENTE'].includes(String(c.estado))) continue;
-
-            var tieneReciboCobro = !!(c.recibo_url && String(c.recibo_url).trim() !== '');
-
-            // PAGO_PARCIAL con recibo aprobado: solo asegurar que el estado sea correcto.
-            // NO modificar saldo_pendiente — el monto pagado es un hecho fijo y no debe cambiar.
-            if (tieneReciboCobro) {
-                if (String(c.estado) !== 'PAGO_PARCIAL') {
-                    var saldoC = redondear2(Number(c.saldo_pendiente) || 0);
-                    var nuevoEstR = saldoC <= 0 ? 'ABONADA' : 'PAGO_PARCIAL';
-                    moraUpdates.push(sb.from('cobros').update({ estado: nuevoEstR }).eq('cobro_id', c.cobro_id));
-                }
-                continue;
-            }
-
-            var fVenc    = new Date(c.fecha_vencimiento + 'T00:00:00');
-            var diasMora = Math.floor((fHoy - fVenc) / 86400000);
-            var mesesMora = diasMora / 30;  // fraccionario según regla
-
-            // Precio base sin descuento (monto_original es siempre el precio real)
-            var precioBase = Number(c.monto_original) || Number(c.monto_final) || 0;
-
-            var nuevoMonto, nuevoSaldo;
-            var descPct = Number(c.descuento_porcentaje) || 0;
-
-            if (tieneDescuentoInsc || descPct > 0) {
-                // ── Estudiante CON descuento ──
-                if (mesesMora <= 1) {
-                    // PRIMER MES: solo pierde el descuento, sin intereses
-                    nuevoMonto  = precioBase;       // vuelve al precio sin descuento
-                    nuevoSaldo  = precioBase;
-                } else {
-                    // DESDE EL SEGUNDO MES: interés compuesto sobre precio base
-                    var mesesConInteres = mesesMora - 1;
-                    nuevoSaldo  = Math.round(precioBase * Math.pow(1 + moraPct, mesesConInteres) * 100) / 100;
-                    nuevoMonto  = nuevoSaldo;
-                }
-            } else {
-                // ── Estudiante SIN descuento: interés desde el día 1 ──
-                nuevoSaldo  = Math.round(precioBase * Math.pow(1 + moraPct, mesesMora) * 100) / 100;
-                nuevoMonto  = nuevoSaldo;
-            }
-
-            // Solo actualizar si hay cambio real
-            var montoActual = Math.round(Number(c.monto_final) * 100) / 100;
-            var saldoActual = Math.round(Number(c.saldo_pendiente) * 100) / 100;
-            var hayDiff = Math.abs(nuevoMonto - montoActual) > 0.01
-                       || Math.abs(nuevoSaldo - saldoActual) > 0.01
-                       || String(c.estado) !== 'EN_MORA';
-
-            if (hayDiff) {
-                var fechaMora = c.fecha_mora || new Date(fVenc.getTime() + 86400000).toISOString().split('T')[0];
-                moraUpdates.push(sb.from('cobros').update({
-                    estado:          'EN_MORA',
-                    monto_final:     nuevoMonto,
-                    saldo_pendiente: nuevoSaldo,
-                    meses_mora:      Math.floor(mesesMora),
-                    fecha_mora:      fechaMora
-                }).eq('cobro_id', c.cobro_id));
-            }
-        }
-    }
-    if (moraUpdates.length) await Promise.all(moraUpdates);
+    await sb.rpc('aplicar_mora_cohorte', { p_cohorte_id: cohorteId });
 }
 
 /* ══════════════════════════════════════════════════
