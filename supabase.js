@@ -670,13 +670,22 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
             recibo_url: reciboUrl
         }).eq('cobro_id', cobroId);
     } else {
-        var nuevoSaldo = Math.round((Number(cobro.monto_final) - Number(montoAprobado)) * 100) / 100;
-        await sb.from('cobros').update({
-            estado: 'PAGO_PARCIAL',
-            saldo_pendiente: nuevoSaldo,
-            monto_abonado: Number(montoAprobado),
+        // El monto ingresado es el INCREMENTO de este pago: acumular sobre lo
+        // ya abonado en pagos parciales previos (no sobrescribir).
+        var abonadoPrevio = Number(cobro.monto_abonado) || 0;
+        var abonadoTotal  = redondear2(abonadoPrevio + Number(montoAprobado));
+        var nuevoSaldo    = redondear2(Number(cobro.monto_final) - abonadoTotal);
+        var estadoNuevo   = nuevoSaldo <= 0 ? 'ABONADA' : 'PAGO_PARCIAL';
+        var updateParcial = {
+            estado: estadoNuevo,
+            saldo_pendiente: Math.max(0, nuevoSaldo),
+            monto_abonado: abonadoTotal,
             recibo_url: reciboUrl
-        }).eq('cobro_id', cobroId);
+        };
+        if (estadoNuevo === 'ABONADA') {
+            updateParcial.fecha_aprobacion = new Date().toISOString().split('T')[0];
+        }
+        await sb.from('cobros').update(updateParcial).eq('cobro_id', cobroId);
 
         await sb.from('pagos').insert({
             cobro_id: cobroId,
