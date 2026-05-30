@@ -710,7 +710,7 @@ async function rechazarPago(cobroId) {
 
     if (!cobro.monto_final || cobro.monto_final === 0) {
         nuevoEstado = 'A_DEFINIR';
-    } else if (cobro.fecha_vencimiento && new Date(cobro.fecha_vencimiento) < new Date()) {
+    } else if (vencioCuota(cobro)) {
         nuevoEstado = 'EN_MORA';
     } else {
         const { data: pagos } = await sb.from('pagos').select('monto').eq('cobro_id', cobroId);
