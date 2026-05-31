@@ -983,7 +983,7 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
     cobros.forEach(function(c) {
         var key = c.concepto + '||' + (c.periodo || '');
         if (!colMap[key]) {
-            colMap[key] = { concepto_base: c.concepto, periodo: c.periodo || '' };
+            colMap[key] = { concepto_base: c.concepto, periodo: c.periodo || '', fecha_vencimiento: c.fecha_vencimiento || null };
             conceptosVistos.push(key);
         }
     });
@@ -1194,15 +1194,15 @@ function renderTabla() {
                     periodo:  col.periodo || '',
                     monto: null,
                     descuento_porcentaje: est.descuento_porcentaje || 0,
-                    fecha_vencimiento: null,
+                    fecha_vencimiento: col.fecha_vencimiento || null,
                     estado_actual: 'A_DEFINIR',
                     no_aplica: false,
                     _sin_cobro: true
                 });
-                return '<td data-est="A_DEFINIR" onclick="avisarSinCobro(event,' + encodeAttr(sinCobroInfo) + ')" style="cursor:pointer;" title="Sin cobro generado — recargá la página o contactá al administrador">'
+                return '<td data-est="A_DEFINIR" onclick="abrirCeldaPopup(event,' + encodeAttr(sinCobroInfo) + ')" style="cursor:pointer;" title="Sin cobro generado — clic para definir el monto y crearlo">'
                     + '<div class="cuota-cell-wrap">'
                     + '<div class="cuota-cell-txt" style="color:var(--clr-warning);font-size:10px;font-style:italic;">A definir</div>'
-                    + '<div class="u-hint">⚠️ sin cobro</div>'
+                    + '<div class="u-hint">✏️ definir</div>'
                     + '</div></td>';
             }
 
@@ -3088,11 +3088,17 @@ function cerrarCeldaPopup() {
 }
 
 async function guardarCeldaPopup() {
-    if (!_cpopCobroId) return;
-    var cobroId  = _cpopCobroId;
     var cpopInfo = window._cpopInfo || {};
+    var esNuevo  = !_cpopCobroId;   // cobro inexistente en la BD (ej. importado sin cobro)
+    // Sin cobro existente ni info de cuota a crear: nada que guardar.
+    if (!_cpopCobroId && !cpopInfo._sin_cobro) return;
+    var cobroId  = _cpopCobroId;
     var dniEst   = String(cpopInfo.dni || '');
     if (!dniEst) { toast('Error: DNI no identificado', 'err'); return; }
+    if (esNuevo && (!COHORTE_ID || !PROGRAMA_ID || !cpopInfo.concepto)) {
+        toast('Error: faltan datos para crear el cobro. Recargá la página.', 'err');
+        return;
+    }
 
     var noAplica = document.getElementById('cpop-noapl').checked;
     var montoStr = document.getElementById('cpop-monto').value.trim();
@@ -3103,42 +3109,56 @@ async function guardarCeldaPopup() {
     try {
         var sb = await getSupabase();
         var res;
+        var payload;
 
         if (noAplica) {
-            res = await sb.from('cobros').update({
+            payload = {
                 monto_original:       null,
                 monto_final:          null,
                 saldo_pendiente:      null,
                 descuento_porcentaje: 0,
                 estado:               'NO_APLICA',
                 no_aplica:            true
-            }).eq('cobro_id', cobroId).eq('dni', dniEst);
+            };
         } else if (!tieneMonto) {
-            res = await sb.from('cobros').update({
+            payload = {
                 monto_original:  null,
                 monto_final:     null,
                 saldo_pendiente: null,
                 estado:          'A_DEFINIR',
                 no_aplica:       false
-            }).eq('cobro_id', cobroId).eq('dni', dniEst);
+            };
         } else {
             var montoOriginal = redondear2(parseFloat(montoStr));
             var pct         = Number(cpopInfo.descuento_porcentaje) || 0;
             var montoFinal  = pct > 0 ? redondear2(montoOriginal * (1 - pct / 100)) : montoOriginal;
             var saldoPend   = montoFinal;
             var nuevoEstado = normalizarEstadoCuota(montoFinal, saldoPend, cpopInfo.fecha_vencimiento || null, cpopInfo.estado_actual || 'NO_ABONADA');
-            res = await sb.from('cobros').update({
+            payload = {
                 monto_original:       montoOriginal,
                 monto_final:          montoFinal,
                 saldo_pendiente:      saldoPend,
                 descuento_porcentaje: pct,
                 estado:               nuevoEstado,
                 no_aplica:            false
-            }).eq('cobro_id', cobroId).eq('dni', dniEst);
+            };
+        }
+
+        if (esNuevo) {
+            // El cobro no existe (cuota importada sin registro): crearlo.
+            payload.dni               = dniEst;
+            payload.programa_id       = PROGRAMA_ID;
+            payload.cohorte_id        = COHORTE_ID;
+            payload.concepto          = cpopInfo.concepto;
+            payload.periodo           = cpopInfo.periodo || null;
+            payload.fecha_vencimiento = cpopInfo.fecha_vencimiento || null;
+            res = await sb.from('cobros').insert(payload);
+        } else {
+            res = await sb.from('cobros').update(payload).eq('cobro_id', cobroId).eq('dni', dniEst);
         }
 
         if (res.error) throw res.error;
-        toast('Cuota actualizada ✓', 'ok');
+        toast(esNuevo ? 'Cuota creada ✓' : 'Cuota actualizada ✓', 'ok');
         await cargar();
     } catch(e) {
         console.error(e);
@@ -3146,14 +3166,6 @@ async function guardarCeldaPopup() {
     } finally {
         spin(false);
     }
-}
-
-// Celda sin cobro generado: informar al admin que recargue
-function avisarSinCobro(event, infoJson) {
-    event.stopPropagation();
-    var info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
-    toast('Esta cuota no tiene registro en la BD. Recargá la página — el sistema la generará automáticamente al inscribir al estudiante.', 'err');
-    console.warn('Sin cobro para:', info.concepto, info.periodo, 'DNI:', info.dni);
 }
 
 // Cerrar modales al hacer clic fuera
