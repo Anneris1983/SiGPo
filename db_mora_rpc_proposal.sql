@@ -20,9 +20,10 @@
 --
 -- REGLAS REPLICADAS (idénticas a aplicarMoraCohorteJS, admin_4:1076-1157)
 --   Config (tabla configuracion): mora_porcentaje = 5 (% mensual compuesto)
---   Se omiten cobros: sin monto definido, sin fecha_venc, NO vencidos
---     (fecha_vencimiento >= hoy), no_aplica = true, o estado en
---     (ABONADA, NO_APLICA, PENDIENTE).
+--   Se omiten cobros: sin monto positivo (monto_final <= 0), sin
+--     fecha_venc, NO vencidos (fecha_vencimiento >= hoy), no_aplica = true,
+--     o estado en (ABONADA, NO_APLICA, PENDIENTE, A_DEFINIR).
+--     IMPORTANTE: una cuota A_DEFINIR o con monto 0 NUNCA entra en mora.
 --   Cobros CON recibo (recibo_url no vacío): NO se toca saldo_pendiente
 --     (el pago es un hecho fijo); sólo se corrige el estado a ABONADA si
 --     saldo <= 0, o PAGO_PARCIAL si saldo > 0. → protege pagos parciales.
@@ -66,11 +67,11 @@ BEGIN
          WHERE c.cohorte_id = p_cohorte_id
            AND c.recibo_url IS NOT NULL
            AND btrim(c.recibo_url) <> ''
-           AND c.monto_final IS NOT NULL
+           AND COALESCE(c.monto_final, 0) > 0
            AND c.fecha_vencimiento IS NOT NULL
            AND c.fecha_vencimiento < CURRENT_DATE
            AND COALESCE(c.no_aplica, false) = false
-           AND c.estado NOT IN ('ABONADA','NO_APLICA','PENDIENTE')
+           AND c.estado NOT IN ('ABONADA','NO_APLICA','PENDIENTE','A_DEFINIR')
            AND c.estado <> CASE WHEN COALESCE(c.saldo_pendiente, 0) <= 0
                                 THEN 'ABONADA'::estado_cobro
                                 ELSE 'PAGO_PARCIAL'::estado_cobro END
@@ -101,11 +102,11 @@ BEGIN
           FROM cobros c
          WHERE c.cohorte_id = p_cohorte_id
            AND (c.recibo_url IS NULL OR btrim(c.recibo_url) = '')
-           AND c.monto_final IS NOT NULL
+           AND COALESCE(c.monto_final, 0) > 0
            AND c.fecha_vencimiento IS NOT NULL
            AND c.fecha_vencimiento < CURRENT_DATE
            AND COALESCE(c.no_aplica, false) = false
-           AND c.estado NOT IN ('ABONADA','NO_APLICA','PENDIENTE')
+           AND c.estado NOT IN ('ABONADA','NO_APLICA','PENDIENTE','A_DEFINIR')
     ),
     nuevo AS (
         SELECT
@@ -122,6 +123,7 @@ BEGIN
                 END
             , 2) AS nuevo_saldo
           FROM calc
+         WHERE precio_base > 0
     ),
     afectados2 AS (
         UPDATE cobros c
