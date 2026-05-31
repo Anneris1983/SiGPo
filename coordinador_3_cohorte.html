@@ -685,8 +685,8 @@
 const QS = new URLSearchParams(location.search);
 const COHORTE_ID  = QS.get('cohorte_id') || QS.get('cohorteId') || '';
 const PROGRAMA_ID = QS.get('programa_id') || QS.get('programaId') || '';
-const GAS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxtDIAY6yhpTJF5OK3k0-VK9GHK4UxputJrW-I_1ihT-ABYEEzpVPGcKwLF9k6nQW6iHw/exec';
-const GAS_SECRET       = 'SIGPO_KEY_FCE_2025';
+// Envío de emails vía Edge Function 'enviar-email' (relay): el secreto se
+// inyecta del lado del servidor y la gas_url se resuelve en la BD por programa.
 
 const PLANTILLAS_DEF = {
     recordatorio: {
@@ -1545,7 +1545,7 @@ async function reclamarSel() {
         var tipo    = document.getElementById('c-tipo') ? document.getElementById('c-tipo').value : 'reclamo';
         var asunto  = (V.plantillas[tipo] || V.plantillas.reclamo).asunto;
         var cuerpo  = (V.plantillas[tipo] || V.plantillas.reclamo).cuerpo;
-        var gasUrl  = (V.data.programa.gas_url) || GAS_FALLBACK_URL;
+        var progIdEmail = V.data.programa.programa_id || PROGRAMA_ID;
         var replyTo = V.data.programa.email_remitente || '';
         var cbu     = V.config.cbu_banco  || '—';
         var alias   = V.config.alias_banco || '—';
@@ -1594,7 +1594,7 @@ async function reclamarSel() {
 
         var ok = 0, err = 0;
         for (var i = 0; i < emails.length; i++) {
-            var sent = await enviarEmailGas(gasUrl, emails[i].to, emails[i].subject, emails[i].body, replyTo);
+            var sent = await enviarEmailGas(progIdEmail, emails[i].to, emails[i].subject, emails[i].body, replyTo);
             if (sent) ok++; else err++;
         }
 
@@ -1607,17 +1607,14 @@ async function reclamarSel() {
     finally { spin(false); }
 }
 
-async function enviarEmailGas(gasUrl, to, subject, body, replyTo) {
+async function enviarEmailGas(programaId, to, subject, body, replyTo) {
     try {
-        await fetch(gasUrl, {
-            method:  'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body:    JSON.stringify({ secret: GAS_SECRET, to: to, subject: subject, body: body, replyTo: replyTo || '' }),
-            mode:    'no-cors'
+        var sb = await getSupabase();
+        var resp = await sb.functions.invoke('enviar-email', {
+            body: { programaId: programaId, to: to, subject: subject, body: body, replyTo: replyTo || '' }
         });
-        // no-cors: el request llega al GAS y el email se envía,
-        // pero el browser no puede leer la respuesta (respuesta opaca).
-        return true;
+        if (resp.error) { console.error('relay error para', to, ':', resp.error.message); return false; }
+        return (resp.data && resp.data.ok) === true;
     } catch(err) {
         console.error('enviarEmailGas excepción:', err);
         return false;

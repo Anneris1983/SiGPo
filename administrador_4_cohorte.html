@@ -760,12 +760,12 @@ const COHORTE_ID  = parseInt(QS.get('cohorte_id'))  || null;
 const PROGRAMA_ID = parseInt(QS.get('programa_id')) || null;
 
 /* ══════════════════════════════════════════════════
-   CONFIGURACIÓN DE EMAILS (Google Apps Script)
-   GAS_FALLBACK_URL: script desplegado desde anneris.amarfil
-   GAS_SECRET: debe coincidir con SECRET en sigpo_gas_email.gs
+   ENVÍO DE EMAILS
+   El envío se hace vía la Edge Function 'enviar-email' (relay),
+   que inyecta el secreto del lado del servidor y resuelve la
+   gas_url del programa desde la base de datos. La clave NUNCA
+   viaja en este HTML público.
 ══════════════════════════════════════════════════ */
-const GAS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxtDIAY6yhpTJF5OK3k0-VK9GHK4UxputJrW-I_1ihT-ABYEEzpVPGcKwLF9k6nQW6iHw/exec'; // anneris.amarfil@fce.uncu.edu.ar
-const GAS_SECRET       = 'SIGPO_KEY_FCE_2025';
 
 /* ══════════════════════════════════════════════════
    PLANTILLAS DE CORREO
@@ -2094,22 +2094,18 @@ async function enviarNotificaciones() {
             if (updRes.error) console.error('Error marcando cobros enviados:', updRes.error);
         }
 
-        // Envío real de emails via Google Apps Script
-        var gasUrl   = (V.data.programa.gas_url) || GAS_FALLBACK_URL;
+        // Envío real de emails via relay (Edge Function 'enviar-email')
         var replyTo  = V.data.programa.email_remitente || '';
         var emailsOk = 0, emailsErr = 0;
-        if (gasUrl) {
-            for (var ei = 0; ei < emails.length; ei++) {
-                var em = emails[ei];
-                var ok = await enviarEmailGas(gasUrl, em.to, em.subject, em.body, replyTo);
-                if (ok) emailsOk++; else emailsErr++;
-            }
+        for (var ei = 0; ei < emails.length; ei++) {
+            var em = emails[ei];
+            var ok = await enviarEmailGas(PROGRAMA_ID, em.to, em.subject, em.body, replyTo);
+            if (ok) emailsOk++; else emailsErr++;
         }
 
         var totalNotifs = notifs.length;
         var msgToast = '✓ ' + sel.length + ' estudiante' + (sel.length !== 1 ? 's' : '') + ' notificado' + (sel.length !== 1 ? 's' : '');
-        if (gasUrl)  msgToast += ' · ' + emailsOk + ' email' + (emailsOk !== 1 ? 's' : '') + ' enviado' + (emailsOk !== 1 ? 's' : '') + ' (1 por estudiante con detalle completo)';
-        if (!gasUrl) msgToast += ' (sin URL GAS: solo notificación interna)';
+        msgToast += ' · ' + emailsOk + ' email' + (emailsOk !== 1 ? 's' : '') + ' enviado' + (emailsOk !== 1 ? 's' : '') + ' (1 por estudiante con detalle completo)';
         if (emailsErr > 0) msgToast += ' ⚠️ ' + emailsErr + ' error(es)';
         toast(msgToast, emailsErr > 0 ? 'err' : 'ok');
         cerrar('modal-correo');
@@ -2130,15 +2126,14 @@ function interpolarPlantilla(texto, vars) {
     });
 }
 
-async function enviarEmailGas(gasUrl, to, subject, body, replyTo) {
+async function enviarEmailGas(programaId, to, subject, body, replyTo) {
     try {
-        var res = await fetch(gasUrl, {
-            method:  'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body:    JSON.stringify({ secret: GAS_SECRET, to: to, subject: subject, body: body, replyTo: replyTo || '' }),
-            mode:    'cors'
+        var sb = await getSupabase();
+        var resp = await sb.functions.invoke('enviar-email', {
+            body: { programaId: programaId, to: to, subject: subject, body: body, replyTo: replyTo || '' }
         });
-        var json = await res.json();
+        if (resp.error) { console.error('relay error para', to, ':', resp.error.message); return false; }
+        var json = resp.data || {};
         if (!json.ok) console.error('GAS error para', to, ':', json.error);
         return json.ok === true;
     } catch (err) {

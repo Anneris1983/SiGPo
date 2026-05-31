@@ -241,8 +241,8 @@
     var _estudiante = null;
     var _inscripciones = [];
     var _cobrosMap = {};
-    var GAS_SECRET = 'SIGPO_KEY_FCE_2025';
-    var GAS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxtDIAY6yhpTJF5OK3k0-VK9GHK4UxputJrW-I_1ihT-ABYEEzpVPGcKwLF9k6nQW6iHw/exec';
+    // Envío de emails vía Edge Function 'enviar-email' (relay): el secreto se
+    // inyecta del lado del servidor; la gas_url se resuelve en la BD por programa.
 
     var fM = fMonto;
 
@@ -643,16 +643,14 @@
         renderNotificaciones(_notifs);
     }
 
-    async function enviarEmailGas(gasUrl, to, subject, body) {
+    async function enviarEmailGas(programaId, to, subject, body) {
         try {
-            var res = await fetch(gasUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ secret: GAS_SECRET, to: to, subject: subject, body: body }),
-                mode: 'cors'
+            var sb = await getSupabase();
+            var resp = await sb.functions.invoke('enviar-email', {
+                body: { programaId: programaId, to: to, subject: subject, body: body }
             });
-            var json = await res.json();
-            return json.ok === true;
+            if (resp.error) { console.error('relay error para', to, ':', resp.error.message); return false; }
+            return (resp.data && resp.data.ok) === true;
         } catch(err) {
             console.error('Error enviando email a', to, err);
             return false;
@@ -671,7 +669,6 @@
 
             var coh  = insc.cohortes || {};
             var prog = coh.programas || {};
-            var gasUrl = prog.gas_url || GAS_FALLBACK_URL;
 
             var cobros = _cobrosMap[cohorteId] || [];
 
@@ -748,7 +745,7 @@
 
             var enviados = 0;
             for (var i = 0; i < emails.length; i++) {
-                var ok = await enviarEmailGas(gasUrl, emails[i], subject, body);
+                var ok = await enviarEmailGas(programaId, emails[i], subject, body);
                 if (ok) enviados++;
             }
 

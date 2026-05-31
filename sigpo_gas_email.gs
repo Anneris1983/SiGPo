@@ -22,7 +22,7 @@
 
 var SUPABASE_URL  = 'https://fdevypdowdhqaxvfiywt.supabase.co';
 var SUPABASE_KEY  = 'REEMPLAZAR_CON_SERVICE_ROLE_KEY'; // ← solo en script.google.com, nunca en el repo
-var SECRET        = 'SIGPO_KEY_FCE_2025';
+var SECRET        = 'REEMPLAZAR_CON_SECRETO'; // ← solo en script.google.com; debe coincidir con GAS_SECRET (secreto Edge Function en Supabase)
 var NOMBRE_INST   = 'Secretaría de Posgrado — FCE UNCUYO';
 
 // ══════════════════════════════════════════════════════════════
