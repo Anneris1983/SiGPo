@@ -223,15 +223,7 @@ function spin(on) { document.getElementById('spinner').classList.toggle('show', 
 var _notifs = [];
 function toggleNotif() { var dd=document.getElementById('notif-dropdown'); if(dd)dd.style.display=dd.style.display==='block'?'none':'block'; }
 document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
-function renderNotificaciones(datos) {
-    _notifs=datos||[];
-    var sinLeer=_notifs.filter(function(n){return !n.leida;}).length;
-    var badge=document.getElementById('notif-badge'); if(badge){badge.textContent=sinLeer;badge.style.display=sinLeer>0?'flex':'none';}
-    var lista=document.getElementById('notif-list'); if(!lista)return;
-    if(!_notifs.length){lista.innerHTML='<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;">Sin notificaciones</div>';return;}
-    lista.innerHTML=_notifs.map(function(n){return '<div style="padding:12px 16px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#374151;">'+escHtml(n.mensaje)+'</div>';}).join('');
-}
-function marcarTodasLeidas(){_notifs.forEach(function(n){n.leida=true;});renderNotificaciones(_notifs);marcarTodasNotificacionesLeidas();}
+// renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', async function() {
