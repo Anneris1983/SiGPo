@@ -3133,7 +3133,8 @@ async function guardarCeldaPopup() {
             var pct         = Number(cpopInfo.descuento_porcentaje) || 0;
             var montoFinal  = pct > 0 ? redondear2(montoOriginal * (1 - pct / 100)) : montoOriginal;
             var saldoPend   = montoFinal;
-            var nuevoEstado = normalizarEstadoCuota(montoFinal, saldoPend, cpopInfo.fecha_vencimiento || null, cpopInfo.estado_actual || 'NO_ABONADA');
+            var estadoBase  = (cpopInfo.estado_actual === 'A_DEFINIR') ? 'NO_ABONADA' : (cpopInfo.estado_actual || 'NO_ABONADA');
+            var nuevoEstado = normalizarEstadoCuota(montoFinal, saldoPend, cpopInfo.fecha_vencimiento || null, estadoBase);
             payload = {
                 monto_original:       montoOriginal,
                 monto_final:          montoFinal,
