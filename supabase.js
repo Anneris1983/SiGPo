@@ -1036,11 +1036,6 @@ async function obtenerDashboardAdmin() {
 // FACTURACIÓN (ESTUDIANTE)
 // ══════════════════════════════════════════════════════════════
 
-async function guardarDatosFacturacion(datos) {
-    console.log('Datos facturación:', datos);
-    return { ok: true };
-}
-
 // ══════════════════════════════════════════════════════════════
 // PERFIL DE USUARIO
 // ══════════════════════════════════════════════════════════════
@@ -1209,9 +1204,6 @@ var _gasFunctions = {
         var r = await sb.from('usuarios').select('*').eq('usuario_id', id).single();
         return r.data;
     },
-
-    // Facturación
-    guardarDatosFacturacion: guardarDatosFacturacion,
 
     // Reportes / Exportaciones (en desarrollo)
     getDatosComparativo:              async function() { return { periodos: [], datos: [] }; },
