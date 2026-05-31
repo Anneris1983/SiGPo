@@ -352,7 +352,9 @@ function toast(msg, tipo) {
     var cont = document.getElementById('toasts') || document.getElementById('toast');
     if (!cont) return;
     var d = document.createElement('div');
-    d.className = 'toast'+(tipo==='err'?' toast-err':tipo==='ok'?' toast-ok':'');
+    // Aplica ambas convenciones de clase: '.toast.ok/.err' (mayoría de páginas)
+    // y '.toast-ok/.toast-err' (consumidores previos de supabase.js).
+    d.className = 'toast'+(tipo==='err'?' err toast-err':tipo==='ok'?' ok toast-ok':'');
     d.textContent = msg;
     cont.appendChild(d);
     setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); }, 3500);

@@ -264,14 +264,7 @@ function toggleTodosAnios(cb) {
     selAnio.style.opacity = cb.checked ? '0.4' : '1';
 }
 
-function toast(msg, tipo) {
-    var c = document.getElementById('toasts');
-    var d = document.createElement('div');
-    d.className = 'toast' + (tipo ? ' ' + tipo : '');
-    d.textContent = msg;
-    c.appendChild(d);
-    setTimeout(function(){ d.remove(); }, 3200);
-}
+// toast: usa la versión global de supabase.js
 
 function fM(n) {
     return Number(n || 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });

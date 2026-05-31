@@ -259,12 +259,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 /* ── UI ── */
 function spin(on) { document.getElementById('spinner').classList.toggle('show', on); }
-function toast(msg, tipo) {
-    var d = document.createElement('div');
-    d.className = 'toast ' + (tipo||''); d.textContent = msg;
-    document.getElementById('toasts').appendChild(d);
-    setTimeout(function() { if(d.parentNode) d.remove(); }, 3500);
-}
+// toast: usa la versión global de supabase.js
 function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
 
 /* ── CARGAR ── */

@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded',async function(){
 });
 
 function spin(on){document.getElementById('spinner').classList.toggle('on',on);}
-function toast(msg,t){var d=document.createElement('div');d.className='toast '+(t||'');d.textContent=msg;document.getElementById('toasts').appendChild(d);setTimeout(function(){d.remove();},3500);}
+// toast: usa la versión global de supabase.js
 function abrM(id){document.getElementById(id).classList.add('on');}
 function cerM(id){document.getElementById(id).classList.remove('on');}
 document.querySelectorAll('.mo').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)cerM(m.id);});});

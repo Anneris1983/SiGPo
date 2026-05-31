@@ -315,14 +315,7 @@ function gs(fn, ...args) {
     });
 }
 
-function toast(msg, tipo='') {
-    const c = document.getElementById('toasts');
-    const d = document.createElement('div');
-    d.className = `toast ${tipo}`;
-    d.textContent = msg;
-    c.appendChild(d);
-    setTimeout(() => d.remove(), 3200);
-}
+// toast: usa la versión global de supabase.js
 
 
 function formatCurrency(value) {
