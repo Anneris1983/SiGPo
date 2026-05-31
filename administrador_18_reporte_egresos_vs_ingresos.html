@@ -453,8 +453,8 @@ function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
 async function cargarDatos() {
     try {
         var sb = await getSupabase();
-        var rCobros  = await sb.from('cobros').select('*');
-        var rEgresos = await sb.from('egresos').select('*');
+        var rCobros  = await sb.from('cobros').select('programa_id,cohorte_id,fecha_vencimiento,estado,monto_final,saldo_pendiente');
+        var rEgresos = await sb.from('egresos').select('programa_id,cohorte_id,fecha_pago,fecha_estimada,tipo,estado,monto_pagado');
         var cobros   = rCobros.data  || [];
         var egresos  = rEgresos.data || [];
         // ── Aplicar filtros desde Cashflow ──
