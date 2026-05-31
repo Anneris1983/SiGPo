@@ -6,9 +6,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // el secreto GAS_SECRET del lado del servidor, para que la clave
 // NUNCA viaje en el HTML público ni en el repositorio.
 //
-// Secretos requeridos (Supabase → Edge Functions → Secrets):
+// Los secretos se leen del Supabase Vault (tabla cifrada en la BD):
 //   · GAS_SECRET        → debe coincidir con SECRET en sigpo_gas_email.gs
 //   · GAS_FALLBACK_URL  → URL del GAS por defecto (cuando el programa no tiene gas_url)
+// Rotación: actualizar el valor en vault.secrets (vía SQL) y en el GAS.
 // SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY los inyecta Supabase automáticamente.
 // ══════════════════════════════════════════════════════════════
 
@@ -55,7 +56,20 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Faltan campos: to, subject, body' }, 400)
     }
 
-    // 3. Resolver la gas_url desde la BD (nunca desde el cliente) para evitar
+    // 3. Leer secretos del Vault (cifrados en la BD, accesibles solo con service role)
+    const { data: secretos, error: secErr } = await sbAdmin
+      .schema('vault')
+      .from('decrypted_secrets')
+      .select('name, decrypted_secret')
+      .in('name', ['GAS_SECRET', 'GAS_FALLBACK_URL'])
+    if (secErr) return json({ ok: false, error: 'No se pudieron leer secretos: ' + secErr.message }, 500)
+
+    const mapa: Record<string, string> = {}
+    for (const s of secretos || []) mapa[s.name] = s.decrypted_secret
+    const secret = mapa['GAS_SECRET']
+    if (!secret) return json({ ok: false, error: 'GAS_SECRET no configurado en el Vault' }, 500)
+
+    // 4. Resolver la gas_url desde la BD (nunca desde el cliente) para evitar
     //    que un usuario apunte el relay a una URL arbitraria y robe el secreto.
     let gasUrl = ''
     if (programaId !== null && programaId !== '') {
@@ -66,21 +80,18 @@ Deno.serve(async (req) => {
         .single()
       if (prog && prog.gas_url) gasUrl = String(prog.gas_url).trim()
     }
-    if (!gasUrl) gasUrl = (Deno.env.get('GAS_FALLBACK_URL') || '').trim()
+    if (!gasUrl) gasUrl = (mapa['GAS_FALLBACK_URL'] || '').trim()
 
     if (!gasUrl) return json({ ok: false, error: 'Sin gas_url configurada' }, 400)
 
-    // 4. Restringir a Google Apps Script (defensa adicional anti-SSRF)
+    // 5. Restringir a Google Apps Script (defensa adicional anti-SSRF)
     let host = ''
     try { host = new URL(gasUrl).host } catch (_) { return json({ ok: false, error: 'gas_url invalida' }, 400) }
     if (host !== 'script.google.com') {
       return json({ ok: false, error: 'gas_url no permitida' }, 400)
     }
 
-    const secret = Deno.env.get('GAS_SECRET')
-    if (!secret) return json({ ok: false, error: 'GAS_SECRET no configurado en el servidor' }, 500)
-
-    // 5. Reenviar al GAS con el secreto inyectado del lado servidor
+    // 6. Reenviar al GAS con el secreto inyectado del lado servidor
     const res = await fetch(gasUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
