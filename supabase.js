@@ -74,13 +74,14 @@ async function login(dni, password) {
 
     const usuario = usuarioPre;
 
-    localStorage.setItem('sigpo_rol', usuario.rol);
-    localStorage.setItem('sigpo_nombre', usuario.nombre_completo);
-    localStorage.setItem('sigpo_apellido', usuario.apellido || '');
-    localStorage.setItem('sigpo_nombre2', usuario.nombre || '');
-    localStorage.setItem('sigpo_dni', usuario.dni);
-    localStorage.setItem('sigpo_email', usuario.email);
+    localStorage.setItem('sigpo_rol',         usuario.rol);
+    localStorage.setItem('sigpo_nombre',      usuario.nombre_completo);
+    localStorage.setItem('sigpo_apellido',    usuario.apellido || '');
+    localStorage.setItem('sigpo_nombre2',     usuario.nombre || '');
+    localStorage.setItem('sigpo_dni',         usuario.dni);
+    localStorage.setItem('sigpo_email',       usuario.email);
     localStorage.setItem('sigpo_programa_id', usuario.programa_id || '');
+    localStorage.setItem('sigpo_usuario_id',  String(usuario.usuario_id || ''));
 
     return {
         ok: true,
@@ -100,6 +101,7 @@ async function logout() {
     localStorage.removeItem('sigpo_dni');
     localStorage.removeItem('sigpo_email');
     localStorage.removeItem('sigpo_programa_id');
+    localStorage.removeItem('sigpo_usuario_id');
     return { ok: true };
 }
 
@@ -107,11 +109,12 @@ function getSesion() {
     const rol = localStorage.getItem('sigpo_rol');
     if (!rol) return null;
     return {
-        rol: rol,
-        nombre: localStorage.getItem('sigpo_nombre'),
-        dni: localStorage.getItem('sigpo_dni'),
-        email: localStorage.getItem('sigpo_email'),
-        programa_id: localStorage.getItem('sigpo_programa_id')
+        rol:         rol,
+        nombre:      localStorage.getItem('sigpo_nombre'),
+        dni:         localStorage.getItem('sigpo_dni'),
+        email:       localStorage.getItem('sigpo_email'),
+        programa_id: localStorage.getItem('sigpo_programa_id'),
+        usuario_id:  localStorage.getItem('sigpo_usuario_id') || null
     };
 }
 
@@ -125,7 +128,7 @@ async function requireAuth() {
     // Verify role from DB using the authenticated JWT (not localStorage)
     const { data: usuario, error } = await sb
         .from('usuarios')
-        .select('rol, nombre_completo, apellido, nombre, dni, email, programa_id')
+        .select('usuario_id, rol, nombre_completo, apellido, nombre, dni, email, programa_id')
         .eq('auth_user_id', session.user.id)
         .maybeSingle();
     if (error || !usuario) {
@@ -140,6 +143,7 @@ async function requireAuth() {
     localStorage.setItem('sigpo_dni',         usuario.dni);
     localStorage.setItem('sigpo_email',       usuario.email);
     localStorage.setItem('sigpo_programa_id', String(usuario.programa_id || ''));
+    localStorage.setItem('sigpo_usuario_id',  String(usuario.usuario_id || ''));
     return getSesion();
 }
 
