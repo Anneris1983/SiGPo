@@ -292,7 +292,7 @@ function _wrapHtml(contenido) {
   return '<!DOCTYPE html><html><head><meta charset="UTF-8">' + _CSS + '</head><body>' +
     '<div class="hdr"><h1>' + NOMBRE_INST + '</h1><p>Sistema de Gestión de Posgrado</p></div>' +
     '<div class="bod">' + contenido + '</div>' +
-    '<div class="ftr">Este es un mensaje automático del sistema SiGPo. Por consultas comuníquese con la Secretaría de Posgrado.</div>' +
+    '<div class="ftr">Este es un mensaje automático. Por consultas comuníquese con la Secretaría de Posgrado.</div>' +
     '</body></html>';
 }
 
