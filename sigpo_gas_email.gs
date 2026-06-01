@@ -311,17 +311,18 @@ function _filasCC(cc) {
 }
 
 function _htmlRecordatorio(nombre, prog, mesNom, anio, cuotasMes, cc) {
+  var fechaVenc = _fmtFecha(cuotasMes[0].fecha_vencimiento);
   var filasCuota = cuotasMes.map(function(c) {
     return '<tr class="pend"><td>' + (c.concepto||'—') + '</td><td>' + (c.periodo||'—') + '</td>' +
-           '<td>15/' + String(new Date().getMonth()+1).padStart(2,'0') + '/' + anio + '</td>' +
+           '<td>' + _fmtFecha(c.fecha_vencimiento) + '</td>' +
            '<td><strong>' + _fmtPeso(c.monto_final) + '</strong></td></tr>';
   }).join('');
   var deudaPrev = cc.filter(function(c){ return c.estado === 'EN_MORA'; })
                     .reduce(function(s,c){ return s + Number(c.saldo_pendiente||c.monto_final||0); }, 0);
   return _wrapHtml(
     '<p>Estimado/a <strong>' + nombre + '</strong>,</p>' +
-    '<div class="aviso">Le recordamos que la/s siguiente/s cuota/s del programa <strong>' + prog + '</strong> ' +
-    'vence/n el <strong>15 de ' + mesNom + ' ' + anio + '</strong>.</div>' +
+    '<div class="aviso">Le recordamos que la cuota del mes de <strong>' + mesNom + ' ' + anio + '</strong> ' +
+    'vence el <strong>' + fechaVenc + '</strong>.</div>' +
     '<table><tr><th>Concepto</th><th>Período</th><th>Vencimiento</th><th>Monto</th></tr>' + filasCuota + '</table>' +
     (deudaPrev > 0 ?
       '<div class="alerta">Además, registra una deuda previa en mora de <span class="deuda">' + _fmtPeso(deudaPrev) + '</span>. Le solicitamos regularizar su situación.</div>' : '') +
