@@ -373,6 +373,7 @@
 
     function renderActividad() {
         var cont = document.getElementById('activityList');
+        if (!cont) return;
         if (!dashboardData.actividadReciente.length) { cont.innerHTML = '<div class="empty-state">No hay actividad reciente.</div>'; return; }
         cont.innerHTML = dashboardData.actividadReciente.map(function(a) {
             return '<div class="activity-item"><strong>' + escapeHtml(a.titulo) + '</strong>' +
