@@ -18,6 +18,18 @@ function escapeHtml(str) {
 const SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
 
+// Preconnect al dominio de la API para reducir latencia TLS en cada página.
+// Se inyecta una sola vez: si la etiqueta ya existe no se duplica.
+(function() {
+    if (typeof document === 'undefined') return;
+    ['https://fdevypdowdhqaxvfiywt.supabase.co', 'https://cdn.jsdelivr.net'].forEach(function(origin) {
+        if (document.querySelector('link[rel="preconnect"][href="' + origin + '"]')) return;
+        var l = document.createElement('link');
+        l.rel = 'preconnect'; l.href = origin; l.crossOrigin = '';
+        document.head.appendChild(l);
+    });
+}());
+
 // ══════════════════════════════════════════════════════════════
 // INICIALIZAR CLIENTE
 // ══════════════════════════════════════════════════════════════
