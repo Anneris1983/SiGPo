@@ -908,19 +908,22 @@ async function obtenerProgramasCoordinador(usuarioId) {
 /**
  * Retorna un array de programa_id asignados al usuario con ese dni.
  * Usado por las páginas de coordinador/profesor para filtrar datos.
+ * Usa usuario_id cacheado en localStorage para hacer una sola consulta.
  */
 async function obtenerProgramasAsignadosPorDni(dni) {
     const sb = await getSupabase();
-    const { data: usuario } = await sb
-        .from('usuarios')
-        .select('usuario_id')
-        .eq('dni', String(dni))
-        .single();
-    if (!usuario) return [];
+    let uid = localStorage.getItem('sigpo_usuario_id');
+    if (!uid) {
+        // Fallback: buscar por dni si el cache no está disponible
+        const { data: u } = await sb.from('usuarios').select('usuario_id').eq('dni', String(dni)).single();
+        if (!u) return [];
+        uid = String(u.usuario_id);
+        localStorage.setItem('sigpo_usuario_id', uid);
+    }
     const { data: asignaciones } = await sb
         .from('coordinadores_programas')
         .select('programa_id')
-        .eq('coordinador_id', usuario.usuario_id);
+        .eq('coordinador_id', uid);
     if (!asignaciones || !asignaciones.length) return [];
     return [...new Set(asignaciones.map(function(a){ return a.programa_id; }))];
 }
@@ -929,19 +932,21 @@ async function obtenerProgramasAsignadosPorDni(dni) {
  * Retorna { progIds, cohIds } para un coordinador.
  * progIds = programas asignados sin cohorte específica (ve todas las cohortes del programa).
  * cohIds  = cohortes específicas asignadas.
+ * Usa usuario_id cacheado en localStorage para hacer una sola consulta.
  */
 async function obtenerAsignacionesCoordinador(dni) {
     const sb = await getSupabase();
-    const { data: usuario } = await sb
-        .from('usuarios')
-        .select('usuario_id')
-        .eq('dni', String(dni))
-        .single();
-    if (!usuario) return { progIds: [], cohIds: [] };
+    let uid = localStorage.getItem('sigpo_usuario_id');
+    if (!uid) {
+        const { data: u } = await sb.from('usuarios').select('usuario_id').eq('dni', String(dni)).single();
+        if (!u) return { progIds: [], cohIds: [] };
+        uid = String(u.usuario_id);
+        localStorage.setItem('sigpo_usuario_id', uid);
+    }
     const { data: asigs } = await sb
         .from('coordinadores_programas')
         .select('programa_id, cohorte_id')
-        .eq('coordinador_id', usuario.usuario_id);
+        .eq('coordinador_id', uid);
     if (!asigs || !asigs.length) return { progIds: [], cohIds: [] };
     const progIds = [...new Set(asigs.filter(function(a){ return !a.cohorte_id; }).map(function(a){ return a.programa_id; }))];
     const cohIds  = [...new Set(asigs.filter(function(a){ return  a.cohorte_id; }).map(function(a){ return a.cohorte_id; }))];
