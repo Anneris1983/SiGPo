@@ -1083,170 +1083,143 @@ function _renderFilaEst(est, celdas, totP, totA, totS, estadoGen) {
 /* ══════════════════════════════════════════════════
    RENDER TABLA
 ══════════════════════════════════════════════════ */
-function renderTabla() {
-    V.page = 1;
-    var columnas    = V.data.columnas;
-    var estudiantes = V.data.estudiantes;
-    var thead = document.getElementById('t-head');
-    var tbody = document.getElementById('t-body');
-
-    thead.innerHTML = '<tr>'
-        + '<th class="col-check"><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>'
+/* renderTabla → cohorte_tabla.js (esqueleto). Esta vista aporta su HTML
+   específico vía CT_VIEW (definido más abajo, junto a _renderFilaEst). */
+var CT_VIEW = {
+    leadingHeader:
+          '<th class="col-check"><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>'
         + '<th class="col-name">Apellido y Nombre</th>'
         + '<th style="min-width:64px;text-align:center;">Desc %</th>'
         + '<th class="col-email">Correo electrónico</th>'
-        + '<th style="min-width:76px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>Cohorte</th>'
-        + columnas.map(function(c) {
-            return '<th class="col-cuota">' + escapeHtml(c.concepto_base) + '<br><span style="font-weight:400;color:#fff;font-size:9px;">' + escapeHtml(c.periodo || '') + '</span></th>';
-          }).join('')
-        + '<th class="tot-hdr th-pagar">Total a<br>Pagar</th>'
-        + '<th class="tot-hdr th-abonado">Total<br>Abonado</th>'
-        + '<th class="tot-hdr th-saldo">Saldo<br>Pendiente</th>'
-        + '</tr>';
+        + '<th style="min-width:76px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>Cohorte</th>',
 
-    tbody.innerHTML = '';
-
-    estudiantes.forEach(function(est) {
-        var estadoGen = calcEstadoGeneral(est.cobros);
-
-        // Construir cobrosMap primero y pre-calcular estado/abonado
-        var cobrosMap = {};
-        est.cobros.forEach(function(c) {
-            cobrosMap[keyCuota(c.concepto, c.periodo)] = c;
-            c._estado_resuelto = resolverEstadoCobro(c);
-            c.monto_abonado = calcMontoAbonado(c);
-        });
-
-        // Sumar SOLO los cobros que tienen columna visible (evita cobros huérfanos ocultos)
-        var totP = 0, totA = 0, totS = 0;
+    // Sumar SOLO los cobros que tienen columna visible (evita cobros huérfanos ocultos)
+    totales: function(est, columnas, cobrosMap) {
+        var p = 0, a = 0, s = 0;
         columnas.forEach(function(col) {
             var c = cobrosMap[keyCuota(col.concepto_base, col.periodo)];
             if (!c || c.no_aplica === true || c._estado_resuelto === 'NO_APLICA') return;
-            totP += tieneMontoDefinido(c) ? Number(c.monto_final) || 0 : 0;
-            totA += calcMontoAbonado(c);
-            totS += c.saldo_pendiente === null || c.saldo_pendiente === undefined ? 0 : Number(c.saldo_pendiente) || 0;
+            p += tieneMontoDefinido(c) ? Number(c.monto_final) || 0 : 0;
+            a += calcMontoAbonado(c);
+            s += c.saldo_pendiente === null || c.saldo_pendiente === undefined ? 0 : Number(c.saldo_pendiente) || 0;
         });
+        return { p: p, a: a, s: s };
+    },
 
-        var celdas = columnas.map(function(col) {
-            var c = cobrosMap[keyCuota(col.concepto_base, col.periodo)];
-            // Sin cobro: el trigger debería haberlo creado al inscribir al estudiante.
-            // Si por datos anteriores al trigger falta el cobro, mostrarlo como A_DEFINIR
-            // editable para que el administrador pueda definir el monto.
-            if (!c) {
-                var sinCobroInfo = JSON.stringify({
-                    cobro_id: null,
-                    dni: String(est.dni),
-                    concepto: col.concepto_base,
-                    periodo:  col.periodo || '',
-                    monto: null,
-                    descuento_porcentaje: est.descuento_porcentaje || 0,
-                    fecha_vencimiento: col.fecha_vencimiento || null,
-                    estado_actual: 'A_DEFINIR',
-                    no_aplica: false,
-                    _sin_cobro: true
-                });
-                return '<td data-est="A_DEFINIR" onclick="abrirCeldaPopup(event,' + encodeAttr(sinCobroInfo) + ')" style="cursor:pointer;" title="Sin cobro generado — clic para definir el monto y crearlo">'
-                    + '<div class="cuota-cell-wrap">'
-                    + '<div class="cuota-cell-txt" style="color:var(--clr-warning);font-size:10px;font-style:italic;">A definir</div>'
-                    + '<div class="u-hint">✏️ definir</div>'
-                    + '</div></td>';
-            }
+    // Sin cobro: mostrarlo como A_DEFINIR editable para que el admin defina el monto.
+    celdaVacia: function(est, col) {
+        var sinCobroInfo = JSON.stringify({
+            cobro_id: null,
+            dni: String(est.dni),
+            concepto: col.concepto_base,
+            periodo:  col.periodo || '',
+            monto: null,
+            descuento_porcentaje: est.descuento_porcentaje || 0,
+            fecha_vencimiento: col.fecha_vencimiento || null,
+            estado_actual: 'A_DEFINIR',
+            no_aplica: false,
+            _sin_cobro: true
+        });
+        return '<td data-est="A_DEFINIR" onclick="abrirCeldaPopup(event,' + encodeAttr(sinCobroInfo) + ')" style="cursor:pointer;" title="Sin cobro generado — clic para definir el monto y crearlo">'
+            + '<div class="cuota-cell-wrap">'
+            + '<div class="cuota-cell-txt" style="color:var(--clr-warning);font-size:10px;font-style:italic;">A definir</div>'
+            + '<div class="u-hint">✏️ definir</div>'
+            + '</div></td>';
+    },
 
-            var estado       = resolverEstadoCobro(c);
-            var montoAbonado = calcMontoAbonado(c);
-            var idCobro      = c.cobro_id;
+    celda: function(c, est, estado, montoAbonado, col) {
+        var idCobro = c.cobro_id;
 
-            /* Texto de la celda */
-            var txt;
-            if (estado === 'NO_APLICA')         txt = '— no aplica';
-            else if (!tieneMontoDefinido(c))    txt = 'A definir';
-            else if (estado === 'PAGO_PARCIAL') txt = fMonto(montoAbonado) + '<br><small style="font-size:9px;opacity:.8;">de ' + fMonto(c.monto_final) + '</small>';
-            else if (estado === 'PENDIENTE') {
-                var mt = c.monto_transferido && Number(c.monto_transferido) > 0 ? Number(c.monto_transferido) : null;
-                txt = mt && mt < Number(c.monto_final||0)
-                    ? fMonto(mt) + '<br><small style="font-size:9px;opacity:.8;">🕓 En revisión</small>'
-                    : '🕓 En revisión';
-            }
-            else if (estado === 'A_DEFINIR')    txt = 'A definir';
-            else                                txt = fMonto(c.monto_final);
+        /* Texto de la celda */
+        var txt;
+        if (estado === 'NO_APLICA')         txt = '— no aplica';
+        else if (!tieneMontoDefinido(c))    txt = 'A definir';
+        else if (estado === 'PAGO_PARCIAL') txt = fMonto(montoAbonado) + '<br><small style="font-size:9px;opacity:.8;">de ' + fMonto(c.monto_final) + '</small>';
+        else if (estado === 'PENDIENTE') {
+            var mt = c.monto_transferido && Number(c.monto_transferido) > 0 ? Number(c.monto_transferido) : null;
+            txt = mt && mt < Number(c.monto_final||0)
+                ? fMonto(mt) + '<br><small style="font-size:9px;opacity:.8;">🕓 En revisión</small>'
+                : '🕓 En revisión';
+        }
+        else if (estado === 'A_DEFINIR')    txt = 'A definir';
+        else                                txt = fMonto(c.monto_final);
 
-            /*
-             * Botones por estado — Administrador: control total
-             * PENDIENTE    → Ver comprobante + Aprobar + Rechazar
-             * ABONADA      → Ver comprobante + Ver recibo
-             * PAGO_PARCIAL → Ver comprobante + Ver recibo parcial
-             * resto        → sin botones
-             */
-            var btns = '';
-            if (estado === 'PENDIENTE') {
-                if (c.comprobante_url)
-                    btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
-                btns += '<button class="cbtn cbtn-aprobar" onclick="abrirAprobacion(' + idCobro + ')">✔ Aprobar</button>';
-                btns += '<button class="cbtn cbtn-rechazar" onclick="rechazarCuotaDirecto(' + idCobro + ')">✕ Rechazar</button>';
-            } else if (estado === 'ABONADA') {
-                if (c.comprobante_url)
-                    btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
-                if (c.recibo_url)
-                    btns += '<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\'' + encodeAttr(c.recibo_url) + '\',\'Recibo\',\'' + encodeAttr(c.concepto) + '\')">🧾 Recibo</button>';
-            } else if (estado === 'PAGO_PARCIAL') {
-                if (c.comprobante_url)
-                    btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
-                if (c.recibo_url)
-                    btns += '<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\'' + encodeAttr(c.recibo_url) + '\',\'Recibo parcial\',\'' + encodeAttr(c.concepto) + '\')">🧾 Recibo</button>';
-            }
-            // EN_MORA, NO_ABONADA, A_DEFINIR: sin botones
+        /*
+         * Botones por estado — Administrador: control total
+         * PENDIENTE    → Ver comprobante + Aprobar + Rechazar
+         * ABONADA      → Ver comprobante + Ver recibo
+         * PAGO_PARCIAL → Ver comprobante + Ver recibo parcial
+         * resto        → sin botones
+         */
+        var btns = '';
+        if (estado === 'PENDIENTE') {
+            if (c.comprobante_url)
+                btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
+            btns += '<button class="cbtn cbtn-aprobar" onclick="abrirAprobacion(' + idCobro + ')">✔ Aprobar</button>';
+            btns += '<button class="cbtn cbtn-rechazar" onclick="rechazarCuotaDirecto(' + idCobro + ')">✕ Rechazar</button>';
+        } else if (estado === 'ABONADA') {
+            if (c.comprobante_url)
+                btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
+            if (c.recibo_url)
+                btns += '<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\'' + encodeAttr(c.recibo_url) + '\',\'Recibo\',\'' + encodeAttr(c.concepto) + '\')">🧾 Recibo</button>';
+        } else if (estado === 'PAGO_PARCIAL') {
+            if (c.comprobante_url)
+                btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
+            if (c.recibo_url)
+                btns += '<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\'' + encodeAttr(c.recibo_url) + '\',\'Recibo parcial\',\'' + encodeAttr(c.concepto) + '\')">🧾 Recibo</button>';
+        }
+        // EN_MORA, NO_ABONADA, A_DEFINIR: sin botones
 
-            var title = encodeAttr(c.concepto + ' · ' + (c.periodo||'')
-                + ' | Estado: ' + etiquetaEstado(estado)
-                + ' | Abonado: ' + fMonto(montoAbonado)
-                + ' | Saldo: ' + fMonto(c.saldo_pendiente)
-                + (c.fecha_vencimiento ? ' | Vence: ' + fFecha(c.fecha_vencimiento) : ''));
+        var title = encodeAttr(c.concepto + ' · ' + (c.periodo||'')
+            + ' | Estado: ' + etiquetaEstado(estado)
+            + ' | Abonado: ' + fMonto(montoAbonado)
+            + ' | Saldo: ' + fMonto(c.saldo_pendiente)
+            + (c.fecha_vencimiento ? ' | Vence: ' + fFecha(c.fecha_vencimiento) : ''));
 
-            // PENDIENTE: no editable inline (comprobante en revisión)
-            var esPagoAprobado = ['ABONADA','PAGO_PARCIAL'].includes(estado);
-            var esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado);
-            var editAttr = '';
-            if (esEditable) {
-                editAttr = ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
-                    cobro_id:             c.cobro_id,
-                    dni:                  String(est.dni),
-                    concepto:             c.concepto,
-                    periodo:              c.periodo || '',
-                    monto:                c.monto_original,
-                    descuento_porcentaje: est.descuento_porcentaje || c.descuento_porcentaje || 0,
-                    fecha_vencimiento:    c.fecha_vencimiento || null,
-                    estado_actual:        estado,
-                    no_aplica:            estado === 'NO_APLICA'
-                })) + ')" style="cursor:pointer;"';
-            } else if (esPagoAprobado) {
-                editAttr = ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
-                    cobro_id:         c.cobro_id,
-                    dni:              String(est.dni),
-                    concepto:         c.concepto,
-                    periodo:          c.periodo || '',
-                    monto_final:      c.monto_final,
-                    monto_abonado:    montoAbonado,
-                    saldo_pendiente:  c.saldo_pendiente,
-                    fecha_vencimiento: c.fecha_vencimiento || null,
-                    estado_actual:    estado,
-                    es_pago_aprobado: true
-                })) + ')" style="cursor:pointer;"';
-            }
+        // PENDIENTE: no editable inline (comprobante en revisión)
+        var esPagoAprobado = ['ABONADA','PAGO_PARCIAL'].includes(estado);
+        var esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado);
+        var editAttr = '';
+        if (esEditable) {
+            editAttr = ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
+                cobro_id:             c.cobro_id,
+                dni:                  String(est.dni),
+                concepto:             c.concepto,
+                periodo:              c.periodo || '',
+                monto:                c.monto_original,
+                descuento_porcentaje: est.descuento_porcentaje || c.descuento_porcentaje || 0,
+                fecha_vencimiento:    c.fecha_vencimiento || null,
+                estado_actual:        estado,
+                no_aplica:            estado === 'NO_APLICA'
+            })) + ')" style="cursor:pointer;"';
+        } else if (esPagoAprobado) {
+            editAttr = ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
+                cobro_id:         c.cobro_id,
+                dni:              String(est.dni),
+                concepto:         c.concepto,
+                periodo:          c.periodo || '',
+                monto_final:      c.monto_final,
+                monto_abonado:    montoAbonado,
+                saldo_pendiente:  c.saldo_pendiente,
+                fecha_vencimiento: c.fecha_vencimiento || null,
+                estado_actual:    estado,
+                es_pago_aprobado: true
+            })) + ')" style="cursor:pointer;"';
+        }
 
-            return '<td data-est="' + estado + '" title="' + title + '"' + editAttr + '>'
-                + '<div class="cuota-cell-wrap">'
-                + (c.es_readmision ? '<span class="badge-readmision">Readmisión</span>' : '')
-                + '<div class="cuota-cell-txt">' + txt + '</div>'
-                + (btns ? '<div class="cuota-cell-btns">' + btns + '</div>' : '')
-                + ((esEditable || esPagoAprobado) ? '<div class="u-hint">✏️ editar</div>' : '')
-                + '</div></td>';
-        }).join('');
+        return '<td data-est="' + estado + '" title="' + title + '"' + editAttr + '>'
+            + '<div class="cuota-cell-wrap">'
+            + (c.es_readmision ? '<span class="badge-readmision">Readmisión</span>' : '')
+            + '<div class="cuota-cell-txt">' + txt + '</div>'
+            + (btns ? '<div class="cuota-cell-btns">' + btns + '</div>' : '')
+            + ((esEditable || esPagoAprobado) ? '<div class="u-hint">✏️ editar</div>' : '')
+            + '</div></td>';
+    },
 
-        tbody.appendChild(_renderFilaEst(est, celdas, totP, totA, totS, estadoGen));
-    });
-
-    aplicarFiltro();
-}
+    fila: function(est, estadoGen, celdas, totP, totA, totS) {
+        return _renderFilaEst(est, celdas, totP, totA, totS, estadoGen);
+    }
+};
 
 /* calcEstadoGeneral → cohorte_tabla.js */
 
