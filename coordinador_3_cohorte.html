@@ -681,6 +681,7 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js?v=20250529"></script>
+<script src="cohorte_tabla.js?v=20250602"></script>
 <script>
 const QS = new URLSearchParams(location.search);
 const COHORTE_ID  = QS.get('cohorte_id') || QS.get('cohorteId') || '';
@@ -882,19 +883,20 @@ function normalizarCobro(c) {
         else saldo = Math.max(0, montoFinal - montoAbonado);
     }
 
-    let estado = 'NO_ABONADA';
-    const hoyStr = new Date().toISOString().split('T')[0];
-
-    if (['A_DEFINIR', 'A DEFINIR', 'NO DEFINIDO', 'NO DEFINIDA'].includes(estadoExplicito) || montoFinal == null) estado = 'A_DEFINIR';
-    else if (['NO_APLICA', 'NO APLICA', 'NO_DEBE', 'NO DEBE'].includes(estadoExplicito) || montoFinal === 0) estado = 'NO_APLICA';
-    else if (['ABONADA', 'PAGADA', 'PAGADO'].includes(estadoExplicito) || (montoFinal != null && saldo <= 0 && montoAbonado > 0)) estado = 'ABONADA';
-    else if (['PAGO PARCIAL', 'PAGO_PARCIAL', 'PARCIAL'].includes(estadoExplicito) || (montoAbonado > 0 && saldo > 0)) estado = 'PAGO_PARCIAL';
-    else if (['PENDIENTE', 'PENDIENTE DE VERIFICACION', 'PENDIENTE DE REVISION'].includes(estadoExplicito)) estado = 'PENDIENTE';
-    else if (['NO ABONADA', 'NO_ABONADA', 'NO ABONADO'].includes(estadoExplicito)) estado = 'NO_ABONADA';
-    else if (['EN MORA', 'EN_MORA', 'MORA', 'VENCIDA'].includes(estadoExplicito)) estado = 'EN_MORA';
-    else if (saldo > 0 && fechaVto && fechaVto < hoyStr) estado = 'EN_MORA';
-    else if (saldo > 0) estado = 'NO_ABONADA';
-    else if (saldo <= 0) estado = 'ABONADA';
+    // Estado unificado: una sola fuente de verdad → resolverEstadoCobro (cohorte_tabla.js)
+    var noAplica = ['NO_APLICA', 'NO APLICA', 'NO_DEBE', 'NO DEBE'].includes(estadoExplicito);
+    var comprobanteUrl = c.comprobante_url || c.comprobanteUrl || null;
+    var reciboUrl      = c.recibo_url || c.reciboUrl || null;
+    var estado = resolverEstadoCobro({
+        no_aplica: noAplica,
+        monto_final: montoFinal,
+        saldo_pendiente: saldo,
+        monto_abonado: montoAbonado,
+        estado: estadoExplicito,
+        fecha_vencimiento: fechaVto,
+        comprobante_url: comprobanteUrl,
+        recibo_url: reciboUrl
+    });
 
     return {
         cobro_id: c.cobro_id || c.cobroId || c.id || '',
@@ -909,8 +911,9 @@ function normalizarCobro(c) {
         monto_abonado: montoAbonado,
         saldo_pendiente: saldo,
         estado: estado,
-        comprobante_url: c.comprobante_url || c.comprobanteUrl || null,
-        recibo_url: c.recibo_url || c.reciboUrl || null
+        no_aplica: estado === 'NO_APLICA',
+        comprobante_url: comprobanteUrl,
+        recibo_url: reciboUrl
     };
 }
 
@@ -1041,12 +1044,7 @@ function renderTabla() {
     onChk();
 }
 
-function calcEstadoGeneral(cobros) {
-    const pesos = { EN_MORA:6, PAGO_PARCIAL:5, PENDIENTE:4, NO_ABONADA:3, A_DEFINIR:2, ABONADA:1 };
-    let peor = 'ABONADA';
-    cobros.forEach(c => { if (c && (pesos[c.estado] || 0) > (pesos[peor] || 0)) peor = c.estado; });
-    return peor;
-}
+/* calcEstadoGeneral → cohorte_tabla.js */
 
 function actualizarStats() {
     const ests = V.data.estudiantes;
