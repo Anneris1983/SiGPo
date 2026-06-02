@@ -132,7 +132,7 @@ async function aplicarMoraCohorteJS(cohorteId) {
 var CT_PAGE_SIZE = 30;
 
 function actualizarFiltros() {
-    var ests = (window.V && V.data && V.data.estudiantes) || [];
+    var ests = (typeof V !== 'undefined' && V.data && V.data.estudiantes) || [];
     var labels = {
         todos: 'Todos', ABONADA: 'Al día', EN_MORA: 'En mora',
         PAGO_PARCIAL: 'Pago parcial', PENDIENTE: 'Pendiente',
@@ -203,8 +203,8 @@ function mostrarMas() {
      profesor → s-mora-cuotas (cantidad de CUOTAS en mora, no estudiantes)
 ══════════════════════════════════════════════════ */
 function actualizarStats() {
-    var ests = (window.V && V.data && V.data.estudiantes) || [];
-    var egresos = (window.V && V.data && V.data.egresos) || [];
+    var ests = (typeof V !== 'undefined' && V.data && V.data.estudiantes) || [];
+    var egresos = (typeof V !== 'undefined' && V.data && V.data.egresos) || [];
     var recaud = ests.reduce(function(s, e) {
         return s + (e.cobros || []).reduce(function(ss, c) { return ss + calcMontoAbonado(c); }, 0);
     }, 0);
