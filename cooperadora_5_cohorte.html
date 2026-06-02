@@ -1562,8 +1562,11 @@
                         ? Number(c.monto_abonado)
                         : Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
                     var saldoC = Number(c.saldo_pendiente||0);
+                    var _hoyStr = new Date().toISOString().split('T')[0];
+                    var _esPagada = c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL';
                     var estadoRaw = c.no_aplica ? 'NODEBE'
                         : (abonado > 0 && saldoC > 0) ? 'PAGO_PARCIAL'
+                        : (!_esPagada && c.fecha_vencimiento && c.fecha_vencimiento < _hoyStr && Number(c.monto_final||0) > 0) ? 'EN_MORA'
                         : (c.estado||'NO_ABONADA');
                     dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, montoTransferido:(c.monto_transferido ? Number(c.monto_transferido) : null), texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'', recibo_url:c.recibo_url||'' });
                 });
@@ -1641,15 +1644,15 @@
             const estadoOriginal = (cuota.estado || '').toString().toUpperCase().trim();
             let estado = 'noabonada'; // default: sin comprobante, no venció
 
-            if (cuota.monto_final != null && Number(cuota.monto_final) === 0) estado = 'nodebe';
+            if (cuota.no_aplica || cuota.noDebeAbonar) estado = 'nodebe';
             else if (estadoOriginal === 'ABONADA' || estadoOriginal === 'PAGADA') estado = 'abonada';
             else if (estadoOriginal === 'PAGO_PARCIAL' || estadoOriginal === 'PARCIAL') estado = 'parcial';
             else if (estadoOriginal === 'VENCIDA' || estadoOriginal === 'MORA' || estadoOriginal === 'EN MORA' || estadoOriginal === 'EN_MORA') estado = 'mora';
             else if (estadoOriginal === 'PENDIENTE') estado = 'pendiente';
             else if (estadoOriginal === 'NO_ABONADA' || estadoOriginal === 'NO ABONADA') estado = 'noabonada';
             else if (estadoOriginal === 'A_DEFINIR' || estadoOriginal === 'A DEFINIR' || estadoOriginal === 'NO DEFINIDO') estado = 'adefinir';
-            else if (estadoOriginal === 'NODEBE' || estadoOriginal === 'NO_DEBE_ABONAR') estado = 'nodebe';
-            else if (cuota.noDebeAbonar) estado = 'nodebe';
+            else if (estadoOriginal === 'NODEBE' || estadoOriginal === 'NO_APLICA' || estadoOriginal === 'NO_DEBE_ABONAR') estado = 'nodebe';
+            else if (Number(cuota.monto_final || cuota.montoFinal || 0) === 0) estado = 'adefinir';
 
             // Si hay comprobante subido pero el estado DB es inconsistente (carga manual), forzar pendiente
             if (cuota.comprobante_url && estado !== 'abonada' && estado !== 'parcial' && estado !== 'nodebe' && estado !== 'adefinir') {

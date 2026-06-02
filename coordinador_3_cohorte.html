@@ -2005,13 +2005,14 @@ async function eliminarSeleccionadas() {
 
             var noAplica = document.getElementById('cpop-noapl').checked;
             var montoStr = document.getElementById('cpop-monto').value.trim();
-            var tieneMonto = montoStr !== '' && !isNaN(parseFloat(montoStr));
+            var tieneMonto = montoStr !== '' && !isNaN(parseFloat(montoStr)) && parseFloat(montoStr) > 0;
 
             spin(true);
             cerrarCeldaPopup();
             try {
                 var sb = await getSupabase();
                 var res;
+                var nuevoEstado = null;
 
                 if (noAplica) {
                     res = await sb.from('cobros').update({
@@ -2029,7 +2030,7 @@ async function eliminarSeleccionadas() {
                     var montoFinal = pct > 0 ? Math.round(montoOriginal * (1 - pct / 100) * 100) / 100 : montoOriginal;
                     var fVenc = cpopInfo.fecha_vencimiento || null;
                     var hoy = new Date().toISOString().split('T')[0];
-                    var nuevoEstado = (fVenc && fVenc < hoy) ? 'EN_MORA' : 'NO_ABONADA';
+                    nuevoEstado = (fVenc && fVenc < hoy) ? 'EN_MORA' : 'NO_ABONADA';
                     res = await sb.from('cobros').update({
                         monto_original: montoOriginal, monto_final: montoFinal,
                         saldo_pendiente: montoFinal, descuento_porcentaje: pct,
@@ -2038,6 +2039,7 @@ async function eliminarSeleccionadas() {
                 }
 
                 if (res.error) throw res.error;
+                if (nuevoEstado === 'EN_MORA') await aplicarMoraCohorteJS(COHORTE_ID);
                 toast('Cuota actualizada ✓', 'ok');
                 await cargar();
             } catch(e) {
