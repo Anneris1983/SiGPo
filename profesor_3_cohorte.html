@@ -210,6 +210,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="supabase.js?v=20250529"></script>
+<script src="cohorte_tabla.js?v=20250602"></script>
 <script>
 var COHORTE_ID = parseInt(new URLSearchParams(location.search).get('cohorte_id'), 10) || 0;
 var V = { data: null, filtro: 'todos' };
@@ -308,18 +309,19 @@ function normalizarCobro(c) {
     var descuento     = Number(c.descuento_porcentaje || 0);
     var fechaVto      = c.fecha_vencimiento || '';
     var estadoExpl    = String(c.estado || '').toUpperCase().trim().normalize('NFD').replace(/[̀-ͯ]/g,'');
-    var hoyStr        = new Date().toISOString().split('T')[0];
-    var estado = 'NO_ABONADA';
-    if (['A_DEFINIR','A DEFINIR','NO DEFINIDO'].includes(estadoExpl) || montoFinal == null) estado = 'A_DEFINIR';
-    else if (montoFinal === 0) estado = 'NO_APLICA';
-    else if (['ABONADA','PAGADA','PAGADO'].includes(estadoExpl) || (montoFinal != null && saldo <= 0 && montoAbonado > 0)) estado = 'ABONADA';
-    else if (['PAGO PARCIAL','PARCIAL'].includes(estadoExpl) || (montoAbonado > 0 && saldo > 0)) estado = 'PAGO_PARCIAL';
-    else if (['PENDIENTE'].includes(estadoExpl)) estado = 'PENDIENTE';
-    else if (['EN MORA','MORA','VENCIDA'].includes(estadoExpl)) estado = 'EN_MORA';
-    else if (saldo > 0 && fechaVto && fechaVto < hoyStr) estado = 'EN_MORA';
-    else if (saldo > 0) estado = 'NO_ABONADA';
-    else estado = 'ABONADA';
-    return { cobro_id:c.cobro_id||'', concepto:concepto, concepto_base:concepto, periodo:c.periodo||'', fecha_vencimiento:fechaVto, fecha_pago:c.fecha_pago||'', monto_original:montoOriginal, descuento_porcentaje:descuento, monto_final:montoFinal, monto_abonado:montoAbonado, saldo_pendiente:saldo, estado:estado, comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null };
+    // Estado unificado: una sola fuente de verdad → resolverEstadoCobro (cohorte_tabla.js)
+    var noAplica = ['NO_APLICA','NO APLICA','NO_DEBE','NO DEBE'].includes(estadoExpl);
+    var estado = resolverEstadoCobro({
+        no_aplica: noAplica,
+        monto_final: montoFinal,
+        saldo_pendiente: saldo,
+        monto_abonado: montoAbonado,
+        estado: estadoExpl,
+        fecha_vencimiento: fechaVto,
+        comprobante_url: c.comprobante_url || null,
+        recibo_url: c.recibo_url || null
+    });
+    return { cobro_id:c.cobro_id||'', concepto:concepto, concepto_base:concepto, periodo:c.periodo||'', fecha_vencimiento:fechaVto, fecha_pago:c.fecha_pago||'', monto_original:montoOriginal, descuento_porcentaje:descuento, monto_final:montoFinal, monto_abonado:montoAbonado, saldo_pendiente:saldo, estado:estado, no_aplica:estado==='NO_APLICA', comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null };
 }
 
 /* ── DERIVAR COLUMNAS ── */
@@ -410,13 +412,7 @@ function renderTabla() {
     aplicarFiltro();
 }
 
-/* ── CALC ESTADO GENERAL ── */
-function calcEstadoGeneral(cobros) {
-    var pesos = { EN_MORA:6, PAGO_PARCIAL:5, PENDIENTE:4, NO_ABONADA:3, A_DEFINIR:2, ABONADA:1 };
-    var peor = 'ABONADA';
-    cobros.forEach(function(c){ if(c && (pesos[c.estado]||0) > (pesos[peor]||0)) peor = c.estado; });
-    return peor;
-}
+/* ── CALC ESTADO GENERAL → cohorte_tabla.js ── */
 
 /* ── STATS ── */
 function actualizarStats() {
