@@ -1063,55 +1063,8 @@ function actualizarStats() {
     sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
 }
 
-function actualizarFiltros() {
-    const ests = V.data.estudiantes;
-    const cg = e => calcEstadoGeneral(e.cobros);
-    const n = f => f==='todos' ? ests.length : ests.filter(e=>cg(e)===f).length;
-    const labels = { todos:'Todos', ABONADA:'Al día', EN_MORA:'En mora', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'Pendiente', NO_ABONADA:'No abonada', A_DEFINIR:'A definir' };
-    document.querySelectorAll('.filter-btn').forEach(b => { b.textContent = `${labels[b.dataset.f]} (${n(b.dataset.f)})`; });
-}
-
-function initFiltros() {
-    document.querySelectorAll('.filter-btn').forEach(b => {
-        b.onclick = () => {
-            V.filtro = b.dataset.f;
-            document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-            aplicarFiltro();
-        };
-    });
-}
-
-var _PAGE_SIZE = 30;
-
-function aplicarFiltro() {
-    V.page = 1;
-    _aplicarFiltroYPag();
-}
-
-function _aplicarFiltroYPag() {
-    let vis = 0, ocultas = 0;
-    document.querySelectorAll('.fila-est').forEach(tr => {
-        const ok = V.filtro==='todos' || tr.dataset.est===V.filtro;
-        if (!ok) { tr.classList.add('oculta'); return; }
-        vis++;
-        const enPag = vis <= V.page * _PAGE_SIZE;
-        tr.classList.toggle('oculta', !enPag);
-        if (!enPag) ocultas++;
-    });
-    document.getElementById('empty').classList.toggle('show', vis===0);
-    const wrap = document.getElementById('wrap-mas-est');
-    const btn  = document.getElementById('btn-mas-est');
-    if (wrap && btn) {
-        wrap.style.display = ocultas > 0 ? '' : 'none';
-        btn.textContent = 'Mostrar ' + Math.min(ocultas, _PAGE_SIZE) + ' más (' + ocultas + ' restantes)';
-    }
-}
-
-function mostrarMas() {
-    V.page++;
-    _aplicarFiltroYPag();
-}
+/* Filtros y paginación (actualizarFiltros, initFiltros, aplicarFiltro,
+   _aplicarFiltroYPag, mostrarMas) → cohorte_tabla.js */
 
 function toggleAll(cb) {
     document.querySelectorAll('.chk-e').forEach(c => {

@@ -1272,69 +1272,8 @@ function actualizarStats() {
     sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
 }
 
-function actualizarFiltros() {
-    var ests = V.data.estudiantes;
-    var labels = {
-        todos: 'Todos', ABONADA: 'Al día', EN_MORA: 'En mora',
-        PAGO_PARCIAL: 'Pago parcial', PENDIENTE: 'Pendiente',
-        NO_ABONADA: 'No abonada', A_DEFINIR: 'A definir', READMISION: 'Readmisión'
-    };
-    document.querySelectorAll('.filter-btn').forEach(function(b) {
-        var f = b.dataset.f;
-        var n = f === 'todos'
-            ? ests.length
-            : f === 'READMISION'
-                ? ests.filter(function(e){ return e.cobros.some(function(c){ return c.es_readmision; }); }).length
-                : ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === f; }).length;
-        b.textContent = labels[f] + ' (' + n + ')';
-    });
-}
-
-function initFiltros() {
-    document.querySelectorAll('.filter-btn').forEach(function(b) {
-        b.onclick = function() {
-            V.filtro = b.dataset.f;
-            document.querySelectorAll('.filter-btn').forEach(function(x) { x.classList.remove('active'); });
-            b.classList.add('active');
-            aplicarFiltro();
-        };
-    });
-}
-
-var _PAGE_SIZE = 30;
-
-function aplicarFiltro() {
-    V.page = 1;
-    _aplicarFiltroYPag();
-}
-
-function _aplicarFiltroYPag() {
-    var vis = 0, ocultas = 0;
-    document.querySelectorAll('.fila-est').forEach(function(tr) {
-        var ok = V.filtro === 'todos'
-            ? true
-            : V.filtro === 'READMISION'
-                ? tr.dataset.readmision === '1'
-                : tr.dataset.est === V.filtro;
-        if (!ok) { tr.classList.add('oculta'); return; }
-        vis++;
-        var enPag = vis <= V.page * _PAGE_SIZE;
-        tr.classList.toggle('oculta', !enPag);
-        if (!enPag) ocultas++;
-    });
-    document.getElementById('empty').classList.toggle('show', vis === 0);
-    var wrap = document.getElementById('wrap-mas-est');
-    var btn  = document.getElementById('btn-mas-est');
-    if (wrap && btn) {
-        wrap.style.display = ocultas > 0 ? '' : 'none';
-        btn.textContent = 'Mostrar ' + Math.min(ocultas, _PAGE_SIZE) + ' más (' + ocultas + ' restantes)';
-    }
-}
-
-function mostrarMas() {
-    V.page++;
-    _aplicarFiltroYPag();
-}
+/* Filtros y paginación (actualizarFiltros, initFiltros, aplicarFiltro,
+   _aplicarFiltroYPag, mostrarMas) → cohorte_tabla.js */
 
 /* ══════════════════════════════════════════════════
    SELECCIÓN MÚLTIPLE

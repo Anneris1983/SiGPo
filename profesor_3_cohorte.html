@@ -434,32 +434,8 @@ function actualizarStats() {
 }
 
 /* ── FILTROS ── */
-function actualizarFiltros() {
-    var ests = V.data.estudiantes;
-    var cg = function(e){ return calcEstadoGeneral(e.cobros); };
-    var n = function(f){ return f==='todos' ? ests.length : ests.filter(function(e){ return cg(e)===f; }).length; };
-    var labels = { todos:'Todos', ABONADA:'Al día', EN_MORA:'En mora', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'Pendiente', NO_ABONADA:'No abonada', A_DEFINIR:'A definir' };
-    document.querySelectorAll('.filter-btn').forEach(function(b){ b.textContent = labels[b.dataset.f] + ' (' + n(b.dataset.f) + ')'; });
-}
-function initFiltros() {
-    document.querySelectorAll('.filter-btn').forEach(function(b) {
-        b.onclick = function() {
-            V.filtro = b.dataset.f;
-            document.querySelectorAll('.filter-btn').forEach(function(x){ x.classList.remove('active'); });
-            b.classList.add('active');
-            aplicarFiltro();
-        };
-    });
-}
-function aplicarFiltro() {
-    var vis = 0;
-    document.querySelectorAll('.fila-est').forEach(function(tr) {
-        var ok = V.filtro === 'todos' || tr.dataset.est === V.filtro;
-        tr.classList.toggle('oculta', !ok);
-        if (ok) vis++;
-    });
-    document.getElementById('empty').classList.toggle('show', vis === 0);
-}
+/* Filtros (actualizarFiltros, initFiltros, aplicarFiltro) → cohorte_tabla.js
+   Esta vista no pagina; el módulo lo autodetecta (sin #btn-mas-est). */
 
 /* ── ARCHIVO ── */
 function verArchivo(url) { window.open(url, '_blank'); }

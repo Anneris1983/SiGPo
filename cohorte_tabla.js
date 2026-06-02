@@ -117,3 +117,79 @@ async function aplicarMoraCohorteJS(cohorteId) {
     var sb = await getSupabase();
     await sb.rpc('aplicar_mora_cohorte', { p_cohorte_id: cohorteId });
 }
+
+/* ══════════════════════════════════════════════════
+   FILTROS Y PAGINACIÓN DE LA TABLA
+   Operan sobre el estado global `V` (V.data.estudiantes, V.filtro, V.page)
+   y sobre el DOM estándar de las 4 vistas:
+     .filter-btn[data-f]  → chips de filtro
+     .fila-est[data-est]  → filas de estudiante (data-readmision opcional)
+     #empty               → mensaje "sin resultados"
+     #wrap-mas-est / #btn-mas-est → paginación (opcional; profesor no la usa)
+   La paginación se autodetecta: si no existe #btn-mas-est, se muestran todas
+   las filas (comportamiento de la vista profesor, sin "mostrar más").
+══════════════════════════════════════════════════ */
+var CT_PAGE_SIZE = 30;
+
+function actualizarFiltros() {
+    var ests = (window.V && V.data && V.data.estudiantes) || [];
+    var labels = {
+        todos: 'Todos', ABONADA: 'Al día', EN_MORA: 'En mora',
+        PAGO_PARCIAL: 'Pago parcial', PENDIENTE: 'Pendiente',
+        NO_ABONADA: 'No abonada', A_DEFINIR: 'A definir', READMISION: 'Readmisión'
+    };
+    document.querySelectorAll('.filter-btn').forEach(function(b) {
+        var f = b.dataset.f;
+        var n;
+        if (f === 'todos') n = ests.length;
+        else if (f === 'READMISION') n = ests.filter(function(e){ return (e.cobros||[]).some(function(c){ return c && c.es_readmision; }); }).length;
+        else n = ests.filter(function(e){ return calcEstadoGeneral(e.cobros) === f; }).length;
+        b.textContent = (labels[f] || f) + ' (' + n + ')';
+    });
+}
+
+function initFiltros() {
+    document.querySelectorAll('.filter-btn').forEach(function(b) {
+        b.onclick = function() {
+            V.filtro = b.dataset.f;
+            document.querySelectorAll('.filter-btn').forEach(function(x){ x.classList.remove('active'); });
+            b.classList.add('active');
+            aplicarFiltro();
+        };
+    });
+}
+
+function aplicarFiltro() {
+    V.page = 1;
+    _aplicarFiltroYPag();
+}
+
+function _aplicarFiltroYPag() {
+    var paginar = !!document.getElementById('btn-mas-est');
+    var vis = 0, ocultas = 0;
+    document.querySelectorAll('.fila-est').forEach(function(tr) {
+        var ok = V.filtro === 'todos'
+            ? true
+            : V.filtro === 'READMISION'
+                ? tr.dataset.readmision === '1'
+                : tr.dataset.est === V.filtro;
+        if (!ok) { tr.classList.add('oculta'); return; }
+        vis++;
+        var enPag = !paginar || vis <= V.page * CT_PAGE_SIZE;
+        tr.classList.toggle('oculta', !enPag);
+        if (!enPag) ocultas++;
+    });
+    var emptyEl = document.getElementById('empty');
+    if (emptyEl) emptyEl.classList.toggle('show', vis === 0);
+    var wrap = document.getElementById('wrap-mas-est');
+    var btn  = document.getElementById('btn-mas-est');
+    if (wrap && btn) {
+        wrap.style.display = ocultas > 0 ? '' : 'none';
+        btn.textContent = 'Mostrar ' + Math.min(ocultas, CT_PAGE_SIZE) + ' más (' + ocultas + ' restantes)';
+    }
+}
+
+function mostrarMas() {
+    V.page++;
+    _aplicarFiltroYPag();
+}
