@@ -30,7 +30,6 @@ Deno.serve(async (req) => {
 
   try {
     // 1. Autenticación: cualquier usuario con sesión válida puede disparar envíos.
-    //    (El propio GAS valida que los destinatarios sean usuarios activos registrados.)
     const token = (req.headers.get('Authorization') || '').replace('Bearer ', '').trim()
     if (!token) return json({ ok: false, error: 'Sin token' }, 401)
 
@@ -50,7 +49,7 @@ Deno.serve(async (req) => {
     const to = String(body.to || '').trim()
     const subject = String(body.subject || '').trim()
     const emailBody = String(body.body || '').trim()
-    const replyTo = String(body.replyTo || '').trim()
+    const replyToClient = String(body.replyTo || '').trim()
 
     if (!to || !subject || !emailBody) {
       return json({ ok: false, error: 'Faltan campos: to, subject, body' }, 400)
@@ -69,19 +68,19 @@ Deno.serve(async (req) => {
     const secret = mapa['GAS_SECRET']
     if (!secret) return json({ ok: false, error: 'GAS_SECRET no configurado en el Vault' }, 500)
 
-    // 4. Resolver la gas_url desde la BD (nunca desde el cliente) para evitar
-    //    que un usuario apunte el relay a una URL arbitraria y robe el secreto.
+    // 4. Resolver gas_url y email_remitente desde la BD
     let gasUrl = ''
+    let fromEmail = ''
     if (programaId !== null && programaId !== '') {
       const { data: prog } = await sbAdmin
         .from('programas')
-        .select('gas_url')
+        .select('gas_url, email_remitente')
         .eq('programa_id', programaId)
         .single()
       if (prog && prog.gas_url) gasUrl = String(prog.gas_url).trim()
+      if (prog && prog.email_remitente) fromEmail = String(prog.email_remitente).trim()
     }
     if (!gasUrl) gasUrl = (mapa['GAS_FALLBACK_URL'] || '').trim()
-
     if (!gasUrl) return json({ ok: false, error: 'Sin gas_url configurada' }, 400)
 
     // 5. Restringir a Google Apps Script (defensa adicional anti-SSRF)
@@ -92,12 +91,43 @@ Deno.serve(async (req) => {
     }
 
     // 6. Reenviar al GAS con el secreto inyectado del lado servidor
-    const res = await fetch(gasUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ secret, to, subject, body: emailBody, replyTo }),
-    })
-    const out = await res.json().catch(() => ({ ok: false, error: 'Respuesta no JSON del GAS' }))
+    const replyTo = fromEmail || replyToClient
+    console.log(`[enviar-email] programa=${programaId} to=${to} from=${fromEmail} replyTo=${replyTo} gasUrl=${gasUrl.slice(-30)}`)
+
+    const gasPayload = JSON.stringify({ secret, to, subject, body: emailBody, from: fromEmail, replyTo })
+    let gasRes: Response
+    try {
+      gasRes = await fetch(gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: gasPayload,
+        redirect: 'follow',
+      })
+    } catch (fetchErr) {
+      return json({ ok: false, error: 'Error de red al contactar GAS: ' + (fetchErr as Error).message }, 200)
+    }
+
+    const rawText = await gasRes.text()
+    console.log(`[enviar-email] GAS status=${gasRes.status} redirected=${gasRes.redirected} body=${rawText.slice(0, 300)}`)
+
+    // Si la respuesta es HTML (error de Google), devolver diagnóstico claro
+    if (rawText.trimStart().startsWith('<')) {
+      const tituloMatch = rawText.match(/<title[^>]*>([^<]*)<\/title>/i)
+      const titulo = tituloMatch ? tituloMatch[1] : 'página HTML'
+      return json({
+        ok: false,
+        error: `GAS devolvió HTML (${gasRes.status}): ${titulo}. Verificar que el deployment tenga acceso "Cualquier persona" y versión con doPost.`,
+        debug: { status: gasRes.status, redirected: gasRes.redirected, snippet: rawText.slice(0, 200) }
+      }, 200)
+    }
+
+    let out: Record<string, unknown>
+    try {
+      out = JSON.parse(rawText)
+    } catch (_) {
+      return json({ ok: false, error: `GAS devolvió texto no JSON (${gasRes.status}): ${rawText.slice(0, 100)}` }, 200)
+    }
+
     return json(out, 200)
 
   } catch (e) {

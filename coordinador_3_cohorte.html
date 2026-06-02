@@ -1544,6 +1544,7 @@ async function enviarEmailGas(programaId, to, subject, body, replyTo) {
         if (resp.data && resp.data.ok === true) return true;
         var detalle = (resp.data && resp.data.error) ? String(resp.data.error) : 'el servidor de correo rechazó el envío';
         console.error('GAS rechazó para', to, ':', detalle);
+        if (resp.data && resp.data.debug) console.error('GAS debug:', JSON.stringify(resp.data.debug));
         return detalle;
     } catch(err) {
         console.error('enviarEmailGas excepción:', err);
