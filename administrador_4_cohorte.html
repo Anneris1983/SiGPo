@@ -837,8 +837,9 @@ function resolverEstadoCobro(c) {
     // PENDIENTE: comprobante subido, esperando revisión cooperadora
     if (estadoDb === 'PENDIENTE' || (tieneComp && !tieneRecibo && montoAbonado <= 0)) return 'PENDIENTE';
 
-    // NO_APLICA: monto_final=$0 significa que no debe pagar esa cuota
-    if (saldo !== null && saldo <= 0 && Number(c.monto_final) === 0) return 'NO_APLICA';
+    // NO_APLICA: monto_final=$0 Y el campo no_aplica es true explícitamente.
+    // Si no_aplica=false, monto=0 es un dato incompleto → A_DEFINIR, no NO_APLICA.
+    if (saldo !== null && saldo <= 0 && Number(c.monto_final) === 0 && c.no_aplica === true) return 'NO_APLICA';
     // ABONADA: recibo cargado + saldo = 0, o estado en BD ya es ABONADA con saldo = 0 (datos importados)
     if (saldo !== null && saldo <= 0 && (tieneRecibo || estadoDb === 'ABONADA')) return 'ABONADA';
 
@@ -3097,7 +3098,9 @@ async function guardarCeldaPopup() {
 
     var noAplica = document.getElementById('cpop-noapl').checked;
     var montoStr = document.getElementById('cpop-monto').value.trim();
-    var tieneMonto = montoStr !== '' && !isNaN(parseFloat(montoStr));
+    var montoNum  = parseFloat(montoStr);
+    // Monto=0 sin no_aplica es un dato incompleto → tratarlo como sin monto (A_DEFINIR)
+    var tieneMonto = montoStr !== '' && !isNaN(montoNum) && montoNum > 0;
 
     spin(true);
     cerrarCeldaPopup();
