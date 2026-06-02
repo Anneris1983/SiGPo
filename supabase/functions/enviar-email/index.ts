@@ -96,39 +96,27 @@ Deno.serve(async (req) => {
 
     const gasPayload = JSON.stringify({ secret, to, subject, body: emailBody, from: fromEmail, replyTo })
 
-    // GAS web apps sometimes return a 302 redirect. The default redirect:'follow'
-    // converts POST→GET per HTTP spec, so doPost never runs. We handle it manually.
+    // GAS web apps responden con un 302 hacia googleusercontent.com donde se
+    // sirve el resultado de doPost. Seguimos el redirect (follow) para obtener
+    // el JSON. NO usar 'manual': en Deno produce una respuesta opaca sin body.
     let gasRes: Response
     try {
       gasRes = await fetch(gasUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: gasPayload,
-        redirect: 'manual',
+        redirect: 'follow',
       })
     } catch (fetchErr) {
       return json({ ok: false, error: 'Error de red al contactar GAS: ' + (fetchErr as Error).message }, 200)
     }
 
-    if (gasRes.status >= 300 && gasRes.status < 400) {
-      const location = gasRes.headers.get('Location') || gasRes.headers.get('location') || ''
-      console.log(`[enviar-email] GAS redirect ${gasRes.status} → ${location.slice(-60)}`)
-      if (!location) {
-        return json({ ok: false, error: `GAS redirigió (${gasRes.status}) sin Location header` }, 200)
-      }
-      try {
-        gasRes = await fetch(location, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: gasPayload,
-          redirect: 'follow',
-        })
-      } catch (fetchErr2) {
-        return json({ ok: false, error: 'Error de red en redirect GAS: ' + (fetchErr2 as Error).message }, 200)
-      }
+    let rawText = ''
+    try {
+      rawText = await gasRes.text()
+    } catch (readErr) {
+      return json({ ok: false, error: 'No se pudo leer respuesta del GAS: ' + (readErr as Error).message }, 200)
     }
-
-    const rawText = await gasRes.text()
     console.log(`[enviar-email] GAS status=${gasRes.status} redirected=${gasRes.redirected} body=${rawText.slice(0, 300)}`)
 
     // Si la respuesta es HTML (error de Google), devolver diagnóstico claro
