@@ -231,3 +231,77 @@ function actualizarStats() {
         sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
     }
 }
+
+/* ══════════════════════════════════════════════════
+   RENDER DE LA TABLA — esqueleto común dirigido por configuración de vista.
+
+   Cada vista define en su <script> un objeto global `CT_VIEW` con el HTML
+   específico de su rol (que difiere de verdad: columnas, botones, edición),
+   manteniendo sus propios helpers locales (encodeAttr, verDocumento,
+   abrirCeldaPopup, navegar, etc.) por cierre. El módulo aporta el armado
+   del thead, el recorrido de estudiantes, el cobrosMap, los totales y el
+   filtrado, que es la parte realmente compartida.
+
+   CT_VIEW = {
+     leadingHeader: '<th>…</th>…',  // columnas ANTES de las cuotas (check, nombre, desc, email, estado cohorte)
+     totales(est, columnas, cobrosMap) -> { p, a, s },
+     celda(c, est, estado, montoAbonado, col) -> '<td>…</td>',   // cobro existente
+     celdaVacia(est, col) -> '<td>…</td>',                       // sin cobro en esa columna
+     fila(est, estadoGen, celdas, totP, totA, totS) -> <tr> | string,
+     afterRender()  // opcional (p.ej. onChk)
+   }
+   La cabecera de cuotas y la de totales son idénticas en las 4 vistas, así
+   que las genera el módulo.
+══════════════════════════════════════════════════ */
+var CT_TRAILING_HEADER =
+      '<th class="tot-hdr th-pagar">Total a<br>Pagar</th>'
+    + '<th class="tot-hdr th-abonado">Total<br>Abonado</th>'
+    + '<th class="tot-hdr th-saldo">Saldo<br>Pendiente</th>';
+
+function renderTabla() {
+    var cfg = window.CT_VIEW || {};
+    V.page = 1;
+    var columnas = V.data.columnas, estudiantes = V.data.estudiantes;
+    var thead = document.getElementById('t-head');
+    var tbody = document.getElementById('t-body');
+
+    var colsHtml = columnas.map(function(c) {
+        return '<th class="col-cuota">' + escapeHtml(c.concepto_base)
+             + '<br><span style="font-weight:400;color:#fff;font-size:9px;">' + escapeHtml(c.periodo || '') + '</span></th>';
+    }).join('');
+    thead.innerHTML = '<tr>' + (cfg.leadingHeader || '') + colsHtml + CT_TRAILING_HEADER + '</tr>';
+
+    tbody.innerHTML = '';
+    estudiantes.forEach(function(est) {
+        var estadoGen = calcEstadoGeneral(est.cobros);
+
+        var cobrosMap = {};
+        (est.cobros || []).forEach(function(c) {
+            if (!c) return;
+            cobrosMap[keyCuota(c.concepto_base || c.concepto, c.periodo)] = c;
+            cobrosMap[keyCuota(c.concepto, c.periodo)] = c;
+            c._estado_resuelto = resolverEstadoCobro(c);
+            c.monto_abonado = calcMontoAbonado(c);
+        });
+
+        var tot = cfg.totales ? cfg.totales(est, columnas, cobrosMap) : { p: 0, a: 0, s: 0 };
+
+        var celdas = columnas.map(function(col) {
+            var c = cobrosMap[keyCuota(col.concepto_base, col.periodo)];
+            if (!c) return cfg.celdaVacia ? cfg.celdaVacia(est, col) : '<td></td>';
+            return cfg.celda(c, est, c._estado_resuelto, c.monto_abonado, col);
+        }).join('');
+
+        var fila = cfg.fila(est, estadoGen, celdas, tot.p, tot.a, tot.s);
+        if (typeof fila === 'string') {
+            var tmp = document.createElement('tbody');
+            tmp.innerHTML = fila;
+            while (tmp.firstChild) tbody.appendChild(tmp.firstChild);
+        } else if (fila) {
+            tbody.appendChild(fila);
+        }
+    });
+
+    aplicarFiltro();
+    if (typeof cfg.afterRender === 'function') cfg.afterRender();
+}
