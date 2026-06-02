@@ -354,7 +354,7 @@ function renderTabla() {
         + '<th class="col-name">Apellido y Nombre</th>'
         + '<th style="min-width:74px;text-align:center;">Desc %</th>'
         + '<th class="col-email">Correo electrónico</th>'
-        + columnas.map(function(c){ return '<th class="col-cuota">'+escHtml(c.concepto_base)+'<br><span style="font-weight:400;color:#888;font-size:9px;">'+escHtml(c.periodo||'')+'</span></th>'; }).join('')
+        + columnas.map(function(c){ return '<th class="col-cuota">'+escHtml(c.concepto_base)+'<br><span style="font-weight:400;color:#fff;font-size:9px;">'+escHtml(c.periodo||'')+'</span></th>'; }).join('')
         + '<th class="tot-hdr th-pagar">Total a<br>Pagar</th>'
         + '<th class="tot-hdr th-abonado">Total<br>Abonado</th>'
         + '<th class="tot-hdr th-saldo">Saldo<br>Pendiente</th>'

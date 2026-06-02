@@ -947,7 +947,7 @@ function renderTabla() {
       <th style="min-width:74px;text-align:center;">Desc %</th>
       <th class="col-email">Correo electrónico</th>
       <th style="min-width:88px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>Cohorte</th>
-      ${columnas.map(c=>`<th class="col-cuota">${escapeHtml(c.concepto_base)}<br><span style="font-weight:400;color:#767676;font-size:9px;">${escapeHtml(c.periodo || '')}</span></th>`).join('')}
+      ${columnas.map(c=>`<th class="col-cuota">${escapeHtml(c.concepto_base)}<br><span style="font-weight:400;color:#fff;font-size:9px;">${escapeHtml(c.periodo || '')}</span></th>`).join('')}
       <th class="tot-hdr th-pagar">Total a<br>Pagar</th>
       <th class="tot-hdr th-abonado">Total<br>Abonado</th>
       <th class="tot-hdr th-saldo">Saldo<br>Pendiente</th>
