@@ -1531,7 +1531,7 @@ async function reclamarSel() {
         deselAll();
         cerrar('modal-correo');
     } catch(e) { console.error(e); toast('Error al enviar reclamos: ' + e.message, 'err'); }
-    finally { spin(false); }
+    finally { V.busy = false; spin(false); }
 }
 
 async function enviarEmailGas(programaId, to, subject, body, replyTo) {
