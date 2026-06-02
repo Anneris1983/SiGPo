@@ -1519,14 +1519,14 @@ async function reclamarSel() {
             emails.push({ to: est.email, subject: asuntoFinal, body: cuerpoBase + detalle, dni: est.dni });
         });
 
-        var ok = 0, err = 0;
+        var ok = 0, err = 0, ultimoError = '';
         for (var i = 0; i < emails.length; i++) {
             var sent = await enviarEmailGas(progIdEmail, emails[i].to, emails[i].subject, emails[i].body, replyTo);
-            if (sent) ok++; else err++;
+            if (sent === true) ok++; else { err++; if (typeof sent === 'string') ultimoError = sent; }
         }
 
         var msg = '✓ ' + ok + ' email' + (ok!==1?'s':'') + ' enviado' + (ok!==1?'s':'');
-        if (err) msg += ' ⚠️ ' + err + ' error(es)';
+        if (err) msg += ' ⚠️ ' + err + ' error(es)' + (ultimoError ? ': ' + ultimoError : '');
         toast(msg, err ? 'err' : 'ok');
         deselAll();
         cerrar('modal-correo');
@@ -1540,11 +1540,14 @@ async function enviarEmailGas(programaId, to, subject, body, replyTo) {
         var resp = await sb.functions.invoke('enviar-email', {
             body: { programaId: programaId, to: to, subject: subject, body: body, replyTo: replyTo || '' }
         });
-        if (resp.error) { console.error('relay error para', to, ':', resp.error.message); return false; }
-        return (resp.data && resp.data.ok) === true;
+        if (resp.error) { console.error('relay error para', to, ':', resp.error.message); return resp.error.message || 'error de red'; }
+        if (resp.data && resp.data.ok === true) return true;
+        var detalle = (resp.data && resp.data.error) ? String(resp.data.error) : 'el servidor de correo rechazó el envío';
+        console.error('GAS rechazó para', to, ':', detalle);
+        return detalle;
     } catch(err) {
         console.error('enviarEmailGas excepción:', err);
-        return false;
+        return err.message || 'excepción al enviar';
     }
 }
 async function exportarExcel() {
