@@ -95,16 +95,37 @@ Deno.serve(async (req) => {
     console.log(`[enviar-email] programa=${programaId} to=${to} from=${fromEmail} replyTo=${replyTo} gasUrl=${gasUrl.slice(-30)}`)
 
     const gasPayload = JSON.stringify({ secret, to, subject, body: emailBody, from: fromEmail, replyTo })
+
+    // GAS web apps sometimes return a 302 redirect. The default redirect:'follow'
+    // converts POST→GET per HTTP spec, so doPost never runs. We handle it manually.
     let gasRes: Response
     try {
       gasRes = await fetch(gasUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: gasPayload,
-        redirect: 'follow',
+        redirect: 'manual',
       })
     } catch (fetchErr) {
       return json({ ok: false, error: 'Error de red al contactar GAS: ' + (fetchErr as Error).message }, 200)
+    }
+
+    if (gasRes.status >= 300 && gasRes.status < 400) {
+      const location = gasRes.headers.get('Location') || gasRes.headers.get('location') || ''
+      console.log(`[enviar-email] GAS redirect ${gasRes.status} → ${location.slice(-60)}`)
+      if (!location) {
+        return json({ ok: false, error: `GAS redirigió (${gasRes.status}) sin Location header` }, 200)
+      }
+      try {
+        gasRes = await fetch(location, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: gasPayload,
+          redirect: 'follow',
+        })
+      } catch (fetchErr2) {
+        return json({ ok: false, error: 'Error de red en redirect GAS: ' + (fetchErr2 as Error).message }, 200)
+      }
     }
 
     const rawText = await gasRes.text()
