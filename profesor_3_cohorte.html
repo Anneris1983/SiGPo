@@ -348,52 +348,46 @@ function renderHeader() {
 }
 
 /* ── RENDER TABLA ── */
-function renderTabla() {
-    var columnas = V.data.columnas, estudiantes = V.data.estudiantes;
-    var thead = document.getElementById('t-head'), tbody = document.getElementById('t-body');
-
-    thead.innerHTML = '<tr>'
-        + '<th class="col-name">Apellido y Nombre</th>'
+/* renderTabla → cohorte_tabla.js (esqueleto). Esta vista aporta su HTML
+   específico (solo lectura) vía CT_VIEW. */
+var CT_VIEW = {
+    leadingHeader:
+          '<th class="col-name">Apellido y Nombre</th>'
         + '<th style="min-width:74px;text-align:center;">Desc %</th>'
-        + '<th class="col-email">Correo electrónico</th>'
-        + columnas.map(function(c){ return '<th class="col-cuota">'+escHtml(c.concepto_base)+'<br><span style="font-weight:400;color:#fff;font-size:9px;">'+escHtml(c.periodo||'')+'</span></th>'; }).join('')
-        + '<th class="tot-hdr th-pagar">Total a<br>Pagar</th>'
-        + '<th class="tot-hdr th-abonado">Total<br>Abonado</th>'
-        + '<th class="tot-hdr th-saldo">Saldo<br>Pendiente</th>'
-        + '</tr>';
+        + '<th class="col-email">Correo electrónico</th>',
 
-    tbody.innerHTML = '';
-    estudiantes.forEach(function(est) {
-        var estadoGen = calcEstadoGeneral(est.cobros);
+    totales: function(est) {
         var totP = 0, totA = 0, totS = 0;
         est.cobros.forEach(function(c){ if(c){ totP += Number(c.monto_final||0); totA += Number(c.monto_abonado||0); totS += Number(c.saldo_pendiente||0); }});
+        return { p: totP, a: totA, s: totS };
+    },
 
-        var cobrosMap = {};
-        est.cobros.forEach(function(c){ if(c) cobrosMap[(c.concepto_base||c.concepto)+'||'+(c.periodo||'')] = c; });
+    celdaVacia: function(est, col) {
+        return '<td data-est="NO_APLICA">no debe<br>abonar</td>';
+    },
 
-        var celdas = columnas.map(function(col) {
-            var c = cobrosMap[col.concepto_base+'||'+(col.periodo||'')];
-            if (!c) return '<td data-est="NO_APLICA">no debe<br>abonar</td>';
-            var txt = '';
-            if      (c.estado === 'ABONADA')      txt = fMonto(c.monto_final);
-            else if (c.estado === 'PAGO_PARCIAL')  txt = fMonto(c.monto_abonado)+'<br><small style="font-size:9px;opacity:.8;">de '+fMonto(c.monto_final)+'</small>';
-            else if (c.estado === 'PENDIENTE')     txt = 'en revisión';
-            else if (c.estado === 'NO_ABONADA')    txt = fMonto(c.saldo_pendiente||c.monto_final);
-            else if (c.estado === 'EN_MORA')       txt = fMonto(c.saldo_pendiente||c.monto_final);
-            else if (c.estado === 'A_DEFINIR')     txt = 'a definir';
-            else txt = fMonto(c.monto_final);
-            var title = escHtml(c.concepto+' · '+(c.periodo||'')+' | Estado: '+c.estado+' | Abonado: '+fMonto(c.monto_abonado)+' | Saldo: '+fMonto(c.saldo_pendiente)+(c.fecha_vencimiento?' | Vence: '+c.fecha_vencimiento:''));
-            var btnComp   = c.comprobante_url ? '<button class="clink clink-comp" onclick="verArchivo(\''+escJs(c.comprobante_url)+'\')" title="Ver comprobante">📎 Comp.</button>' : '';
-            var btnRecibo = c.recibo_url      ? '<button class="clink clink-recibo" onclick="verArchivo(\''+escJs(c.recibo_url)+'\')" title="Ver recibo">🧾 Recibo</button>' : '';
-            var links = (btnComp||btnRecibo) ? '<div class="cell-links">'+btnComp+btnRecibo+'</div>' : '';
-            var badge = '';
-            if      (c.estado === 'EN_MORA')      badge = '<span class="est-badge badge-mora">En mora</span>';
-            else if (c.estado === 'NO_ABONADA')   badge = '<span class="est-badge badge-noabonada">No abonada</span>';
-            else if (c.estado === 'PAGO_PARCIAL') badge = '<span class="est-badge badge-parcial">Pago parcial</span>';
-            else if (c.estado === 'PENDIENTE')    badge = '<span class="est-badge badge-pendiente">En revisión</span>';
-            return '<td data-est="'+c.estado+'" title="'+title+'">'+badge+txt+links+'</td>';
-        }).join('');
+    celda: function(c, est) {
+        var txt = '';
+        if      (c.estado === 'ABONADA')      txt = fMonto(c.monto_final);
+        else if (c.estado === 'PAGO_PARCIAL')  txt = fMonto(c.monto_abonado)+'<br><small style="font-size:9px;opacity:.8;">de '+fMonto(c.monto_final)+'</small>';
+        else if (c.estado === 'PENDIENTE')     txt = 'en revisión';
+        else if (c.estado === 'NO_ABONADA')    txt = fMonto(c.saldo_pendiente||c.monto_final);
+        else if (c.estado === 'EN_MORA')       txt = fMonto(c.saldo_pendiente||c.monto_final);
+        else if (c.estado === 'A_DEFINIR')     txt = 'a definir';
+        else txt = fMonto(c.monto_final);
+        var title = escHtml(c.concepto+' · '+(c.periodo||'')+' | Estado: '+c.estado+' | Abonado: '+fMonto(c.monto_abonado)+' | Saldo: '+fMonto(c.saldo_pendiente)+(c.fecha_vencimiento?' | Vence: '+c.fecha_vencimiento:''));
+        var btnComp   = c.comprobante_url ? '<button class="clink clink-comp" onclick="verArchivo(\''+escJs(c.comprobante_url)+'\')" title="Ver comprobante">📎 Comp.</button>' : '';
+        var btnRecibo = c.recibo_url      ? '<button class="clink clink-recibo" onclick="verArchivo(\''+escJs(c.recibo_url)+'\')" title="Ver recibo">🧾 Recibo</button>' : '';
+        var links = (btnComp||btnRecibo) ? '<div class="cell-links">'+btnComp+btnRecibo+'</div>' : '';
+        var badge = '';
+        if      (c.estado === 'EN_MORA')      badge = '<span class="est-badge badge-mora">En mora</span>';
+        else if (c.estado === 'NO_ABONADA')   badge = '<span class="est-badge badge-noabonada">No abonada</span>';
+        else if (c.estado === 'PAGO_PARCIAL') badge = '<span class="est-badge badge-parcial">Pago parcial</span>';
+        else if (c.estado === 'PENDIENTE')    badge = '<span class="est-badge badge-pendiente">En revisión</span>';
+        return '<td data-est="'+c.estado+'" title="'+title+'">'+badge+txt+links+'</td>';
+    },
 
+    fila: function(est, estadoGen, celdas, totP, totA, totS) {
         var tr = document.createElement('tr');
         tr.className = 'fila-est';
         tr.dataset.dni = est.dni;
@@ -406,11 +400,9 @@ function renderTabla() {
             + '<td class="cell-tot-pagar">'+fMonto(totP)+'</td>'
             + '<td class="cell-tot-abonado">'+fMonto(totA)+'</td>'
             + '<td class="'+(totS===0?'cell-saldo-cero':'cell-saldo-pos')+'">'+fMonto(totS)+'</td>';
-        tbody.appendChild(tr);
-    });
-
-    aplicarFiltro();
-}
+        return tr;
+    }
+};
 
 /* ── CALC ESTADO GENERAL → cohorte_tabla.js ── */
 
