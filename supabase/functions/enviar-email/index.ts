@@ -1,9 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// ══════════════════════════════════════════════════════════════
-// SiGPo — Relay de envío de email (verify_jwt: false — auth interna)
-// ══════════════════════════════════════════════════════════════
-
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -44,15 +40,13 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Faltan campos: to, subject, body' }, 400)
     }
 
+    // Leer secretos via RPC (vault no es accesible via schema() en REST API)
     const { data: secretos, error: secErr } = await sbAdmin
-      .schema('vault')
-      .from('decrypted_secrets')
-      .select('name, decrypted_secret')
-      .in('name', ['GAS_SECRET', 'GAS_FALLBACK_URL'])
+      .rpc('get_vault_secrets', { secret_names: ['GAS_SECRET', 'GAS_FALLBACK_URL'] })
     if (secErr) return json({ ok: false, error: 'No se pudieron leer secretos: ' + secErr.message }, 200)
 
     const mapa: Record<string, string> = {}
-    for (const s of secretos || []) mapa[s.name] = s.decrypted_secret
+    for (const s of (secretos || [])) mapa[s.name] = s.value
     const secret = mapa['GAS_SECRET']
     if (!secret) return json({ ok: false, error: 'GAS_SECRET no configurado en el Vault' }, 200)
 
@@ -72,9 +66,7 @@ Deno.serve(async (req) => {
 
     let host = ''
     try { host = new URL(gasUrl).host } catch (_) { return json({ ok: false, error: 'gas_url invalida' }, 200) }
-    if (host !== 'script.google.com') {
-      return json({ ok: false, error: 'gas_url no permitida' }, 200)
-    }
+    if (host !== 'script.google.com') return json({ ok: false, error: 'gas_url no permitida' }, 200)
 
     const replyTo = fromEmail || replyToClient
     console.log(`[enviar-email] programa=${programaId} to=${to} from=${fromEmail} replyTo=${replyTo} gasUrl=${gasUrl.slice(-30)}`)
@@ -101,7 +93,7 @@ Deno.serve(async (req) => {
       const titulo = (rawText.match(/<title[^>]*>([^<]*)<\/title>/i) || [])[1] || 'HTML'
       return json({
         ok: false,
-        error: `GAS devolvió HTML (${gasRes.status}): "${titulo}". El deployment debe tener acceso "Cualquier persona" y versión con doPost.`,
+        error: `GAS devolvió HTML (${gasRes.status}): "${titulo}". Verificar deployment: acceso "Cualquier persona" + versión con doPost.`,
         debug: { status: gasRes.status, redirected: gasRes.redirected, snippet: rawText.slice(0, 200) }
       }, 200)
     }
@@ -110,7 +102,7 @@ Deno.serve(async (req) => {
     try {
       out = JSON.parse(rawText)
     } catch (_) {
-      return json({ ok: false, error: `GAS devolvió texto no JSON (status ${gasRes.status}): ${rawText.slice(0, 150)}` }, 200)
+      return json({ ok: false, error: `GAS devolvió no-JSON (status ${gasRes.status}): ${rawText.slice(0, 150)}` }, 200)
     }
 
     return json(out, 200)
