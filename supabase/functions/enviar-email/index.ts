@@ -140,6 +140,10 @@ Deno.serve(async (req) => {
     return json(out, 200)
 
   } catch (e) {
-    return json({ ok: false, error: (e as Error).message }, 500)
+    // Devolvemos 200 con ok:false para que el mensaje real llegue al cliente
+    // (supabase-js oculta el body en respuestas no-2xx con un error genérico).
+    const err = e as Error
+    console.error('[enviar-email] EXCEPCION:', err.message, err.stack)
+    return json({ ok: false, error: 'Excepción en edge function: ' + (err.message || String(e)) }, 200)
   }
 })
