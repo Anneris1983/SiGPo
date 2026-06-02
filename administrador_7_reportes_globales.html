@@ -491,9 +491,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('f-hasta').value = hoy.toISOString().split('T')[0];
 
     mostrarLoader(true);
-    await cargarDatosBase();
-    await aplicarFiltros();
-    mostrarLoader(false);
+    try {
+        await cargarDatosBase();
+        await aplicarFiltros();
+    } catch(e) {
+        console.error('Error cargando datos:', e);
+        if (typeof toast === 'function') toast('Error al cargar los datos: ' + (e.message || e), 'err');
+        var _cont = document.querySelector('.container');
+        if (_cont) {
+            var _b = document.createElement('div');
+            _b.style.cssText = 'background:#fee2e2;border:1px solid var(--clr-danger);color:#991b1b;padding:12px 20px;border-radius:8px;margin:16px;font-size:14px;';
+            _b.innerHTML = '<strong>⚠️ Error al cargar el reporte:</strong> ' + esc(e.message || String(e));
+            _cont.prepend(_b);
+        }
+    } finally {
+        mostrarLoader(false);
+    }
 
     if (typeof obtenerNotificaciones === 'function') {
         obtenerNotificaciones('ADMINISTRADOR').then(renderNotificaciones);

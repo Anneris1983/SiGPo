@@ -527,6 +527,8 @@ async function cargarDatos() {
 
     } catch(e) {
         console.error('cargarDatos error:', e);
+        var _band = document.getElementById('filter-band');
+        if (_band) _band.innerHTML = '<span style="color:var(--clr-danger);">⚠️ Error al cargar los datos: ' + esc(e.message || e) + '</span>';
         iniciarGrafico();
     }
 }
