@@ -621,8 +621,7 @@ function escapeJsF(s) {
     function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
     document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
     // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
-    (function() {
-        if (typeof google !== 'undefined' && google.script) { google.script.run.withSuccessHandler(renderNotificaciones).obtenerNotificaciones('ESTUDIANTE'); }
-        else { renderNotificaciones([{id:'n1',tipo:'cuota',mensaje:'Tu cuota <stro
+</script>
+
 </body>
 </html>
