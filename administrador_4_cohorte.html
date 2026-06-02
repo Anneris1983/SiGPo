@@ -208,6 +208,13 @@
         .cpop-cancel:hover { background: #e2e8f0; }
         .cpop-save   { background: var(--primary); color: white; }
         .cpop-save:hover { background: #8C1A28; }
+        .cpop-annul  { background: #fff1f2; color: #be123c; border: 1.5px solid #fecdd3 !important; }
+        .cpop-annul:hover { background: #ffe4e6; }
+        .cpop-corr-info {
+            font-size: 11px; color: #64748b; background: #f8fafc;
+            border: 1px solid #e2e8f0; border-radius: 6px;
+            padding: 6px 8px; margin-bottom: 10px; line-height: 1.5;
+        }
 
         /* ── SPINNER ── */
         .spinner-overlay {
@@ -733,17 +740,33 @@
 <div id="cell-popup-overlay" class="cell-popup-overlay" style="display:none;" onclick="cerrarCeldaPopup()"></div>
 <div id="cell-popup" class="cell-popup" style="display:none;">
     <div class="cell-popup-title" id="cpop-title">Editar cuota</div>
-    <div class="cell-popup-monto">
-        <span>$</span>
-        <input type="number" id="cpop-monto" min="0" step="100" placeholder="0" aria-label="Monto de la cuota">
+    <!-- Sección normal: definir monto / no_aplica -->
+    <div id="cpop-normal-section">
+        <div class="cell-popup-monto">
+            <span>$</span>
+            <input type="number" id="cpop-monto" min="0" step="100" placeholder="0" aria-label="Monto de la cuota">
+        </div>
+        <label class="cell-popup-noapl" id="cpop-noapl-label" onclick="toggleNoAplica()">
+            <input type="checkbox" id="cpop-noapl" onclick="event.stopPropagation()">
+            <span>No debe pagar esta cuota (NO APLICA)</span>
+        </label>
+        <div class="cell-popup-btns">
+            <button class="cpop-cancel" onclick="cerrarCeldaPopup()">Cancelar</button>
+            <button class="cpop-save" onclick="guardarCeldaPopup()">💾 Guardar</button>
+        </div>
     </div>
-    <label class="cell-popup-noapl" id="cpop-noapl-label" onclick="toggleNoAplica()">
-        <input type="checkbox" id="cpop-noapl" onclick="event.stopPropagation()">
-        <span>No debe pagar esta cuota (NO APLICA)</span>
-    </label>
-    <div class="cell-popup-btns">
-        <button class="cpop-cancel" onclick="cerrarCeldaPopup()">Cancelar</button>
-        <button class="cpop-save" onclick="guardarCeldaPopup()">💾 Guardar</button>
+    <!-- Sección corrección: solo para ABONADA / PAGO_PARCIAL -->
+    <div id="cpop-corr-section" style="display:none;">
+        <div class="cpop-corr-info" id="cpop-corr-info"></div>
+        <div class="cell-popup-monto" style="margin-bottom:12px;">
+            <span>$</span>
+            <input type="number" id="cpop-corr-monto" min="0" step="100" placeholder="Nuevo monto abonado" aria-label="Nuevo monto abonado">
+        </div>
+        <div class="cell-popup-btns">
+            <button class="cpop-cancel" onclick="cerrarCeldaPopup()">Cancelar</button>
+            <button class="cpop-annul" onclick="anularPago()">🗑 Anular pago</button>
+            <button class="cpop-save" onclick="corregirMontoPago()">💾 Corregir</button>
+        </div>
     </div>
 </div>
 
@@ -1257,10 +1280,12 @@ function renderTabla() {
                 + ' | Saldo: ' + fMonto(c.saldo_pendiente)
                 + (c.fecha_vencimiento ? ' | Vence: ' + fFecha(c.fecha_vencimiento) : ''));
 
-            // Solo celdas sin pago aprobado son editables inline
+            // PENDIENTE: no editable inline (comprobante en revisión)
+            var esPagoAprobado = ['ABONADA','PAGO_PARCIAL'].includes(estado);
             var esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado);
-            var editAttr = esEditable
-                ? ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
+            var editAttr = '';
+            if (esEditable) {
+                editAttr = ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
                     cobro_id:             c.cobro_id,
                     dni:                  String(est.dni),
                     concepto:             c.concepto,
@@ -1270,15 +1295,28 @@ function renderTabla() {
                     fecha_vencimiento:    c.fecha_vencimiento || null,
                     estado_actual:        estado,
                     no_aplica:            estado === 'NO_APLICA'
-                  })) + ')" style="cursor:pointer;"'
-                : '';
+                })) + ')" style="cursor:pointer;"';
+            } else if (esPagoAprobado) {
+                editAttr = ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
+                    cobro_id:         c.cobro_id,
+                    dni:              String(est.dni),
+                    concepto:         c.concepto,
+                    periodo:          c.periodo || '',
+                    monto_final:      c.monto_final,
+                    monto_abonado:    montoAbonado,
+                    saldo_pendiente:  c.saldo_pendiente,
+                    fecha_vencimiento: c.fecha_vencimiento || null,
+                    estado_actual:    estado,
+                    es_pago_aprobado: true
+                })) + ')" style="cursor:pointer;"';
+            }
 
             return '<td data-est="' + estado + '" title="' + title + '"' + editAttr + '>'
                 + '<div class="cuota-cell-wrap">'
                 + (c.es_readmision ? '<span class="badge-readmision">Readmisión</span>' : '')
                 + '<div class="cuota-cell-txt">' + txt + '</div>'
                 + (btns ? '<div class="cuota-cell-btns">' + btns + '</div>' : '')
-                + (esEditable ? '<div class="u-hint">✏️ editar</div>' : '')
+                + ((esEditable || esPagoAprobado) ? '<div class="u-hint">✏️ editar</div>' : '')
                 + '</div></td>';
         }).join('');
 
@@ -3036,16 +3074,39 @@ function abrirCeldaPopup(event, infoJson) {
     document.getElementById('cpop-title').textContent =
         (info.concepto || 'Cuota') + (info.periodo ? ' · ' + info.periodo : '');
 
-    // Resetear siempre para no mostrar valores de la celda anterior
-    var montoActual = (info.monto !== null && info.monto !== undefined && info.monto !== '') ? Number(info.monto) : '';
-    var inputMonto = document.getElementById('cpop-monto');
-    inputMonto.value = montoActual === '' ? '' : montoActual;
-    inputMonto.disabled = false;   // siempre habilitar primero
+    var corrSection   = document.getElementById('cpop-corr-section');
+    var normalSection = document.getElementById('cpop-normal-section');
 
-    var noAplica = info.no_aplica === true;
-    document.getElementById('cpop-noapl').checked = noAplica;
-    inputMonto.disabled = noAplica;
-    document.getElementById('cpop-noapl-label').classList.toggle('active', noAplica);
+    if (info.es_pago_aprobado) {
+        // Modo corrección: mostrar sección de corrección, ocultar normal
+        normalSection.style.display = 'none';
+        corrSection.style.display   = 'block';
+        var montoFinal   = Number(info.monto_final   || 0);
+        var montoAbonado = Number(info.monto_abonado || 0);
+        var saldo        = Number(info.saldo_pendiente || 0);
+        var corrInfo = document.getElementById('cpop-corr-info');
+        corrInfo.innerHTML = 'Total: <strong>$' + montoFinal.toLocaleString('es-AR') + '</strong>'
+            + ' &nbsp;|&nbsp; Abonado: <strong>$' + montoAbonado.toLocaleString('es-AR') + '</strong>'
+            + (saldo > 0 ? ' &nbsp;|&nbsp; Saldo: <strong>$' + saldo.toLocaleString('es-AR') + '</strong>' : '');
+        var inputCorr = document.getElementById('cpop-corr-monto');
+        inputCorr.value = montoAbonado > 0 ? montoAbonado : '';
+        inputCorr.max   = montoFinal;
+        setTimeout(function() { inputCorr.focus(); inputCorr.select(); }, 80);
+    } else {
+        // Modo normal: ocultar corrección, mostrar normal
+        corrSection.style.display   = 'none';
+        normalSection.style.display = 'block';
+        // Resetear siempre para no mostrar valores de la celda anterior
+        var montoActual = (info.monto !== null && info.monto !== undefined && info.monto !== '') ? Number(info.monto) : '';
+        var inputMonto = document.getElementById('cpop-monto');
+        inputMonto.value = montoActual === '' ? '' : montoActual;
+        inputMonto.disabled = false;
+        var noAplica = info.no_aplica === true;
+        document.getElementById('cpop-noapl').checked = noAplica;
+        inputMonto.disabled = noAplica;
+        document.getElementById('cpop-noapl-label').classList.toggle('active', noAplica);
+        setTimeout(function() { document.getElementById('cpop-monto').focus(); }, 80);
+    }
 
     // Posicionar el popup cerca de la celda clickeada
     var popup = document.getElementById('cell-popup');
@@ -3065,8 +3126,6 @@ function abrirCeldaPopup(event, infoJson) {
     }
     popup.style.top  = top  + 'px';
     popup.style.left = left + 'px';
-
-    setTimeout(function() { document.getElementById('cpop-monto').focus(); }, 80);
 }
 
 function toggleNoAplica() {
@@ -3081,6 +3140,108 @@ function cerrarCeldaPopup() {
     document.getElementById('cell-popup').style.display = 'none';
     document.getElementById('cell-popup-overlay').style.display = 'none';
     _cpopCobroId = null;
+}
+
+async function corregirMontoPago() {
+    var info = window._cpopInfo || {};
+    var cobroId = _cpopCobroId;
+    if (!cobroId) { toast('Error: cobro no identificado', 'err'); return; }
+    var dniEst = String(info.dni || '');
+    if (!dniEst) { toast('Error: DNI no identificado', 'err'); return; }
+
+    var montoStr = document.getElementById('cpop-corr-monto').value.trim();
+    var nuevoAbonado = parseFloat(montoStr);
+    if (!montoStr || isNaN(nuevoAbonado) || nuevoAbonado <= 0) {
+        toast('Ingresá un monto abonado válido mayor a cero', 'err');
+        return;
+    }
+    var montoFinal = Number(info.monto_final || 0);
+    if (nuevoAbonado > montoFinal) {
+        toast('El monto abonado no puede superar el total (' + fMonto(montoFinal) + ')', 'err');
+        return;
+    }
+
+    nuevoAbonado = redondear2(nuevoAbonado);
+    var nuevoSaldo  = redondear2(montoFinal - nuevoAbonado);
+    var nuevoEstado = nuevoAbonado >= montoFinal ? 'ABONADA' : 'PAGO_PARCIAL';
+
+    cerrarCeldaPopup();
+    spin(true);
+    try {
+        var sb = await getSupabase();
+
+        // Actualizar cobro
+        var res = await sb.from('cobros').update({
+            monto_abonado:    nuevoAbonado,
+            saldo_pendiente:  nuevoSaldo,
+            estado:           nuevoEstado,
+            updated_at:       new Date().toISOString()
+        }).eq('cobro_id', cobroId).eq('dni', dniEst);
+        if (res.error) throw res.error;
+
+        // Sincronizar tabla pagos: limpiar y reinsertar con monto corregido
+        var delRes = await sb.from('pagos').delete().eq('cobro_id', cobroId);
+        if (delRes.error) throw delRes.error;
+        var insRes = await sb.from('pagos').insert({
+            cobro_id:         cobroId,
+            dni:              dniEst,
+            monto:            nuevoAbonado,
+            tipo:             nuevoEstado === 'ABONADA' ? 'COMPLETO' : 'PARCIAL',
+            fecha_pago:       new Date().toISOString().slice(0, 10),
+            observaciones:    'Monto corregido por administrador'
+        });
+        if (insRes.error) throw insRes.error;
+
+        toast('Monto corregido ✓', 'ok');
+        await cargar();
+    } catch(e) {
+        console.error(e);
+        toast('Error al corregir: ' + e.message, 'err');
+    } finally {
+        spin(false);
+    }
+}
+
+async function anularPago() {
+    var info = window._cpopInfo || {};
+    var cobroId = _cpopCobroId;
+    if (!cobroId) { toast('Error: cobro no identificado', 'err'); return; }
+    var dniEst = String(info.dni || '');
+    if (!dniEst) { toast('Error: DNI no identificado', 'err'); return; }
+
+    if (!confirm('¿Anular el pago registrado? El cobro volverá a estado NO_ABONADA y se eliminarán los registros de pago.')) return;
+
+    var montoFinal = Number(info.monto_final || 0);
+    var hoy = new Date();
+    var vence = info.fecha_vencimiento ? new Date(info.fecha_vencimiento) : null;
+    var estadoAnulado = (vence && vence < hoy && montoFinal > 0) ? 'EN_MORA' : 'NO_ABONADA';
+
+    cerrarCeldaPopup();
+    spin(true);
+    try {
+        var sb = await getSupabase();
+
+        var res = await sb.from('cobros').update({
+            monto_abonado:    0,
+            saldo_pendiente:  montoFinal,
+            estado:           estadoAnulado,
+            fecha_aprobacion: null,
+            recibo_url:       null,
+            updated_at:       new Date().toISOString()
+        }).eq('cobro_id', cobroId).eq('dni', dniEst);
+        if (res.error) throw res.error;
+
+        var delRes = await sb.from('pagos').delete().eq('cobro_id', cobroId);
+        if (delRes.error) throw delRes.error;
+
+        toast('Pago anulado. Estado: ' + estadoAnulado + ' ✓', 'ok');
+        await cargar();
+    } catch(e) {
+        console.error(e);
+        toast('Error al anular: ' + e.message, 'err');
+    } finally {
+        spin(false);
+    }
 }
 
 async function guardarCeldaPopup() {
