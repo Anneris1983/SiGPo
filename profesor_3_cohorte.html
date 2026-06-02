@@ -415,23 +415,7 @@ function renderTabla() {
 /* ── CALC ESTADO GENERAL → cohorte_tabla.js ── */
 
 /* ── STATS ── */
-function actualizarStats() {
-    var ests = V.data.estudiantes;
-    var cg = function(e){ return calcEstadoGeneral(e.cobros); };
-    var recaud = ests.reduce(function(s,e){ return s + e.cobros.reduce(function(ss,c){ return ss+(c?Number(c.monto_abonado||0):0); },0); }, 0);
-    var egrExec = (V.data.egresos||[]).filter(function(e){ return e.tipo==='EJECUTADO'; }).reduce(function(s,e){ return s+Number(e.monto_pagado||e.monto_original||0); },0);
-    var saldo = recaud - egrExec;
-    document.getElementById('s-aldia').textContent     = ests.filter(function(e){ return cg(e)==='ABONADA'; }).length;
-    document.getElementById('s-mora').textContent      = ests.filter(function(e){ return cg(e)==='EN_MORA'; }).length;
-    var cuotasMora = 0; ests.forEach(function(e){ (e.cobros||[]).forEach(function(c){ if(c.estado==='EN_MORA') cuotasMora++; }); });
-    document.getElementById('s-mora-cuotas').textContent = cuotasMora;
-    document.getElementById('s-parcial').textContent   = ests.filter(function(e){ return cg(e)==='PAGO_PARCIAL'; }).length;
-    document.getElementById('s-recaudado').textContent = fMonto(recaud);
-    document.getElementById('s-egresos').textContent   = fMonto(egrExec);
-    var sEl = document.getElementById('s-saldo');
-    sEl.textContent = fMonto(saldo);
-    sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
-}
+/* actualizarStats → cohorte_tabla.js */
 
 /* ── FILTROS ── */
 /* Filtros (actualizarFiltros, initFiltros, aplicarFiltro) → cohorte_tabla.js

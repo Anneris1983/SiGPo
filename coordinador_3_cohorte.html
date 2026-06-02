@@ -1046,22 +1046,7 @@ function renderTabla() {
 
 /* calcEstadoGeneral → cohorte_tabla.js */
 
-function actualizarStats() {
-    const ests = V.data.estudiantes;
-    const cg = e => calcEstadoGeneral(e.cobros);
-    const recaud = ests.reduce((s,e)=>s + e.cobros.reduce((ss,c)=>ss+(c?Number(c.monto_abonado||0):0),0), 0);
-    const egrExec = (V.data.egresos || []).filter(e => e.tipo === 'EJECUTADO')
-                                          .reduce((s,e) => s + Number(e.monto_pagado || e.monto_original || 0), 0);
-    const saldo = recaud - egrExec;
-    document.getElementById('s-aldia').textContent     = ests.filter(e=>cg(e)==='ABONADA').length;
-    document.getElementById('s-mora').textContent      = ests.filter(e=>cg(e)==='EN_MORA').length;
-    document.getElementById('s-parcial').textContent   = ests.filter(e=>cg(e)==='PAGO_PARCIAL').length;
-    document.getElementById('s-recaudado').textContent = fMonto(recaud);
-    document.getElementById('s-egresos').textContent   = fMonto(egrExec);
-    const sEl = document.getElementById('s-saldo');
-    sEl.textContent = fMonto(saldo);
-    sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
-}
+/* actualizarStats → cohorte_tabla.js */
 
 /* Filtros y paginación (actualizarFiltros, initFiltros, aplicarFiltro,
    _aplicarFiltroYPag, mostrarMas) → cohorte_tabla.js */

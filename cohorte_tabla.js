@@ -193,3 +193,41 @@ function mostrarMas() {
     V.page++;
     _aplicarFiltroYPag();
 }
+
+/* ══════════════════════════════════════════════════
+   ESTADÍSTICAS DE LA CABECERA
+   Cada stat se escribe solo si su elemento existe en el DOM, de modo que
+   cada vista muestra las suyas:
+     comunes  → s-aldia, s-mora, s-parcial, s-recaudado, s-egresos, s-saldo
+     admin    → s-readmision (estudiantes con readmisión)
+     profesor → s-mora-cuotas (cantidad de CUOTAS en mora, no estudiantes)
+══════════════════════════════════════════════════ */
+function actualizarStats() {
+    var ests = (window.V && V.data && V.data.estudiantes) || [];
+    var egresos = (window.V && V.data && V.data.egresos) || [];
+    var recaud = ests.reduce(function(s, e) {
+        return s + (e.cobros || []).reduce(function(ss, c) { return ss + calcMontoAbonado(c); }, 0);
+    }, 0);
+    var egrExec = egresos.filter(function(e){ return e.tipo === 'EJECUTADO'; })
+                         .reduce(function(s, e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
+    var saldo = recaud - egrExec;
+
+    function setTxt(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+    function contarGeneral(estado) { return ests.filter(function(e){ return calcEstadoGeneral(e.cobros) === estado; }).length; }
+
+    setTxt('s-aldia',   contarGeneral('ABONADA'));
+    setTxt('s-mora',    contarGeneral('EN_MORA'));
+    setTxt('s-parcial', contarGeneral('PAGO_PARCIAL'));
+    setTxt('s-readmision', ests.filter(function(e){ return (e.cobros || []).some(function(c){ return c && c.es_readmision; }); }).length);
+    var cuotasMora = 0;
+    ests.forEach(function(e){ (e.cobros || []).forEach(function(c){ if (c && resolverEstadoCobro(c) === 'EN_MORA') cuotasMora++; }); });
+    setTxt('s-mora-cuotas', cuotasMora);
+    setTxt('s-recaudado', fMonto(recaud));
+    setTxt('s-egresos',   fMonto(egrExec));
+
+    var sEl = document.getElementById('s-saldo');
+    if (sEl) {
+        sEl.textContent = fMonto(saldo);
+        sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
+    }
+}
