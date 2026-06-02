@@ -3318,6 +3318,13 @@ async function guardarCeldaPopup() {
         }
 
         if (res.error) throw res.error;
+
+        // Si la cuota quedó vencida (EN_MORA), aplicar el recargo de mora ahora
+        // para mostrar el monto final con interés en un solo paso (sin recargar).
+        if (payload.estado === 'EN_MORA') {
+            await aplicarMoraCohorteJS(COHORTE_ID);
+        }
+
         toast(esNuevo ? 'Cuota creada ✓' : 'Cuota actualizada ✓', 'ok');
         await cargar();
     } catch(e) {
