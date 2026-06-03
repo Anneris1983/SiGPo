@@ -1472,7 +1472,8 @@ async function reclamarSel() {
         var tipo    = document.getElementById('c-tipo') ? document.getElementById('c-tipo').value : 'reclamo';
         var asunto  = (V.plantillas[tipo] || V.plantillas.reclamo).asunto;
         var cuerpo  = (V.plantillas[tipo] || V.plantillas.reclamo).cuerpo;
-        var progIdEmail = V.data.programa.programa_id || PROGRAMA_ID;
+        var progIdEmail = parseInt(V.data.programa.programaId || V.data.programa.programa_id || PROGRAMA_ID, 10);
+        if (!progIdEmail) { toast('No se pudo determinar el programa de esta cohorte. Volvé a entrar desde el listado de programas.', 'err'); return; }
         var replyTo = V.data.programa.email_remitente || '';
         var cbu     = V.config.cbu_banco  || '—';
         var alias   = V.config.alias_banco || '—';
