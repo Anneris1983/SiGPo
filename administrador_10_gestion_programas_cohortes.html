@@ -491,6 +491,7 @@ async function eliminarPrograma(id, nombre) {
         await sb.from('coordinadores_programas').delete().eq('programa_id',id);
         if (cids.length) {
             await sb.from('cobros').delete().in('cohorte_id',cids);
+            await sb.from('inscripciones').delete().in('cohorte_id',cids);
             await sb.from('cohortes').delete().eq('programa_id',id);
         }
         var {error} = await sb.from('programas').delete().eq('programa_id',id);
@@ -534,7 +535,7 @@ async function cargarCohortes() {
         if (cids.length) {
             var [ir,cr] = await Promise.all([
                 sb.from('inscripciones').select('cohorte_id,estado_academico').in('cohorte_id',cids),
-                sb.from('cobros').select('cohorte_id,monto_final,saldo_pendiente').in('cohorte_id',cids)
+                sb.from('cobros').select('cohorte_id,monto_final,saldo_pendiente,estado,no_aplica').in('cohorte_id',cids)
             ]);
             inscData = ir.data||[];
             cobrosData = cr.data||[];
@@ -551,7 +552,7 @@ async function cargarCohortes() {
             cohs.forEach(function(c) {
                 var act  = inscData.filter(function(i){return i.cohorte_id===c.cohorte_id&&i.estado_academico==='ACTIVO';}).length;
                 var baja = inscData.filter(function(i){return i.cohorte_id===c.cohorte_id&&i.estado_academico==='BAJA';}).length;
-                var cobs = cobrosData.filter(function(x){return x.cohorte_id===c.cohorte_id;});
+                var cobs = cobrosData.filter(function(x){return x.cohorte_id===c.cohorte_id && x.estado!=='NO_APLICA' && x.no_aplica!==true;});
                 var rec  = cobs.reduce(function(s,x){return s+Math.max(0,(Number(x.monto_final)||0)-(Number(x.saldo_pendiente)||0));},0);
                 var tot  = cobs.reduce(function(s,x){return s+(Number(x.monto_final)||0);},0);
                 var nomSafe = esc(c.nombre).replace(/'/g,"\\'");

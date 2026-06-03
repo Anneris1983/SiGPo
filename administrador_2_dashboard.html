@@ -302,7 +302,7 @@ function renderNotificacionesLocal(datos) {
         return '<div class="notif-item ' + (n.leida ? '' : 'unread') + '" onclick="leerNotifLocal(\'' + n.id + '\')">'
             + '<div class="notif-icon-circle ' + (n.tipo || 'alerta') + '">' + (iconos[n.tipo] || '🔔') + '</div>'
             + '<div class="notif-text">'
-            + '<p>' + n.mensaje + '</p>'
+            + '<p>' + esc(n.mensaje) + '</p>'
             + '<div class="notif-time">' + (n.tiempo || '') + '</div>'
             + '</div></div>';
     }).join('');
@@ -392,7 +392,7 @@ function renderTarjeta(p) {
 
     return '<div class="program-card" onclick="navegar(\'administrador_3_Programas_de_posgrado.html?id=' + p.id + '\')">'
         + '<div class="program-icon">' + icono + '</div>'
-        + '<div class="program-name">' + p.nombre + '</div>'
+        + '<div class="program-name">' + esc(p.nombre) + '</div>'
         + '<div class="program-stats">'
         + '<div class="program-stat"><span>Estudiantes:</span><strong>' + (p.estudiantes || 0) + '</strong></div>'
         + '<div class="program-stat"><span>' + label + ':</span><strong>' + (p.cohortes || 0) + '</strong></div>'
@@ -427,14 +427,8 @@ function cargarDashboard() {
    INICIALIZAR
    ══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async function() {
-    var sb = await getSupabase();
-    var { data: { session } } = await sb.auth.getSession();
-    if (!session) { window.location.href='portal_login.html'; return; }
-    var sesion = getSesion();
-    if (!sesion) {
-        window.location.href = 'portal_login.html';
-        return;
-    }
+    var sesion = await requireAuth();
+    if (!sesion || sesion.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
 
     document.getElementById('btn-admin-name').textContent = sesion.nombre || 'Admin';
 

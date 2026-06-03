@@ -578,7 +578,14 @@ function confErase(id,nm){_aid=id;_anm=nm;document.getElementById('er-t').textCo
 function chkErase(){document.getElementById('btn-erase').disabled=document.getElementById('er-conf').value.trim().toUpperCase()!=='ELIMINAR';}
 async function ejErase(){
     spin(true);
-    try{var sb=await getSupabase();await sb.from('coordinadores_programas').delete().eq('coordinador_id',_aid);var r=await sb.from('usuarios').delete().eq('usuario_id',_aid);if(r.error)throw r.error;toast('Registro eliminado ✓','ok');cerM('m-erase');await cargar();}
+    try{var sb=await getSupabase();await sb.from('coordinadores_programas').delete().eq('coordinador_id',_aid);
+        // Si es estudiante, borrar inscripciones huérfanas (inscripciones → estudiantes.id vía dni)
+        var ru=await sb.from('usuarios').select('dni,rol').eq('usuario_id',_aid).limit(1);
+        if(!ru.error&&ru.data&&ru.data.length&&ru.data[0].rol==='ESTUDIANTE'&&ru.data[0].dni){
+            var re=await sb.from('estudiantes').select('id').eq('dni',ru.data[0].dni).limit(1);
+            if(!re.error&&re.data&&re.data.length){await sb.from('inscripciones').delete().eq('estudiante_id',re.data[0].id);}
+        }
+        var r=await sb.from('usuarios').delete().eq('usuario_id',_aid);if(r.error)throw r.error;toast('Registro eliminado ✓','ok');cerM('m-erase');await cargar();}
     catch(e){toast('Error: '+e.message,'err');}finally{spin(false);}
 }
 
@@ -620,6 +627,8 @@ async function doImp(){
         if(!rows.length){toast('Archivo vacío','err');return;}
         var rolesOK=['ADMINISTRADOR','SECRETARIA','COOPERADORA','COORDINADOR','PROFESOR','ESTUDIANTE'];
         var sb=await getSupabase();var ok=0,errs=[];
+        var sess2=await sb.auth.getSession();
+        var tok2=sess2.data.session?sess2.data.session.access_token:'';
         for(var i=0;i<rows.length;i++){
             var r=rows[i];
             var ap2=String(r.apellido||r.Apellido||'').trim();
@@ -630,8 +639,6 @@ async function doImp(){
             var rl2=String(r.rol||r.Rol||'').trim().toUpperCase();
             if(!ap2||!no2||!dn2||!em2||!pw2){errs.push('Fila '+(i+2)+': faltan campos');continue;}
             if(!rolesOK.includes(rl2)){errs.push('Fila '+(i+2)+': rol inválido "'+rl2+'"');continue;}
-            var sess2=await sb.auth.getSession();
-            var tok2=sess2.data.session?sess2.data.session.access_token:'';
             var resp2=await fetch(EDGE_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok2,'apikey':SUPABASE_KEY},body:JSON.stringify({email:em2,password:pw2,apellido:ap2,nombre:no2,nombre_completo:ap2+' '+no2,dni:dn2,rol:rl2,asignaciones:[],inscripciones:[]})});
             var j2=await resp2.json();
             if(!resp2.ok||j2.error){errs.push('Fila '+(i+2)+' ('+dn2+'): '+(j2.error||'Error'));continue;}

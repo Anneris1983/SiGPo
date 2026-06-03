@@ -426,7 +426,10 @@ function _ejecutarFiltros() {
     var cobros = _allCobros.filter(function(c) {
         if (programa && String(c.programa_id) !== String(programa)) return false;
         if (cohorte  && String(c.cohorte_id)  !== String(cohorte))  return false;
-        var fecha = c.fecha_vencimiento;
+        // Para cuotas cobradas, el ingreso debe caer en el período en que se cobró
+        // (fecha de pago real), no en el de vencimiento.
+        var pagada = (c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL');
+        var fecha = pagada ? (c.fecha_pago || c.fecha_aprobacion || c.fecha_vencimiento) : c.fecha_vencimiento;
         if (!desdeChk && desde && fecha && fecha < desde) return false;
         if (hasta && fecha && fecha > hasta) return false;
         return true;
@@ -478,7 +481,10 @@ function _ejecutarFiltros() {
         allMonths[k] = 1;
         ingPrMap[k]  = (ingPrMap[k]||0) + Number(c.monto_final||0);
         if (c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL') {
-            ingRealMap[k] = (ingRealMap[k]||0) + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
+            // El recaudado real se imputa al mes en que se cobró (fecha de pago real).
+            var kReal = mesKey(c.fecha_pago || c.fecha_aprobacion || c.fecha_vencimiento) || k;
+            allMonths[kReal] = 1;
+            ingRealMap[kReal] = (ingRealMap[kReal]||0) + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
         }
     });
     egresos.forEach(function(e) {
@@ -609,7 +615,7 @@ async function cargarInicial() {
         var [rP, rC, rCob, rE] = await Promise.all([
             sb.from('programas').select('programa_id,nombre'),
             sb.from('cohortes').select('cohorte_id,nombre,programa_id'),
-            sb.from('cobros').select('programa_id,cohorte_id,dni,monto_final,saldo_pendiente,estado,fecha_vencimiento'),
+            sb.from('cobros').select('programa_id,cohorte_id,dni,monto_final,saldo_pendiente,estado,fecha_vencimiento,fecha_pago,fecha_aprobacion'),
             sb.from('egresos').select('programa_id,monto_pagado,monto_original,tipo,estado,fecha_pago,fecha_estimada')
         ]);
 
@@ -660,11 +666,8 @@ document.addEventListener('click', function(e) { var w = document.querySelector(
 // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 
 document.addEventListener('DOMContentLoaded', async function() {
-    var sb = await getSupabase();
-    var { data: { session } } = await sb.auth.getSession();
-    if (!session) { window.location.href='portal_login.html'; return; }
-    var sesion = getSesion();
-    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    var sesion = await requireAuth();
+    if (!sesion || sesion.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
     // chkInicio is checked by default — disable the date input visually
     toggleDesdeInicio({checked: true});
     cargarInicial();

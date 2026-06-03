@@ -218,7 +218,7 @@ function renderNotificacionesLocal(datos) {
     lista.innerHTML = notificaciones.map(function(n) {
         return '<div class="notif-item ' + (n.leida ? '' : 'unread') + '" onclick="leerNotifLocal(\'' + n.id + '\')">'
             + '<div class="notif-icon-circle ' + (n.tipo || 'alerta') + '">' + (iconos[n.tipo] || '🔔') + '</div>'
-            + '<div class="notif-text"><p>' + n.mensaje + '</p>'
+            + '<div class="notif-text"><p>' + esc(n.mensaje) + '</p>'
             + '<div class="notif-time">' + (n.tiempo || '') + '</div></div></div>';
     }).join('');
 }
@@ -332,14 +332,8 @@ function cargarPrograma() {
    INICIALIZAR
    ══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async function() {
-    var sb = await getSupabase();
-    var { data: { session } } = await sb.auth.getSession();
-    if (!session) { window.location.href='portal_login.html'; return; }
-    var sesion = getSesion();
-    if (!sesion) {
-        window.location.href = 'portal_login.html';
-        return;
-    }
+    var sesion = await requireAuth();
+    if (!sesion || sesion.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
 
     cargarPrograma();
     cargarNotificaciones();

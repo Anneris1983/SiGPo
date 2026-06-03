@@ -248,11 +248,8 @@ var POR_PAG = 10;
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', async function() {
-    var sb = await getSupabase();
-    var { data: { session } } = await sb.auth.getSession();
-    if (!session) { window.location.href='portal_login.html'; return; }
-    var sesion = getSesion();
-    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    var sesion = await requireAuth();
+    if (!sesion || sesion.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
     obtenerNotificaciones(sesion.rol).then(renderNotificaciones);
     await cargar();
 });

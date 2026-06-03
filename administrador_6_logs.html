@@ -314,6 +314,7 @@ var _todosLogs      = [];
 var _logsFiltrados  = [];
 var _programasMap   = {};   // programa_id → nombre
 var _cohortesMapa   = {};   // cohorte_id  → nombre
+var _cohProgMap     = {};   // cohorte_id  → programa_id
 var _usuariosMap    = {};   // usuario_id  → {email, rol}
 var _estudiantesMap = {};   // dni         → apellido, nombre
 var _cobrosMap      = {};   // cobro_id    → {concepto, periodo, fecha_vencimiento}
@@ -358,8 +359,8 @@ async function cargarDatosBase() {
     });
 
     // Cohortes (SELECT abierto por RLS)
-    var rc = await sb.from('cohortes').select('cohorte_id,nombre');
-    (rc.data || []).forEach(function (c) { _cohortesMapa[c.cohorte_id] = c.nombre; });
+    var rc = await sb.from('cohortes').select('cohorte_id,nombre,programa_id');
+    (rc.data || []).forEach(function (c) { _cohortesMapa[c.cohorte_id] = c.nombre; _cohProgMap[c.cohorte_id] = c.programa_id; });
 
     // Usuarios — puede fallar si no hay auth; ignoramos silenciosamente
     try {
@@ -485,19 +486,14 @@ async function cargarHistorialInscripciones() {
         var est      = _estIdMap[h.estudiante_id] || { nombre: 'Est. ID ' + h.estudiante_id, dni: '' };
         var cohNombre = _cohortesMapa[h.cohorte_id] || ('Cohorte ' + h.cohorte_id);
 
-        // Buscar programa a partir de cohorte (cohorte ya fue cargada con programa_id en cargarDatosBase)
-        // En la versión simplificada usamos el mapa de cohortes
-        var progNombre = '—';
-        // Intentar deducir programa por dni del estudiante si cobros lo tiene
-        // En este contexto simplemente mostramos lo que tenemos
-        Object.keys(_programasMap).forEach(function(pid) {
-            // skip — no tenemos la relación directa acá sin join adicional
-        });
+        // Resolver programa a partir de la cohorte (cohorte_id → cohortes.programa_id)
+        var progId     = _cohProgMap[h.cohorte_id];
+        var progNombre = (progId != null && _programasMap[progId]) ? _programasMap[progId] : '—';
 
         return {
             id:               h.id,
             tipo:             'inscripcion',
-            programa_id:      null,
+            programa_id:      (progId != null ? progId : null),
             cohorte_id:       h.cohorte_id,
             dni:              est.dni,
             estado_ant:       h.estado_anterior,

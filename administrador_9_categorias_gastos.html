@@ -199,11 +199,8 @@
         // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
         
         async function inicializar() {
-            var sb = await getSupabase();
-            var { data: { session } } = await sb.auth.getSession();
-            if (!session) { window.location.href = 'portal_login.html'; return; }
-            var sesion = getSesion();
-            if (!sesion) { window.location.href = 'portal_login.html'; return; }
+            var sesion = await requireAuth();
+            if (!sesion || sesion.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
             try {
                 var cats = await obtenerCategoriasGastos();
                 categorias = cats.map(function(c){ return { id:c.id, nombre:c.nombre||c.categoria||'', tipo:c.tipo||'OPERATIVO', desc:c.descripcion||'' }; });
