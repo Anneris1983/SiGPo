@@ -40,8 +40,11 @@ var PROGRAMA_IDS = [REEMPLAZAR_CON_ID_DEL_PROGRAMA]; // ← número(s), sin comi
 function ejecutarTareasDiarias() {
   var dia = new Date().getDate();
   Logger.log('=== SiGPo coordinador — día ' + dia + ' — programas: [' + PROGRAMA_IDS.join(',') + '] ===');
-  if (dia === 1)  enviarRecordatoriosVencimiento();
-  if (dia === 16) enviarReclamosMora();
+  if (dia === 1) {
+    enviarRecordatoriosVencimiento(); // recordatorio de cuota que vence este mes
+    enviarReclamosMora();             // reclamo de mora a los morosos
+  }
+  if (dia === 16) enviarReclamosMora(); // segundo reclamo de mora del mes
 }
 
 function configurarTriggers() {
@@ -132,8 +135,7 @@ function enviarRecordatoriosVencimiento() {
 
   Logger.log('--- Recordatorios de vencimiento: ' + mesNom + ' ' + anio + ' ---');
 
-  // Cuotas con vencimiento en el mes actual
-  var cobrosMes = _sbGet(
+  var cobros = _sbGet(
     'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
     '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
     '&estado=not.in.(ABONADA,A_DEFINIR)' +
@@ -142,40 +144,20 @@ function enviarRecordatoriosVencimiento() {
     '&fecha_vencimiento=lte.' + hasta
   );
 
-  // Cobros EN_MORA de meses anteriores: también reciben el recordatorio mensual
-  var cobrosMoraAnt = _sbGet(
-    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
-    '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
-    '&estado=eq.EN_MORA' +
-    '&fecha_vencimiento=lt.' + desde
-  );
+  if (!cobros.length) { Logger.log('Sin cobros pendientes este mes.'); return; }
 
-  var todosCobros = cobrosMes.concat(cobrosMoraAnt);
-  if (!todosCobros.length) { Logger.log('Sin cobros pendientes ni en mora.'); return; }
-
-  // Índice de cuotas del mes por DNI
-  var porDniMes = {};
-  cobrosMes.forEach(function(c) {
-    if (!porDniMes[c.dni]) porDniMes[c.dni] = [];
-    porDniMes[c.dni].push(c);
-  });
-
-  var ctx          = _cargarContexto(todosCobros);
-  var todosLosDnis = _uniq(todosCobros.map(function(c){ return c.dni; }));
-  var ccPorDni     = _cuentasCorrientesLote(todosLosDnis, Object.keys(ctx.cohMap));
+  var ctx      = _cargarContexto(cobros);
+  var ccPorDni = _cuentasCorrientesLote(Object.keys(ctx.porDni), Object.keys(ctx.cohMap));
 
   var enviados = 0;
-  todosLosDnis.forEach(function(dni) {
+  Object.keys(ctx.porDni).forEach(function(dni) {
     var usu = ctx.usuMap[dni];
     if (!usu || !usu.email) { Logger.log('Sin email: DNI ' + dni); return; }
-    var cuotasMes  = porDniMes[dni] || [];
-    var todasCtas  = cuotasMes.length ? cuotasMes : (ctx.porDni[dni] || []);
-    var progNom    = _nombrePrograma(todasCtas[0], ctx);
-    var cc         = ccPorDni[dni] || [];
-    var subject    = cuotasMes.length > 0
-      ? 'Recordatorio de cuota — ' + progNom + ' — ' + mesNom + ' ' + anio
-      : 'Recordatorio de deuda en mora — ' + progNom + ' — ' + mesNom + ' ' + anio;
-    var html       = _htmlRecordatorio(_nombreCompleto(usu), progNom, mesNom, anio, cuotasMes, cc);
+    var cuotasMes = ctx.porDni[dni];
+    var progNom   = _nombrePrograma(cuotasMes[0], ctx);
+    var cc        = ccPorDni[dni] || [];
+    var subject = 'Recordatorio de cuota — ' + progNom + ' — ' + mesNom + ' ' + anio;
+    var html    = _htmlRecordatorio(_nombreCompleto(usu), progNom, mesNom, anio, cuotasMes, cc);
     if (_enviarMail(usu.email, subject, html)) enviados++;
   });
 
