@@ -679,6 +679,12 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
     const { data: cobro } = await sb.from('cobros').select('*').eq('cobro_id', cobroId).single();
     if (!cobro) return { ok: false, mensaje: 'Cobro no encontrado' };
 
+    // Una cuota ya abonada no puede volver a aprobarse: evita doble conteo de
+    // monto_abonado e ingresos inflados.
+    if (cobro.estado === 'ABONADA') {
+        return { ok: false, mensaje: 'Esta cuota ya está abonada' };
+    }
+
     if (tipo === 'COMPLETO' || tipo === 'total') {
         await sb.from('cobros').update({
             estado: 'ABONADA',
