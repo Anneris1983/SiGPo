@@ -414,7 +414,7 @@ function renderNotificaciones(datos) {
     lista.innerHTML = _notifs.map(function (n) {
         return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + escapeHtml(n.id) + '\')">'
             + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo] || '#f3f4f6') + ';">' + (iconos[n.tipo] || '🔔') + '</div>'
-            + '<div style="flex:1;"><p style="font-size:13px;color:#000;line-height:1.4;">' + escapeHtml(n.mensaje) + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + escapeHtml(n.tiempo) + '</div></div></div>';
+            + '<div style="flex:1;"><p style="font-size:13px;color:#000;line-height:1.4;">' + escapeHtml(n.mensaje) + '</p><div style="font-size:11px;color:#000;margin-top:3px;">' + escapeHtml(n.tiempo) + '</div></div></div>';
     }).join('');
 }
 
