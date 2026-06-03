@@ -8,15 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #5C1018;
-            --accent:  #8C1A28;
-            --success: #2d7a4f;
-            --danger:  #c0392b;
-            --warning: #e67e22;
-            --bg:      #f8f6f1;
-        }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 0; font-size: 14px; display:flex; flex-direction:column; height:125vh; overflow:hidden; }
+
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 0; font-size: 14px; display:flex; flex-direction:column; height:125vh; overflow-x:auto; overflow-y:hidden; }
 
         /* ── HEADER ── */
         .page-header {
@@ -97,18 +90,14 @@
         th.col-cuota { min-width: 82px; }
         th.tot-hdr   { color: white; font-size: 10px; min-width: 100px; }
         th.th-pagar   { background: #3730a3; }
-        th.th-abonado { background: #2d7a4f; }
-        th.th-saldo   { background: #c0392b; }
+        th.th-abonado { background: var(--clr-success); }
+        th.th-saldo   { background: var(--clr-danger); }
         #t-body tr td:nth-child(1) { position: sticky; left: 0; z-index: 2; background: white; }
         #t-body tr td.cell-name    { position: sticky; left: 32px; z-index: 2; background: white; box-shadow: 2px 0 4px rgba(0,0,0,0.07); }
-        #t-body tr.fila-est:hover td:nth-child(1),
-        #t-body tr.fila-est:hover td.cell-name { background: #fffdf4; }
-
         td {
             padding: 9px 6px; border-bottom: 1px solid #ebebeb;
             border-right: 1px solid #ebebeb; vertical-align: middle;
         }
-        tr.fila-est:hover td { background: rgba(212,175,55,0.05); }
         tr.oculta { display: none; }
 
         .cell-name  { font-weight: 700; color: var(--primary); padding-left: 10px; white-space: nowrap; cursor: pointer; }
@@ -118,7 +107,7 @@
 
         td[data-est="ABONADA"]      { background: #d4edda; color: #1e7e44; text-align:center; font-weight:600; }
         td[data-est="PAGO_PARCIAL"] { background: #fff3cd; color: #856404; text-align:center; font-weight:600; font-size:10px; }
-        td[data-est="EN_MORA"]      { background: #f8d7da; color: #c0392b; text-align:center; font-weight:600; }
+        td[data-est="EN_MORA"]      { background: #f8d7da; color: var(--clr-danger); text-align:center; font-weight:600; }
         td[data-est="PENDIENTE"]    { background: #f0f0f0; color: #666;    text-align:center; font-weight:600; }
         td[data-est="NO_APLICA"]    { background: #fafafa; color: #ccc; font-style:italic; font-size:10px;
                                       border: 1px dashed #e0e0e0; text-align:center; }
@@ -137,7 +126,7 @@
 
         .cell-tot-pagar   { background:#eef2ff; color:#5C1018; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
         .cell-tot-abonado { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
-        .cell-saldo-pos   { background:#f8d7da; color:#c0392b; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+        .cell-saldo-pos   { background:#f8d7da; color:var(--clr-danger); font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
         .cell-saldo-cero  { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
 
         .edit-btn {
@@ -228,7 +217,7 @@
         .plan-paso-titulo { font-size:13px; font-weight:700; color:var(--primary); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.4px; }
         .plan-fila { display:grid; grid-template-columns:auto 1fr 110px 110px 130px auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; transition:border-color 0.2s; }
         .plan-fila:focus-within { border-color:var(--accent); }
-        .plan-fila.fila-irregular { border-color:#e67e22; background:#fffbf5; }
+        .plan-fila.fila-irregular { border-color:var(--clr-warning); background:#fffbf5; }
         .plan-fila-num { width:26px; height:26px; border-radius:50%; background:var(--primary); color:white; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:2px; }
         .plan-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
         .plan-fila input, .plan-fila select { width:100%; padding:7px 9px; border:1.5px solid #ddd; border-radius:7px; font-size:12px; font-family:'DM Sans',sans-serif; transition:border-color 0.2s; background:white; }
@@ -238,7 +227,7 @@
         .plan-fila .monto-wrap::before { content:'$'; position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:12px; color:#999; pointer-events:none; }
         .plan-fila .btn-del { background:none; border:none; cursor:pointer; color:#e74c3c; font-size:17px; padding:4px; border-radius:6px; transition:background 0.2s; line-height:1; align-self:end; margin-bottom:2px; }
         .plan-fila .btn-del:hover { background:#fdecea; }
-        .btn-agregar-cuota { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:#2d7a4f; color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
+        .btn-agregar-cuota { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:var(--clr-success); color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
         .btn-agregar-cuota:hover { background:#246441; }
         .plan-destino-box { background:#f0f8ff; border:1.5px solid #b3d4f0; border-radius:10px; padding:14px 16px; }
         .plan-radio-opcion { display:flex; gap:12px; align-items:flex-start; cursor:pointer; }
@@ -261,7 +250,7 @@
         }
         .btn-baja-coh:hover { background:#fff8e1; }
         .btn-alta-coh {
-            background:none; border:1.5px solid #2d7a4f; color:#2d7a4f;
+            background:none; border:1.5px solid var(--clr-success); color:var(--clr-success);
             border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px;
             cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap;
         }
@@ -302,7 +291,7 @@
         .cell-popup-monto {
             display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
         }
-        .cell-popup-monto span { font-size: 13px; color: #888; font-weight: 600; }
+        .cell-popup-monto span { font-size: 13px; color: #767676; font-weight: 600; }
         .cell-popup-monto input {
             width: 120px; padding: 6px 8px; border: 2px solid #e0e0e0;
             border-radius: 6px; font-size: 13px; font-family: 'DM Sans', sans-serif;
@@ -333,9 +322,16 @@
         .leyenda { flex-shrink:0; }
         .page-header { flex-shrink:0; }
         .toolbar { flex-shrink:0; }
+
+    /* ── utilidades inline repetidas ── */
+    .u-lbl  { font-size:10px; color:#767676; font-weight:600; text-transform:uppercase; margin-bottom:2px; }
+    .u-lbl-blue { font-size:10px; font-weight:600; color:#0369a1; display:block; margin-bottom:3px; }
+    .u-hint { font-size:9px; color:#bbb; margin-top:2px; }
+    .u-sub  { font-size:11px; color:#767676; margin-top:2px; }
+    .btn-mas { padding:8px 22px; background:#fff; border:1.5px solid #c7d2fe; border-radius:8px; color:#4338ca; font-size:13px; font-weight:600; cursor:pointer; }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
 </head>
 <body>
 
@@ -359,7 +355,7 @@
                 <div style="position:relative;" id="notif-wrapper">
                     <button onclick="toggleNotif()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 12px;border-radius:8px;font-size:18px;cursor:pointer;position:relative;" title="Notificaciones">
                         🔔
-                        <span id="notif-badge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;border-radius:50%;min-width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;">0</span>
+                        <span id="notif-badge" style="position:absolute;top:-4px;right:-4px;background:var(--clr-danger);color:white;border-radius:50%;min-width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;">0</span>
                     </button>
                     <div id="notif-panel" style="display:none;position:absolute;right:0;top:48px;width:320px;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:500;overflow:hidden;">
                         <div style="padding:14px 16px;border-bottom:1px solid #f0f0f0;font-weight:700;color:#5C1018;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;">
@@ -378,7 +374,7 @@
                 <div class="stat-item"><div class="stat-label">En mora</div><div class="stat-value" id="s-mora" style="color:#ffc107;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado" style="font-size:15px;">—</div></div>
-                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;font-size:15px;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:var(--clr-warning);font-size:15px;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Saldo</div><div class="stat-value" id="s-saldo" style="font-size:15px;">—</div></div>
             </div>
         </div>
@@ -397,9 +393,8 @@
             <button class="filter-btn" data-f="A_DEFINIR">A definir</button>
         </div>
         <div class="actions">
-            <button class="btn btn-crear" onclick="abrirCrearCuota()">➕ Crear plan de cuotas</button>
-            <button class="btn btn-editar-cuotas" onclick="abrirEditarCuotas()">✏️ Editar cuotas</button>
-            <button class="btn btn-eliminar-global" onclick="abrirEliminarCuotasGlobal()">🗑 Eliminar cuota</button>
+            <!-- El coordinador no gestiona cuotas (solo las consulta para reclamar).
+                 Botones de crear/editar/eliminar plan de cuotas deshabilitados a propósito. -->
             <button class="btn btn-outline" onclick="abrirCorreo()">✉️ Editar correos de reclamo</button>
             <button class="btn btn-primary" id="btn-reclamar" disabled onclick="reclamarSel()">📧 Reclamar seleccionados</button>
             <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar a Excel</button>
@@ -423,6 +418,9 @@
         </table>
         <div class="empty-state" id="empty"><div style="font-size:48px;margin-bottom:12px;">🔍</div><div style="font-size:15px;font-weight:600;color:#666;">Sin resultados para este filtro</div></div>
     </div>
+    <div id="wrap-mas-est" style="text-align:center;padding:12px 0 4px;display:none;">
+        <button id="btn-mas-est" onclick="mostrarMas()" class="btn-mas">Mostrar más</button>
+    </div>
 
     <!-- LEYENDA -->
     <div class="leyenda">
@@ -433,7 +431,7 @@
         <div class="ley-item"><span class="ley-box ley-pendiente"></span> Pendiente</div>
         <div class="ley-item"><span class="ley-box ley-noabonada"></span> No abonada</div>
         <div class="ley-item"><span class="ley-box ley-adefinir"></span> A definir</div>
-        <div class="ley-item"><span class="ley-box ley-nodebe"></span> No debe abonar</div>
+        <div class="ley-item"><span class="ley-box ley-nodebe"></span> No aplica</div>
     </div>
 </div>
 
@@ -495,17 +493,17 @@
         </div>
         <div class="modal-body">
             <div class="mfield">
-                <label>Tipo</label>
-                <select id="c-tipo" onchange="cargarPlantilla()">
+                <label for="c-tipo">Tipo</label>
+                <select id="c-tipo" aria-label="Tipo de correo" onchange="cargarPlantilla()">
                     <option value="recordatorio">📩 Recordatorio de vencimiento próximo</option>
                     <option value="reclamo">🔔 Reclamo por cuota vencida</option>
                     <option value="coordinador">👨‍🏫 Aviso al coordinador</option>
                 </select>
             </div>
-            <div class="mfield"><label>Asunto</label><input type="text" id="c-asunto"></div>
+            <div class="mfield"><label for="c-asunto">Asunto</label><input type="text" id="c-asunto" aria-label="Asunto del correo"></div>
             <div class="mfield">
-                <label>Cuerpo</label>
-                <textarea id="c-cuerpo" style="min-height:130px;resize:vertical;"></textarea>
+                <label for="c-cuerpo">Cuerpo</label>
+                <textarea id="c-cuerpo" aria-label="Cuerpo del correo" style="min-height:130px;resize:vertical;"></textarea>
                 <div class="mhint">Variables: {nombre} {apellido} {dni} {cuota} {periodo} {monto} {vencimiento} {programa} {cbu} {alias}</div>
             </div>
         </div>
@@ -581,7 +579,7 @@
                     <div id="drop-zone" class="drop-zone" onclick="document.getElementById('file-imp').click()" ondragover="dOver(event)" ondragleave="dLeave()" ondrop="dDrop(event)">
                         <div style="font-size:28px;margin-bottom:6px;">📊</div>
                         <div style="font-size:13px;color:#666;">Arrastrá el archivo acá o <strong>hacé clic</strong> para seleccionarlo</div>
-                        <input type="file" id="file-imp" accept=".xlsx,.xls" onchange="fileElegido(event)">
+                        <input type="file" id="file-imp" accept=".xlsx,.xls" aria-label="Archivo de importación (.xlsx)" onchange="fileElegido(event)">
                     </div>
                     <div id="imp-prev" class="imp-preview">
                         <span style="font-size:18px;">📄</span>
@@ -652,11 +650,11 @@
             <div id="eg-lista" style="padding:8px 22px;max-height:380px;overflow-y:auto;"></div>
         </div>
         <div class="modal-footer" style="justify-content:space-between;align-items:center;">
-            <span id="eg-sel-count" style="font-size:12px;color:#888;"></span>
+            <span id="eg-sel-count" style="font-size:12px;color:#767676;"></span>
             <div style="display:flex;gap:10px;">
                 <button class="btn-cancel" onclick="cerrar('modal-eliminar-global')">Cerrar</button>
                 <button id="btn-elim-sel" onclick="eliminarSeleccionadas()" disabled
-                    style="background:#dc2626;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;padding:9px 18px;cursor:not-allowed;font-family:'DM Sans',sans-serif;opacity:0.4;transition:all 0.2s;">
+                    style="background:var(--clr-danger);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;padding:9px 18px;cursor:not-allowed;font-family:'DM Sans',sans-serif;opacity:0.4;transition:all 0.2s;">
                     🗑 Eliminar seleccionadas
                 </button>
             </div>
@@ -669,7 +667,7 @@
     <div class="cell-popup-title" id="cpop-title">Editar cuota</div>
     <div class="cell-popup-monto">
         <span>$</span>
-        <input type="number" id="cpop-monto" min="0" step="100" placeholder="0">
+        <input type="number" id="cpop-monto" min="0" step="100" placeholder="0" aria-label="Monto de la cuota">
     </div>
     <label class="cell-popup-noapl" id="cpop-noapl-label" onclick="toggleNoAplicaCoord()">
         <input type="checkbox" id="cpop-noapl" onclick="event.stopPropagation()">
@@ -681,13 +679,14 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
+<script src="cohorte_tabla.js?v=20250603"></script>
 <script>
 const QS = new URLSearchParams(location.search);
 const COHORTE_ID  = QS.get('cohorte_id') || QS.get('cohorteId') || '';
 const PROGRAMA_ID = QS.get('programa_id') || QS.get('programaId') || '';
-const GAS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxtDIAY6yhpTJF5OK3k0-VK9GHK4UxputJrW-I_1ihT-ABYEEzpVPGcKwLF9k6nQW6iHw/exec';
-const GAS_SECRET       = 'SIGPO_KEY_FCE_2025';
+// Envío de emails vía Edge Function 'enviar-email' (relay): el secreto se
+// inyecta del lado del servidor y la gas_url se resuelve en la BD por programa.
 
 const PLANTILLAS_DEF = {
     recordatorio: {
@@ -707,14 +706,19 @@ const PLANTILLAS_DEF = {
 const V = {
     data: null,
     filtro: 'todos',
+    page: 1,
     descTarget: null,
     notifications: [],
     plantillas: (function(){ try { var s=localStorage.getItem('sigpo_plantillas_coord_'+PROGRAMA_ID); return s ? JSON.parse(s) : JSON.parse(JSON.stringify(PLANTILLAS_DEF)); } catch(e){ return JSON.parse(JSON.stringify(PLANTILLAS_DEF)); } })(),
     config: {},
-    importFile: null
+    importFile: null,
+    busy:       false,  // mutex — evita doble submit
 };
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    var sb = await getSupabase();
+    var { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion) { window.location.href = 'portal_login.html'; return; }
     cargar();
@@ -733,24 +737,27 @@ async function cargar() {
     spin(true);
     try {
         var sb = await getSupabase();
-        var [rCoh, rCob, rInsc, rEst, rEgr, rProg, rCfg] = await Promise.all([
-            sb.from('cohortes').select('*, programas(nombre,gas_url,email_remitente)').eq('cohorte_id', COHORTE_ID).single(),
+        var [rCoh, rCob, rInsc, rEgr, rProg] = await Promise.all([
+            sb.from('cohortes').select('cohorte_id,nombre,estado,fecha_inicio,fecha_fin,programa_id,programas(nombre,gas_url,email_remitente)').eq('cohorte_id', COHORTE_ID).single(),
             sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,monto_transferido,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
-            sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico').eq('cohorte_id', COHORTE_ID),
-            sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
-            sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', COHORTE_ID),
-            PROGRAMA_ID ? sb.from('programas').select('programa_id,nombre,gas_url,email_remitente').eq('programa_id', PROGRAMA_ID).single() : Promise.resolve({data:null}),
-            sb.from('configuracion').select('clave,valor')
+            obtenerInscripcionesPorCohorte(COHORTE_ID, 'estudiante_id, descuento_porcentaje, estado_academico'),
+            obtenerEgresosResumenPorCohorte(COHORTE_ID),
+            PROGRAMA_ID ? sb.from('programas').select('programa_id,nombre,gas_url,email_remitente').eq('programa_id', PROGRAMA_ID).single() : Promise.resolve({data:null})
         ]);
 
         var cohorte = rCoh.data || {};
         var cobros = rCob.data || [];
-        var inscripciones = rInsc.data || [];
-        var estList = rEst.data || [];
+        var inscripciones = rInsc;
         var progData = rProg.data || {};
-        var cfgRows = rCfg.data || [];
-        V.config = {};
-        cfgRows.forEach(function(r){ V.config[r.clave] = r.valor; });
+        var inscIds = inscripciones.map(function(i){ return i.estudiante_id; });
+        var rEst = inscIds.length
+            ? await sb.from('estudiantes').select('id,dni,nombre,apellido,email').in('id', inscIds)
+            : { data: [] };
+        var estList = rEst.data || [];
+        V.config = await obtenerConfiguracion();
+        V.config.motivosDescuento = V.config.etiquetas
+            ? V.config.etiquetas.split(',').map(function(e) { return e.trim(); }).filter(Boolean)
+            : [];
 
         var estByDni = {};
         estList.forEach(function(e){ estByDni[String(e.dni)] = e; });
@@ -775,7 +782,7 @@ async function cargar() {
             var abonado = (c.monto_abonado != null && Number(c.monto_abonado) > 0)
                 ? Number(c.monto_abonado)
                 : Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
-            dniMap[dk].cobros.push({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final != null ? Number(c.monto_final) : null, monto_abonado:abonado, monto_transferido:(c.monto_transferido ? Number(c.monto_transferido) : null), saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'A_DEFINIR':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null });
+            dniMap[dk].cobros.push({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final != null ? Number(c.monto_final) : null, monto_abonado:abonado, monto_transferido:(c.monto_transferido ? Number(c.monto_transferido) : null), saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'NO_APLICA':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null });
         });
 
         // Agregar estudiantes inscriptos que aún no tienen cobros
@@ -791,7 +798,10 @@ async function cargar() {
             programa: { nombre: cohorte.programas ? cohorte.programas.nombre : (progData.nombre||''), programa_id: cohorte.programa_id || PROGRAMA_ID, gas_url: progData.gas_url || (cohorte.programas ? cohorte.programas.gas_url : '') || '', email_remitente: progData.email_remitente || (cohorte.programas ? cohorte.programas.email_remitente : '') || '' },
             cohorte:  { nombre:cohorte.nombre||'Cohorte', cohorte_id:cohorte.cohorte_id||COHORTE_ID, fecha_inicio:cohorte.fecha_inicio||'', fecha_fin:cohorte.fecha_fin||'', estado:cohorte.estado||'' },
             columnas: columnas,
-            estudiantes: Object.values(dniMap)
+            estudiantes: Object.values(dniMap).sort(function(a,b){
+                var r = String(a.apellido||'').localeCompare(String(b.apellido||''), 'es', { sensitivity:'base' });
+                return r !== 0 ? r : String(a.nombre||'').localeCompare(String(b.nombre||''), 'es', { sensitivity:'base' });
+            })
         };
         V.data = normalizarVista(res);
         V.data.programa.gas_url        = progData.gas_url || (cohorte.programas ? cohorte.programas.gas_url : '') || '';
@@ -875,18 +885,20 @@ function normalizarCobro(c) {
         else saldo = Math.max(0, montoFinal - montoAbonado);
     }
 
-    let estado = 'NO_ABONADA';
-    const hoyStr = new Date().toISOString().split('T')[0];
-
-    if (['A_DEFINIR', 'A DEFINIR', 'NO DEFINIDO', 'NO DEFINIDA'].includes(estadoExplicito) || montoFinal == null) estado = 'A_DEFINIR';
-    else if (['ABONADA', 'PAGADA', 'PAGADO'].includes(estadoExplicito) || (montoFinal != null && saldo <= 0 && montoAbonado > 0)) estado = 'ABONADA';
-    else if (['PAGO PARCIAL', 'PARCIAL'].includes(estadoExplicito) || (montoAbonado > 0 && saldo > 0)) estado = 'PAGO_PARCIAL';
-    else if (['PENDIENTE', 'PENDIENTE DE VERIFICACION', 'PENDIENTE DE REVISION'].includes(estadoExplicito)) estado = 'PENDIENTE';
-    else if (['NO ABONADA', 'NO ABONADO'].includes(estadoExplicito)) estado = 'NO_ABONADA';
-    else if (['EN MORA', 'MORA', 'VENCIDA'].includes(estadoExplicito)) estado = 'EN_MORA';
-    else if (saldo > 0 && fechaVto && fechaVto < hoyStr) estado = 'EN_MORA';
-    else if (saldo > 0) estado = 'NO_ABONADA';
-    else if (saldo <= 0) estado = 'ABONADA';
+    // Estado unificado: una sola fuente de verdad → resolverEstadoCobro (cohorte_tabla.js)
+    var noAplica = ['NO_APLICA', 'NO APLICA', 'NO_DEBE', 'NO DEBE'].includes(estadoExplicito);
+    var comprobanteUrl = c.comprobante_url || c.comprobanteUrl || null;
+    var reciboUrl      = c.recibo_url || c.reciboUrl || null;
+    var estado = resolverEstadoCobro({
+        no_aplica: noAplica,
+        monto_final: montoFinal,
+        saldo_pendiente: saldo,
+        monto_abonado: montoAbonado,
+        estado: estadoExplicito,
+        fecha_vencimiento: fechaVto,
+        comprobante_url: comprobanteUrl,
+        recibo_url: reciboUrl
+    });
 
     return {
         cobro_id: c.cobro_id || c.cobroId || c.id || '',
@@ -901,8 +913,9 @@ function normalizarCobro(c) {
         monto_abonado: montoAbonado,
         saldo_pendiente: saldo,
         estado: estado,
-        comprobante_url: c.comprobante_url || c.comprobanteUrl || null,
-        recibo_url: c.recibo_url || c.reciboUrl || null
+        no_aplica: estado === 'NO_APLICA',
+        comprobante_url: comprobanteUrl,
+        recibo_url: reciboUrl
     };
 }
 
@@ -927,159 +940,92 @@ function renderHeader() {
     document.getElementById('hdr-sub').textContent = partes.join(' • ');
 }
 
-function renderTabla() {
-    const { columnas, estudiantes } = V.data;
-    const thead = document.getElementById('t-head');
-    const tbody = document.getElementById('t-body');
+/* renderTabla → cohorte_tabla.js (esqueleto). Esta vista aporta su HTML
+   específico vía CT_VIEW. */
+var CT_VIEW = {
+    leadingHeader:
+          '<th class="col-check"><input type="checkbox" id="chk-all" onchange="toggleAll(this)" aria-label="Seleccionar todos los estudiantes"></th>'
+        + '<th class="col-name">Apellido y Nombre</th>'
+        + '<th style="min-width:74px;text-align:center;">Desc %</th>'
+        + '<th class="col-email">Correo electrónico</th>'
+        + '<th style="min-width:88px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>Cohorte</th>',
 
-    thead.innerHTML = `<tr>
-      <th class="col-check"><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>
-      <th class="col-name">Apellido y Nombre</th>
-      <th style="min-width:74px;text-align:center;">Desc %</th>
-      <th class="col-email">Correo electrónico</th>
-      <th style="min-width:88px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>Cohorte</th>
-      ${columnas.map(c=>`<th class="col-cuota">${escapeHtml(c.concepto_base)}<br><span style="font-weight:400;color:#888;font-size:9px;">${escapeHtml(c.periodo || '')}</span></th>`).join('')}
-      <th class="tot-hdr th-pagar">Total a<br>Pagar</th>
-      <th class="tot-hdr th-abonado">Total<br>Abonado</th>
-      <th class="tot-hdr th-saldo">Saldo<br>Pendiente</th>
-    </tr>`;
-
-    tbody.innerHTML = '';
-    estudiantes.forEach(est => {
-        const estadoGen = calcEstadoGeneral(est.cobros);
+    totales: function(est) {
         let totP = 0, totA = 0, totS = 0;
-        est.cobros.forEach(c => { if(c){ totP += Number(c.monto_final || 0); totA += Number(c.monto_abonado || 0); totS += Number(c.saldo_pendiente || 0); }});
+        est.cobros.forEach(c => { if(c && c.estado !== 'NO_APLICA'){ totP += Number(c.monto_final || 0); totA += Number(c.monto_abonado || 0); totS += Number(c.saldo_pendiente || 0); }});
+        return { p: totP, a: totA, s: totS };
+    },
 
-        const cobrosMap = {};
-        est.cobros.forEach(c => { if (c) cobrosMap[(c.concepto_base || c.concepto) + '||' + (c.periodo || '')] = c; });
+    celdaVacia: function(est, col) {
+        return `<td data-est="NO_APLICA">no debe<br>abonar</td>`;
+    },
 
-        const celdas = columnas.map(col => {
-            const c = cobrosMap[col.concepto_base + '||' + (col.periodo || '')];
-            if (!c) return `<td data-est="NO_APLICA">no debe<br>abonar</td>`;
-            let txt = '';
-            if (c.estado === 'ABONADA') txt = fMonto(c.monto_final);
-            else if (c.estado === 'PAGO_PARCIAL') txt = `${fMonto(c.monto_abonado)}/${fMonto(c.monto_final)}`;
-            else if (c.estado === 'PENDIENTE') {
-                if (c.monto_transferido && c.monto_transferido > 0 && c.monto_transferido < Number(c.monto_final||0)) {
-                    txt = fMonto(c.monto_transferido) + '\nen revisión';
-                } else {
-                    txt = 'en revisión';
-                }
+    celda: function(c, est) {
+        let txt = '';
+        if (c.estado === 'ABONADA') txt = fMonto(c.monto_final);
+        else if (c.estado === 'PAGO_PARCIAL') txt = `${fMonto(c.monto_abonado)}<br><small style="font-size:9px;opacity:.8;">de ${fMonto(c.monto_final)}</small>`;
+        else if (c.estado === 'PENDIENTE') {
+            if (c.monto_transferido && c.monto_transferido > 0 && c.monto_transferido < Number(c.monto_final||0)) {
+                txt = fMonto(c.monto_transferido) + '\nen revisión';
+            } else {
+                txt = 'en revisión';
             }
-            else if (c.estado === 'NO_ABONADA') txt = fMonto(c.saldo_pendiente || c.monto_final);
-            else if (c.estado === 'EN_MORA') txt = fMonto(c.saldo_pendiente || c.monto_final);
-            else if (c.estado === 'A_DEFINIR') txt = 'a definir';
-            else txt = fMonto(c.monto_final);
-            const title = `${c.concepto} · ${c.periodo || ''} | Estado: ${c.estado} | Abonado: ${fMonto(c.monto_abonado)} | Saldo: ${fMonto(c.saldo_pendiente)}${c.fecha_vencimiento ? ' | Vence: '+c.fecha_vencimiento : ''}`;
-            const btnComp   = c.comprobante_url ? `<button class="clink clink-comp"   onclick="event.stopPropagation();verArchivo('${escapeJs(c.comprobante_url)}')" title="Ver comprobante del estudiante">📎 Comp.</button>` : '';
-            const btnRecibo = c.recibo_url      ? `<button class="clink clink-recibo" onclick="event.stopPropagation();verArchivo('${escapeJs(c.recibo_url)}')"      title="Ver recibo de Cooperadora">🧾 Recibo</button>` : '';
-            const links = (btnComp || btnRecibo) ? `<div class="cell-links">${btnComp}${btnRecibo}</div>` : '';
-            let badge = '';
-            if      (c.estado === 'EN_MORA')      badge = '<span class="est-badge badge-mora">En mora</span>';
-            else if (c.estado === 'NO_ABONADA')   badge = '<span class="est-badge badge-noabonada">Por abonar</span>';
-            else if (c.estado === 'PAGO_PARCIAL') badge = '<span class="est-badge badge-parcial">Pago parcial</span>';
-            else if (c.estado === 'PENDIENTE')    badge = '<span class="est-badge badge-pendiente">En revisión</span>';
-            const esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(c.estado);
-            const editAttr = esEditable
-                ? ' onclick="event.stopPropagation();abrirCeldaPopup(event,' + escapeHtml(JSON.stringify({
-                    cobro_id: c.cobro_id,
-                    dni: String(est.dni),
-                    concepto: c.concepto,
-                    periodo: c.periodo || '',
-                    monto: c.monto_original,
-                    descuento_porcentaje: est.descuento_porcentaje || c.descuento_porcentaje || 0,
-                    fecha_vencimiento: c.fecha_vencimiento || null,
-                    estado_actual: c.estado,
-                    no_aplica: c.estado === 'NO_APLICA'
-                  })) + ')" style="cursor:pointer;"'
-                : '';
-            const editHint = esEditable ? '<div style="font-size:9px;color:#bbb;margin-top:2px;">✏️ editar</div>' : '';
-            return `<td data-est="${c.estado}" title="${escapeHtml(title)}"${editAttr}>${badge}${txt}${editHint}${links}</td>`;
-        }).join('');
+        }
+        else if (c.estado === 'NO_ABONADA') txt = fMonto(c.saldo_pendiente || c.monto_final);
+        else if (c.estado === 'EN_MORA') txt = fMonto(c.saldo_pendiente || c.monto_final);
+        else if (c.estado === 'A_DEFINIR')  txt = 'a definir';
+        else if (c.estado === 'NO_APLICA')  txt = 'No aplica';
+        else txt = fMonto(c.monto_final);
+        const title = `${c.concepto} · ${c.periodo || ''} | Estado: ${c.estado} | Abonado: ${fMonto(c.monto_abonado)} | Saldo: ${fMonto(c.saldo_pendiente)}${c.fecha_vencimiento ? ' | Vence: '+c.fecha_vencimiento : ''}`;
+        const btnComp   = c.comprobante_url ? `<button class="clink clink-comp"   onclick="event.stopPropagation();verArchivo('${escapeJs(c.comprobante_url)}')" title="Ver comprobante del estudiante">📎 Comp.</button>` : '';
+        const btnRecibo = c.recibo_url      ? `<button class="clink clink-recibo" onclick="event.stopPropagation();verArchivo('${escapeJs(c.recibo_url)}')"      title="Ver recibo de Cooperadora">🧾 Recibo</button>` : '';
+        const links = (btnComp || btnRecibo) ? `<div class="cell-links">${btnComp}${btnRecibo}</div>` : '';
+        let badge = '';
+        if      (c.estado === 'EN_MORA')      badge = '<span class="est-badge badge-mora">En mora</span>';
+        else if (c.estado === 'NO_ABONADA')   badge = '<span class="est-badge badge-noabonada">No abonada</span>';
+        else if (c.estado === 'PAGO_PARCIAL') badge = '<span class="est-badge badge-parcial">Pago parcial</span>';
+        else if (c.estado === 'PENDIENTE')    badge = '<span class="est-badge badge-pendiente">En revisión</span>';
+        else if (c.estado === 'NO_APLICA')    badge = '';
+        // El coordinador solo consulta las cuotas: no puede editar, aprobar ni rechazar.
+        // (La edición por celda queda deshabilitada; sí puede ver comprobantes y recibos.)
+        return `<td data-est="${c.estado}" title="${escapeHtml(title)}">${badge}${txt}${links}</td>`;
+    },
 
+    fila: function(est, estadoGen, celdas, totP, totA, totS) {
         const tr = document.createElement('tr');
-        tr.className = 'fila-est' + (est.estado_academico === 'BAJA_COHORTE' ? ' fila-pasiva-cohorte' : '');
+        tr.className = 'fila-est' + (est.estado_academico === 'BAJA' ? ' fila-pasiva-cohorte' : '');
         tr.dataset.dni = est.dni;
         tr.dataset.est = estadoGen;
 
-        const btnEstado = est.estado_academico === 'BAJA_COHORTE'
-            ? `<button class="btn-alta-coh" type="button" onclick="event.stopPropagation();confirmarCambioEstado(${est.dni}, '${escapeJs(est.apellido + ', ' + est.nombre)}', 'ACTIVO')">Alta</button>`
-            : `<button class="btn-baja-coh" type="button" onclick="event.stopPropagation();confirmarCambioEstado(${est.dni}, '${escapeJs(est.apellido + ', ' + est.nombre)}', 'BAJA_COHORTE')">Baja</button>`;
-
+        // El coordinador solo consulta el estado del estudiante (no da de baja/alta).
         tr.innerHTML = `
           <td style="text-align:center;"><input type="checkbox" class="chk-e" data-dni="${est.dni}" onchange="onChk()"></td>
           <td class="cell-name" onclick="irEstudiante(${est.dni})">${escapeHtml(est.apellido)}, ${escapeHtml(est.nombre)}</td>
           <td class="cell-desc" style="color:${est.descuento_porcentaje>0?'var(--success)':'#aaa'}">
-            ${est.descuento_porcentaje}% <button class="edit-btn" type="button" title="Editar descuento" onclick='event.stopPropagation();abrirDescuento({ dni:${est.dni}, apellido:${JSON.stringify(est.apellido)}, nombre:${JSON.stringify(est.nombre)}, pct:${est.descuento_porcentaje} }, this)'>✏️</button>
+            ${est.descuento_porcentaje}%
           </td>
           <td class="cell-email">${escapeHtml(est.email)}</td>
           <td style="text-align:center;border-right:1px solid #ebebeb;">
-            <div style="font-size:11px;margin-bottom:4px;">${est.estado_academico === 'BAJA_COHORTE' ? '⛔ Baja' : '✅ Activo'}</div>
-            ${btnEstado}
+            <div style="display:inline-flex;flex-direction:column;align-items:center;gap:4px;">
+              <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;${est.estado_academico === 'BAJA' ? 'background:#fde8e1;color:var(--clr-danger);' : 'background:#d1fae5;color:#065f46;'}">${est.estado_academico === 'BAJA' ? 'Baja' : 'Activo'}</span>
+            </div>
           </td>
           ${celdas}
           <td class="cell-tot-pagar">${fMonto(totP)}</td>
           <td class="cell-tot-abonado">${fMonto(totA)}</td>
           <td class="${totS===0?'cell-saldo-cero':'cell-saldo-pos'}">${fMonto(totS)}</td>`;
-        tbody.appendChild(tr);
-    });
+        return tr;
+    },
 
-    aplicarFiltro();
-    onChk();
-}
+    afterRender: function() { onChk(); }
+};
 
-function calcEstadoGeneral(cobros) {
-    const pesos = { EN_MORA:6, PAGO_PARCIAL:5, PENDIENTE:4, NO_ABONADA:3, A_DEFINIR:2, ABONADA:1 };
-    let peor = 'ABONADA';
-    cobros.forEach(c => { if (c && (pesos[c.estado] || 0) > (pesos[peor] || 0)) peor = c.estado; });
-    return peor;
-}
+/* calcEstadoGeneral → cohorte_tabla.js */
 
-function actualizarStats() {
-    const ests = V.data.estudiantes;
-    const cg = e => calcEstadoGeneral(e.cobros);
-    const recaud = ests.reduce((s,e)=>s + e.cobros.reduce((ss,c)=>ss+(c?Number(c.monto_abonado||0):0),0), 0);
-    const egrExec = (V.data.egresos || []).filter(e => e.tipo === 'EJECUTADO')
-                                          .reduce((s,e) => s + Number(e.monto_pagado || e.monto_original || 0), 0);
-    const saldo = recaud - egrExec;
-    document.getElementById('s-aldia').textContent     = ests.filter(e=>cg(e)==='ABONADA').length;
-    document.getElementById('s-mora').textContent      = ests.filter(e=>cg(e)==='EN_MORA').length;
-    document.getElementById('s-parcial').textContent   = ests.filter(e=>cg(e)==='PAGO_PARCIAL').length;
-    document.getElementById('s-recaudado').textContent = fMonto(recaud);
-    document.getElementById('s-egresos').textContent   = fMonto(egrExec);
-    const sEl = document.getElementById('s-saldo');
-    sEl.textContent = fMonto(saldo);
-    sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
-}
+/* actualizarStats → cohorte_tabla.js */
 
-function actualizarFiltros() {
-    const ests = V.data.estudiantes;
-    const cg = e => calcEstadoGeneral(e.cobros);
-    const n = f => f==='todos' ? ests.length : ests.filter(e=>cg(e)===f).length;
-    const labels = { todos:'Todos', ABONADA:'Al día', EN_MORA:'En mora', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'Pendiente', NO_ABONADA:'No abonada', A_DEFINIR:'A definir' };
-    document.querySelectorAll('.filter-btn').forEach(b => { b.textContent = `${labels[b.dataset.f]} (${n(b.dataset.f)})`; });
-}
-
-function initFiltros() {
-    document.querySelectorAll('.filter-btn').forEach(b => {
-        b.onclick = () => {
-            V.filtro = b.dataset.f;
-            document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-            aplicarFiltro();
-        };
-    });
-}
-
-function aplicarFiltro() {
-    let vis = 0;
-    document.querySelectorAll('.fila-est').forEach(tr => {
-        const ok = V.filtro==='todos' || tr.dataset.est===V.filtro;
-        tr.classList.toggle('oculta', !ok);
-        if (ok) vis++;
-    });
-    document.getElementById('empty').classList.toggle('show', vis===0);
-}
+/* Filtros y paginación (actualizarFiltros, initFiltros, aplicarFiltro,
+   _aplicarFiltroYPag, mostrarMas) → cohorte_tabla.js */
 
 function toggleAll(cb) {
     document.querySelectorAll('.chk-e').forEach(c => {
@@ -1160,7 +1106,7 @@ function abrirDescuento(info, btn) {
     abrir('modal-descuento');
 }
 
-function _descRedondear2(n) { return Math.round((Number(n)||0)*100)/100; }
+function _descRedondear2(n) { return redondear2(n); }
 function _descCalcAbonado(c) { return _descRedondear2(Math.max(0,(Number(c.monto_final)||0)-(Number(c.saldo_pendiente)||0))); }
 function _descTieneMonto(c) { return !(c==null||c.monto_final===null||c.monto_final===undefined||c.monto_final===''||isNaN(Number(c.monto_final))); }
 function _descNormEstado(montoFinal, saldo, fechaVenc, estadoActual) {
@@ -1180,6 +1126,8 @@ async function guardarDescuento() {
         if (!p.desde) { toast('Período ' + (pi+1) + ': indicá la fecha de inicio', 'err'); return; }
         if (p.hasta && p.hasta < p.desde) { toast('Período ' + (pi+1) + ': la fecha fin debe ser posterior al inicio', 'err'); return; }
     }
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb = await getSupabase();
@@ -1202,6 +1150,7 @@ async function guardarDescuento() {
             if (resInsc.error) throw resInsc.error;
         }
 
+        var cobroUpdates = [];
         for (var i = 0; i < est.cobros.length; i++) {
             var c = est.cobros[i];
             if (['ABONADA','PAGO_PARCIAL','PENDIENTE','EN_MORA'].includes(c.estado)) continue;
@@ -1218,7 +1167,7 @@ async function guardarDescuento() {
             }
 
             if (!_descTieneMonto(c)) {
-                await sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobro_id);
+                cobroUpdates.push(sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobro_id));
                 continue;
             }
 
@@ -1228,14 +1177,16 @@ async function guardarDescuento() {
             var nuevoSaldo = _descRedondear2(Math.max(0, nuevoFinal - abonado));
             var nuevoEstado = _descNormEstado(nuevoFinal, nuevoSaldo, c.fecha_vencimiento, c.estado);
 
-            var resCobro = await sb.from('cobros').update({
+            cobroUpdates.push(sb.from('cobros').update({
                 descuento_porcentaje: pctAplicar,
                 monto_final:          nuevoFinal,
                 saldo_pendiente:      nuevoSaldo,
                 estado:               nuevoEstado
-            }).eq('cobro_id', c.cobro_id);
-            if (resCobro.error) throw resCobro.error;
+            }).eq('cobro_id', c.cobro_id));
         }
+        var cobroResults = await Promise.all(cobroUpdates);
+        var cobroErr = cobroResults.find(function(r){ return r.error; });
+        if (cobroErr) throw cobroErr.error;
 
         toast('Descuento actualizado ✓', 'ok');
         cerrar('modal-descuento');
@@ -1244,6 +1195,7 @@ async function guardarDescuento() {
         console.error(e);
         toast('Error al guardar el descuento: ' + (e.message||''), 'err');
     } finally {
+        V.busy = false;
         spin(false);
     }
 }
@@ -1370,6 +1322,8 @@ async function guardarCuotas() {
     const dnis = V.data.estudiantes.map(e => e.dni);
     if (!dnis.length) { toast('No hay estudiantes en esta cohorte', 'err'); return; }
 
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         const sb = await getSupabase();
@@ -1428,6 +1382,7 @@ async function guardarCuotas() {
         console.error(e);
         toast('Error al crear el plan: ' + (e.message || ''), 'err');
     } finally {
+        V.busy = false;
         spin(false);
     }
 }
@@ -1435,17 +1390,17 @@ async function guardarCuotas() {
 let _bcDni = null, _bcNombre = '', _bcNuevoEstado = '';
 function confirmarCambioEstado(dni, nombre, nuevoEstado) {
     _bcDni = dni; _bcNombre = nombre; _bcNuevoEstado = nuevoEstado;
-    const esBaja = nuevoEstado === 'BAJA_COHORTE';
+    const esBaja = nuevoEstado === 'BAJA';
     const hdr = document.getElementById('mbc-hdr');
     const btn = document.getElementById('mbc-btn');
     hdr.style.background = esBaja ? 'linear-gradient(135deg,#e65100 0%,#f59e0b 100%)' : 'linear-gradient(135deg,#2d7a4f 0%,#4caf50 100%)';
     document.getElementById('mbc-titulo').textContent = esBaja ? '⛔ Baja en esta cohorte' : '✅ Alta en esta cohorte';
     document.getElementById('mbc-sub').textContent = V.data ? V.data.programa.nombre + ' · ' + V.data.cohorte.nombre : '';
     btn.textContent = esBaja ? '⛔ Confirmar Baja' : '✅ Confirmar Alta';
-    btn.style.background = esBaja ? '#ea580c' : '#2d7a4f';
+    btn.style.background = esBaja ? '#ea580c' : 'var(--clr-success)';
     document.getElementById('mbc-cuerpo').innerHTML = esBaja
         ? `<p style="font-size:13px;color:#555;">Va a dar de baja a <strong>${escapeHtml(nombre)}</strong> solo en esta cohorte/edición.</p>
-           <div style="margin-top:12px;background:#fff8e1;border-left:4px solid #f59e0b;padding:12px;border-radius:8px;font-size:12px;color:#78350f;">
+           <div style="margin-top:12px;background:#fff8e1;border-left:4px solid var(--clr-warning);padding:12px;border-radius:8px;font-size:12px;color:#78350f;">
              <strong>Efectos:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;">
                <li>Deja de generar deuda nueva en esta cohorte.</li>
                <li>El historial de pagos se conserva.</li>
@@ -1453,7 +1408,7 @@ function confirmarCambioEstado(dni, nombre, nuevoEstado) {
              </ul>
            </div>`
         : `<p style="font-size:13px;color:#555;">Va a reactivar a <strong>${escapeHtml(nombre)}</strong> en esta cohorte/edición.</p>
-           <div style="margin-top:12px;background:#d4edda;border-left:4px solid #2d7a4f;padding:12px;border-radius:8px;font-size:12px;color:#155724;">
+           <div style="margin-top:12px;background:#d4edda;border-left:4px solid var(--clr-success);padding:12px;border-radius:8px;font-size:12px;color:#155724;">
              <strong>Efectos:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;">
                <li>El estudiante vuelve a estado ACTIVO en esta cohorte.</li>
                <li>Se reanudan los cálculos de cuotas y deuda.</li>
@@ -1462,17 +1417,31 @@ function confirmarCambioEstado(dni, nombre, nuevoEstado) {
     abrir('modal-baja-cohorte');
 }
 async function ejecutarCambioEstado() {
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
-        if (estaEnAppsScript()) await gs('cambiarEstadoEstudianteEnCohorte', { dni:_bcDni, cohorteId:COHORTE_ID, programaId:PROGRAMA_ID, estadoAcademico:_bcNuevoEstado });
-        else await delay(400);
-        const est = V.data.estudiantes.find(e => e.dni === _bcDni);
-        if (est) est.estado_academico = _bcNuevoEstado;
+        // Fuente de verdad: tabla inscripciones (estado_academico: ACTIVO | BAJA)
+        const est = V.data.estudiantes.find(e => String(e.dni) === String(_bcDni));
+        if (!est) throw new Error('Estudiante no encontrado en memoria');
+        if (!est.id) throw new Error('No se pudo determinar la inscripción del estudiante');
+
+        const sb = await getSupabase();
+        const { error } = await sb.from('inscripciones')
+            .update({ estado_academico: _bcNuevoEstado })
+            .eq('estudiante_id', est.id)
+            .eq('cohorte_id', COHORTE_ID);
+        if (error) throw error;
+
+        est.estado_academico = _bcNuevoEstado;
         renderTabla();
-        toast(_bcNuevoEstado === 'BAJA_COHORTE' ? `${_bcNombre} dado/a de baja en esta cohorte ✓` : `${_bcNombre} reactivado/a en esta cohorte ✓`, 'ok');
+        toast(_bcNuevoEstado === 'BAJA' ? `${_bcNombre} dado/a de baja en esta cohorte ✓` : `${_bcNombre} reactivado/a en esta cohorte ✓`, 'ok');
         cerrar('modal-baja-cohorte');
-    } catch(e) { toast('Error al procesar','err'); }
-    finally { spin(false); }
+    } catch(e) {
+        console.error(e);
+        toast('Error al procesar: ' + (e.message || e), 'err');
+    }
+    finally { V.busy = false; spin(false); }
 }
 
 function abrirCorreo() { cargarPlantilla(); abrir('modal-correo'); }
@@ -1492,13 +1461,16 @@ function guardarPlantilla() {
 async function reclamarSel() {
     var sel = getSel();
     if (!sel.length) { toast('Seleccioná al menos un estudiante', 'err'); return; }
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb      = await getSupabase();
         var tipo    = document.getElementById('c-tipo') ? document.getElementById('c-tipo').value : 'reclamo';
         var asunto  = (V.plantillas[tipo] || V.plantillas.reclamo).asunto;
         var cuerpo  = (V.plantillas[tipo] || V.plantillas.reclamo).cuerpo;
-        var gasUrl  = (V.data.programa.gas_url) || GAS_FALLBACK_URL;
+        var progIdEmail = parseInt(V.data.programa.programaId || V.data.programa.programa_id || PROGRAMA_ID, 10);
+        if (!progIdEmail) { toast('No se pudo determinar el programa de esta cohorte. Volvé a entrar desde el listado de programas.', 'err'); return; }
         var replyTo = V.data.programa.email_remitente || '';
         var cbu     = V.config.cbu_banco  || '—';
         var alias   = V.config.alias_banco || '—';
@@ -1545,39 +1517,50 @@ async function reclamarSel() {
             emails.push({ to: est.email, subject: asuntoFinal, body: cuerpoBase + detalle, dni: est.dni });
         });
 
-        var ok = 0, err = 0;
-        for (var i = 0; i < emails.length; i++) {
-            var sent = await enviarEmailGas(gasUrl, emails[i].to, emails[i].subject, emails[i].body, replyTo);
-            if (sent) ok++; else err++;
+        var rows = emails.map(function(e){ return {
+            programa_id: progIdEmail, to_email: e.to, subject: e.subject,
+            body: e.body, reply_to: replyTo || null, estado: 'pendiente'
+        }; });
+        var ok = 0, err = 0, ultimoError = '';
+        if (rows.length) {
+            var insResp = await sb.from('reclamos_pendientes').insert(rows);
+            if (insResp.error) { err = rows.length; ultimoError = insResp.error.message; console.error('encolar error:', insResp.error.message); }
+            else { ok = rows.length; }
         }
 
-        var msg = '✓ ' + ok + ' email' + (ok!==1?'s':'') + ' enviado' + (ok!==1?'s':'');
-        if (err) msg += ' ⚠️ ' + err + ' error(es)';
+        var msg = '✓ ' + ok + ' reclamo' + (ok!==1?'s':'') + ' encolado' + (ok!==1?'s':'') + ' (se envían en segundos)';
+        if (err) msg += ' ⚠️ ' + err + ' error(es)' + (ultimoError ? ': ' + ultimoError : '');
         toast(msg, err ? 'err' : 'ok');
         deselAll();
         cerrar('modal-correo');
     } catch(e) { console.error(e); toast('Error al enviar reclamos: ' + e.message, 'err'); }
-    finally { spin(false); }
+    finally { V.busy = false; spin(false); }
 }
 
-async function enviarEmailGas(gasUrl, to, subject, body, replyTo) {
+// Encola el reclamo en Supabase. El GAS (trigger cada 1 min) lo lee y envía
+// desde la cuenta del programa. Evita el POST directo al GAS (que fallaba).
+async function enviarEmailGas(programaId, to, subject, body, replyTo) {
     try {
-        await fetch(gasUrl, {
-            method:  'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body:    JSON.stringify({ secret: GAS_SECRET, to: to, subject: subject, body: body, replyTo: replyTo || '' }),
-            mode:    'no-cors'
+        var sb = await getSupabase();
+        var resp = await sb.from('reclamos_pendientes').insert({
+            programa_id: programaId,
+            to_email:    to,
+            subject:     subject,
+            body:        body,
+            reply_to:    replyTo || null,
+            estado:      'pendiente'
         });
-        // no-cors: el request llega al GAS y el email se envía,
-        // pero el browser no puede leer la respuesta (respuesta opaca).
+        if (resp.error) { console.error('encolar error para', to, ':', resp.error.message); return resp.error.message || 'error al encolar'; }
         return true;
     } catch(err) {
         console.error('enviarEmailGas excepción:', err);
-        return false;
+        return err.message || 'excepción al encolar';
     }
 }
 async function exportarExcel() {
     if (!V.data) { toast('Sin datos para exportar','err'); return; }
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         if (!window.XLSX) {
@@ -1600,19 +1583,20 @@ async function exportarExcel() {
             const cobrosMap = {};
             est.cobros.forEach(c => { if(c) cobrosMap[(c.concepto_base||c.concepto)+'||'+(c.periodo||'')] = c; });
             let totP = 0, totA = 0, totS = 0;
-            est.cobros.forEach(c => { if(c){ totP += Number(c.monto_final||0); totA += Number(c.monto_abonado||0); totS += Number(c.saldo_pendiente||0); }});
+            est.cobros.forEach(c => { if(c && c.estado !== 'NO_APLICA'){ totP += Number(c.monto_final||0); totA += Number(c.monto_abonado||0); totS += Number(c.saldo_pendiente||0); }});
             const estadoGen = calcEstadoGeneral(est.cobros);
             const fila = [
                 est.apellido, est.nombre, est.dni, est.email,
                 est.descuento_porcentaje + '%',
                 etiquetas[estadoGen] || estadoGen,
-                est.estado_academico === 'BAJA_COHORTE' ? 'Baja' : 'Activo'
+                est.estado_academico === 'BAJA' ? 'Baja' : 'Activo'
             ];
             columnas.forEach(col => {
                 const c = cobrosMap[col.concepto_base+'||'+(col.periodo||'')];
                 if (!c) { fila.push(''); return; }
                 // Valor numérico de la cuota según estado
-                if (c.estado === 'ABONADA')      fila.push(Number(c.monto_final||0));
+                if (c.estado === 'NO_APLICA')    fila.push('No aplica');
+                else if (c.estado === 'ABONADA') fila.push(Number(c.monto_final||0));
                 else if (c.estado === 'PAGO_PARCIAL') fila.push(Number(c.monto_abonado||0));
                 else if (c.estado === 'A_DEFINIR' || c.monto_final == null) fila.push('A definir');
                 else fila.push(Number(c.monto_final||0));
@@ -1659,6 +1643,8 @@ function mostrarArch(f) {
 }
 async function procesarImport() {
     if (!V.importFile) { toast('Seleccioná un archivo Excel','err'); return; }
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         const archivo = await leerArchivoBase64(V.importFile);
@@ -1704,9 +1690,9 @@ function renderNotificaciones() {
     }
     cont.innerHTML = V.notifications.map((n, i) => `
         <div class="notif-item ${n.leida ? '' : 'unread'}" onclick="leerNotif(${i})">
-            <div style="font-weight:600;color:#5C1018;">${escapeHtml(n.titulo || 'Notificación')}</div>
-            <div style="margin-top:2px;">${escapeHtml(n.mensaje || '')}</div>
-            <small>${escapeHtml(n.tiempo || '')}</small>
+            <div style="font-weight:600;color:#000;">${escapeHtml(n.tipo || 'Notificación')}</div>
+            <div style="margin-top:2px;color:#000;">${escapeHtml(n.mensaje || '')}</div>
+            <small style="color:#000;">${escapeHtml(n.tiempo || '')}</small>
         </div>
     `).join('');
 }
@@ -1722,33 +1708,14 @@ function leerNotif(i) {
 async function marcarTodasLeidas() {
     V.notifications = (V.notifications || []).map(n => ({ ...n, leida:true }));
     renderNotificaciones();
-    if (estaEnAppsScript()) { try { await gs('marcarNotificacionesCoordinadorLeidas'); } catch(e) {} }
+    marcarTodasNotificacionesLeidas();
 }
 
 
 function abrir(id){ document.getElementById(id).classList.add('show'); }
 function cerrar(id){ document.getElementById(id).classList.remove('show'); }
 function spin(v){ document.getElementById('spinner').classList.toggle('show', !!v); }
-function hoy(){ return new Date().toISOString().split('T')[0]; }
 function delay(ms){ return new Promise(r=>setTimeout(r, ms)); }
-function toast(msg, tipo='') {
-    const c = document.getElementById('toasts');
-    const d = document.createElement('div');
-    d.className = `toast ${tipo}`;
-    d.textContent = msg;
-    c.appendChild(d);
-    setTimeout(()=>d.remove(), 3500);
-}
-function fMonto(n) {
-    if (n===null||n===undefined) return '–';
-    return '$'+Math.round(Number(n)).toLocaleString('es-AR');
-}
-function fMillones(n) {
-    n = Number(n || 0);
-    if (n>=1000000) return '$'+(n/1000000).toFixed(1)+'M';
-    if (n>=1000)    return '$'+(n/1000).toFixed(0)+'k';
-    return fMonto(n);
-}
 async function verArchivo(url) {
     if (!url) return;
     try {
@@ -1760,9 +1727,6 @@ async function verArchivo(url) {
         }
         window.open(url, '_blank');
     } catch(e) { window.open(url, '_blank'); }
-}
-function escapeHtml(valor) {
-    return String(valor == null ? '' : valor).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'", '&#39;');
 }
 function escapeAttr(valor) { return escapeHtml(valor); }
 function escapeJs(valor) {
@@ -1830,7 +1794,7 @@ function obtenerDemoData() {
                 { cobro_id:11, concepto:'Cuota 03', periodo:'May 2025', fecha_vencimiento:'2025-05-15', monto_original:90000, descuento_porcentaje:0, monto_final:90000, monto_abonado:0, saldo_pendiente:90000, estado:'NO_ABONADA' }
               ]
             },
-            { dni:34567890, apellido:'Martínez', nombre:'Laura', email:'laura.martinez@email.com', telefono:'2615553456', descuento_porcentaje:5, estado_academico:'BAJA_COHORTE',
+            { dni:34567890, apellido:'Martínez', nombre:'Laura', email:'laura.martinez@email.com', telefono:'2615553456', descuento_porcentaje:5, estado_academico:'BAJA',
               cobros:[
                 { cobro_id:12, concepto:'Inscripción', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15', fecha_pago:'2025-03-12', monto_original:50000, descuento_porcentaje:5, monto_final:47500, monto_abonado:47500, saldo_pendiente:0, estado:'ABONADA' },
                 { cobro_id:13, concepto:'Cuota 01', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15', fecha_pago:'2025-03-12', monto_original:90000, descuento_porcentaje:5, monto_final:85500, monto_abonado:85500, saldo_pendiente:0, estado:'ABONADA' }
@@ -1839,8 +1803,6 @@ function obtenerDemoData() {
         ]
     };
 }
-
-function keyCuota(concepto, periodo) { return String(concepto||'')+'||'+String(periodo||''); }
 
 var _ecCuotasEditadas = [];
 
@@ -1865,11 +1827,11 @@ function renderEditarCuotas() {
     cont.innerHTML = _ecCuotasEditadas.map(function(c,i) {
         return '<div style="background:#f8fafc;border-radius:10px;padding:12px 14px;margin-bottom:10px;border:2px solid #e0e0e0;">'
             +'<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;">'
-            +'<div><label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">CONCEPTO</label>'
+            +'<div><label class="u-lbl-blue">CONCEPTO</label>'
             +'<input type="text" value="'+escapeHtml(c.concepto||'')+'" onchange="_ecCuotasEditadas['+i+'].concepto=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;"></div>'
-            +'<div><label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">PERÍODO</label>'
+            +'<div><label class="u-lbl-blue">PERÍODO</label>'
             +'<input type="text" value="'+escapeHtml(c.periodo||'')+'" onchange="_ecCuotasEditadas['+i+'].periodo=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;"></div>'
-            +'<div><label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">VENCIMIENTO</label>'
+            +'<div><label class="u-lbl-blue">VENCIMIENTO</label>'
             +'<input type="date" value="'+(c.fecha_vencimiento||'')+'" onchange="_ecCuotasEditadas['+i+'].fecha_vencimiento=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;"></div>'
             +'</div></div>';
     }).join('');
@@ -1881,6 +1843,8 @@ function actualizarResumenEC() {
 }
 
 async function guardarEdicionCuotas() {
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb = await getSupabase();
@@ -1931,7 +1895,7 @@ function renderEliminarGlobal() {
             +'</div>'
             +'<div style="flex:1;">'
             +'<div style="font-weight:700;font-size:13px;color:#5C1018;">'+escapeHtml(col.concepto_base)+'</div>'
-            +'<div style="font-size:11px;color:#888;margin-top:2px;">'+escapeHtml(col.periodo||'')+' · '+cobrosCol.length+' estudiante'+(cobrosCol.length!==1?'s':'')
+            +'<div style="font-size:11px;color:#767676;margin-top:2px;">'+escapeHtml(col.periodo||'')+' · '+cobrosCol.length+' estudiante'+(cobrosCol.length!==1?'s':'')
             +(abonadas?' · <span style="color:#15803d;font-weight:600;">'+abonadas+' abonada'+(abonadas>1?'s':'')+'</span>':'')
             +(parciales?' · <span style="color:#92400e;font-weight:600;">'+parciales+' parcial'+(parciales>1?'es':'')+'</span>':'')
             +(pendientes?' · <span style="color:#b45309;font-weight:600;">'+pendientes+' pendiente'+(pendientes>1?'s':'')+'</span>':'')
@@ -1963,6 +1927,8 @@ async function eliminarSeleccionadas() {
     var cuotas=checks.map(function(c){ return {concepto:c.dataset.concepto,periodo:c.dataset.periodo}; });
     var nombres=cuotas.map(function(q){ return '"'+q.concepto+'"'+(q.periodo?' ('+q.periodo+')':''); }).join('\n• ');
     if (!confirm('¿Eliminar '+cuotas.length+' cuota'+(cuotas.length>1?'s':'')+' de todos los estudiantes?\n\n• '+nombres+'\n\nEsta acción no se puede deshacer.')) return;
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb=await getSupabase(), eliminadas=0, bloqueadas=[];
@@ -2049,13 +2015,14 @@ async function eliminarSeleccionadas() {
 
             var noAplica = document.getElementById('cpop-noapl').checked;
             var montoStr = document.getElementById('cpop-monto').value.trim();
-            var tieneMonto = montoStr !== '' && !isNaN(parseFloat(montoStr));
+            var tieneMonto = montoStr !== '' && !isNaN(parseFloat(montoStr)) && parseFloat(montoStr) > 0;
 
             spin(true);
             cerrarCeldaPopup();
             try {
                 var sb = await getSupabase();
                 var res;
+                var nuevoEstado = null;
 
                 if (noAplica) {
                     res = await sb.from('cobros').update({
@@ -2073,7 +2040,7 @@ async function eliminarSeleccionadas() {
                     var montoFinal = pct > 0 ? Math.round(montoOriginal * (1 - pct / 100) * 100) / 100 : montoOriginal;
                     var fVenc = cpopInfo.fecha_vencimiento || null;
                     var hoy = new Date().toISOString().split('T')[0];
-                    var nuevoEstado = (fVenc && fVenc < hoy) ? 'EN_MORA' : 'NO_ABONADA';
+                    nuevoEstado = (fVenc && fVenc < hoy) ? 'EN_MORA' : 'NO_ABONADA';
                     res = await sb.from('cobros').update({
                         monto_original: montoOriginal, monto_final: montoFinal,
                         saldo_pendiente: montoFinal, descuento_porcentaje: pct,
@@ -2082,6 +2049,7 @@ async function eliminarSeleccionadas() {
                 }
 
                 if (res.error) throw res.error;
+                if (nuevoEstado === 'EN_MORA') await aplicarMoraCohorteJS(COHORTE_ID);
                 toast('Cuota actualizada ✓', 'ok');
                 await cargar();
             } catch(e) {

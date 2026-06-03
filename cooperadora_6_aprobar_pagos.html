@@ -8,14 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #5C1018;
-            --accent: #C49A2A;
-            --success: #2d7a4f;
-            --danger: #c0392b;
-            --warning: #e67e22;
-            --bg: #f8f6f1;
-        }
+
         body { font-family: 'DM Sans', sans-serif; background: var(--bg); font-size: 14px; }
 
         .header {
@@ -87,11 +80,11 @@
             padding: 4px 12px; border-radius: 20px;
             font-size: 12px; font-weight: 600; white-space: nowrap;
         }
-        .badge-mora { background: #fde8e8; color: #c0392b; }
+        .badge-mora { background: #fde8e8; color: var(--clr-danger); }
         .badge-parcial { background: #fef9e7; color: #d68910; border: 1px solid #f9e79f; }
-        .badge-aldia { background: #e8f6ef; color: #2d7a4f; }
+        .badge-aldia { background: #e8f6ef; color: var(--clr-success); }
         .badge-pendiente { background: #f0f0f0; color: #666; }
-        .badge-nuevo { background: #c0392b; color: white; animation: blink 1.5s infinite; }
+        .badge-nuevo { background: var(--clr-danger); color: white; animation: blink 1.5s infinite; }
         @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 
@@ -176,8 +169,8 @@
             padding: 4px 12px; border-radius: 20px;
             font-size: 12px; font-weight: 600; min-width: 90px; text-align: center;
         }
-        .est-abonada { background: #e8f6ef; color: #2d7a4f; }
-        .est-mora    { background: #fde8e8; color: #c0392b; }
+        .est-abonada { background: #e8f6ef; color: var(--clr-success); }
+        .est-mora    { background: #fde8e8; color: var(--clr-danger); }
         .est-parcial { background: #fef9e7; color: #d68910; }
         .est-pendiente { background: #f0f0f0; color: #888; }
         .est-nodebe  { background: #fafafa; color: #ccc; font-style: italic; }
@@ -217,8 +210,8 @@
         .btn-cerrar { background: #e0e0e0; color: #555; padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
         .btn-cerrar:hover { background: #d0d0d0; }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
 </head>
 <body>
 
@@ -233,7 +226,7 @@
             <div class="notif-wrapper" style="position:relative;">
                 <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                     <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
+                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:var(--clr-danger);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
                 </button>
                 <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                     <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -344,24 +337,10 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
     var _cobros = [];
     var _cobroActivo = null;
-
-    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
-    function fMonto(n) {
-        if (n===null||n===undefined||n==='') return '—';
-        var v = Math.round(Number(n));
-        if (v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
-        if (v>=1000) return '$'+Math.round(v/1000)+'k';
-        return '$'+v.toLocaleString('es-AR');
-    }
-    function fFecha(f) {
-        if (!f) return '—';
-        var p = String(f).split('T')[0].split('-');
-        return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : f;
-    }
 
     /* ── INIT ── */
     var _params = new URLSearchParams(location.search);
@@ -369,6 +348,9 @@
     var _programaId = _params.get('programaId') || _params.get('programa_id') || '';
 
     document.addEventListener('DOMContentLoaded', async function() {
+        var sb = await getSupabase();
+        var { data: { session } } = await sb.auth.getSession();
+        if (!session) { window.location.href = 'portal_login.html'; return; }
         var sesion = getSesion();
         if (!sesion) { window.location.href = 'portal_login.html'; return; }
 
@@ -407,7 +389,7 @@
         var pend = _cobros.length;
         document.querySelector('.summary-card.pend .summary-value').textContent = pend;
         var totalSaldo = _cobros.reduce(function(s,c){ return s+(Number(c.saldo_pendiente)||0); }, 0);
-        document.querySelectorAll('.summary-card')[1].querySelector('.summary-value').textContent = fMonto(totalSaldo);
+        document.querySelectorAll('.summary-card')[1].querySelector('.summary-value').textContent = fMillones(totalSaldo);
     }
 
     /* ── RENDER LISTA ── */
@@ -435,7 +417,7 @@
                 + '</div>'
                 + '<div class="student-totales">'
                 +   '<div class="tot-label">Saldo pendiente</div>'
-                +   '<div class="tot-deuda">' + fMonto(c.saldo_pendiente) + '</div>'
+                +   '<div class="tot-deuda">' + fMillones(c.saldo_pendiente) + '</div>'
                 + '</div>'
                 + '<div class="arrow">›</div>'
                 + '</div>';
@@ -454,13 +436,13 @@
         var cuotaLabel = c.nro_cuota ? 'Cuota ' + c.nro_cuota : (c.concepto || '—');
         document.getElementById('modal-nombre').textContent = nombreMostrado;
         document.getElementById('modal-sub').textContent = 'DNI: ' + (c.dni || '—') + ' · ' + cuotaLabel;
-        document.getElementById('modal-total-pagar').textContent = fMonto(c.monto_final);
-        document.getElementById('modal-total-abonado').textContent = fMonto(
+        document.getElementById('modal-total-pagar').textContent = fMillones(c.monto_final);
+        document.getElementById('modal-total-abonado').textContent = fMillones(
             (c.monto_abonado != null && Number(c.monto_abonado) > 0)
                 ? Number(c.monto_abonado)
                 : Math.max(0, (Number(c.monto_final)||0) - (Number(c.saldo_pendiente)||0))
         );
-        document.getElementById('modal-saldo').textContent = fMonto(c.saldo_pendiente);
+        document.getElementById('modal-saldo').textContent = fMillones(c.saldo_pendiente);
 
         /* Cuotas area → comprobante y acciones */
         var cuotasDiv = document.getElementById('modal-cuotas');
@@ -493,11 +475,11 @@
             var colorText = esParcialDeclarado ? '#9a3412' : '#166534';
             var iconoD = esParcialDeclarado ? '⚠️' : '✅';
             var labelD = esParcialDeclarado
-                ? 'Pago PARCIAL declarado: <strong>' + fMonto(mt) + '</strong> de ' + fMonto(Number(c.monto_final))
-                : 'Pago TOTAL declarado: <strong>' + fMonto(mt) + '</strong>';
+                ? 'Pago PARCIAL declarado: <strong>' + fMillones(mt) + '</strong> de ' + fMillones(Number(c.monto_final))
+                : 'Pago TOTAL declarado: <strong>' + fMillones(mt) + '</strong>';
             montoDeclaradoHtml = '<div style="margin-bottom:12px;padding:10px 14px;background:'+colorBg+';border-radius:8px;border:1px solid '+colorBorder+';font-size:13px;color:'+colorText+';">'
                 + iconoD + ' ' + labelD
-                + (esParcialDeclarado ? '<br><span style="font-size:12px;opacity:.8;">Saldo restante a cobrar: <strong>' + fMonto(Math.max(0, Number(c.monto_final) - mt)) + '</strong></span>' : '')
+                + (esParcialDeclarado ? '<br><span style="font-size:12px;opacity:.8;">Saldo restante a cobrar: <strong>' + fMillones(Math.max(0, Number(c.monto_final) - mt)) + '</strong></span>' : '')
                 + '</div>';
         }
 
@@ -512,7 +494,7 @@
             +'<div style="font-size:13px;font-weight:600;color:#5C1018;margin-bottom:8px;">Monto parcial a aprobar:</div>'
             +'<div style="display:flex;gap:8px;align-items:center;">'
             +'<input type="number" id="monto-parcial" placeholder="Ingresá el monto" min="1" max="'+Number(c.monto_final)+'" step="100" style="flex:1;padding:9px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:\'DM Sans\',sans-serif;">'
-            +'<button class="btn" style="background:#e67e22;color:white;white-space:nowrap;" onclick="accionParcial()">📊 Aprobar Parcial</button>'
+            +'<button class="btn" style="background:var(--clr-warning);color:white;white-space:nowrap;" onclick="accionParcial()">📊 Aprobar Parcial</button>'
             +'</div></div>';
 
         cuotasDiv.innerHTML = comprobanteHtml
@@ -543,7 +525,7 @@
         if (!_cobroActivo) return;
         var reciboFile = getReciboFile();
         if (!reciboFile) { alert('Debés adjuntar el recibo oficial antes de aprobar.'); return; }
-        if (!confirm('¿Aprobar el pago completo de '+fMonto(_cobroActivo.monto_final)+'?')) return;
+        if (!confirm('¿Aprobar el pago completo de '+fMillones(_cobroActivo.monto_final)+'?')) return;
         try {
             var res = await aprobarPago(_cobroActivo.cobro_id, 'total', _cobroActivo.monto_final, reciboFile);
             if (!res.ok) { alert('Error: ' + (res.mensaje || 'No se pudo aprobar')); return; }
@@ -561,7 +543,7 @@
         if (!monto || monto <= 0) { alert('Ingresá un monto válido'); return; }
         var reciboFile = getReciboFile();
         if (!reciboFile) { alert('Debés adjuntar el recibo oficial antes de aprobar.'); return; }
-        if (!confirm('¿Aprobar pago parcial de '+fMonto(monto)+'?')) return;
+        if (!confirm('¿Aprobar pago parcial de '+fMillones(monto)+'?')) return;
         try {
             var res = await aprobarPago(_cobroActivo.cobro_id, 'parcial', monto, reciboFile);
             if (!res.ok) { alert('Error: ' + (res.mensaje || 'No se pudo aprobar')); return; }
@@ -589,7 +571,7 @@
     function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
     document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
     function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
-    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
+    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); marcarTodasNotificacionesLeidas(); }
 </script>
 </body>
 </html>

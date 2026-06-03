@@ -8,15 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #5C1018;
-            --accent:  #8C1A28;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger:  #ef4444;
-            --info:    #3b82f6;
-            --gray:    #9ca3af;
-        }
+
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
 
         /* ── Header institucional ── */
@@ -34,7 +26,7 @@
         .notif-bell { background: none; border: none; cursor: pointer; position: relative; padding: 8px; border-radius: 8px; transition: background .15s; }
         .notif-bell:hover { background: rgba(255,255,255,.15); }
         .notif-wrapper { position: relative; display: inline-flex; align-items: center; }
-        .notif-badge-dot { position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid transparent; line-height: 1; }
+        .notif-badge-dot { position: absolute; top: 2px; right: 2px; background: var(--clr-danger); color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid transparent; line-height: 1; }
         .notif-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; width: 380px; max-height: 460px; overflow-y: auto; background: #fff; border-radius: 14px; box-shadow: 0 16px 48px rgba(10,15,30,.14); z-index: 999; border: 1px solid #E6DFD2; }
 
         /* LAYOUT */
@@ -49,13 +41,15 @@
         .filter-select:focus { outline: none; border-color: var(--primary); }
 
         /* RESUMEN */
-        .resumen-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+        .resumen-bar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 20px; }
         .resumen-pill { background: white; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid transparent; }
         .resumen-pill.r-total     { border-color: var(--primary); }
         .resumen-pill.r-abonada   { border-color: var(--success); }
+        .resumen-pill.r-parcial   { border-color: var(--clr-warning);         }
         .resumen-pill.r-mora      { border-color: var(--danger);  }
-        .resumen-pill.r-pendiente { border-color: var(--warning); }
-        .resumen-pill.r-indefinida{ border-color: var(--gray);    }
+        .resumen-pill.r-pendiente  { border-color: var(--warning); }
+        .resumen-pill.r-indefinida { border-color: var(--gray);    }
+        .resumen-pill.r-noabonada  { border-color: #94a3b8;        }
         .pill-num   { font-size: 22px; font-weight: 700; color: var(--primary); line-height: 1; }
         .pill-label { font-size: 12px; color: #666; line-height: 1.3; }
 
@@ -66,7 +60,7 @@
         .cuota-card.estado-EN_MORA      { border-color: var(--danger);  }
         .cuota-card.estado-PENDIENTE    { border-color: var(--warning); }
         .cuota-card.estado-NO_ABONADA   { border-color: #6366f1; }
-        .cuota-card.estado-PAGO_PARCIAL { border-color: var(--info);    }
+        .cuota-card.estado-PAGO_PARCIAL { border-color: var(--clr-warning);        }
         .cuota-card.estado-A_DEFINIR    { border-color: var(--gray);    }
 
         .cuota-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
@@ -78,7 +72,7 @@
         .badge-EN_MORA      { background: #fee2e2; color: #991b1b; }
         .badge-PENDIENTE    { background: #fef3c7; color: #92400e; }
         .badge-NO_ABONADA   { background: #e0e7ff; color: #3730a3; }
-        .badge-PAGO_PARCIAL { background: #dbeafe; color: #1e40af; }
+        .badge-PAGO_PARCIAL { background: #fde68a; color: #92400e; }
         .badge-A_DEFINIR    { background: #f3f4f6; color: #6b7280; }
 
         .cuota-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 20px; margin-bottom: 16px; }
@@ -96,7 +90,7 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: #8C1A28; }
         .btn-success { background: var(--success); color: white; }
-        .btn-success:hover { background: #059669; }
+        .btn-success:hover { background: var(--clr-success); }
         .btn-outline { background: white; color: var(--primary); border: 2px solid #d1d5db; }
         .btn-outline:hover { border-color: var(--primary); }
         .btn-warning { background: var(--warning); color: white; }
@@ -185,7 +179,8 @@
             .cuota-grid  { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
 </head>
 <body>
 
@@ -235,13 +230,13 @@
 
     <!-- FILTROS -->
     <div class="filters-bar">
-        <select class="filter-select" id="selPrograma" onchange="onProgramaChange()">
+        <select class="filter-select" id="selPrograma" aria-label="Filtrar por programa" onchange="onProgramaChange()">
             <option value="">Todos los programas</option>
         </select>
-        <select class="filter-select" id="selCohorte" onchange="render()">
+        <select class="filter-select" id="selCohorte" aria-label="Filtrar por cohorte" onchange="render()">
             <option value="">Todas las cohortes</option>
         </select>
-        <select class="filter-select" id="selEstado" onchange="render()">
+        <select class="filter-select" id="selEstado" aria-label="Filtrar por estado de cuota" onchange="render()">
             <option value="">Todos los estados</option>
             <option value="NO_ABONADA">No abonada</option>
             <option value="PENDIENTE">Pendiente de revisión</option>
@@ -283,7 +278,7 @@
                     <small style="color:#bbb;margin-top:4px;display:block;">PDF, JPG o PNG · Máx. 10 MB</small>
                 </div>
             </div>
-            <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="onFileSelect(event)">
+            <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" aria-label="Seleccionar comprobante de pago" onchange="onFileSelect(event)">
             <div class="file-preview" id="filePreview">
                 <span style="font-size:20px;">📄</span>
                 <span class="file-preview-name" id="filePreviewName"></span>
@@ -296,23 +291,23 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label">Fecha de la transferencia <span class="req">*</span></label>
-            <input type="date" class="form-input" id="inputFechaTransf">
+            <label class="form-label" for="inputFechaTransf">Fecha de la transferencia <span class="req">*</span></label>
+            <input type="date" class="form-input" id="inputFechaTransf" aria-label="Fecha de la transferencia">
         </div>
 
         <div class="form-group">
-            <label class="form-label">N° de operación / referencia <span class="req">*</span></label>
-            <input type="text" class="form-input" id="inputNroOp" placeholder="Ej: 123456789">
+            <label class="form-label" for="inputNroOp">N° de operación / referencia <span class="req">*</span></label>
+            <input type="text" class="form-input" id="inputNroOp" placeholder="Ej: 123456789" aria-label="Número de operación o referencia">
         </div>
 
         <div class="form-group">
-            <label class="form-label">Monto transferido (ARS) <span class="req">*</span></label>
-            <input type="number" class="form-input" id="inputMonto" placeholder="Ej: 90000" min="1">
+            <label class="form-label" for="inputMonto">Monto transferido (ARS) <span class="req">*</span></label>
+            <input type="number" class="form-input" id="inputMonto" placeholder="Ej: 90000" min="1" aria-label="Monto transferido en pesos">
         </div>
 
         <div class="form-group">
-            <label class="form-label">Observaciones <span style="color:#aaa;font-weight:400;">(opcional)</span></label>
-            <textarea class="form-input" id="inputObs" rows="2" placeholder="Ej: Pago parcial acordado con la administración…" style="resize:vertical;"></textarea>
+            <label class="form-label" for="inputObs">Observaciones <span style="color:#aaa;font-weight:400;">(opcional)</span></label>
+            <textarea class="form-input" id="inputObs" rows="2" placeholder="Ej: Pago parcial acordado con la administración…" style="resize:vertical;" aria-label="Observaciones opcionales"></textarea>
         </div>
 
         <div class="info-note">
@@ -345,7 +340,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
 'use strict';
 
@@ -367,7 +362,7 @@ var ETIQUETAS = {
     EN_MORA:      '🔴 En mora',
     PENDIENTE:    '🕐 Pendiente',
     NO_ABONADA:   '🔵 No abonada',
-    PAGO_PARCIAL: '💙 Pago parcial',
+    PAGO_PARCIAL: '🔶 Pago parcial',
     A_DEFINIR:    '⚙️ A definir',
     NO_APLICA:    '— No aplica'
 };
@@ -375,6 +370,8 @@ var ETIQUETAS = {
 var RESUMEN_META = [
     { key:'total',       label:'Total',       cls:'r-total',      icon:'📋' },
     { key:'ABONADA',     label:'Abonadas',    cls:'r-abonada',    icon:'✅' },
+    { key:'NO_ABONADA',  label:'No abonadas', cls:'r-noabonada',  icon:'🔲' },
+    { key:'PAGO_PARCIAL',label:'Pago parcial',cls:'r-parcial',    icon:'🔶' },
     { key:'EN_MORA',     label:'En mora',     cls:'r-mora',       icon:'🔴' },
     { key:'PENDIENTE',   label:'Pendientes',  cls:'r-pendiente',  icon:'🕐' },
     { key:'A_DEFINIR',   label:'A definir',   cls:'r-indefinida', icon:'⚙️' },
@@ -396,40 +393,12 @@ document.addEventListener('click', function(e) {
         if (dd) dd.style.display = 'none';
     }
 });
-function renderNotificaciones(datos) {
-    _notifs = datos || [];
-    var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-    var badge = document.getElementById('notif-badge');
-    if (badge) { badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none'; }
-    var lista = document.getElementById('notif-list');
-    if (!lista) return;
-    if (!_notifs.length) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-    var iconos  = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨', cuota:'📅' };
-    var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3', cuota:'#dbeafe' };
-    lista.innerHTML = _notifs.map(function(n) {
-        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-            + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo] || '#f3f4f6') + ';">' + (iconos[n.tipo] || '🔔') + '</div>'
-            + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + escapeHtml(n.mensaje) + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + escapeHtml(n.tiempo) + '</div></div></div>';
-    }).join('');
-}
-function leerNotif(id) {
-    _notifs.forEach(function(n) { if (n.id === id) n.leida = true; });
-    renderNotificaciones(_notifs);
-    if (typeof marcarNotificacionLeida === 'function') marcarNotificacionLeida(id);
-}
-function marcarTodasLeidas() {
-    _notifs.forEach(function(n) { n.leida = true; });
-    renderNotificaciones(_notifs);
-    if (typeof marcarTodasNotificacionesLeidas === 'function') marcarTodasNotificacionesLeidas();
-}
+// renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 
 // ════════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════════
-function fmt(n) {
-    if (n === null || n === undefined) return '—';
-    return '$' + Number(n).toLocaleString('es-AR');
-}
+var fmt = fMonto;
 function spin(v) { document.getElementById('spinner').classList.toggle('show', v); }
 function toast(msg, tipo) {
     var t = document.getElementById('toast');
@@ -438,7 +407,6 @@ function toast(msg, tipo) {
     clearTimeout(t._to);
     t._to = setTimeout(function() { t.className = 'toast'; }, 4500);
 }
-function hoy() { return new Date().toISOString().split('T')[0]; }
 
 // ════════════════════════════════════════════════════
 // FILTROS DESDE DASHBOARD
@@ -672,7 +640,7 @@ function render() {
 
 function renderResumen(lista) {
     var cnt = { total: lista.length };
-    ['ABONADA','EN_MORA','PENDIENTE','PAGO_PARCIAL','A_DEFINIR'].forEach(function(e) {
+    ['ABONADA','NO_ABONADA','EN_MORA','PENDIENTE','PAGO_PARCIAL','A_DEFINIR'].forEach(function(e) {
         cnt[e] = lista.filter(function(c) { return c.estado === e; }).length;
     });
     document.getElementById('resumenBar').innerHTML = RESUMEN_META.map(function(m) {
@@ -740,7 +708,7 @@ function buildCard(c) {
         footerLeft = 'Pago parcial registrado · Saldo restante: ' + fmt(c.saldo);
 
     } else if (c.estado === 'PENDIENTE') {
-        infoExtra = '<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;color:#92400e;">🕐 <strong>Comprobante enviado</strong> — Esperando revisión de Cooperadora</div>';
+        infoExtra = '<div style="background:#fef3c7;border-left:4px solid var(--clr-warning);padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;color:#92400e;">🕐 <strong>Comprobante enviado</strong> — Esperando revisión de Cooperadora</div>';
         gridHtml = ''
             + '<div><div class="detail-label">Concepto</div><div class="detail-value">' + esc(c.concepto) + '</div></div>'
             + '<div><div class="detail-label">Período</div><div class="detail-value">' + esc(c.periodo) + '</div></div>'
@@ -1056,12 +1024,7 @@ document.getElementById('modalDoc').addEventListener('click', function(e) {
 });
 
 // ════════════════════════════════════════════════════
-// UTILS
 // ════════════════════════════════════════════════════
-function esc(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
 </script>
 </body>
 </html>

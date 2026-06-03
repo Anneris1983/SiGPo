@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Programas y Cohortes - SiGPo</title>
+    <title>Gestión de Programas y Cohortes</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #5C1018; --accent: #C49A2A; --success: #2d7a4f; --danger: #dc2626; }
+
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
 
         .header { background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%); color: white; padding: 20px 40px; }
@@ -49,7 +49,7 @@
         .btn-success { background: var(--success); color: white; }
         .btn-secondary { background: #f0f0f0; color: #333; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning { background: var(--clr-warning); color: white; }
         .btn-sm { padding: 6px 12px; font-size: 12px; }
 
         .section-hdr { font-size: 14px; font-weight: 700; color: var(--primary); padding: 9px 14px; background: #eef2f7; border-radius: 8px; margin-bottom: 10px; margin-top: 18px; display: flex; justify-content: space-between; align-items: center; }
@@ -111,8 +111,8 @@
 
         .notif-wrapper { position: relative; }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
     <style>
     body { zoom: 1.0 !important; }
     .container { max-width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
@@ -131,7 +131,7 @@
             <div class="notif-wrapper">
                 <button onclick="toggleNotif()" style="background:none;border:none;cursor:pointer;padding:8px;border-radius:8px;position:relative;">
                     <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;border:2px solid #5C1018;">0</span>
+                    <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:var(--clr-danger);color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;border:2px solid #5C1018;">0</span>
                 </button>
                 <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:360px;max-height:440px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                     <div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -276,7 +276,7 @@
 <div class="spinner" id="spinner"><div class="spin-c"></div></div>
 <div id="toasts"></div>
 
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
 var _programas = [];
 var _progActual = null;
@@ -303,20 +303,14 @@ function switchTab(tab) {
 
 // ── HELPERS ───────────────────────────────
 function spin(on) { document.getElementById('spinner').classList.toggle('active', on); }
-function toast(msg, t) {
-    var d = document.createElement('div');
-    d.className = 'toast '+(t||'');
-    d.textContent = msg;
-    document.getElementById('toasts').appendChild(d);
-    setTimeout(function(){d.remove();}, 3500);
-}
+// toast: usa la versión global de supabase.js
 function abrirModal(id) { document.getElementById(id).classList.add('active'); }
 function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
 document.querySelectorAll('.modal-overlay').forEach(function(m) {
     m.addEventListener('click', function(e){ if(e.target===m) cerrarModal(m.id); });
 });
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fMonto(n) { return '$'+Math.round(Number(n)||0).toLocaleString('es-AR'); }
+
 
 function iconoTipo(t) {
     return {DOCTORADO:'🎓',MAESTRIA:'📊',ESPECIALIZACION:'💼',DIPLOMADO:'📖',DIPLOMATURA:'📖',MICRO_MAESTRIA:'📖',CURSO:'📖'}[t]||'📖';

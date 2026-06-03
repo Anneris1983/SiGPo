@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #5C1018; --accent: #C49A2A; }
+
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
 
         /* HEADER */
@@ -90,7 +90,7 @@
         .btn:hover { opacity: 0.85; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-secondary { background: #e0e0e0; color: #333; }
-        .btn-export { background: #2d7a4f; color: white; }
+        .btn-export { background: var(--clr-success); color: white; }
 
         /* RESULTADO INFO */
         .result-info {
@@ -168,8 +168,8 @@
         /* NOTIF */
         .notif-wrapper { position: relative; }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
     <style>
     body { zoom: 1.0 !important; }
     .container { max-width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
@@ -187,7 +187,7 @@
         <div class="notif-wrapper">
             <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                 <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
+                <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:var(--clr-danger);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
             </button>
             <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                 <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -283,7 +283,7 @@
             <input type="date" id="f-hasta" onchange="aplicarFiltros()">
         </div>
         <button class="btn btn-secondary" onclick="limpiarFiltros()">✕ Limpiar</button>
-        <button class="btn btn-export" onclick="exportarLogs()">📥 Exportar CSV</button>
+        <button class="btn btn-export" onclick="exportarExcel()">📥 Exportar Excel</button>
     </div>
 
     <div class="result-info hidden" id="result-info">
@@ -302,8 +302,9 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
 /* ══════════════════════════════════════════════════════
    ESTADO GLOBAL
@@ -786,48 +787,49 @@ function mostrarLoading(show) {
 }
 
 /* ══════════════════════════════════════════════════════
-   EXPORTAR CSV
+   EXPORTAR EXCEL
 ══════════════════════════════════════════════════════ */
-function exportarLogs() {
+function exportarExcel() {
     if (_logsFiltrados.length === 0) {
         alert('No hay registros para exportar.');
         return;
     }
-    var cols, filas;
+    var rows;
     if (_tabActual === 'cobros') {
-        cols = ['Fecha', 'Estudiante', 'DNI', 'Cuota', 'Cohorte', 'Estado Anterior', 'Estado Nuevo', 'Monto', 'Saldo Pendiente', 'Registrado por', 'Rol'];
-        filas = _logsFiltrados.map(function(l) {
-            return [
-                new Date(l.created_at).toLocaleString('es-AR'),
-                l.estudiante, l.dni, l.cuota, l.cohorte,
-                l.estado_ant, l.estado_nuevo,
-                l.monto || '', l.saldo || '',
-                l.registrado_email, l.registrado_rol
-            ];
+        rows = _logsFiltrados.map(function(l) {
+            return {
+                'Fecha':            new Date(l.created_at).toLocaleString('es-AR'),
+                'Estudiante':       l.estudiante || '',
+                'DNI':              l.dni || '',
+                'Cuota':            l.cuota || '',
+                'Cohorte':          l.cohorte || '',
+                'Estado Anterior':  l.estado_ant || '',
+                'Estado Nuevo':     l.estado_nuevo || '',
+                'Monto':            l.monto || '',
+                'Saldo Pendiente':  l.saldo || '',
+                'Registrado por':   l.registrado_email || '',
+                'Rol':              l.registrado_rol || ''
+            };
         });
     } else {
-        cols = ['Fecha', 'Estudiante', 'Programa', 'Cohorte', 'Estado Anterior', 'Estado Nuevo', 'Motivo', 'Registrado por', 'Rol'];
-        filas = _logsFiltrados.map(function(l) {
-            return [
-                new Date(l.created_at).toLocaleString('es-AR'),
-                l.estudiante, l.programa_nombre, l.cohorte,
-                l.estado_ant, l.estado_nuevo, l.motivo || '',
-                l.registrado_email, l.registrado_rol
-            ];
+        rows = _logsFiltrados.map(function(l) {
+            return {
+                'Fecha':            new Date(l.created_at).toLocaleString('es-AR'),
+                'Estudiante':       l.estudiante || '',
+                'Programa':         l.programa_nombre || '',
+                'Cohorte':          l.cohorte || '',
+                'Estado Anterior':  l.estado_ant || '',
+                'Estado Nuevo':     l.estado_nuevo || '',
+                'Motivo':           l.motivo || '',
+                'Registrado por':   l.registrado_email || '',
+                'Rol':              l.registrado_rol || ''
+            };
         });
     }
-
-    var csv = [cols.join(',')].concat(filas.map(function(f) {
-        return f.map(function(v) { return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(',');
-    })).join('\n');
-
-    var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    var url  = URL.createObjectURL(blob);
-    var a    = document.createElement('a');
-    a.href   = url;
-    a.download = 'logs_' + _tabActual + '_' + new Date().toISOString().split('T')[0] + '.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, _tabActual === 'cobros' ? 'Historial Cobros' : 'Historial Inscripciones');
+    XLSX.writeFile(wb, 'logs_' + _tabActual + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
 }
 
 /* ══════════════════════════════════════════════════════
@@ -844,36 +846,7 @@ document.addEventListener('click', function(e) {
         document.getElementById('notif-dropdown').style.display = 'none';
     }
 });
-function renderNotificaciones(datos) {
-    _notifs = datos || [];
-    var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-    var badge = document.getElementById('notif-badge');
-    badge.textContent = sinLeer;
-    badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-    var lista = document.getElementById('notif-list');
-    if (_notifs.length === 0) {
-        lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>';
-        return;
-    }
-    var iconos  = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨', cuota:'📅' };
-    var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3', cuota:'#dbeafe' };
-    lista.innerHTML = _notifs.map(function(n) {
-        return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-            + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-            + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p>'
-            + '<div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
-    }).join('');
-}
-function leerNotif(id) {
-    _notifs.forEach(function(n) { if (n.id === id) n.leida = true; });
-    renderNotificaciones(_notifs);
-    if (typeof marcarNotificacionLeida === 'function') marcarNotificacionLeida(id);
-}
-function marcarTodasLeidas() {
-    _notifs.forEach(function(n) { n.leida = true; });
-    renderNotificaciones(_notifs);
-    if (typeof marcarTodasNotificacionesLeidas === 'function') marcarTodasNotificacionesLeidas();
-}
+// renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 function cargarNotificaciones() {
     if (typeof obtenerNotificaciones === 'function') {
         obtenerNotificaciones('ADMINISTRADOR').then(renderNotificaciones);

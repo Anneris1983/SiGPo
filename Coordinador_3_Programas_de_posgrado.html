@@ -13,14 +13,7 @@
             box-sizing: border-box;
         }
 
-        :root {
-            --primary: #5C1018;
-            --accent: #C49A2A;
-            --bg: #f8f6f1;
-            --success: #2d7a4f;
-            --warning: #e67e22;
-            --danger: #c0392b;
-        }
+
 
         body {
             font-family: 'DM Sans', sans-serif;
@@ -355,8 +348,8 @@
         .saldo-positivo { color: var(--success); font-weight: 700; }
         .saldo-negativo { color: var(--danger);  font-weight: 700; }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
 </head>
 <body>
 
@@ -385,7 +378,7 @@
             <div class="notif-wrapper" style="position:relative;">
                 <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                     <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                    <span id="notif-badge" style="position:absolute;top:0;right:0;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
+                    <span id="notif-badge" style="position:absolute;top:0;right:0;background:var(--clr-danger);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid white;line-height:1;">0</span>
                 </button>
                 <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                     <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -410,7 +403,7 @@
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
 var _programaId = new URLSearchParams(location.search).get('programa') || new URLSearchParams(location.search).get('id') || '';
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -419,16 +412,7 @@ function fM(n) { var num=parseFloat(n||0); if(isNaN(num)) return '$0,00'; return
 var _notifs = [];
 function toggleNotif() { var dd=document.getElementById('notif-dropdown'); if(dd) dd.style.display=dd.style.display==='block'?'none':'block'; }
 document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
-function renderNotificaciones(datos) {
-    _notifs=datos||[];
-    var sinLeer=_notifs.filter(function(n){return !n.leida;}).length;
-    var badge=document.getElementById('notif-badge'); if(badge){badge.textContent=sinLeer;badge.style.display=sinLeer>0?'flex':'none';}
-    var lista=document.getElementById('notif-list'); if(!lista) return;
-    if(!_notifs.length){lista.innerHTML='<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>';return;}
-    lista.innerHTML=_notifs.map(function(n){return '<div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="leerNotif(\''+n.id+'\')"><p style="font-size:13px;color:#374151;">'+esc(n.mensaje)+'</p></div>';}).join('');
-}
-function leerNotif(id){_notifs.forEach(function(n){if(n.id===id)n.leida=true;});renderNotificaciones(_notifs);}
-function marcarTodasLeidas(){_notifs.forEach(function(n){n.leida=true;});renderNotificaciones(_notifs);}
+// renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 
 function abrirLogout() { document.getElementById('logoutModal').classList.add('show'); }
 function cancelarLogout() { document.getElementById('logoutModal').classList.remove('show'); }
@@ -476,7 +460,10 @@ async function cargarCohortes() {
     } catch(e) { console.error('Error cargando cohortes:', e); }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    var _sb = await getSupabase();
+    var { data: { session: _session } } = await _sb.auth.getSession();
+    if (!_session) { window.location.href = 'portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion) { window.location.href = 'portal_login.html'; return; }
     cargarCohortes();

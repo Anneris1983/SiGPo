@@ -72,18 +72,15 @@ function alertarCuotasADefinir() {
 
   var cohorteIds = Object.keys(porCohorte);
   var cohortes   = _sbGet('cohortes?select=cohorte_id,nombre,programa_id&cohorte_id=in.(' + cohorteIds.join(',') + ')');
-  var programas  = _sbGet('programas?select=programa_id,nombre');
+  var programas  = _sbGet('programas?select=programa_id,nombre,email_remitente');
   var cohMap     = _indexar(cohortes,  'cohorte_id');
   var progMap    = _indexar(programas, 'programa_id');
 
-  // Receptores: cooperadora, secretaria y admin — usando estado_usuario
-  var receptores = _sbGet('usuarios?select=dni,nombre,apellido,email,rol,programa_id&rol=in.(COOPERADORA,SECRETARIA,ADMINISTRADOR,COORDINADOR)&estado_usuario=eq.ACTIVO');
-  var recPorProg = {};
-  receptores.forEach(function(r) {
-    var key = String(r.programa_id || 'global');
-    if (!recPorProg[key]) recPorProg[key] = [];
-    recPorProg[key].push(r);
-  });
+  // Personal de back-office global (ADMINISTRADOR/SECRETARIA/COOPERADORA, sin restricción de programa).
+  // Los COORDINADOREs NO se consultan aquí: su correo viene de programas.email_remitente,
+  // evitando que coordinadores de otros programas reciban alertas ajenas.
+  var globalStaff  = _sbGet('usuarios?select=email&rol=in.(COOPERADORA,SECRETARIA,ADMINISTRADOR)&estado_usuario=eq.ACTIVO');
+  var globalEmails = _uniq(globalStaff.filter(function(r){ return r.email; }).map(function(r){ return r.email; }));
 
   var enviados = 0;
   cohorteIds.forEach(function(cid) {
@@ -94,8 +91,10 @@ function alertarCuotasADefinir() {
     var fechaVenc = cuotas[0] ? cuotas[0].fecha_vencimiento : '';
     var dias      = fechaVenc ? Math.round((new Date(fechaVenc) - hoy) / 86400000) : 0;
 
-    var dests  = (recPorProg[String(coh.programa_id)] || []).concat(recPorProg['global'] || []).filter(function(r){ return r.email; });
-    var emails = _uniq(dests.map(function(r){ return r.email; }));
+    // Destinatarios: correo del programa (email_remitente) + back-office global
+    var emails = _uniq(
+      (prog.email_remitente ? [prog.email_remitente] : []).concat(globalEmails)
+    );
 
     if (!emails.length) { Logger.log('Sin destinatarios para cohorte ' + cid); return; }
 

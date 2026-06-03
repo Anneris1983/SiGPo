@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Coordinador - SiGPo</title>
+    <title>Dashboard Coordinador</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -21,17 +21,17 @@
         .icon-btn:hover { background: rgba(255,255,255,0.28); }
         .logout-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; font-family: inherit; transition: .15s; }
         .logout-btn:hover { background: rgba(255,255,255,0.28); }
-        .notif-badge { position: absolute; top: -4px; right: -4px; background: #dc2626; color: #fff; border-radius: 50%; min-width: 17px; height: 17px; font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 3px; border: 2px solid #fff; }
+        .notif-badge { position: absolute; top: -4px; right: -4px; background: var(--clr-danger); color: #fff; border-radius: 50%; min-width: 17px; height: 17px; font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 3px; border: 2px solid #fff; }
         .notif-panel { display: none; position: absolute; right: 0; top: calc(100% + 8px); width: 320px; background: #fff; border-radius: 14px; box-shadow: 0 8px 32px rgba(10,15,30,.14); z-index: 500; overflow: hidden; color: #1C1510; border: 1px solid #EFEAE0; }
         .notif-panel.open { display: block; }
         .notif-head { padding: 14px 16px; border-bottom: 1px solid #EFEAE0; font-weight: 700; color: #5C1018; font-size: 13.5px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
         .notif-head button { background: none; border: none; color: #C49A2A; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-        .notif-item { padding: 12px 16px; border-bottom: 1px solid #F8F6F1; font-size: 13px; cursor: pointer; background: #fff; transition: background .1s; }
+        .notif-item { padding: 12px 16px; border-bottom: 1px solid #F8F6F1; font-size: 13px; cursor: pointer; background: #fff; transition: background .1s; color: #000; }
         .notif-item:hover { background: #F8F6F1; }
         .notif-item.unread { background: #FBF4E3; }
         .notif-item:last-child { border-bottom: none; }
-        .notif-item strong { display: block; color: #5C1018; margin-bottom: 2px; font-size: 13px; }
-        .notif-item small { color: #6B6254; font-size: 11.5px; margin-top: 2px; display: block; }
+        .notif-item strong { display: block; color: #000; margin-bottom: 2px; font-size: 13px; }
+        .notif-item small { color: #000; font-size: 11.5px; margin-top: 2px; display: block; }
 
         /* Stats bar */
         .hstats-bar { max-width: 1400px; margin: 0 auto; padding: 8px 28px 12px; display: flex; gap: 6px 28px; flex-wrap: wrap; border-top: 1px solid rgba(255,255,255,0.15); background: transparent; }
@@ -110,7 +110,7 @@
         .excel-structure { margin-top: 10px; background: #F8F6F1; border-radius: 9px; padding: 12px 14px; font-size: 12px; color: #594F42; line-height: 1.8; }
         .excel-chip { display: inline-block; background: #fff; border: 1px solid #E6DFD2; border-radius: 4px; padding: 2px 8px; margin: 2px; }
         .alert-box { display: none; border-radius: 9px; padding: 11px 14px; font-size: 13px; margin-bottom: 14px; line-height: 1.45; }
-        .alert-box.error { background: #fff1f1; border: 1px solid #fecaca; color: #991b1b; border-left: 4px solid #dc2626; }
+        .alert-box.error { background: #fff1f1; border: 1px solid #fecaca; color: #991b1b; border-left: 4px solid var(--clr-danger); }
         .alert-box.success { background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; font-weight: 600; }
         .modal-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 20px; }
         .btn-modal { padding: 10px 22px; border-radius: 9px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: .15s; }
@@ -123,8 +123,8 @@
         @media (max-width: 768px) { .header-main, .container, .hstats-bar { padding-left: 16px; padding-right: 16px; } }
         @media (max-width: 480px) { .header-left h1 { font-size: 20px; } .card { padding: 18px; } }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
     <style>
         .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; }
         .header-main { max-width: 100% !important; }
@@ -215,13 +215,13 @@
         <div class="modal-box">
             <div class="modal-top"><h2>🎓 Solicitar Programa/Curso</h2><button type="button" onclick="cerrarModalSolicitud()">×</button></div>
             <p class="modal-desc">Esta solicitud se enviará al administrador del sistema junto con el archivo Excel del listado de estudiantes.</p>
-            <div class="field"><label>Programa/Curso <span style="color:#ef4444;">*</span></label><input id="sol-programa" type="text" placeholder="Ej: Especialización en Costos y Gestión Empresarial"></div>
-            <div class="field"><label>Cohorte/Edición <span style="color:#ef4444;">*</span></label><input id="sol-cohorte" type="text" placeholder="Ej: Cohorte 2026-2027 / 8ª Edición 2026"></div>
-            <div class="field"><label>Cantidad de cuotas <span style="color:#ef4444;">*</span></label><input id="sol-cuotas" type="number" min="1" max="60" placeholder="Ej: 12"></div>
-            <div class="field"><label>Mes de la primera cuota/inscripción <span style="color:#ef4444;">*</span></label><input id="sol-mes" type="text" placeholder="Ej: Marzo 2026 / 01/03/2026"></div>
+            <div class="field"><label>Programa/Curso <span style="color:var(--clr-danger);">*</span></label><input id="sol-programa" type="text" placeholder="Ej: Especialización en Costos y Gestión Empresarial"></div>
+            <div class="field"><label>Cohorte/Edición <span style="color:var(--clr-danger);">*</span></label><input id="sol-cohorte" type="text" placeholder="Ej: Cohorte 2026-2027 / 8ª Edición 2026"></div>
+            <div class="field"><label>Cantidad de cuotas <span style="color:var(--clr-danger);">*</span></label><input id="sol-cuotas" type="number" min="1" max="60" placeholder="Ej: 12"></div>
+            <div class="field"><label>Mes de la primera cuota/inscripción <span style="color:var(--clr-danger);">*</span></label><input id="sol-mes" type="text" placeholder="Ej: Marzo 2026 / 01/03/2026"></div>
             <div class="field"><label>💬 Comentarios</label><textarea id="sol-comentarios" placeholder="Información adicional, observaciones o aclaraciones para el administrador..."></textarea></div>
             <div class="field">
-                <label>📎 Listado de estudiantes (Excel) <span style="color:#ef4444;">*</span></label>
+                <label>📎 Listado de estudiantes (Excel) <span style="color:var(--clr-danger);">*</span></label>
                 <div id="sol-drop" class="drop-zone" onclick="document.getElementById('sol-archivo').click()" ondragover="onDragSolicitud(event)" ondragleave="offDragSolicitud(event)" ondrop="onDropSolicitud(event)">
                     <div style="font-size:28px;margin-bottom:6px;">📊</div>
                     <div style="font-size:13px;color:#666;">Arrastrá o <span style="color:#5C1018;font-weight:600;">hacé clic</span> para seleccionar el archivo</div>
@@ -241,12 +241,15 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script src="supabase.js"></script>
+    <script src="supabase.js?v=20250529"></script>
     <script>
     var dashboardData = null;
     var notificaciones = [];
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', async function() {
+        var _sb = await getSupabase();
+        var { data: { session: _session } } = await _sb.auth.getSession();
+        if (!_session) { window.location.href = 'portal_login.html'; return; }
         var sesion = getSesion();
         if (!sesion) { window.location.href = 'portal_login.html'; return; }
         document.addEventListener('click', cerrarNotifSiCorresponde);
@@ -287,8 +290,11 @@
             programas.forEach(function(p) { progNomMap[p.programa_id] = p.nombre; });
 
             var dnisTotal = new Set(cobros.map(function(c) { return c.dni; }));
-            var dnisAlDia = new Set(cobros.filter(function(c) { return c.estado === 'ABONADA'; }).map(function(c) { return c.dni; }));
+            // Un estudiante está "en mora" si tiene AL MENOS UNA cuota EN_MORA.
+            // Un estudiante está "al día" si NO tiene ninguna cuota EN_MORA.
+            // La misma cuota no puede contar en ambos grupos.
             var dnisEnMora = new Set(cobros.filter(function(c) { return c.estado === 'EN_MORA'; }).map(function(c) { return c.dni; }));
+            var dnisAlDia  = new Set([...dnisTotal].filter(function(dni) { return !dnisEnMora.has(dni); }));
             var recaudado = cobros.filter(function(c) { return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
                                   .reduce(function(s,c) { return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
 
@@ -311,16 +317,17 @@
 
             var cohortesStats = cohortes.map(function(c) {
                 var cobs = cobros.filter(function(x) { return x.cohorte_id === c.cohorte_id; });
-                var alD = new Set(cobs.filter(function(x) { return x.estado === 'ABONADA'; }).map(function(x) { return x.dni; })).size;
-                var mor = new Set(cobs.filter(function(x) { return x.estado === 'EN_MORA'; }).map(function(x) { return x.dni; })).size;
+                var morSet = new Set(cobs.filter(function(x) { return x.estado === 'EN_MORA'; }).map(function(x) { return x.dni; }));
+                var dnisCoh = new Set(cobs.map(function(x) { return x.dni; }));
+                var mor = morSet.size;
+                var alD = [...dnisCoh].filter(function(dni) { return !morSet.has(dni); }).length;
                 var rec = cobs.filter(function(x) { return x.estado === 'ABONADA' || x.estado === 'PAGO_PARCIAL'; })
                               .reduce(function(s,x) { return s + Math.max(0, Number(x.monto_final||0) - Number(x.saldo_pendiente||0)); }, 0);
-                var dnis = new Set(cobs.map(function(x) { return x.dni; }));
                 return {
                     cohorteId: c.cohorte_id, nombre: c.nombre || 'Cohorte',
                     programa: progNomMap[c.programa_id] || '',
                     estado: c.estado === 'ACTIVO' ? 'Activa' : 'Cerrada',
-                    estudiantes: dnis.size, alDia: alD, mora: mor,
+                    estudiantes: dnisCoh.size, alDia: alD, mora: mor,
                     recaudado: '$' + Number(rec).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}),
                     fechaInicio: c.fecha_inicio || '', fechaFin: c.fecha_fin || '',
                     destino: 'coordinador_3_cohorte.html?cohorte_id=' + c.cohorte_id
@@ -366,6 +373,7 @@
 
     function renderActividad() {
         var cont = document.getElementById('activityList');
+        if (!cont) return;
         if (!dashboardData.actividadReciente.length) { cont.innerHTML = '<div class="empty-state">No hay actividad reciente.</div>'; return; }
         cont.innerHTML = dashboardData.actividadReciente.map(function(a) {
             return '<div class="activity-item"><strong>' + escapeHtml(a.titulo) + '</strong>' +
@@ -454,7 +462,7 @@
         if (!notificaciones.length) { lista.innerHTML = '<div class="loading-block">No hay notificaciones.</div>'; return; }
         lista.innerHTML = notificaciones.map(function(n, i) {
             return '<div class="notif-item ' + (n.leida ? '' : 'unread') + '" onclick="leerNotif(' + i + ')">' +
-                '<strong>' + escapeHtml(n.titulo || 'Notificación') + '</strong>' +
+                '<strong>' + escapeHtml(n.tipo || 'Notificación') + '</strong>' +
                 '<div>' + escapeHtml(n.mensaje || '') + '</div>' +
                 '<small>' + escapeHtml(n.tiempo || '') + '</small></div>';
         }).join('');
@@ -466,7 +474,7 @@
         document.getElementById('notif-panel').classList.remove('open');
     }
     function leerNotif(index) { if (!notificaciones[index]) return; notificaciones[index].leida = true; renderNotificaciones(notificaciones); }
-    function marcarTodasLeidas() { notificaciones = notificaciones.map(function(n) { n.leida=true; return n; }); renderNotificaciones(notificaciones); }
+    function marcarTodasLeidas() { notificaciones = notificaciones.map(function(n) { n.leida=true; return n; }); renderNotificaciones(notificaciones); marcarTodasNotificacionesLeidas(); }
 
     async function leerArchivoBase64(archivo) {
         return new Promise(function(resolve, reject) {
@@ -476,7 +484,7 @@
         });
     }
     function estaEnAppsScript() { return typeof google !== 'undefined' && google.script && google.script.run; }
-    function escapeHtml(valor) { return String(valor==null?'':valor).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#39;"); }
+
     function escapeJs(valor) { return String(valor==null?'':valor).replaceAll('\\','\\\\').replaceAll("'","\\'"); }
     </script>
 </body>

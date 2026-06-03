@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión — SiGPo FCE UNCUYO</title>
+    <title>Iniciar Sesión — FCE UNCUYO</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -127,7 +127,7 @@
             font-size:     13px;
             margin-bottom: 16px;
             border:        1px solid #fecaca;
-            border-left:   4px solid #c0392b;
+            border-left:   4px solid var(--clr-danger);
         }
         .error-msg.show { display: block; }
 
@@ -192,7 +192,7 @@
             .login-footer { padding: 12px 24px 24px; }
         }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
 </head>
 <body>
 
@@ -200,10 +200,11 @@
     <div class="login-card">
         <!-- HEADER -->
         <div class="login-header">
-            <img class="login-brand-img" src="assets/01_v4_original.svg" alt="SiGPo - Sistema de Gestión de Pagos para Posgrado">
+            <img class="login-brand-img" src="assets/01_v4_original.svg" alt="Sistema de Gestión de Pagos para Posgrado">
         </div>
 
-        <!-- FORM -->
+        <!-- FORM LOGIN -->
+        <div id="seccionLogin">
         <div class="login-body">
             <div id="errorMsg" class="error-msg"></div>
 
@@ -233,14 +234,47 @@
             <p>¿Olvidaste tu contraseña? <a href="#" onclick="recuperarPassword(event)">Recuperar acceso</a></p>
             <p style="margin-top: 8px;">Secretaría de Posgrado — FCE UNCUYO</p>
         </div>
+        </div>
+
+        <!-- FORM NUEVA CONTRASEÑA (recovery) -->
+        <div id="seccionRecovery" style="display:none;">
+        <div class="login-body">
+            <div id="errorMsgRec" class="error-msg"></div>
+            <p style="font-size:14px;color:#374151;margin-bottom:18px;line-height:1.5;">Ingresá tu nueva contraseña para continuar.</p>
+
+            <div class="field">
+                <label for="newPassword">Nueva contraseña</label>
+                <div class="field-password">
+                    <input type="password" id="newPassword" placeholder="Mínimo 8 caracteres" autocomplete="new-password"
+                        onkeydown="if(event.key==='Enter') document.getElementById('confirmPassword').focus()">
+                    <button type="button" class="toggle-pass" onclick="togglePasswordRec('newPassword', this)" title="Mostrar/ocultar">👁️</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="confirmPassword">Confirmar contraseña</label>
+                <div class="field-password">
+                    <input type="password" id="confirmPassword" placeholder="Repetí la contraseña" autocomplete="new-password"
+                        onkeydown="if(event.key==='Enter') cambiarPassword()">
+                    <button type="button" class="toggle-pass" onclick="togglePasswordRec('confirmPassword', this)" title="Mostrar/ocultar">👁️</button>
+                </div>
+            </div>
+
+            <button id="btnCambiar" class="btn-login" onclick="cambiarPassword()">
+                <span class="btn-text">Guardar nueva contraseña</span>
+                <span class="spinner"></span>
+            </button>
+        </div>
+        <div class="login-footer">
+            <p>Secretaría de Posgrado — FCE UNCUYO</p>
+        </div>
+        </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
-var SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
-var SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
-var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 var RUTAS = {
     'ESTUDIANTE':          'portal_estudiante_2_dashboard.html',
@@ -286,6 +320,7 @@ async function iniciarSesion() {
     btn.disabled = true;
 
     try {
+        var sb = await getSupabase();
         var { data: loginInfo, error: loginErr } = await sb.rpc('get_login_info', { p_dni: dni });
 
         if (loginErr || !loginInfo) {
@@ -334,24 +369,73 @@ async function recuperarPassword(e) {
     e.preventDefault();
     var dni = document.getElementById('dni').value.trim();
     if (!dni) {
-        alert('Ingresá tu DNI y hacé clic en "Recuperar acceso".\nSe enviará un correo a tu email registrado con instrucciones.');
+        mostrarError('Ingresá tu DNI primero y luego hacé clic en "Recuperar acceso".');
         document.getElementById('dni').focus();
         return;
     }
-
-    var resp = await sb.from('usuarios').select('email').eq('dni', dni).single();
-    if (resp.error || !resp.data) {
+    limpiarError();
+    var enlace = document.querySelector('.login-footer a');
+    if (enlace) { enlace.textContent = 'Enviando…'; enlace.style.pointerEvents = 'none'; }
+    try {
+        var sb = await getSupabase();
+        var { data: usuario } = await sb.from('usuarios').select('email').eq('dni', dni).single();
+        if (usuario && usuario.email) {
+            var redirectTo = window.location.origin + window.location.pathname;
+            await sb.auth.resetPasswordForEmail(usuario.email, { redirectTo: redirectTo });
+            var partes = usuario.email.split('@');
+            var oculto = partes[0].substring(0, 3) + '***@' + partes[1];
+            alert('📧 Se enviaron instrucciones a ' + oculto + '\nRevisá tu bandeja de entrada.');
+        } else {
+            alert('Si el DNI está registrado, recibirás un correo con instrucciones para recuperar el acceso.');
+        }
+    } catch(err) {
         alert('Si el DNI está registrado, recibirás un correo con instrucciones para recuperar el acceso.');
-        return;
+    } finally {
+        if (enlace) { enlace.textContent = 'Recuperar acceso'; enlace.style.pointerEvents = ''; }
     }
+}
 
-    var email = resp.data.email;
-    var partes = email.split('@');
-    var oculto = partes[0].substring(0, 3) + '***@' + partes[1];
-    alert('📧 Se enviarán instrucciones de recuperación a ' + oculto);
+function togglePasswordRec(id, btn) {
+    var input = document.getElementById(id);
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+    else { input.type = 'password'; btn.textContent = '👁️'; }
+}
+
+async function cambiarPassword() {
+    var p1 = document.getElementById('newPassword').value;
+    var p2 = document.getElementById('confirmPassword').value;
+    var errEl = document.getElementById('errorMsgRec');
+    errEl.classList.remove('show');
+    if (p1.length < 8) { errEl.textContent = 'La contraseña debe tener al menos 8 caracteres.'; errEl.classList.add('show'); return; }
+    if (p1 !== p2) { errEl.textContent = 'Las contraseñas no coinciden.'; errEl.classList.add('show'); return; }
+    var btn = document.getElementById('btnCambiar');
+    btn.classList.add('loading'); btn.disabled = true;
+    try {
+        var sb = await getSupabase();
+        var { error } = await sb.auth.updateUser({ password: p1 });
+        if (error) { errEl.textContent = 'No se pudo cambiar la contraseña: ' + error.message; errEl.classList.add('show'); return; }
+        alert('✅ Contraseña actualizada correctamente. Ahora podés iniciar sesión.');
+        window.location.hash = '';
+        window.location.replace(window.location.pathname);
+    } catch(err) {
+        errEl.textContent = 'Ocurrió un error. Intentá de nuevo.'; errEl.classList.add('show');
+    } finally {
+        btn.classList.remove('loading'); btn.disabled = false;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+    var sb = await getSupabase();
+
+    // Detectar si el usuario viene desde el link de recuperación
+    var hash = window.location.hash;
+    if (hash && hash.includes('type=recovery')) {
+        document.getElementById('seccionLogin').style.display = 'none';
+        document.getElementById('seccionRecovery').style.display = '';
+        document.getElementById('newPassword').focus();
+        return;
+    }
+
     await sb.auth.signOut();
     localStorage.removeItem('sigpo_rol');
     localStorage.removeItem('sigpo_nombre');

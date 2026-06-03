@@ -8,13 +8,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        :root { --primary:#5C1018; --accent:#8C1A28; --bg:#f8f6f1; --success:#2d7a4f; --danger:#c0392b; --warning:#e67e22; --muted:#6b7280; --line:#e5e7eb; }
+
         body { font-family:'DM Sans',sans-serif; background:var(--bg); font-size:14px; color:#2c2c2c; }
 
         /* HEADER */
         .header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:20px 32px; box-shadow:0 4px 20px rgba(0,0,0,0.12); }
-        .header-inner { max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; }
-        .header-left .breadcrumb { font-size:12px; opacity:0.8; margin-bottom:6px; }
+        .header-inner { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+        .header-left .breadcrumb { font-size:12px; opacity:0.8; margin-bottom:6px; cursor:pointer; }
         .header-left h1 { font-family:'Crimson Pro',serif; font-size:24px; margin-bottom:3px; }
         .header-left p { font-size:13px; opacity:0.85; }
         .header-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
@@ -60,15 +60,15 @@
         table { width:100%; border-collapse:collapse; font-size:13px; }
         th { padding:10px 12px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:#555; background:#f0ede6; border-bottom:2px solid #d0ccc4; white-space:nowrap; }
         td { padding:12px 12px; border-bottom:1px solid #f0ede6; vertical-align:middle; }
-        tr:hover td { background:rgba(212,175,55,0.04); }
 
         .est-badge { display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:10px; white-space:nowrap; }
         .badge-abonada   { background:#d4edda; color:#1e7e44; }
-        .badge-mora      { background:#f8d7da; color:#c0392b; }
+        .badge-mora      { background:#f8d7da; color:var(--clr-danger); }
         .badge-parcial   { background:#fff3cd; color:#856404; }
         .badge-pendiente { background:#fef9c3; color:#854d0e; }
         .badge-noabonada { background:#eef2ff; color:#4338ca; }
         .badge-adefinir  { background:#f3f4f6; color:#6b7280; }
+        .badge-noapl     { background:#fafafa; color:#bbb; font-style:italic; }
 
         .monto-cell { text-align:right; font-weight:600; white-space:nowrap; }
         .monto-pagar { color:#3730a3; }
@@ -94,8 +94,8 @@
         .toast.ok  { background:var(--success); }
         .toast.err { background:var(--danger); }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
     <style>
     body { zoom: 1.0 !important; }
     .container { max-width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
@@ -110,12 +110,11 @@
 <div class="header">
     <div class="header-inner">
         <div class="header-left">
-            <div class="breadcrumb" id="breadcrumb">← Volver a cohorte</div>
+            <div class="breadcrumb" id="breadcrumb" onclick="history.back()">← Volver a cohorte</div>
             <h1 id="hdr-nombre">Cargando…</h1>
             <p id="hdr-sub"></p>
         </div>
         <div class="header-right">
-            <button class="btn-back" onclick="history.back()">← Volver</button>
             <button class="btn-logout" onclick="cerrarSesion()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 Cerrar sesión
@@ -183,7 +182,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
 var QS         = new URLSearchParams(location.search);
 var DNI        = QS.get('dni') || '';
@@ -194,7 +193,7 @@ var _est       = null;
 function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fM(n) { var num=parseFloat(n||0); if(isNaN(num))return '$0,00'; return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function spin(v){ document.getElementById('spinner').classList.toggle('show',v); }
-function toast(msg,tipo){ var c=document.getElementById('toasts'); var d=document.createElement('div'); d.className='toast '+(tipo||''); d.textContent=msg; c.appendChild(d); setTimeout(function(){d.remove();},3500); }
+// toast: usa la versión global de supabase.js
 
 document.addEventListener('DOMContentLoaded', async function() {
     var sb = await getSupabase();
@@ -262,6 +261,7 @@ function resolverEstado(c) {
     var saldo   = Number(c.saldo_pendiente||0);
     var hoy     = new Date().toISOString().split('T')[0];
     if (c.monto_final == null) return 'A_DEFINIR';
+    if (Number(c.monto_final) === 0) return 'NO_APLICA';
     if (['ABONADA','PAGADA'].includes(s) || (saldo <= 0 && abonado > 0)) return 'ABONADA';
     if (['PAGO_PARCIAL','PARCIAL'].includes(s) || (abonado > 0 && saldo > 0)) return 'PAGO_PARCIAL';
     if (s === 'PENDIENTE') return 'PENDIENTE';
@@ -271,8 +271,8 @@ function resolverEstado(c) {
 }
 
 function renderCobros(cobros) {
-    var etq = { ABONADA:'Abonada', EN_MORA:'En mora', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'En revisión', NO_ABONADA:'Por abonar', A_DEFINIR:'A definir', NO_APLICA:'No aplica' };
-    var cls = { ABONADA:'badge-abonada', EN_MORA:'badge-mora', PAGO_PARCIAL:'badge-parcial', PENDIENTE:'badge-pendiente', NO_ABONADA:'badge-noabonada', A_DEFINIR:'badge-adefinir', NO_APLICA:'badge-adefinir' };
+    var etq = { ABONADA:'Abonada', EN_MORA:'En mora', PAGO_PARCIAL:'Pago parcial', PENDIENTE:'En revisión', NO_ABONADA:'No abonada', A_DEFINIR:'A definir', NO_APLICA:'No aplica' };
+    var cls = { ABONADA:'badge-abonada', EN_MORA:'badge-mora', PAGO_PARCIAL:'badge-parcial', PENDIENTE:'badge-pendiente', NO_ABONADA:'badge-noabonada', A_DEFINIR:'badge-adefinir', NO_APLICA:'badge-noapl' };
     var tbody = document.getElementById('cobros-body');
     if (!cobros.length) { document.getElementById('cobros-empty').style.display=''; tbody.innerHTML=''; return; }
 

@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #5C1018; --accent: #C49A2A; --danger: #dc2626; }
+
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
         
         .header { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 20px 40px; }
@@ -27,8 +27,8 @@
         .summary-label { font-size: 13px; color: #666; margin-bottom: 8px; }
         .summary-value { font-size: 28px; font-weight: 700; color: var(--primary); }
         .summary-change { font-size: 12px; margin-top: 4px; }
-        .change-up { color: #dc2626; }
-        .change-down { color: #16a34a; }
+        .change-up { color: var(--clr-danger); }
+        .change-down { color: var(--clr-success); }
         
         .card { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
         .card-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
@@ -39,7 +39,6 @@
         thead { background: var(--primary); color: white; }
         th { padding: 14px; text-align: left; font-weight: 600; font-size: 13px; }
         td { padding: 14px; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
-        tbody tr:hover { background: #f8f6f1; }
         
         .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
         .badge-ejecutado { background: #dcfce7; color: #166534; }
@@ -48,7 +47,7 @@
         
         .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-export { background: #16a34a; color: white; }
+        .btn-export { background: var(--clr-success); color: white; }
         
         .actions { display: flex; gap: 12px; margin-top: 24px; }
     
@@ -120,27 +119,11 @@
     var _notifs = [];
     function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
     document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
-    function renderNotificaciones(datos) {
-        _notifs = datos || [];
-        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-        var lista = document.getElementById('notif-list');
-        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
-        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
-        lista.innerHTML = _notifs.map(function(n) {
-            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
-        }).join('');
-    }
-    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
-    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
-    // Notificaciones cargadas por supabase.js automáticamente
+    // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 
 </script>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
     <style>
     body { zoom: 1.0 !important; }
     .container { max-width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
@@ -160,7 +143,7 @@
                 <div class="notif-wrapper" style="position:relative;">
                     <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                         <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
+                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:var(--clr-danger);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
                     </button>
                     <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                         <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -262,7 +245,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
         function exportarExcel() {
         var loadXLSX = window.XLSX
@@ -325,7 +308,7 @@
 
 <script>
 var _chart1 = null, _chart2 = null;
-var CAT_COLORS = ['#5C1018','#dc2626','#f59e0b','#d97706','#16a34a','#0891b2','#7c3aed','#db2777','#6b7280'];
+var CAT_COLORS = ['#5C1018','var(--clr-danger)','var(--clr-warning)','#d97706','var(--clr-success)','#0891b2','#7c3aed','#db2777','#6b7280'];
 function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
 function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -434,7 +417,11 @@ async function cargarDatos() {
                 + '<td><strong>—</strong></td>'
                 + '<td></td>';
         }
-    } catch(e) { console.error('Error cargando datos:', e); }
+    } catch(e) {
+        console.error('Error cargando datos:', e);
+        var _band = document.getElementById('filter-band');
+        if (_band) _band.innerHTML = '<span style="color:var(--clr-danger);">⚠️ Error al cargar los datos: ' + esc(e.message || e) + '</span>';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', async function() {

@@ -4,21 +4,18 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle Programa - SiGPo</title>
+    <title>Detalle Programa</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #5C1018; --accent: #C49A2A; --bg: #f8f6f1;
-            --success: #2d7a4f; --warning: #e67e22; --danger: #c0392b;
-        }
+
         body { font-family: 'DM Sans', sans-serif; background: var(--bg); font-size: 14px; }
         .header {
             background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%);
             color: white; padding: 20px 40px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
-        .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
         .header-left { flex: 1; }
         .breadcrumb { font-size: 14px; margin-bottom: 12px; }
         .breadcrumb a {
@@ -45,7 +42,7 @@
         .notif-bell { background: none; border: none; cursor: pointer; position: relative; padding: 8px; border-radius: 8px; transition: background 0.2s; }
         .notif-bell:hover { background: rgba(255,255,255,0.15); }
         .notif-bell svg { display: block; }
-        .notif-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid #5C1018; line-height: 1; }
+        .notif-badge { position: absolute; top: 2px; right: 2px; background: var(--clr-danger); color: #fff; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid #5C1018; line-height: 1; }
         .notif-badge:empty, .notif-badge[data-count="0"] { display: none; }
         .notif-dropdown { display: none; position: absolute; top: calc(100% + 10px); right: 0; width: 380px; max-height: 460px; overflow-y: auto; background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.18); z-index: 999; border: 1px solid #e5e7eb; }
         .notif-dropdown.open { display: block; }
@@ -64,9 +61,9 @@
         .notif-icon-circle.reclamo { background: #fef3c7; }
         .notif-icon-circle.alerta { background: #fce7f3; }
         .notif-text { flex: 1; min-width: 0; }
-        .notif-text p { font-size: 13px; color: #374151; line-height: 1.4; }
-        .notif-text p strong { color: var(--primary); }
-        .notif-time { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+        .notif-text p { font-size: 13px; color: #000; line-height: 1.4; }
+        .notif-text p strong { color: #000; }
+        .notif-time { font-size: 11px; color: #000; margin-top: 3px; }
         .notif-empty { padding: 32px 20px; text-align: center; color: #9ca3af; font-size: 14px; }
         .container { max-width: 1200px; margin: 20px auto; padding: 0 24px; }
         .page-title { font-family: 'Crimson Pro', serif; font-size: 24px; color: var(--primary); margin-bottom: 12px; }
@@ -113,8 +110,8 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading-center { text-align: center; padding: 60px; color: #999; }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
     <style>
     body { zoom: 1.0 !important; }
     .container { max-width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
@@ -164,7 +161,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
 /* ══════════════════════════════════════════════
    UTILIDADES

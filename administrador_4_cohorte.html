@@ -4,40 +4,33 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vista Cohorte - SiGPo FCE UNCUYO</title>
+    <title>Vista Cohorte - FCE UNCUYO</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #5C1018;
-            --accent:  #8C1A28;
-            --success: #2d7a4f;
-            --danger:  #c0392b;
-            --warning: #e67e22;
-            --bg:      #f8f6f1;
-        }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 0; font-size: 14px; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); padding: 0; font-size: 14px; display:flex; flex-direction:column; height:100vh; overflow-x:auto; overflow-y:hidden; }
 
         /* ── HEADER ── */
         .page-header {
             background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%);
-            color: white; padding: 22px 28px; border-radius: 12px 12px 0 0;
-            display: flex; justify-content: space-between; align-items: center; gap: 20px;
+            color: white; padding: 7px 16px; border-radius: 12px 12px 0 0;
+            display: flex; justify-content: space-between; align-items: center; gap: 14px;
         }
-        .header-left h1 { font-family: 'Crimson Pro', serif; font-size: 24px; margin-bottom: 4px; }
-        .header-left p  { opacity: 0.85; font-size: 13px; }
-        .stat-row { display: flex; gap: 20px; flex-shrink: 0; align-items: flex-start; }
+        .header-left h1 { font-family: 'Crimson Pro', serif; font-size: 13px; font-weight: 600; margin-bottom: 1px; }
+        .header-left p  { opacity: 0.85; font-size: 10px; }
+        .stat-row { display: flex; gap: 12px; flex-shrink: 0; align-items: flex-start; }
         .btn-logout {
             background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3);
-            color: white; padding: 6px 13px; border-radius: 8px; font-size: 12px;
+            color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px;
             cursor: pointer; font-family: 'DM Sans', sans-serif;
             display: inline-flex; align-items: center; gap: 5px;
             transition: background 0.2s;
         }
         .btn-logout:hover { background: rgba(192,57,43,0.6); border-color: rgba(192,57,43,0.8); }
         .stat-item { text-align: center; }
-        .stat-label { font-size: 10px; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-value { font-size: 22px; font-weight: 700; margin-top: 2px; }
+        .stat-label { font-size: 9px; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 12px; font-weight: 700; margin-top: 1px; }
 
         /* ── TOOLBAR ── */
         .toolbar {
@@ -101,19 +94,15 @@
         th.col-cuota { min-width: 82px; }
         th.tot-hdr   { color: white; font-size: 10px; min-width: 100px; }
         th.th-pagar   { background: #3730a3; }
-        th.th-abonado { background: #2d7a4f; }
-        th.th-saldo   { background: #c0392b; }
+        th.th-abonado { background: var(--clr-success); }
+        th.th-saldo   { background: var(--clr-danger); }
         /* Columnas fijas en el cuerpo */
         #t-body tr td:nth-child(1) { position: sticky; left: 0; z-index: 2; background: white; }
         #t-body tr td.cell-name    { position: sticky; left: 32px; z-index: 2; background: white; box-shadow: 2px 0 4px rgba(0,0,0,0.07); }
-        #t-body tr.fila-est:hover td:nth-child(1),
-        #t-body tr.fila-est:hover td.cell-name { background: #fffdf4; }
-
         td {
             padding: 9px 6px; border-bottom: 1px solid #ebebeb;
             border-right: 1px solid #ebebeb; vertical-align: middle;
         }
-        tr.fila-est:hover td { background: rgba(212,175,55,0.05); }
         tr.oculta { display: none; }
 
         .cell-name  { font-weight: 700; color: var(--primary); padding-left: 10px; white-space: nowrap; cursor: pointer; }
@@ -130,7 +119,7 @@
            NO_APLICA                       → blanco punteado (no corresponde)        */
         td[data-est="ABONADA"]      { background: #d4edda; color: #1a6e35; text-align:center; font-weight:700; }
         td[data-est="PAGO_PARCIAL"] { background: #fff8e1; color: #78350f; text-align:center; font-weight:600; font-size:11px; }
-        td[data-est="EN_MORA"]      { background: #fee2e2; color: #b91c1c; text-align:center; font-weight:700; }
+        td[data-est="EN_MORA"]      { background: #fee2e2; color: var(--clr-danger); text-align:center; font-weight:700; }
         td[data-est="NO_ABONADA"]   { background: #f1f5f9; color: #64748b; text-align:center; font-weight:500; }
         td[data-est="PENDIENTE"]    { background: #fef9c3; color: #854d0e; text-align:center; font-weight:600; }
         td[data-est="A_DEFINIR"]    { background: #f5f3ff; color: #7c3aed; text-align:center; font-weight:500; font-size:11px; font-style:italic; }
@@ -139,7 +128,7 @@
 
         .cell-tot-pagar   { background:#eef2ff; color:#5C1018; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
         .cell-tot-abonado { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
-        .cell-saldo-pos   { background:#f8d7da; color:#c0392b; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
+        .cell-saldo-pos   { background:#f8d7da; color:var(--clr-danger); font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
         .cell-saldo-cero  { background:#d4edda; color:#1e7e44; font-weight:700; text-align:right; padding-right:10px; white-space:nowrap; }
 
         .edit-btn {
@@ -189,7 +178,7 @@
         .cell-popup-monto {
             display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
         }
-        .cell-popup-monto span { font-size: 13px; color: #888; font-weight: 600; }
+        .cell-popup-monto span { font-size: 13px; color: #767676; font-weight: 600; }
         .cell-popup-monto input {
             width: 120px; padding: 6px 8px; border: 2px solid #e0e0e0;
             border-radius: 6px; font-size: 13px; font-family: 'DM Sans', sans-serif;
@@ -219,6 +208,13 @@
         .cpop-cancel:hover { background: #e2e8f0; }
         .cpop-save   { background: var(--primary); color: white; }
         .cpop-save:hover { background: #8C1A28; }
+        .cpop-annul  { background: #fff1f2; color: #be123c; border: 1.5px solid #fecdd3 !important; }
+        .cpop-annul:hover { background: #ffe4e6; }
+        .cpop-corr-info {
+            font-size: 11px; color: #64748b; background: #f8fafc;
+            border: 1px solid #e2e8f0; border-radius: 6px;
+            padding: 6px 8px; margin-bottom: 10px; line-height: 1.5;
+        }
 
         /* ── SPINNER ── */
         .spinner-overlay {
@@ -260,7 +256,7 @@
         .plan-paso-titulo { font-size:13px; font-weight:700; color:var(--primary); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.4px; }
         .plan-fila { display:grid; grid-template-columns:auto 1fr 110px 110px 130px auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; transition:border-color 0.2s; }
         .plan-fila:focus-within { border-color:var(--accent); }
-        .plan-fila.fila-irregular { border-color:#e67e22; background:#fffbf5; }
+        .plan-fila.fila-irregular { border-color:var(--clr-warning); background:#fffbf5; }
         .plan-fila-num { width:26px; height:26px; border-radius:50%; background:var(--primary); color:white; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:2px; }
         .plan-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
         .plan-fila input, .plan-fila select { width:100%; padding:7px 9px; border:1.5px solid #ddd; border-radius:7px; font-size:12px; font-family:'DM Sans',sans-serif; transition:border-color 0.2s; background:white; }
@@ -270,7 +266,10 @@
         .plan-fila .monto-wrap::before { content:'$'; position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:12px; color:#999; pointer-events:none; }
         .plan-fila .btn-del { background:none; border:none; cursor:pointer; color:#e74c3c; font-size:17px; padding:4px; border-radius:6px; transition:background 0.2s; line-height:1; align-self:end; margin-bottom:2px; }
         .plan-fila .btn-del:hover { background:#fdecea; }
-        .btn-agregar-cuota { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:#2d7a4f; color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
+        .plan-fila .readmision-chk { display:flex; align-items:center; gap:5px; margin-top:5px; font-size:10px; font-weight:600; color:#6f42c1; cursor:pointer; white-space:nowrap; }
+        .plan-fila .readmision-chk input { width:13px; height:13px; accent-color:#6f42c1; cursor:pointer; }
+        .badge-readmision { display:inline-block; background:#ede9fe; color:#6f42c1; font-size:9px; font-weight:700; padding:1px 5px; border-radius:4px; letter-spacing:0.3px; line-height:1.6; white-space:nowrap; }
+        .btn-agregar-cuota { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:var(--clr-success); color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
         .btn-agregar-cuota:hover { background:#246441; }
         /* Descuento multi-periodo */
         .desc-periodo-fila { display:grid; grid-template-columns:26px 90px 130px 130px 1fr auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; }
@@ -293,7 +292,7 @@
         .btn-baja-coh:hover { background:#fff8e1; }
         .btn-desvincular-coh { background:none; border:1.5px solid #7f1d1d; color:#7f1d1d; border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; margin-top:4px; }
         .btn-desvincular-coh:hover { background:#fef2f2; }
-        .btn-alta-coh { background:none; border:1.5px solid #2d7a4f; color:#2d7a4f; border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+        .btn-alta-coh { background:none; border:1.5px solid var(--clr-success); color:var(--clr-success); border-radius:5px; font-size:10px; font-weight:700; padding:2px 7px; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; }
         .btn-alta-coh:hover { background:#d4edda; }
 
         /* Import */
@@ -334,13 +333,20 @@
         .cbtn-aprobar    { background:#dcfce7; color:#166534; }
         .cbtn-rechazar   { background:#fee2e2; color:#991b1b; }
         .cbtn-ver-recibo { background:#f3f4f6; color:#374151; }
-            #app { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+            #app { flex:1; display:flex; flex-direction:column; min-height:0; overflow-x:auto; overflow-y:hidden; min-width:900px; }
         .leyenda { flex-shrink:0; }
         .page-header { flex-shrink:0; }
         .toolbar { flex-shrink:0; }
+
+    /* ── utilidades inline repetidas ── */
+    .u-lbl  { font-size:10px; color:#767676; font-weight:600; text-transform:uppercase; margin-bottom:2px; }
+    .u-lbl-blue { font-size:10px; font-weight:600; color:#0369a1; display:block; margin-bottom:3px; }
+    .u-hint { font-size:9px; color:#bbb; margin-top:2px; }
+    .u-sub  { font-size:11px; color:#767676; margin-top:2px; }
+    .btn-mas { padding:8px 22px; background:#fff; border:1.5px solid #c7d2fe; border-radius:8px; color:#4338ca; font-size:13px; font-weight:600; cursor:pointer; }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
     <style>
     body { zoom: 1.0 !important; }
     .container { max-width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
@@ -356,20 +362,20 @@
     <!-- HEADER -->
     <div class="page-header">
         <div class="header-left">
-            <button onclick="volverAPrograma()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 13px;border-radius:8px;font-size:12px;cursor:pointer;margin-bottom:10px;display:inline-flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;">← Volver</button>
+            <button onclick="volverAPrograma()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:3px 8px;border-radius:6px;font-size:10px;cursor:pointer;margin-bottom:4px;display:inline-flex;align-items:center;gap:4px;font-family:'DM Sans',sans-serif;">← Volver</button>
             <h1 id="hdr-programa">—</h1>
-            <div style="display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;">
-                <span id="hdr-cohorte" style="background:rgba(255,255,255,0.18);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:0.03em;"></span>
-                <p id="hdr-sub" style="font-size:13px;opacity:0.85;"></p>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap;">
+                <span id="hdr-cohorte" style="background:rgba(255,255,255,0.18);color:#fff;font-size:9px;font-weight:700;padding:1px 7px;border-radius:999px;letter-spacing:0.03em;"></span>
+                <p id="hdr-sub" style="font-size:10px;opacity:0.85;"></p>
             </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;flex-shrink:0;">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
             <div style="display:flex;align-items:center;gap:12px;">
                 <!-- Campana -->
                 <div class="notif-wrapper" style="position:relative;">
-                    <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;transition:background 0.2s;">
-                        <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
+                    <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:4px;border-radius:8px;transition:background 0.2s;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
+                        <span id="notif-badge" style="position:absolute;top:0;right:0;background:var(--clr-danger);color:#fff;font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #5C1018;line-height:1;">0</span>
                     </button>
                     <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                         <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -385,8 +391,9 @@
                 <div class="stat-item"><div class="stat-label">Al día</div><div class="stat-value" id="s-aldia">—</div></div>
                 <div class="stat-item"><div class="stat-label">En mora</div><div class="stat-value" id="s-mora" style="color:#ffc107;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Pago parcial</div><div class="stat-value" id="s-parcial" style="color:#ffc107;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Readmisión</div><div class="stat-value" id="s-readmision" style="color:#6f42c1;">—</div></div>
                 <div class="stat-item"><div class="stat-label">Ingresos</div><div class="stat-value" id="s-recaudado">—</div></div>
-                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:#e67e22;">—</div></div>
+                <div class="stat-item"><div class="stat-label">Egresos</div><div class="stat-value" id="s-egresos" style="color:var(--clr-warning);">—</div></div>
                 <div class="stat-item"><div class="stat-label">Saldo</div><div class="stat-value" id="s-saldo">—</div></div>
             </div>
         </div>
@@ -394,16 +401,6 @@
 
     <!-- TOOLBAR -->
     <div class="toolbar">
-        <div class="filters" id="filtros">
-            <span class="filter-label">Filtrar:</span>
-            <button class="filter-btn active" data-f="todos">Todos</button>
-            <button class="filter-btn" data-f="ABONADA">Al día</button>
-            <button class="filter-btn" data-f="EN_MORA">En mora</button>
-            <button class="filter-btn" data-f="PAGO_PARCIAL">Pago parcial</button>
-            <button class="filter-btn" data-f="PENDIENTE">Pendiente</button>
-            <button class="filter-btn" data-f="NO_ABONADA">No abonada</button>
-            <button class="filter-btn" data-f="A_DEFINIR">A definir</button>
-        </div>
         <div class="actions">
             <button class="btn btn-outline" onclick="abrirCorreo()">✉️ Editar correos de reclamo</button>
             <button class="btn btn-primary" id="btn-reclamar" disabled onclick="reclamarSel()">📧 Reclamar seleccionados</button>
@@ -427,6 +424,9 @@
             <tbody id="t-body"></tbody>
         </table>
         <div class="empty-state" id="empty"><div style="font-size:48px;margin-bottom:12px;">🔍</div><div style="font-size:15px;font-weight:600;color:#666;">Sin resultados para este filtro</div></div>
+    </div>
+    <div id="wrap-mas-est" style="text-align:center;padding:12px 0 4px;display:none;">
+        <button id="btn-mas-est" onclick="mostrarMas()" class="btn-mas">Mostrar más</button>
     </div>
 
     <!-- LEYENDA -->
@@ -509,23 +509,23 @@
         </div>
         <div class="modal-body">
             <div class="mfield">
-                <label>Tipo</label>
-                <select id="c-tipo" onchange="cargarPlantilla()">
+                <label for="c-tipo">Tipo</label>
+                <select id="c-tipo" aria-label="Tipo de notificación" onchange="cargarPlantilla()">
                     <option value="recordatorio">📩 Recordatorio de vencimiento próximo</option>
                     <option value="reclamo">🔔 Reclamo por cuota vencida</option>
                     <option value="coordinador">👨‍🏫 Aviso al coordinador</option>
                 </select>
             </div>
-            <div class="mfield"><label>Asunto</label><input type="text" id="c-asunto"></div>
+            <div class="mfield"><label for="c-asunto">Asunto</label><input type="text" id="c-asunto" aria-label="Asunto del correo"></div>
             <div class="mfield">
-                <label>Cuerpo</label>
-                <textarea id="c-cuerpo" style="min-height:130px;resize:vertical;"></textarea>
+                <label for="c-cuerpo">Cuerpo</label>
+                <textarea id="c-cuerpo" aria-label="Cuerpo del correo" style="min-height:130px;resize:vertical;"></textarea>
                 <div class="mhint">Variables: {nombre} {apellido} {dni} {cuota} {periodo} {monto} {vencimiento} {programa} {cbu} {alias}</div>
             </div>
         </div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="cerrar('modal-correo')">Cancelar</button>
-            <button class="btn-save" style="background:#e67e22;" onclick="guardarPlantilla()">💾 Guardar plantilla</button>
+            <button class="btn-save" style="background:var(--clr-warning);" onclick="guardarPlantilla()">💾 Guardar plantilla</button>
             <button id="btn-enviar-notif" class="btn-save" style="display:none;" onclick="enviarNotificaciones()">🔔 Enviar notificación</button>
         </div>
     </div>
@@ -543,7 +543,7 @@
                 <div class="istep-num">1</div>
                 <div>
                     <h4>Descargá la plantilla</h4>
-                    <p>Columnas: <code>dni · apellido · nombre · email · telefono · descuento_porcentaje · concepto · periodo · fecha_vencimiento · monto_original · monto_abonado · fecha_pago</code></p>
+                    <p>Columnas: <code>dni · apellido · nombre · email · descuento_porcentaje · descuento_desde · descuento_hasta · concepto · periodo · fecha_vencimiento · monto_original · monto_abonado · fecha_pago · estado · es_readmision</code></p>
                     <button class="btn btn-outline" style="border-color:#6f42c1;color:#6f42c1;margin-top:8px;" onclick="dlPlantilla()">📄 Descargar plantilla .xlsx</button>
                 </div>
             </div>
@@ -560,14 +560,14 @@
                     <h4>Subí el archivo</h4>
                     <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-imp').click()"
                          ondragover="dOver(event)" ondragleave="dLeave()" ondrop="dDrop(event)">
-                        <input type="file" id="file-imp" accept=".xlsx,.xls" onchange="fileElegido(event)">
+                        <input type="file" id="file-imp" accept=".xlsx,.xls" aria-label="Seleccionar archivo Excel para importar" onchange="fileElegido(event)">
                         <div style="font-size:30px;margin-bottom:6px;">📂</div>
                         <p style="font-size:13px;color:#666;"><strong style="color:#6f42c1;">Clic</strong> o arrastrá el archivo</p>
                         <p style="font-size:11px;color:#aaa;margin-top:4px;">.xlsx · .xls</p>
                     </div>
                     <div class="imp-preview" id="imp-prev">
                         <span style="font-size:26px;">📊</span>
-                        <div><div id="imp-fn" style="font-weight:700;color:var(--primary);font-size:13px;"></div><div id="imp-fs" style="font-size:11px;color:#888;"></div></div>
+                        <div><div id="imp-fn" style="font-weight:700;color:var(--primary);font-size:13px;"></div><div id="imp-fs" style="font-size:11px;color:#767676;"></div></div>
                     </div>
                 </div>
             </div>
@@ -653,11 +653,11 @@
             <div id="eg-lista" style="padding:8px 22px;max-height:380px;overflow-y:auto;"></div>
         </div>
         <div class="modal-footer" style="justify-content:space-between;align-items:center;">
-            <span id="eg-sel-count" style="font-size:12px;color:#888;"></span>
+            <span id="eg-sel-count" style="font-size:12px;color:#767676;"></span>
             <div style="display:flex;gap:10px;">
                 <button class="btn-cancel" onclick="cerrar('modal-eliminar-global')">Cerrar</button>
                 <button id="btn-elim-sel" onclick="eliminarSeleccionadas()" disabled
-                    style="background:#dc2626;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;padding:9px 18px;cursor:not-allowed;font-family:'DM Sans',sans-serif;opacity:0.4;transition:all 0.2s;">
+                    style="background:var(--clr-danger);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;padding:9px 18px;cursor:not-allowed;font-family:'DM Sans',sans-serif;opacity:0.4;transition:all 0.2s;">
                     🗑 Eliminar seleccionadas
                 </button>
             </div>
@@ -676,43 +676,43 @@
         <div class="modal-body">
             <div style="background:#f8f6f1;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Cuota</div><strong id="apr-concepto">—</strong></div>
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Período</div><strong id="apr-periodo">—</strong></div>
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Monto Total</div><strong id="apr-monto-total">—</strong></div>
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Saldo Pendiente</div><strong id="apr-saldo">—</strong></div>
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Fecha de pago declarada</div><strong id="apr-fecha-transf">—</strong></div>
-                    <div><div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Comprobante subido</div><strong id="apr-comp-fecha">—</strong></div>
+                    <div><div class="u-lbl">Cuota</div><strong id="apr-concepto">—</strong></div>
+                    <div><div class="u-lbl">Período</div><strong id="apr-periodo">—</strong></div>
+                    <div><div class="u-lbl">Monto Total</div><strong id="apr-monto-total">—</strong></div>
+                    <div><div class="u-lbl">Saldo Pendiente</div><strong id="apr-saldo">—</strong></div>
+                    <div><div class="u-lbl">Fecha de pago declarada</div><strong id="apr-fecha-transf">—</strong></div>
+                    <div><div class="u-lbl">Comprobante subido</div><strong id="apr-comp-fecha">—</strong></div>
                 </div>
             </div>
             <div id="apr-comp-wrap" style="margin-bottom:14px;">
                 <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:6px;">📎 Comprobante del Estudiante</div>
-                <a id="apr-comp-link" href="#" target="_blank" style="font-size:13px;color:#1d4ed8;text-decoration:underline;">Ver comprobante →</a>
+                <a id="apr-comp-link" href="#" target="_blank" rel="noopener noreferrer" style="font-size:13px;color:#1d4ed8;text-decoration:underline;">Ver comprobante →</a>
             </div>
             <div style="background:#f8f6f1;border-radius:10px;padding:14px;margin-bottom:14px;">
                 <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px;">Tipo de aprobación</div>
                 <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;cursor:pointer;">
                     <input type="radio" name="apr-tipo" value="COMPLETO" checked onchange="aprTipoChange()" style="margin-top:3px;accent-color:var(--primary);">
-                    <div style="font-size:13px;">Aprobación total<br><small style="font-size:11px;color:#888;">La cuota pasa a ABONADA (Regla 2)</small></div>
+                    <div style="font-size:13px;">Aprobación total<br><small style="font-size:11px;color:#767676;">La cuota pasa a ABONADA (Regla 2)</small></div>
                 </label>
                 <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
                     <input type="radio" name="apr-tipo" value="PARCIAL" onchange="aprTipoChange()" style="margin-top:3px;accent-color:var(--primary);">
-                    <div style="font-size:13px;">Aprobación parcial<br><small style="font-size:11px;color:#888;">La cuota pasa a PAGO_PARCIAL con saldo (Regla 3)</small></div>
+                    <div style="font-size:13px;">Aprobación parcial<br><small style="font-size:11px;color:#767676;">La cuota pasa a PAGO_PARCIAL con saldo (Regla 3)</small></div>
                 </label>
             </div>
             <div id="apr-monto-parcial-wrap" class="mfield" style="display:none;">
-                <label>Monto aprobado ($)</label>
-                <input type="number" id="apr-monto-aprobado" min="1" step="0.01" placeholder="0.00">
+                <label for="apr-monto-aprobado">Monto aprobado ($)</label>
+                <input type="number" id="apr-monto-aprobado" min="1" step="0.01" placeholder="0.00" aria-label="Monto aprobado en pesos">
                 <div class="mhint">Debe ser menor al monto total de la cuota.</div>
             </div>
             <div class="mfield">
-                <label>📄 Recibo <span style="color:#c0392b;font-weight:700;">*</span> <span style="font-weight:400;color:#888;font-size:11px;">(obligatorio — Regla 1)</span></label>
-                <input type="file" id="apr-recibo-file" accept=".pdf,.jpg,.jpeg,.png" style="border:1.5px dashed #e0e0e0;border-radius:8px;padding:8px;cursor:pointer;width:100%;">
+                <label>📄 Recibo <span style="color:var(--clr-danger);font-weight:700;">*</span> <span style="font-weight:400;color:#767676;font-size:11px;">(obligatorio — Regla 1)</span></label>
+                <input type="file" id="apr-recibo-file" accept=".pdf,.jpg,.jpeg,.png" aria-label="Subir recibo" style="border:1.5px dashed #e0e0e0;border-radius:8px;padding:8px;cursor:pointer;width:100%;">
                 <div class="mhint">Sin recibo no se puede aprobar.</div>
             </div>
         </div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="cerrar('modal-aprobacion')">Cancelar</button>
-            <button style="padding:9px 18px;background:#c0392b;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;" onclick="rechazarCuota()">✕ Rechazar</button>
+            <button style="padding:9px 18px;background:var(--clr-danger);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;" onclick="rechazarCuota()">✕ Rechazar</button>
             <button class="btn-save" onclick="aprobarCuota()">✔ Aprobar</button>
         </div>
     </div>
@@ -729,7 +729,7 @@
             <div id="doc-contenido"></div>
         </div>
         <div class="modal-footer">
-            <a id="doc-descargar" href="#" target="_blank" class="btn-save" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">⬇ Descargar</a>
+            <a id="doc-descargar" href="#" target="_blank" rel="noopener noreferrer" class="btn-save" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">⬇ Descargar</a>
             <button class="btn-cancel" onclick="cerrar('modal-ver-doc')">Cerrar</button>
         </div>
     </div>
@@ -740,23 +740,40 @@
 <div id="cell-popup-overlay" class="cell-popup-overlay" style="display:none;" onclick="cerrarCeldaPopup()"></div>
 <div id="cell-popup" class="cell-popup" style="display:none;">
     <div class="cell-popup-title" id="cpop-title">Editar cuota</div>
-    <div class="cell-popup-monto">
-        <span>$</span>
-        <input type="number" id="cpop-monto" min="0" step="100" placeholder="0">
+    <!-- Sección normal: definir monto / no_aplica -->
+    <div id="cpop-normal-section">
+        <div class="cell-popup-monto">
+            <span>$</span>
+            <input type="number" id="cpop-monto" min="0" step="100" placeholder="0" aria-label="Monto de la cuota">
+        </div>
+        <label class="cell-popup-noapl" id="cpop-noapl-label" onclick="toggleNoAplica()">
+            <input type="checkbox" id="cpop-noapl" onclick="event.stopPropagation()">
+            <span>No debe pagar esta cuota (NO APLICA)</span>
+        </label>
+        <div class="cell-popup-btns">
+            <button class="cpop-cancel" onclick="cerrarCeldaPopup()">Cancelar</button>
+            <button class="cpop-save" onclick="guardarCeldaPopup()">💾 Guardar</button>
+        </div>
     </div>
-    <label class="cell-popup-noapl" id="cpop-noapl-label" onclick="toggleNoAplica()">
-        <input type="checkbox" id="cpop-noapl" onclick="event.stopPropagation()">
-        <span>No debe pagar esta cuota (NO APLICA)</span>
-    </label>
-    <div class="cell-popup-btns">
-        <button class="cpop-cancel" onclick="cerrarCeldaPopup()">Cancelar</button>
-        <button class="cpop-save" onclick="guardarCeldaPopup()">💾 Guardar</button>
+    <!-- Sección corrección: solo para ABONADA / PAGO_PARCIAL -->
+    <div id="cpop-corr-section" style="display:none;">
+        <div class="cpop-corr-info" id="cpop-corr-info"></div>
+        <div class="cell-popup-monto" style="margin-bottom:12px;">
+            <span>$</span>
+            <input type="number" id="cpop-corr-monto" min="0" step="100" placeholder="Nuevo monto abonado" aria-label="Nuevo monto abonado">
+        </div>
+        <div class="cell-popup-btns">
+            <button class="cpop-cancel" onclick="cerrarCeldaPopup()">Cancelar</button>
+            <button class="cpop-annul" onclick="anularPago()">🗑 Anular pago</button>
+            <button class="cpop-save" onclick="corregirMontoPago()">💾 Corregir</button>
+        </div>
     </div>
 </div>
 
 <!-- Supabase SDK + helper compartido -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
+<script src="cohorte_tabla.js?v=20250603"></script>
 
 <script>
 /* ══════════════════════════════════════════════════
@@ -767,12 +784,12 @@ const COHORTE_ID  = parseInt(QS.get('cohorte_id'))  || null;
 const PROGRAMA_ID = parseInt(QS.get('programa_id')) || null;
 
 /* ══════════════════════════════════════════════════
-   CONFIGURACIÓN DE EMAILS (Google Apps Script)
-   GAS_FALLBACK_URL: script desplegado desde anneris.amarfil
-   GAS_SECRET: debe coincidir con SECRET en sigpo_gas_email.gs
+   ENVÍO DE EMAILS
+   El envío se hace vía la Edge Function 'enviar-email' (relay),
+   que inyecta el secreto del lado del servidor y resuelve la
+   gas_url del programa desde la base de datos. La clave NUNCA
+   viaja en este HTML público.
 ══════════════════════════════════════════════════ */
-const GAS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxtDIAY6yhpTJF5OK3k0-VK9GHK4UxputJrW-I_1ihT-ABYEEzpVPGcKwLF9k6nQW6iHw/exec'; // anneris.amarfil@fce.uncu.edu.ar
-const GAS_SECRET       = 'SIGPO_KEY_FCE_2025';
 
 /* ══════════════════════════════════════════════════
    PLANTILLAS DE CORREO
@@ -818,95 +835,9 @@ function encodeAttr(str) {
         .replace(/>/g, '&gt;');
 }
 
-function redondear2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
-function keyCuota(concepto, periodo) { return String(concepto || '') + '||' + String(periodo || ''); }
-function calcMontoAbonado(c) {
-    if (c && c.monto_abonado != null && Number(c.monto_abonado) > 0) return redondear2(Number(c.monto_abonado));
-    return redondear2(Math.max(0, (Number(c && c.monto_final) || 0) - (Number(c && c.saldo_pendiente) || 0)));
-}
 function fechaISO(d) { return d ? new Date(d).toISOString().split('T')[0] : null; }
-function vencioCuota(c) {
-    if (!c || !c.fecha_vencimiento) return false;
-    return String(c.fecha_vencimiento) < hoy();
-}
-function tieneMontoDefinido(c) {
-    return !(c == null || c.monto_final === null || c.monto_final === undefined || c.monto_final === '' || isNaN(Number(c.monto_final)));
-}
-function resolverEstadoCobro(c) {
-    /* ──────────────────────────────────────────────────────
-     * Implementa las 7 reglas del sistema de cuotas:
-     * Regla 6: A_DEFINIR  → sin monto cargado
-     * paso:    PENDIENTE  → comprobante subido, esperando revisión (sin recibo)
-     * Regla 2: ABONADA    → recibo final aprobado, saldo = 0
-     * Regla 3: PAGO_PARCIAL → recibo parcial, saldo > 0
-     * Regla 5: EN_MORA    → venció + sin pago aprobado + sin comp. válido en revisión
-     * default: NO_ABONADA → tiene monto, no venció, sin comprobante
-     * ────────────────────────────────────────────────────── */
-    if (c && c.no_aplica === true) return 'NO_APLICA';               // Cuota excluida
-    if (!tieneMontoDefinido(c)) return 'A_DEFINIR';                     // Regla 6
-
-    var estadoDb     = String((c && c.estado) || '').trim().toUpperCase();
-    if (estadoDb === 'A_DEFINIR') return 'A_DEFINIR';                   // Regla 6b: estado explícito en BD
-    var saldo        = (c && c.saldo_pendiente !== null && c.saldo_pendiente !== undefined && c.saldo_pendiente !== '')
-                       ? redondear2(c.saldo_pendiente) : null;
-    var montoFinal   = redondear2(c.monto_final);
-    var montoAbonado = calcMontoAbonado(c);
-    var tieneRecibo  = !!(c && c.recibo_url);
-    var tieneComp    = !!(c && c.comprobante_url);
-
-    // PENDIENTE: comprobante subido, esperando revisión cooperadora
-    if (estadoDb === 'PENDIENTE' || (tieneComp && !tieneRecibo && montoAbonado <= 0)) return 'PENDIENTE';
-
-    // ABONADA: recibo cargado + saldo = 0 (Regla 2), o estado en BD ya es ABONADA con saldo = 0 (datos importados)
-    if (saldo !== null && saldo <= 0 && (tieneRecibo || estadoDb === 'ABONADA')) return 'ABONADA';
-
-    // EN_MORA sobre saldo parcial: recibo parcial vencido, saldo en mora, sin nuevo comprobante
-    if (estadoDb === 'EN_MORA' && tieneRecibo && saldo !== null && saldo > 0 && montoAbonado > 0 && !tieneComp) return 'EN_MORA';
-
-    // PAGO_PARCIAL: recibo parcial, saldo > 0 (Regla 3)
-    if (tieneRecibo && saldo !== null && saldo > 0 && montoAbonado > 0) return 'PAGO_PARCIAL';
-
-    // EN_MORA: apenas vence sin pago aprobado y sin comprobante válido en revisión (Regla 5)
-    // La BD puede tener EN_MORA (ya procesado) o puede ser nueva (recién venció)
-    if (estadoDb === 'EN_MORA') return 'EN_MORA';
-    if (vencioCuota(c) && montoAbonado <= 0 && !tieneComp) return 'EN_MORA';
-    if (vencioCuota(c) && montoAbonado <= 0 && estadoDb !== 'PENDIENTE') return 'EN_MORA';
-
-    return 'NO_ABONADA';
-}
-
-/* calcEstadoPostRechazo — Regla 4: rechazar nunca deja en PENDIENTE */
-function calcEstadoPostRechazo(c) {
-    if (!tieneMontoDefinido(c)) return 'A_DEFINIR';
-    var montoAbonado = calcMontoAbonado(c);
-    var saldo = redondear2(c.saldo_pendiente || 0);
-    if (montoAbonado > 0 && saldo > 0) return vencioCuota(c) ? 'EN_MORA' : 'PAGO_PARCIAL';
-    if (vencioCuota(c) && montoAbonado <= 0) return 'EN_MORA';
-    return 'NO_ABONADA';
-}
-function etiquetaEstado(estado) {
-    return {
-        NO_ABONADA: 'No abonada',
-        PENDIENTE: 'Pendiente',
-        ABONADA: 'Abonada',
-        PAGO_PARCIAL: 'Pago parcial',
-        EN_MORA: 'En mora',
-        A_DEFINIR: 'A definir'
-    }[estado] || estado || '—';
-}
-function pesoEstado(estado) {
-    return { EN_MORA: 6, PENDIENTE: 5, PAGO_PARCIAL: 4, NO_ABONADA: 3, A_DEFINIR: 2, ABONADA: 1, NO_APLICA: 0 }[estado] || 0;
-}
-function normalizarEstadoCuota(montoFinal, saldoPendiente, fechaVencimiento, estadoActual) {
-    var mock = {
-        monto_final: montoFinal,
-        saldo_pendiente: saldoPendiente,
-        fecha_vencimiento: fechaVencimiento,
-        estado: estadoActual || '',
-        recibo_url: ''
-    };
-    return resolverEstadoCobro(mock);
-}
+/* Máquina de estados de cuotas (resolverEstadoCobro, calcEstadoPostRechazo,
+   etiquetaEstado, pesoEstado, normalizarEstadoCuota) → cohorte_tabla.js */
 
 /* ══════════════════════════════════════════════════
    ESTADO GLOBAL
@@ -915,7 +846,9 @@ const V = {
     data:       null,   // { programa, cohorte, estudiantes, columnas }
     config:     {},     // { cbu, alias } — cargado desde tabla configuracion
     filtro:     'todos',
+    page:       1,     // paginación: cuántas páginas visibles
     descTarget: null,
+    busy:       false,  // mutex para operaciones async — evita doble submit
 };
 var planFilas = [];
 var _bcDni = null, _bcNombre = '', _bcNuevoEstado = '';
@@ -930,7 +863,7 @@ var _ecCuotasEditadas = [];
 async function obtenerCohorteDetalle(cohorteId, programaId) {
     const sb = await getSupabase();
 
-    const [progRes, cohRes, cobRes, cfgRes, egrRes] = await Promise.all([
+    const [progRes, cohRes, cobRes, egrRes] = await Promise.all([
         sb.from('programas')
           .select('programa_id, nombre, tipo, email_remitente, gas_url')
           .eq('programa_id', programaId)
@@ -940,12 +873,11 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
           .eq('cohorte_id', cohorteId)
           .single(),
         sb.from('cobros')
-          .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, no_aplica, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id, fecha_pago, fecha_aprobacion, comprobante_fecha')
+          .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, no_aplica, es_readmision, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id, fecha_pago, fecha_aprobacion, comprobante_fecha')
           .eq('cohorte_id', cohorteId)
           .eq('programa_id', programaId)
           .order('fecha_vencimiento'),
-        sb.from('configuracion').select('clave, valor'),
-        sb.from('egresos').select('tipo, monto_pagado, monto_original').eq('cohorte_id', cohorteId)
+        obtenerEgresosResumenPorCohorte(cohorteId)
     ]);
 
     if (progRes.error || cohRes.error) return null;
@@ -954,10 +886,8 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
     var cohorte  = cohRes.data;
     var cobros   = cobRes.data || [];
 
-    // Cargar TODA la configuración en V.config
-    var cfgRows = cfgRes.data || [];
-    V.config = {};
-    cfgRows.forEach(function(r) { V.config[r.clave] = r.valor; });
+    // Cargar configuración desde caché (5 min TTL — evita query extra en cada reload)
+    V.config = await obtenerConfiguracion();
     // Aliases cómodos para compatibilidad con el resto del código
     V.config.cbu          = V.config.cbu_banco    || '—';
     V.config.alias        = V.config.alias_banco  || '—';
@@ -1002,7 +932,7 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
     cobros.forEach(function(c) {
         var key = c.concepto + '||' + (c.periodo || '');
         if (!colMap[key]) {
-            colMap[key] = { concepto_base: c.concepto, periodo: c.periodo || '' };
+            colMap[key] = { concepto_base: c.concepto, periodo: c.periodo || '', fecha_vencimiento: c.fecha_vencimiento || null };
             conceptosVistos.push(key);
         }
     });
@@ -1033,7 +963,7 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
         cohorte:     cohorte,
         columnas:    columnas,
         estudiantes: estudiantesEnriquecidos,
-        egresos:     egrRes.data || []
+        egresos:     egrRes || []
     };
 }
 
@@ -1064,7 +994,7 @@ async function cargar(aplicarMora) {
         }
         // aplicarMora solo en el primer load, NO en recargas post-guardado
         if (aplicarMora) {
-            await aplicarMoraCohorteJS(V.data.estudiantes, COHORTE_ID);
+            await aplicarMoraCohorteJS(COHORTE_ID);
             V.data = await obtenerCohorteDetalle(COHORTE_ID, PROGRAMA_ID);
         }
         renderHeader();
@@ -1086,100 +1016,7 @@ async function cargar(aplicarMora) {
     }
 }
 
-/**
- * Aplica reglas de mora a todos los cobros vencidos de la cohorte.
- * Regla 1 (mes 1): pierde el descuento (monto_final = monto_original)
- * Regla 2 (mes 2+): 5% compuesto sobre monto_original desde mes 2
- * Actualiza directamente en Supabase solo si hay cambios.
- */
-async function aplicarMoraCohorteJS(estudiantes, cohorteId) {
-    var sb = await getSupabase();
-    var hoyStr = new Date().toISOString().split('T')[0];
-    var fHoy   = new Date(hoyStr + 'T00:00:00');
-    var moraPct = (V.config.moraPct || 5) / 100;   // desde configuracion
-
-    for (var ie = 0; ie < estudiantes.length; ie++) {
-        var est = estudiantes[ie];
-        var tieneDescuentoInsc = Number(est.descuento_porcentaje) > 0;
-
-        for (var ic = 0; ic < est.cobros.length; ic++) {
-            var c = est.cobros[ic];
-
-            // Solo cobros con monto definido, vencidos
-            if (!tieneMontoDefinido(c)) continue;
-            if (!c.fecha_vencimiento) continue;
-            if (c.fecha_vencimiento >= hoyStr) continue;
-            if (c.no_aplica === true) continue;
-            if (['ABONADA', 'NO_APLICA', 'PENDIENTE'].includes(String(c.estado))) continue;
-
-            var tieneReciboCobro = !!(c.recibo_url && String(c.recibo_url).trim() !== '');
-
-            // PAGO_PARCIAL con recibo aprobado: solo asegurar que el estado sea correcto.
-            // NO modificar saldo_pendiente — el monto pagado es un hecho fijo y no debe cambiar.
-            // El saldo restante se muestra tal cual; la mora se refleja visualmente en el color.
-            if (tieneReciboCobro) {
-                if (String(c.estado) !== 'PAGO_PARCIAL') {
-                    var saldoC = redondear2(Number(c.saldo_pendiente) || 0);
-                    var nuevoEstR = saldoC <= 0 ? 'ABONADA' : 'PAGO_PARCIAL';
-                    var resR = await sb.from('cobros').update({ estado: nuevoEstR }).eq('cobro_id', c.cobro_id);
-                    if (resR.error) console.error('estado fix error cobro', c.cobro_id, resR.error);
-                }
-                continue;
-            }
-
-            var fVenc    = new Date(c.fecha_vencimiento + 'T00:00:00');
-            var diasMora = Math.floor((fHoy - fVenc) / 86400000);
-            var mesesMora = diasMora / 30;  // fraccionario según regla
-
-            // Precio base sin descuento (monto_original es siempre el precio real)
-            var precioBase = Number(c.monto_original) || Number(c.monto_final) || 0;
-
-            var nuevoMonto, nuevoSaldo, nuevoDescPct;
-            var descPct = Number(c.descuento_porcentaje) || 0;
-
-            if (tieneDescuentoInsc || descPct > 0) {
-                // ── Estudiante CON descuento ──
-                if (mesesMora <= 1) {
-                    // PRIMER MES: solo pierde el descuento, sin intereses
-                    nuevoMonto  = precioBase;       // vuelve al precio sin descuento
-                    nuevoSaldo  = precioBase;
-                    nuevoDescPct = 0;
-                } else {
-                    // DESDE EL SEGUNDO MES: interés compuesto sobre precio base
-                    var mesesConInteres = mesesMora - 1;
-                    nuevoSaldo  = Math.round(precioBase * Math.pow(1 + moraPct, mesesConInteres) * 100) / 100;
-                    nuevoMonto  = nuevoSaldo;
-                    nuevoDescPct = 0;
-                }
-            } else {
-                // ── Estudiante SIN descuento: interés desde el día 1 ──
-                nuevoSaldo  = Math.round(precioBase * Math.pow(1 + moraPct, mesesMora) * 100) / 100;
-                nuevoMonto  = nuevoSaldo;
-                nuevoDescPct = 0;
-            }
-
-            // Solo actualizar si hay cambio real
-            var montoActual = Math.round(Number(c.monto_final) * 100) / 100;
-            var saldoActual = Math.round(Number(c.saldo_pendiente) * 100) / 100;
-            var hayDiff = Math.abs(nuevoMonto - montoActual) > 0.01
-                       || Math.abs(nuevoSaldo - saldoActual) > 0.01
-                       || String(c.estado) !== 'EN_MORA';
-
-            if (hayDiff) {
-                var fechaMora = c.fecha_mora || new Date(fVenc.getTime() + 86400000).toISOString().split('T')[0];
-                var res = await sb.from('cobros').update({
-                    estado:               'EN_MORA',
-                    monto_final:          nuevoMonto,
-                    saldo_pendiente:      nuevoSaldo,
-                    descuento_porcentaje: nuevoDescPct,
-                    meses_mora:           Math.floor(mesesMora),
-                    fecha_mora:           fechaMora
-                }).eq('cobro_id', c.cobro_id);
-                if (res.error) console.error('mora update error cobro', c.cobro_id, res.error);
-            }
-        }
-    }
-}
+/* aplicarMoraCohorteJS → cohorte_tabla.js */
 
 /* ══════════════════════════════════════════════════
    RENDER HEADER
@@ -1195,258 +1032,204 @@ function renderHeader() {
         + ' • ' + fFecha(c.fecha_inicio) + ' → ' + fFecha(c.fecha_fin);
 }
 
+// Genera el TR de un estudiante — extraído de renderTabla para mantenerla corta
+function _renderFilaEst(est, celdas, totP, totA, totS, estadoGen) {
+    var esPasivo = est.estado_academico === 'BAJA';
+    var nombreEsc = String(est.apellido + ', ' + est.nombre).replace(/'/g, "\\'");
+    var descuentoInfo = JSON.stringify({
+        dni: est.dni, apellido: est.apellido, nombre: est.nombre,
+        pct: est.descuento_porcentaje, desde: est.descuento_desde||'',
+        hasta: est.descuento_hasta||'', motivo: est.descuento_motivo||''
+    }).replace(/'/g, '&apos;');
+    var motRaw = est.descuento_motivo
+        ? est.descuento_motivo.replace(/_/g,' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : '';
+    var motStr = escapeHtml(motRaw);
+    var ff = function(f){ return f ? escapeHtml(f.split('-').reverse().join('/')) : ''; };
+    var vig = est.descuento_desde
+        ? (ff(est.descuento_desde) + (est.descuento_hasta ? ' → ' + ff(est.descuento_hasta) : '')) : '';
+    var descDetalle = (motStr ? '<div style="font-size:9px;color:#555;font-weight:600;text-transform:uppercase;line-height:1.2;">' + motStr + '</div>' : '')
+                    + (vig   ? '<div style="font-size:9px;color:#767676;line-height:1.2;">' + vig + '</div>' : '');
+    var filaHtml = `
+        <td style="text-align:center;"><input type="checkbox" class="chk-e" data-dni="${est.dni}" onchange="onChk()"></td>
+        <td class="cell-name" onclick="irEstudiante(${est.dni})">${escapeHtml(est.apellido + ', ' + est.nombre)}<div style="font-size:10px;font-weight:400;color:#767676;margin-top:1px;">DNI ${escapeHtml(String(est.dni))}</div></td>
+        <td class="cell-desc" style="color:${est.descuento_porcentaje > 0 ? 'var(--success)' : '#aaa'};">
+            <div style="font-weight:700;font-size:13px;">${est.descuento_porcentaje}%</div>
+            ${descDetalle}
+            <button class="edit-btn" title="Editar descuento" onclick='abrirDescuento(${descuentoInfo},this)'>✏️</button>
+        </td>
+        <td class="cell-email">${escapeHtml(est.email || '—')}</td>
+        <td style="text-align:center;border-right:1px solid #ebebeb;">
+            <div style="display:inline-flex;flex-direction:column;align-items:center;gap:4px;">
+              <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;${esPasivo ? 'background:#fde8e1;color:var(--clr-danger);' : 'background:#d1fae5;color:#065f46;'}">${esPasivo ? 'Pasivo' : 'Activo'}</span>
+              ${esPasivo
+                ? `<button class="btn-alta-coh" title="Reactivar en esta cohorte" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','ACTIVO')">↑ Dar alta</button>`
+                : `<button class="btn-baja-coh" title="Dar de baja en esta cohorte" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','BAJA')">↓ Dar baja</button>`}
+              <button class="btn-desvincular-coh" onclick="confirmarDesvincular(${est.dni},'${nombreEsc}')">🗑 Desvincular</button>
+            </div>
+        </td>
+        ${celdas}
+        <td class="cell-tot-pagar">${fMonto(totP)}</td>
+        <td class="cell-tot-abonado">${fMonto(totA)}</td>
+        <td class="${totS === 0 ? 'cell-saldo-cero' : 'cell-saldo-pos'}">${fMonto(totS)}</td>`;
+    var tr = document.createElement('tr');
+    tr.className = 'fila-est' + (esPasivo ? ' fila-pasiva-cohorte' : '');
+    tr.dataset.dni = est.dni;
+    tr.dataset.est = estadoGen;
+    tr.dataset.readmision = est.cobros.some(function(c){ return c.es_readmision; }) ? '1' : '0';
+    tr.innerHTML = filaHtml;
+    return tr;
+}
+
 /* ══════════════════════════════════════════════════
    RENDER TABLA
 ══════════════════════════════════════════════════ */
-function renderTabla() {
-    var columnas    = V.data.columnas;
-    var estudiantes = V.data.estudiantes;
-    var thead = document.getElementById('t-head');
-    var tbody = document.getElementById('t-body');
-
-    thead.innerHTML = '<tr>'
-        + '<th class="col-check"><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>'
+/* renderTabla → cohorte_tabla.js (esqueleto). Esta vista aporta su HTML
+   específico vía CT_VIEW (definido más abajo, junto a _renderFilaEst). */
+var CT_VIEW = {
+    leadingHeader:
+          '<th class="col-check"><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>'
         + '<th class="col-name">Apellido y Nombre</th>'
         + '<th style="min-width:64px;text-align:center;">Desc %</th>'
         + '<th class="col-email">Correo electrónico</th>'
-        + '<th style="min-width:76px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>Cohorte</th>'
-        + columnas.map(function(c) {
-            return '<th class="col-cuota">' + escapeHtml(c.concepto_base) + '<br><span style="font-weight:400;color:#888;font-size:9px;">' + escapeHtml(c.periodo || '') + '</span></th>';
-          }).join('')
-        + '<th class="tot-hdr th-pagar">Total a<br>Pagar</th>'
-        + '<th class="tot-hdr th-abonado">Total<br>Abonado</th>'
-        + '<th class="tot-hdr th-saldo">Saldo<br>Pendiente</th>'
-        + '</tr>';
+        + '<th style="min-width:76px;text-align:center;background:#f0ede6;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;border-bottom:2px solid #c5c5c5;border-right:1px solid #ddd;">Estado<br>Cohorte</th>',
 
-    tbody.innerHTML = '';
-
-    estudiantes.forEach(function(est) {
-        var estadoGen = calcEstadoGeneral(est.cobros);
-
-        // Construir cobrosMap primero y pre-calcular estado/abonado
-        var cobrosMap = {};
-        est.cobros.forEach(function(c) {
-            cobrosMap[keyCuota(c.concepto, c.periodo)] = c;
-            c._estado_resuelto = resolverEstadoCobro(c);
-            c.monto_abonado = calcMontoAbonado(c);
-        });
-
-        // Sumar SOLO los cobros que tienen columna visible (evita cobros huérfanos ocultos)
-        var totP = 0, totA = 0, totS = 0;
+    // Sumar SOLO los cobros que tienen columna visible (evita cobros huérfanos ocultos)
+    totales: function(est, columnas, cobrosMap) {
+        var p = 0, a = 0, s = 0;
         columnas.forEach(function(col) {
             var c = cobrosMap[keyCuota(col.concepto_base, col.periodo)];
             if (!c || c.no_aplica === true || c._estado_resuelto === 'NO_APLICA') return;
-            totP += tieneMontoDefinido(c) ? Number(c.monto_final) || 0 : 0;
-            totA += calcMontoAbonado(c);
-            totS += c.saldo_pendiente === null || c.saldo_pendiente === undefined ? 0 : Number(c.saldo_pendiente) || 0;
+            p += tieneMontoDefinido(c) ? Number(c.monto_final) || 0 : 0;
+            a += calcMontoAbonado(c);
+            s += c.saldo_pendiente === null || c.saldo_pendiente === undefined ? 0 : Number(c.saldo_pendiente) || 0;
         });
+        return { p: p, a: a, s: s };
+    },
 
-        var celdas = columnas.map(function(col) {
-            var c = cobrosMap[keyCuota(col.concepto_base, col.periodo)];
-            // Sin cobro: el trigger debería haberlo creado al inscribir al estudiante.
-            // Si por datos anteriores al trigger falta el cobro, mostrarlo como A_DEFINIR
-            // editable para que el administrador pueda definir el monto.
-            if (!c) {
-                var sinCobroInfo = JSON.stringify({
-                    cobro_id: null,
-                    dni: String(est.dni),
-                    concepto: col.concepto_base,
-                    periodo:  col.periodo || '',
-                    monto: null,
-                    descuento_porcentaje: est.descuento_porcentaje || 0,
-                    fecha_vencimiento: null,
-                    estado_actual: 'A_DEFINIR',
-                    no_aplica: false,
-                    _sin_cobro: true
-                });
-                return '<td data-est="A_DEFINIR" onclick="avisarSinCobro(event,' + encodeAttr(sinCobroInfo) + ')" style="cursor:pointer;" title="Sin cobro generado — recargá la página o contactá al administrador">'
-                    + '<div class="cuota-cell-wrap">'
-                    + '<div class="cuota-cell-txt" style="color:#f59e0b;font-size:10px;font-style:italic;">A definir</div>'
-                    + '<div style="font-size:9px;color:#bbb;margin-top:2px;">⚠️ sin cobro</div>'
-                    + '</div></td>';
-            }
+    // Sin cobro: mostrarlo como A_DEFINIR editable para que el admin defina el monto.
+    celdaVacia: function(est, col) {
+        var sinCobroInfo = JSON.stringify({
+            cobro_id: null,
+            dni: String(est.dni),
+            concepto: col.concepto_base,
+            periodo:  col.periodo || '',
+            monto: null,
+            descuento_porcentaje: est.descuento_porcentaje || 0,
+            fecha_vencimiento: col.fecha_vencimiento || null,
+            estado_actual: 'A_DEFINIR',
+            no_aplica: false,
+            _sin_cobro: true
+        });
+        return '<td data-est="A_DEFINIR" onclick="abrirCeldaPopup(event,' + encodeAttr(sinCobroInfo) + ')" style="cursor:pointer;" title="Sin cobro generado — clic para definir el monto y crearlo">'
+            + '<div class="cuota-cell-wrap">'
+            + '<div class="cuota-cell-txt" style="color:var(--clr-warning);font-size:10px;font-style:italic;">A definir</div>'
+            + '<div class="u-hint">✏️ definir</div>'
+            + '</div></td>';
+    },
 
-            var estado       = resolverEstadoCobro(c);
-            var montoAbonado = calcMontoAbonado(c);
-            var idCobro      = c.cobro_id;
+    celda: function(c, est, estado, montoAbonado, col) {
+        var idCobro = c.cobro_id;
 
-            /* Texto de la celda */
-            var txt;
-            if (estado === 'NO_APLICA')         txt = '— no aplica';
-            else if (!tieneMontoDefinido(c))    txt = 'A definir';
-            else if (estado === 'PAGO_PARCIAL') txt = fMonto(montoAbonado) + '<br><small style="font-size:9px;opacity:.8;">de ' + fMonto(c.monto_final) + '</small>';
-            else if (estado === 'PENDIENTE') {
-                var mt = c.monto_transferido && Number(c.monto_transferido) > 0 ? Number(c.monto_transferido) : null;
-                txt = mt && mt < Number(c.monto_final||0)
-                    ? fMonto(mt) + '<br><small style="font-size:9px;opacity:.8;">🕓 En revisión</small>'
-                    : '🕓 En revisión';
-            }
-            else if (estado === 'A_DEFINIR')    txt = 'A definir';
-            else                                txt = fMonto(c.monto_final);
+        /* Texto de la celda */
+        var txt;
+        if (estado === 'NO_APLICA')         txt = '— no aplica';
+        else if (!tieneMontoDefinido(c))    txt = 'A definir';
+        else if (estado === 'PAGO_PARCIAL') txt = fMonto(montoAbonado) + '<br><small style="font-size:9px;opacity:.8;">de ' + fMonto(c.monto_final) + '</small>';
+        else if (estado === 'PENDIENTE') {
+            var mt = c.monto_transferido && Number(c.monto_transferido) > 0 ? Number(c.monto_transferido) : null;
+            txt = mt && mt < Number(c.monto_final||0)
+                ? fMonto(mt) + '<br><small style="font-size:9px;opacity:.8;">🕓 En revisión</small>'
+                : '🕓 En revisión';
+        }
+        else if (estado === 'A_DEFINIR')    txt = 'A definir';
+        else                                txt = fMonto(c.monto_final);
 
-            /*
-             * Botones por estado — Administrador: control total
-             * PENDIENTE    → Ver comprobante + Aprobar + Rechazar
-             * ABONADA      → Ver comprobante + Ver recibo
-             * PAGO_PARCIAL → Ver comprobante + Ver recibo parcial
-             * resto        → sin botones
-             */
-            var btns = '';
-            if (estado === 'PENDIENTE') {
-                if (c.comprobante_url)
-                    btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
-                btns += '<button class="cbtn cbtn-aprobar" onclick="abrirAprobacion(' + idCobro + ')">✔ Aprobar</button>';
-                btns += '<button class="cbtn cbtn-rechazar" onclick="rechazarCuotaDirecto(' + idCobro + ')">✕ Rechazar</button>';
-            } else if (estado === 'ABONADA') {
-                if (c.comprobante_url)
-                    btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
-                if (c.recibo_url)
-                    btns += '<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\'' + encodeAttr(c.recibo_url) + '\',\'Recibo\',\'' + encodeAttr(c.concepto) + '\')">🧾 Recibo</button>';
-            } else if (estado === 'PAGO_PARCIAL') {
-                if (c.comprobante_url)
-                    btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
-                if (c.recibo_url)
-                    btns += '<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\'' + encodeAttr(c.recibo_url) + '\',\'Recibo parcial\',\'' + encodeAttr(c.concepto) + '\')">🧾 Recibo</button>';
-            }
-            // EN_MORA, NO_ABONADA, A_DEFINIR: sin botones
+        /*
+         * Botones por estado — Administrador: control total
+         * PENDIENTE    → Ver comprobante + Aprobar + Rechazar
+         * ABONADA      → Ver comprobante + Ver recibo
+         * PAGO_PARCIAL → Ver comprobante + Ver recibo parcial
+         * resto        → sin botones
+         */
+        var btns = '';
+        if (estado === 'PENDIENTE') {
+            if (c.comprobante_url)
+                btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
+            btns += '<button class="cbtn cbtn-aprobar" onclick="abrirAprobacion(' + idCobro + ')">✔ Aprobar</button>';
+            btns += '<button class="cbtn cbtn-rechazar" onclick="rechazarCuotaDirecto(' + idCobro + ')">✕ Rechazar</button>';
+        } else if (estado === 'ABONADA') {
+            if (c.comprobante_url)
+                btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
+            if (c.recibo_url)
+                btns += '<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\'' + encodeAttr(c.recibo_url) + '\',\'Recibo\',\'' + encodeAttr(c.concepto) + '\')">🧾 Recibo</button>';
+        } else if (estado === 'PAGO_PARCIAL') {
+            if (c.comprobante_url)
+                btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
+            if (c.recibo_url)
+                btns += '<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\'' + encodeAttr(c.recibo_url) + '\',\'Recibo parcial\',\'' + encodeAttr(c.concepto) + '\')">🧾 Recibo</button>';
+        }
+        // EN_MORA, NO_ABONADA, A_DEFINIR: sin botones
 
-            var title = encodeAttr(c.concepto + ' · ' + (c.periodo||'')
-                + ' | Estado: ' + etiquetaEstado(estado)
-                + ' | Abonado: ' + fMonto(montoAbonado)
-                + ' | Saldo: ' + fMonto(c.saldo_pendiente)
-                + (c.fecha_vencimiento ? ' | Vence: ' + fFecha(c.fecha_vencimiento) : ''));
+        var title = encodeAttr(c.concepto + ' · ' + (c.periodo||'')
+            + ' | Estado: ' + etiquetaEstado(estado)
+            + ' | Abonado: ' + fMonto(montoAbonado)
+            + ' | Saldo: ' + fMonto(c.saldo_pendiente)
+            + (c.fecha_vencimiento ? ' | Vence: ' + fFecha(c.fecha_vencimiento) : ''));
 
-            // Solo celdas sin pago aprobado son editables inline
-            var esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado);
-            var editAttr = esEditable
-                ? ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
-                    cobro_id:             c.cobro_id,
-                    dni:                  String(est.dni),
-                    concepto:             c.concepto,
-                    periodo:              c.periodo || '',
-                    monto:                c.monto_original,
-                    descuento_porcentaje: est.descuento_porcentaje || c.descuento_porcentaje || 0,
-                    fecha_vencimiento:    c.fecha_vencimiento || null,
-                    estado_actual:        estado,
-                    no_aplica:            estado === 'NO_APLICA'
-                  })) + ')" style="cursor:pointer;"'
-                : '';
+        // PENDIENTE: no editable inline (comprobante en revisión)
+        var esPagoAprobado = ['ABONADA','PAGO_PARCIAL'].includes(estado);
+        var esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE'].includes(estado);
+        var editAttr = '';
+        if (esEditable) {
+            editAttr = ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
+                cobro_id:             c.cobro_id,
+                dni:                  String(est.dni),
+                concepto:             c.concepto,
+                periodo:              c.periodo || '',
+                monto:                c.monto_original,
+                descuento_porcentaje: est.descuento_porcentaje || c.descuento_porcentaje || 0,
+                fecha_vencimiento:    c.fecha_vencimiento || null,
+                estado_actual:        estado,
+                no_aplica:            estado === 'NO_APLICA'
+            })) + ')" style="cursor:pointer;"';
+        } else if (esPagoAprobado) {
+            editAttr = ' onclick="abrirCeldaPopup(event,' + encodeAttr(JSON.stringify({
+                cobro_id:         c.cobro_id,
+                dni:              String(est.dni),
+                concepto:         c.concepto,
+                periodo:          c.periodo || '',
+                monto_final:      c.monto_final,
+                monto_abonado:    montoAbonado,
+                saldo_pendiente:  c.saldo_pendiente,
+                fecha_vencimiento: c.fecha_vencimiento || null,
+                estado_actual:    estado,
+                es_pago_aprobado: true
+            })) + ')" style="cursor:pointer;"';
+        }
 
-            return '<td data-est="' + estado + '" title="' + title + '"' + editAttr + '>'
-                + '<div class="cuota-cell-wrap">'
-                + '<div class="cuota-cell-txt">' + txt + '</div>'
-                + (btns ? '<div class="cuota-cell-btns">' + btns + '</div>' : '')
-                + (esEditable ? '<div style="font-size:9px;color:#bbb;margin-top:2px;">✏️ editar</div>' : '')
-                + '</div></td>';
-        }).join('');
+        return '<td data-est="' + estado + '" title="' + title + '"' + editAttr + '>'
+            + '<div class="cuota-cell-wrap">'
+            + (c.es_readmision ? '<span class="badge-readmision">Readmisión</span>' : '')
+            + '<div class="cuota-cell-txt">' + txt + '</div>'
+            + (btns ? '<div class="cuota-cell-btns">' + btns + '</div>' : '')
+            + ((esEditable || esPagoAprobado) ? '<div class="u-hint">✏️ editar</div>' : '')
+            + '</div></td>';
+    },
 
-        var esPasivo = est.estado_academico === 'BAJA';
-        var nombreEsc = String(est.apellido + ', ' + est.nombre).replace(/'/g, "\'");
-        var descuentoInfo = JSON.stringify({dni:est.dni, apellido:est.apellido, nombre:est.nombre, pct:est.descuento_porcentaje, desde:est.descuento_desde||'', hasta:est.descuento_hasta||'', motivo:est.descuento_motivo||''}).replace(/'/g, '&apos;');
-        var filaHtml = `
-            <td style="text-align:center;"><input type="checkbox" class="chk-e" data-dni="${est.dni}" onchange="onChk()"></td>
-            <td class="cell-name" onclick="irEstudiante(${est.dni})">${escapeHtml(est.apellido + ', ' + est.nombre)}<div style="font-size:10px;font-weight:400;color:#888;margin-top:1px;">DNI ${escapeHtml(String(est.dni))}</div></td>
-            <td class="cell-desc" style="color:${est.descuento_porcentaje > 0 ? 'var(--success)' : '#aaa'};">
-                <div style="font-weight:700;font-size:13px;">${est.descuento_porcentaje}%</div>
-                ${(function(){
-                    // Etiqueta del motivo: buscar en motivos dinámicos o usar el valor directo
-                    var motRaw = est.descuento_motivo ? (est.descuento_motivo.replace(/_/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();})) : '';
-                    var motStr = escapeHtml(motRaw);
-                    var ff=function(f){return f?escapeHtml(f.split('-').reverse().join('/')):'';};
-                    var vig=est.descuento_desde?(ff(est.descuento_desde)+(est.descuento_hasta?' → '+ff(est.descuento_hasta):'')):'';
-                    return (motStr?'<div style="font-size:9px;color:#555;font-weight:600;text-transform:uppercase;line-height:1.2;">'+motStr+'</div>':'')
-                          +(vig?'<div style="font-size:9px;color:#888;line-height:1.2;">'+vig+'</div>':'');
-                })()}
-                <button class="edit-btn" title="Editar descuento" onclick='abrirDescuento(${descuentoInfo},this)'>✏️</button>
-            </td>
-            <td class="cell-email">${escapeHtml(est.email || '—')}</td>
-            <td style="text-align:center;border-right:1px solid #ebebeb;">
-                ${esPasivo
-                    ? `<button class="btn-alta-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','ACTIVO')">✅ Alta (ACTIVO)</button>`
-                    : `<button class="btn-baja-coh" onclick="confirmarCambioEstado(${est.dni},'${nombreEsc}','BAJA')">⛔ Baja (PASIVO)</button>`}
-                <br><button class="btn-desvincular-coh" onclick="confirmarDesvincular(${est.dni},'${nombreEsc}')">🗑 Desvincular</button>
-            </td>
-            ${celdas}
-            <td class="cell-tot-pagar">${fMonto(totP)}</td>
-            <td class="cell-tot-abonado">${fMonto(totA)}</td>
-            <td class="${totS === 0 ? 'cell-saldo-cero' : 'cell-saldo-pos'}">${fMonto(totS)}</td>`;
+    fila: function(est, estadoGen, celdas, totP, totA, totS) {
+        return _renderFilaEst(est, celdas, totP, totA, totS, estadoGen);
+    }
+};
 
-        var tr = document.createElement('tr');
-        tr.className = 'fila-est' + (esPasivo ? ' fila-pasiva-cohorte' : '');
-        tr.dataset.dni = est.dni;
-        tr.dataset.est = estadoGen;
-        tr.innerHTML = filaHtml;
-        tbody.appendChild(tr);
-    });
-
-    aplicarFiltro();
-}
-
-function calcEstadoGeneral(cobros) {
-    if (!cobros || cobros.length === 0) return 'A_DEFINIR';
-    var peor = 'ABONADA';
-    cobros.forEach(function(c) {
-        var est = resolverEstadoCobro(c);
-        if (pesoEstado(est) > pesoEstado(peor)) peor = est;
-    });
-    return peor;
-}
+/* calcEstadoGeneral → cohorte_tabla.js */
 
 /* ══════════════════════════════════════════════════
    STATS Y FILTROS
 ══════════════════════════════════════════════════ */
-function actualizarStats() {
-    var ests = V.data.estudiantes;
-    var recaud = ests.reduce(function(s, e) {
-        return s + e.cobros.reduce(function(ss, c) { return ss + calcMontoAbonado(c); }, 0);
-    }, 0);
-    var egrExec = (V.data.egresos || []).filter(function(e){ return e.tipo === 'EJECUTADO'; })
-                                        .reduce(function(s,e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
-    var saldo = recaud - egrExec;
-    document.getElementById('s-aldia').textContent   = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'ABONADA'; }).length;
-    document.getElementById('s-mora').textContent    = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'EN_MORA'; }).length;
-    document.getElementById('s-parcial').textContent = ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === 'PAGO_PARCIAL'; }).length;
-    document.getElementById('s-recaudado').textContent = fMillones(recaud);
-    document.getElementById('s-egresos').textContent  = fMillones(egrExec);
-    var sEl = document.getElementById('s-saldo');
-    sEl.textContent = fMillones(saldo);
-    sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
-}
+/* actualizarStats → cohorte_tabla.js */
 
-function actualizarFiltros() {
-    var ests = V.data.estudiantes;
-    var labels = {
-        todos: 'Todos', ABONADA: 'Al día', EN_MORA: 'En mora',
-        PAGO_PARCIAL: 'Pago parcial', PENDIENTE: 'Pendiente',
-        NO_ABONADA: 'No abonada', A_DEFINIR: 'A definir'
-    };
-    document.querySelectorAll('.filter-btn').forEach(function(b) {
-        var f = b.dataset.f;
-        var n = f === 'todos' ? ests.length : ests.filter(function(e) { return calcEstadoGeneral(e.cobros) === f; }).length;
-        b.textContent = labels[f] + ' (' + n + ')';
-    });
-}
-
-function initFiltros() {
-    document.querySelectorAll('.filter-btn').forEach(function(b) {
-        b.onclick = function() {
-            V.filtro = b.dataset.f;
-            document.querySelectorAll('.filter-btn').forEach(function(x) { x.classList.remove('active'); });
-            b.classList.add('active');
-            aplicarFiltro();
-        };
-    });
-}
-
-function aplicarFiltro() {
-    var vis = 0;
-    document.querySelectorAll('.fila-est').forEach(function(tr) {
-        var ok = V.filtro === 'todos' || tr.dataset.est === V.filtro;
-        tr.classList.toggle('oculta', !ok);
-        if (ok) vis++;
-    });
-    document.getElementById('empty').classList.toggle('show', vis === 0);
-}
+/* Filtros y paginación (actualizarFiltros, initFiltros, aplicarFiltro,
+   _aplicarFiltroYPag, mostrarMas) → cohorte_tabla.js */
 
 /* ══════════════════════════════════════════════════
    SELECCIÓN MÚLTIPLE
@@ -1548,6 +1331,8 @@ async function guardarDescuento() {
         if (p.hasta && p.hasta < p.desde) { toast('Período ' + (pi + 1) + ': la fecha fin debe ser posterior al inicio', 'err'); return; }
     }
 
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb = await getSupabase();
@@ -1573,6 +1358,7 @@ async function guardarDescuento() {
         if (resInsc.error) throw resInsc.error;
 
         // Aplicar descuento a cada cobro según el período que le corresponda por fecha_vencimiento
+        var cobroUpdates = [];
         for (var i = 0; i < est.cobros.length; i++) {
             var c = est.cobros[i];
             var estado = resolverEstadoCobro(c);
@@ -1593,8 +1379,7 @@ async function guardarDescuento() {
             }
 
             if (!tieneMontoDefinido(c)) {
-                var updDef = await sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobro_id);
-                if (updDef.error) throw updDef.error;
+                cobroUpdates.push(sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobro_id));
                 continue;
             }
 
@@ -1605,13 +1390,17 @@ async function guardarDescuento() {
             var nuevoSaldo = redondear2(Math.max(0, nuevoMontoFinal - montoAbonado));
             var nuevoEstado = normalizarEstadoCuota(nuevoMontoFinal, nuevoSaldo, c.fecha_vencimiento, c.estado);
 
-            var resCobro = await sb.from('cobros').update({
+            cobroUpdates.push(sb.from('cobros').update({
                 descuento_porcentaje: pctAplicar,
                 monto_final:          nuevoMontoFinal,
                 saldo_pendiente:      nuevoSaldo,
                 estado:               nuevoEstado
-            }).eq('cobro_id', c.cobro_id);
-            if (resCobro.error) throw resCobro.error;
+            }).eq('cobro_id', c.cobro_id));
+        }
+        if (cobroUpdates.length) {
+            var cobroResults = await Promise.all(cobroUpdates);
+            var cobroErr = cobroResults.find(function(r){ return r.error; });
+            if (cobroErr) throw cobroErr.error;
         }
 
         toast('Descuento actualizado ✓', 'ok');
@@ -1621,6 +1410,7 @@ async function guardarDescuento() {
         console.error(e);
         toast('Error al guardar el descuento: ' + e.message, 'err');
     } finally {
+        V.busy = false;
         spin(false);
     }
 }
@@ -1657,8 +1447,8 @@ function abrirCrearCuota() {
     if (!maxVenc) {
         // Sin cuotas previas: proponer Inscripción + Cuota 1
         planFilas = [
-            { nombre: 'Inscripción', periodo: planPeriodoSiguiente(0), monto: '', vencimiento: planFechaDefault(0) },
-            { nombre: 'Cuota 1',     periodo: planPeriodoSiguiente(1), monto: '', vencimiento: planFechaDefault(1) },
+            { nombre: 'Inscripción', periodo: planPeriodoSiguiente(0), monto: '', vencimiento: planFechaDefault(0), es_readmision: false },
+            { nombre: 'Cuota 1',     periodo: planPeriodoSiguiente(1), monto: '', vencimiento: planFechaDefault(1), es_readmision: false },
         ];
     } else {
         // Continuar desde el mes siguiente a la última cuota existente
@@ -1666,7 +1456,7 @@ function abrirCrearCuota() {
         var nextNum = maxNum + 1;
         var label = !yaHayInscripcion ? 'Inscripción' : 'Cuota ' + nextNum;
         planFilas = [
-            { nombre: label, periodo: planPeriodoDeDate(sig), monto: '', vencimiento: sig.toISOString().split('T')[0] }
+            { nombre: label, periodo: planPeriodoDeDate(sig), monto: '', vencimiento: sig.toISOString().split('T')[0], es_readmision: false }
         ];
     }
 
@@ -1709,7 +1499,8 @@ function planRenderFilas() {
         div.className = 'plan-fila' + (!f.monto ? ' fila-irregular' : '');
         div.innerHTML =
             '<div class="plan-fila-num">' + (i + 1) + '</div>'
-            + '<div><label>Nombre de la cuota</label><input type="text" value="' + f.nombre + '" placeholder="Cuota ' + (i + 1) + '" onchange="planFilas[' + i + '].nombre=this.value;planActualizarResumen();"></div>'
+            + '<div><label>Nombre de la cuota</label><input type="text" value="' + f.nombre + '" placeholder="Cuota ' + (i + 1) + '" onchange="planFilas[' + i + '].nombre=this.value;planActualizarResumen();">'
+            + '<label class="readmision-chk"><input type="checkbox"' + (f.es_readmision ? ' checked' : '') + ' onchange="planFilas[' + i + '].es_readmision=this.checked;"> Readmisión</label></div>'
             + '<div><label>Período</label><input type="text" value="' + f.periodo + '" placeholder="Mar 2026" onchange="planFilas[' + i + '].periodo=this.value;"></div>'
             + '<div class="monto-wrap"><label>Monto</label><input type="number" value="' + f.monto + '" placeholder="0" oninput="planFilas[' + i + '].monto=this.value;planCheckAlerta();planActualizarResumen();this.closest(\'.plan-fila\').classList.toggle(\'fila-irregular\',!this.value||parseFloat(this.value)===0);"></div>'
             + '<div><label>Vencimiento</label><input type="date" value="' + f.vencimiento + '" onchange="planFilas[' + i + '].vencimiento=this.value;"></div>'
@@ -1723,7 +1514,7 @@ function planAgregar() {
     var sig   = planAvanzarMes(last ? last.vencimiento : planFechaDefault(0));
     var m     = last && (last.nombre || '').match(/cuota[\s_]?(\d+)/i);
     var nextNum = m ? parseInt(m[1], 10) + 1 : planFilas.length + 1;
-    planFilas.push({ nombre: 'Cuota ' + nextNum, periodo: planPeriodoDeDate(sig), monto: '', vencimiento: sig.toISOString().split('T')[0] });
+    planFilas.push({ nombre: 'Cuota ' + nextNum, periodo: planPeriodoDeDate(sig), monto: '', vencimiento: sig.toISOString().split('T')[0], es_readmision: false });
     planRenderFilas(); planActualizarResumen(); planCheckAlerta();
 }
 function planEliminar(i) {
@@ -1751,6 +1542,8 @@ async function guardarCuotas() {
     var dnis = V.data.estudiantes.map(function(e) { return e.dni; });
     if (!dnis.length) { toast('No hay estudiantes en esta cohorte', 'err'); return; }
 
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb = await getSupabase();
@@ -1805,7 +1598,8 @@ async function guardarCuotas() {
                     descuento_porcentaje: pctAplicar,
                     monto_final:          montoFinal,
                     saldo_pendiente:      montoFinal,
-                    estado:               estado
+                    estado:               estado,
+                    es_readmision:        f.es_readmision || false
                 });
             });
         });
@@ -1821,6 +1615,7 @@ async function guardarCuotas() {
         console.error(e);
         toast('Error al crear el plan: ' + e.message, 'err');
     } finally {
+        V.busy = false;
         spin(false);
     }
 }
@@ -1839,13 +1634,13 @@ function confirmarCambioEstado(dni, nombre, nuevoEstado) {
     document.getElementById('mbc-sub').textContent    = V.data ? V.data.programa.nombre + ' · ' + V.data.cohorte.nombre : '';
     var btn = document.getElementById('mbc-btn');
     btn.textContent       = esBaja ? '⛔ Confirmar Baja' : '✅ Confirmar Alta';
-    btn.style.background  = esBaja ? '#ea580c' : '#2d7a4f';
+    btn.style.background  = esBaja ? '#ea580c' : 'var(--clr-success)';
     document.getElementById('mbc-cuerpo').innerHTML = esBaja
         ? '<p style="font-size:13px;color:#555;">Va a dar de baja a <strong>' + nombre + '</strong> solo en esta cohorte/edición.</p>'
-          + '<div style="margin-top:12px;background:#fff8e1;border-left:4px solid #f59e0b;padding:12px;border-radius:8px;font-size:12px;color:#78350f;">'
+          + '<div style="margin-top:12px;background:#fff8e1;border-left:4px solid var(--clr-warning);padding:12px;border-radius:8px;font-size:12px;color:#78350f;">'
           + '<strong>Efectos:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;"><li>Deja de generar deuda nueva en esta cohorte.</li><li>El historial de pagos queda intacto.</li><li>Puede reactivarse con el botón <strong>Alta</strong>.</li></ul></div>'
         : '<p style="font-size:13px;color:#555;">Va a reactivar a <strong>' + nombre + '</strong> en esta cohorte/edición.</p>'
-          + '<div style="margin-top:12px;background:#d4edda;border-left:4px solid #2d7a4f;padding:12px;border-radius:8px;font-size:12px;color:#155724;">'
+          + '<div style="margin-top:12px;background:#d4edda;border-left:4px solid var(--clr-success);padding:12px;border-radius:8px;font-size:12px;color:#155724;">'
           + '<strong>Efectos:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;"><li>Vuelve a estado <strong>ACTIVO</strong> en esta cohorte.</li><li>Se reanudan los cálculos de cuotas.</li></ul></div>';
     abrir('modal-baja-cohorte');
 }
@@ -1906,14 +1701,14 @@ function confirmarDesvincular(dni, nombre) {
     btn.style.opacity = '1';
 
     var alertaPagos = tienePagos
-        ? '<div style="margin-top:10px;background:#fef2f2;border-left:4px solid #dc2626;padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
+        ? '<div style="margin-top:10px;background:#fef2f2;border-left:4px solid var(--clr-danger);padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
           + '⚠️ <strong>Atención:</strong> este estudiante tiene ' + nPagos + ' cuota' + (nPagos !== 1 ? 's' : '') + ' con pagos registrados. '
           + 'Al desvincular se eliminarán igualmente. Esta acción <strong>no se puede deshacer</strong>.</div>'
         : '';
 
     document.getElementById('mdv-cuerpo').innerHTML =
         '<p style="font-size:13px;color:#555;">Va a desvincular completamente a <strong>' + nombre + '</strong> de esta cohorte/edición.</p>'
-        + '<div style="margin-top:12px;background:#fef2f2;border-left:4px solid #dc2626;padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
+        + '<div style="margin-top:12px;background:#fef2f2;border-left:4px solid var(--clr-danger);padding:12px;border-radius:8px;font-size:12px;color:#7f1d1d;">'
         + '<strong>Esta acción eliminará:</strong><ul style="margin:6px 0 0 16px;line-height:1.8;">'
         + '<li>La inscripción del estudiante en esta cohorte</li>'
         + '<li>' + nCobros + ' registro' + (nCobros !== 1 ? 's' : '') + ' de cobro' + (nCobros !== 1 ? 's' : '') + ' asociados</li>'
@@ -2007,6 +1802,8 @@ async function enviarNotificaciones() {
     var cuerpo = document.getElementById('c-cuerpo').value.trim();
     if (!asunto || !cuerpo) { toast('Completá el asunto y el cuerpo', 'err'); return; }
 
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb = await getSupabase();
@@ -2141,25 +1938,27 @@ async function enviarNotificaciones() {
             upd[campo] = true;
             var campoFecha = tipo === 'reclamo' ? 'fecha_reclamo' : 'fecha_recordatorio';
             upd[campoFecha] = new Date().toISOString();
-            await sb.from('cobros').update(upd).in('cobro_id', cobrosActualizar);
+            var updRes = await sb.from('cobros').update(upd).in('cobro_id', cobrosActualizar);
+            if (updRes.error) console.error('Error marcando cobros enviados:', updRes.error);
         }
 
-        // Envío real de emails via Google Apps Script
-        var gasUrl   = (V.data.programa.gas_url) || GAS_FALLBACK_URL;
+        // Encola los reclamos en lote; el GAS los envía (event-driven vía pg_net)
         var replyTo  = V.data.programa.email_remitente || '';
         var emailsOk = 0, emailsErr = 0;
-        if (gasUrl) {
-            for (var ei = 0; ei < emails.length; ei++) {
-                var em = emails[ei];
-                var ok = await enviarEmailGas(gasUrl, em.to, em.subject, em.body, replyTo);
-                if (ok) emailsOk++; else emailsErr++;
-            }
+        var sbEnc = await getSupabase();
+        var rowsEnc = emails.map(function(em){ return {
+            programa_id: PROGRAMA_ID, to_email: em.to, subject: em.subject,
+            body: em.body, reply_to: replyTo || null, estado: 'pendiente'
+        }; });
+        if (rowsEnc.length) {
+            var insEnc = await sbEnc.from('reclamos_pendientes').insert(rowsEnc);
+            if (insEnc.error) { emailsErr = rowsEnc.length; console.error('encolar error:', insEnc.error.message); }
+            else { emailsOk = rowsEnc.length; }
         }
 
         var totalNotifs = notifs.length;
         var msgToast = '✓ ' + sel.length + ' estudiante' + (sel.length !== 1 ? 's' : '') + ' notificado' + (sel.length !== 1 ? 's' : '');
-        if (gasUrl)  msgToast += ' · ' + emailsOk + ' email' + (emailsOk !== 1 ? 's' : '') + ' enviado' + (emailsOk !== 1 ? 's' : '') + ' (1 por estudiante con detalle completo)';
-        if (!gasUrl) msgToast += ' (sin URL GAS: solo notificación interna)';
+        msgToast += ' · ' + emailsOk + ' email' + (emailsOk !== 1 ? 's' : '') + ' encolado' + (emailsOk !== 1 ? 's' : '') + ' (se envían en segundos, 1 por estudiante)';
         if (emailsErr > 0) msgToast += ' ⚠️ ' + emailsErr + ' error(es)';
         toast(msgToast, emailsErr > 0 ? 'err' : 'ok');
         cerrar('modal-correo');
@@ -2169,6 +1968,7 @@ async function enviarNotificaciones() {
         console.error(e);
         toast('Error al enviar notificaciones: ' + e.message, 'err');
     } finally {
+        V.busy = false;
         spin(false);
     }
 }
@@ -2179,19 +1979,21 @@ function interpolarPlantilla(texto, vars) {
     });
 }
 
-async function enviarEmailGas(gasUrl, to, subject, body, replyTo) {
+async function enviarEmailGas(programaId, to, subject, body, replyTo) {
     try {
-        var res = await fetch(gasUrl, {
-            method:  'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body:    JSON.stringify({ secret: GAS_SECRET, to: to, subject: subject, body: body, replyTo: replyTo || '' }),
-            mode:    'cors'
+        var sb = await getSupabase();
+        var resp = await sb.from('reclamos_pendientes').insert({
+            programa_id: programaId,
+            to_email:    to,
+            subject:     subject,
+            body:        body,
+            reply_to:    replyTo || null,
+            estado:      'pendiente'
         });
-        var json = await res.json();
-        if (!json.ok) console.error('GAS error para', to, ':', json.error);
-        return json.ok === true;
+        if (resp.error) { console.error('encolar error para', to, ':', resp.error.message); return false; }
+        return true;
     } catch (err) {
-        console.error('Error enviando email a', to, err);
+        console.error('Error encolando email a', to, err);
         return false;
     }
 }
@@ -2271,27 +2073,28 @@ function _dlPlantilla() {
     // Fila 2: instrucciones
     // Fila 3: ejemplo
     var cabecera = [
-        'dni','apellido','nombre','email','telefono',
+        'dni','apellido','nombre','email',
         'descuento_porcentaje','descuento_desde','descuento_hasta',
-        'concepto','periodo','fecha_vencimiento','monto_original','monto_abonado','fecha_pago','estado'
+        'concepto','periodo','fecha_vencimiento','monto_original','monto_abonado','fecha_pago','estado','es_readmision'
     ];
     var instrucciones = [
-        'Obligatorio','Obligatorio','Obligatorio','Obligatorio','Opcional',
+        'Obligatorio','Obligatorio','Obligatorio','Obligatorio',
         'Obligatorio (0 si no tiene)',
         'DD/MM/AAAA (vacío = aplica a todas las cuotas)','DD/MM/AAAA (opcional)',
         'Ej: Inscripción / Cuota 1','Ej: Abril de 2026','DD/MM/AAAA',
         'Precio base sin descuento','0 si no pagó nada','DD/MM/AAAA (solo si monto_abonado > 0)',
-        'Opcional: ABONADA / EN_MORA / PAGO_PARCIAL / NO_ABONADA / A_DEFINIR / NO_APLICA (si se omite se calcula automáticamente)'
+        'Opcional: ABONADA / EN_MORA / PAGO_PARCIAL / NO_ABONADA / A_DEFINIR / NO_APLICA (si se omite se calcula automáticamente)',
+        'SI o 1 si es cuota de readmisión, vacío o NO si es cuota normal'
     ];
     var ejemplo = [
-        '30123456','González','María','maria@email.com','2616000000',
+        '30123456','González','María','maria@email.com',
         '5','01/04/2026','',
-        'Inscripción','Abril de 2026','15/04/2026','90000','0','','NO_APLICA'
+        'Readmisión','Abril de 2026','15/04/2026','90000','0','','NO_ABONADA','SI'
     ];
     var ejemplo2 = [
-        '30123456','González','María','maria@email.com','2616000000',
+        '30123456','González','María','maria@email.com',
         '5','01/04/2026','',
-        'Cuota 1','Mayo de 2026','15/05/2026','90000','90000','15/05/2026','ABONADA'
+        'Cuota 1','Mayo de 2026','15/05/2026','90000','90000','15/05/2026','ABONADA',''
     ];
 
     var ws = XLSX.utils.aoa_to_sheet([cabecera, instrucciones, ejemplo, ejemplo2]);
@@ -2330,161 +2133,208 @@ async function procesarImport() {
     } else { _procesarImport(file); }
 }
 
+// Helpers de importación — separados para mantener _procesarImport corto
+
+function _impParseFecha(val) {
+    if (!val || val === '') return null;
+    if (val instanceof Date) return val.toISOString().split('T')[0];
+    var s = String(val).trim();
+    var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    if (!isNaN(Number(s))) {
+        var d = new Date(Math.round((Number(s) - 25569) * 86400 * 1000));
+        return d.toISOString().split('T')[0];
+    }
+    return null;
+}
+
+async function _impParseXLSX(file) {
+    var data = await file.arrayBuffer();
+    var wb   = XLSX.read(data, { type: 'array', cellDates: true });
+    var ws   = wb.Sheets[wb.SheetNames[0]];
+    var allRows = XLSX.utils.sheet_to_json(ws, { defval: '', header: 1 });
+    if (allRows.length < 2) throw new Error('El archivo no tiene datos');
+    var headers = allRows[0].map(function(h) { return String(h).trim().toLowerCase().replace(/ /g,'_'); });
+    var primerValor = String(allRows[1] ? allRows[1][0] : '').trim();
+    var startRow = (!isNaN(primerValor) && primerValor !== '') ? 1 : 2;
+    var dataRows = allRows.slice(startRow).filter(function(r) { return r.some(function(c){ return c !== ''; }); });
+    if (!dataRows.length) throw new Error('No hay datos para importar');
+    return dataRows.map(function(r) {
+        var obj = {};
+        headers.forEach(function(h, i) { obj[h] = r[i] !== undefined ? r[i] : ''; });
+        return obj;
+    });
+}
+
+function _impBuildEstMap(rows) {
+    var estMap = {};
+    rows.forEach(function(r) {
+        var dni = String(r.dni || '').trim();
+        if (!dni) return;
+        if (!estMap[dni]) {
+            estMap[dni] = {
+                dni:                   dni,
+                apellido:              String(r.apellido || '').trim(),
+                nombre:                String(r.nombre || '').trim(),
+                email:                 String(r.email || '').trim(),
+                descuento_porcentaje:  redondear2(parseFloat(r.descuento_porcentaje) || 0),
+                descuento_desde:       _impParseFecha(r.descuento_desde),
+                descuento_hasta:       _impParseFecha(r.descuento_hasta),
+                cuotas: []
+            };
+        }
+        var montoRaw   = r.monto_original;
+        var tieneMonto = montoRaw !== '' && montoRaw !== null && !isNaN(parseFloat(montoRaw));
+        var montoOrig  = tieneMonto ? redondear2(parseFloat(montoRaw)) : null;
+        var pct        = estMap[dni].descuento_porcentaje;
+        var fechaVto   = _impParseFecha(r.fecha_vencimiento);
+        var aplicaDescuento = pct > 0;
+        if (aplicaDescuento && estMap[dni].descuento_desde && fechaVto)
+            aplicaDescuento = fechaVto >= estMap[dni].descuento_desde;
+        if (aplicaDescuento && estMap[dni].descuento_hasta && fechaVto)
+            aplicaDescuento = aplicaDescuento && (fechaVto <= estMap[dni].descuento_hasta);
+        var montoFinal = (montoOrig !== null && aplicaDescuento)
+            ? redondear2(montoOrig * (1 - pct / 100)) : montoOrig;
+        var abonado = redondear2(parseFloat(r.monto_abonado) || 0);
+        var saldo   = montoFinal === null ? null : redondear2(Math.max(0, montoFinal - abonado));
+        var estadosValidos = ['ABONADA','EN_MORA','PAGO_PARCIAL','NO_ABONADA','A_DEFINIR','NO_APLICA','PENDIENTE'];
+        var estadoExplicito = String(r.estado || '').trim().toUpperCase();
+        // monto_final=$0 sin estado explícito = no debe pagar esa cuota
+        if (!estadosValidos.includes(estadoExplicito) && montoFinal === 0) estadoExplicito = 'NO_APLICA';
+        var estado = estadosValidos.includes(estadoExplicito)
+            ? estadoExplicito
+            : (montoFinal === null ? 'A_DEFINIR'
+                : (abonado >= montoFinal ? 'ABONADA'
+                    : (abonado > 0 ? 'PAGO_PARCIAL'
+                        : normalizarEstadoCuota(montoFinal, saldo, fechaVto, 'NO_ABONADA'))));
+        var esNoAplica = estado === 'NO_APLICA';
+        var esReadmision = /^(si|sí|1|yes|true)$/i.test(String(r.es_readmision || '').trim());
+        estMap[dni].cuotas.push({
+            concepto:             String(r.concepto || '').trim(),
+            periodo:              String(r.periodo || '').trim(),
+            fecha_vencimiento:    fechaVto,
+            monto_original:       esNoAplica ? null : montoOrig,
+            descuento_porcentaje: esNoAplica ? 0 : (aplicaDescuento ? pct : 0),
+            monto_final:          esNoAplica ? null : montoFinal,
+            monto_abonado:        esNoAplica ? 0 : abonado,
+            saldo_pendiente:      esNoAplica ? null : saldo,
+            estado:               estado,
+            no_aplica:            esNoAplica,
+            fecha_pago:           _impParseFecha(r.fecha_pago),
+            es_readmision:        esReadmision
+        });
+    });
+    return { estMap: estMap, dnis: Object.keys(estMap) };
+}
+
 async function _procesarImport(file) {
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
-        var data = await file.arrayBuffer();
-        var wb   = XLSX.read(data, { type: 'array', cellDates: true });
-        var ws   = wb.Sheets[wb.SheetNames[0]];
-        var allRows = XLSX.utils.sheet_to_json(ws, { defval: '', header: 1 });
-        if (allRows.length < 2) { toast('El archivo no tiene datos', 'err'); spin(false); return; }
-
-        // Fila 0 = cabeceras. Fila 1 puede ser fila de instrucciones (texto) o ya datos.
-        // Si el primer campo de fila 1 no es un DNI numérico, la saltamos.
-        var headers = allRows[0].map(function(h) { return String(h).trim().toLowerCase().replace(/ /g,'_'); });
-        var primerValor = String(allRows[1] ? allRows[1][0] : '').trim();
-        var startRow = (!isNaN(primerValor) && primerValor !== '') ? 1 : 2;
-        var dataRows = allRows.slice(startRow).filter(function(r) { return r.some(function(c){ return c !== ''; }); });
-        if (!dataRows.length) { toast('No hay datos para importar', 'err'); spin(false); return; }
-
-        // Convertir a objetos
-        var rows = dataRows.map(function(r) {
-            var obj = {};
-            headers.forEach(function(h, i) { obj[h] = r[i] !== undefined ? r[i] : ''; });
-            return obj;
-        });
+        var rows = await _impParseXLSX(file);
+        var _imp = _impBuildEstMap(rows);
+        var estMap = _imp.estMap;
+        var dnis   = _imp.dnis;
+        if (!dnis.length) { toast('No se encontraron registros válidos (revisá que la columna dni tenga datos)', 'err'); return; }
 
         var sb = await getSupabase();
 
-        // Helper: parsear fecha DD/MM/AAAA o Date de Excel → YYYY-MM-DD
-        function parseFecha(val) {
-            if (!val || val === '') return null;
-            if (val instanceof Date) return val.toISOString().split('T')[0];
-            var s = String(val).trim();
-            // DD/MM/AAAA
-            var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-            if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
-            // AAAA-MM-DD
-            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-            // número serial de Excel
-            if (!isNaN(Number(s))) {
-                var d = new Date(Math.round((Number(s) - 25569) * 86400 * 1000));
-                return d.toISOString().split('T')[0];
-            }
-            return null;
+        // FASE 1: batch upsert de todos los estudiantes (1 query en vez de N)
+        var estList = dnis.map(function(dni) {
+            var e = estMap[dni];
+            return { dni: e.dni, apellido: e.apellido, nombre: e.nombre, email: e.email };
+        });
+        var { data: estDataArr, error: estBatchErr } = await sb.from('estudiantes')
+            .upsert(estList, { onConflict: 'dni' })
+            .select('id,dni');
+        if (estBatchErr) {
+            toast('Error al importar estudiantes: ' + estBatchErr.message, 'err');
+            return;
+        }
+        var dniToId = {};
+        (estDataArr || []).forEach(function(e) { dniToId[e.dni] = e.id; });
+
+        // FASE 2: batch upsert de todas las inscripciones (1 query en vez de N)
+        var inscList = dnis.filter(function(dni){ return dniToId[dni]; }).map(function(dni) {
+            var e = estMap[dni];
+            return {
+                estudiante_id:        dniToId[dni],
+                cohorte_id:           COHORTE_ID,
+                descuento_porcentaje: e.descuento_porcentaje,
+                descuento_desde:      e.descuento_desde,
+                descuento_hasta:      e.descuento_hasta,
+                estado_academico:     'ACTIVO'
+            };
+        });
+        var { error: inscBatchErr } = await sb.from('inscripciones')
+            .upsert(inscList, { onConflict: 'estudiante_id,cohorte_id' });
+        if (inscBatchErr) {
+            toast('Error al importar inscripciones: ' + inscBatchErr.message, 'err');
+            return;
         }
 
-        // Agrupar filas por DNI para procesar estudiantes únicos
-        var estMap = {};
-        rows.forEach(function(r) {
-            var dni = String(r.dni || '').trim();
-            if (!dni) return;
-            if (!estMap[dni]) {
-                estMap[dni] = {
-                    dni:                   dni,
-                    apellido:              String(r.apellido || '').trim(),
-                    nombre:                String(r.nombre || '').trim(),
-                    email:                 String(r.email || '').trim(),
-                    telefono:              String(r.telefono || '').trim() || null,
-                    descuento_porcentaje:  redondear2(parseFloat(r.descuento_porcentaje) || 0),
-                    descuento_desde:       parseFecha(r.descuento_desde),
-                    descuento_hasta:       parseFecha(r.descuento_hasta),
-                    cuotas: []
-                };
-            }
-            // Agregar cuota al estudiante
-            var montoRaw = r.monto_original;
-            var tieneMonto = montoRaw !== '' && montoRaw !== null && !isNaN(parseFloat(montoRaw));
-            var montoOrig = tieneMonto ? redondear2(parseFloat(montoRaw)) : null;
-            var pct = estMap[dni].descuento_porcentaje;
-            // Aplicar descuento si no hay periodo de vigencia, o si la cuota cae dentro del periodo
-            var fechaVto = parseFecha(r.fecha_vencimiento);
-            var aplicaDescuento = pct > 0;
-            if (aplicaDescuento && estMap[dni].descuento_desde && fechaVto) {
-                aplicaDescuento = fechaVto >= estMap[dni].descuento_desde;
-            }
-            if (aplicaDescuento && estMap[dni].descuento_hasta && fechaVto) {
-                aplicaDescuento = aplicaDescuento && (fechaVto <= estMap[dni].descuento_hasta);
-            }
-            var montoFinal = (montoOrig !== null && aplicaDescuento)
-                ? redondear2(montoOrig * (1 - pct / 100))
-                : montoOrig;
-            var abonado = redondear2(parseFloat(r.monto_abonado) || 0);
-            var saldo = montoFinal === null ? null : redondear2(Math.max(0, montoFinal - abonado));
-            var estadosValidos = ['ABONADA','EN_MORA','PAGO_PARCIAL','NO_ABONADA','A_DEFINIR','NO_APLICA','PENDIENTE'];
-            var estadoExplicito = String(r.estado || '').trim().toUpperCase();
-            var estado = estadosValidos.includes(estadoExplicito)
-                ? estadoExplicito
-                : (montoFinal === null
-                    ? 'A_DEFINIR'
-                    : (abonado >= montoFinal ? 'ABONADA'
-                        : (abonado > 0 ? 'PAGO_PARCIAL'
-                            : normalizarEstadoCuota(montoFinal, saldo, fechaVto, 'NO_ABONADA'))));
-            var esNoAplica = estado === 'NO_APLICA';
-            estMap[dni].cuotas.push({
-                concepto:             String(r.concepto || '').trim(),
-                periodo:              String(r.periodo || '').trim(),
-                fecha_vencimiento:    fechaVto,
-                monto_original:       esNoAplica ? null : montoOrig,
-                descuento_porcentaje: esNoAplica ? 0 : (aplicaDescuento ? pct : 0),
-                monto_final:          esNoAplica ? null : montoFinal,
-                saldo_pendiente:      esNoAplica ? null : saldo,
-                estado:               estado,
-                no_aplica:            esNoAplica,
-                fecha_pago:           parseFecha(r.fecha_pago)
+        // FASE 3: batch upsert de todos los cobros (1 query en vez de N)
+        var todasCuotas = [];
+        dnis.filter(function(dni){ return dniToId[dni]; }).forEach(function(dni) {
+            estMap[dni].cuotas.forEach(function(c) {
+                todasCuotas.push(Object.assign({}, c, { dni: estMap[dni].dni, programa_id: PROGRAMA_ID, cohorte_id: COHORTE_ID }));
             });
         });
-
-        var dnis = Object.keys(estMap);
-        if (!dnis.length) { toast('No se encontraron registros válidos (revisá que la columna dni tenga datos)', 'err'); spin(false); return; }
-
-        var estudiantesCreados = 0, inscripcionesCreadas = 0, cobrosCreados = 0, errores = [];
-
-        for (var di = 0; di < dnis.length; di++) {
-            var est = estMap[dnis[di]];
-
-            // 1. Upsert estudiante
-            var { data: estData, error: estErr } = await sb.from('estudiantes')
-                .upsert({ dni: est.dni, apellido: est.apellido, nombre: est.nombre, email: est.email, telefono: est.telefono }, { onConflict: 'dni' })
-                .select('id').single();
-            if (estErr) { errores.push('Estudiante ' + est.dni + ': ' + estErr.message); continue; }
-            estudiantesCreados++;
-
-            var estId = estData.id;
-
-            // 2. Upsert inscripción con descuento
-            var { error: inscErr } = await sb.from('inscripciones')
-                .upsert({
-                    estudiante_id:        estId,
-                    cohorte_id:           COHORTE_ID,
-                    descuento_porcentaje: est.descuento_porcentaje,
-                    descuento_desde:      est.descuento_desde,
-                    descuento_hasta:      est.descuento_hasta,
-                    estado_academico:     'ACTIVO'
-                }, { onConflict: 'estudiante_id,cohorte_id' });
-            if (inscErr) { errores.push('Inscripción ' + est.dni + ': ' + inscErr.message); continue; }
-            inscripcionesCreadas++;
-
-            // 3. Insertar cobros
-            var cobrosEst = est.cuotas.map(function(c) {
-                return Object.assign({}, c, {
-                    dni:        est.dni,
-                    programa_id: PROGRAMA_ID,
-                    cohorte_id:  COHORTE_ID
-                });
-            });
-            var { error: cobErr } = await sb.from('cobros')
-                .upsert(cobrosEst, { onConflict: 'dni,cohorte_id,programa_id,concepto,periodo' });
-            if (cobErr) { errores.push('Cobros ' + est.dni + ': ' + cobErr.message); continue; }
-            cobrosCreados += cobrosEst.length;
+        var { error: cobBatchErr } = await sb.from('cobros')
+            .upsert(todasCuotas, { onConflict: 'dni,cohorte_id,programa_id,concepto,periodo' });
+        if (cobBatchErr) {
+            toast('Error al importar cobros: ' + cobBatchErr.message, 'err');
+            return;
         }
 
-        if (errores.length) {
-            console.error('Errores importación:', errores);
-            toast('Importado con ' + errores.length + ' error' + (errores.length !== 1 ? 'es' : '') + '. Ver consola.', 'err');
-        } else {
-            toast(estudiantesCreados + ' estudiante' + (estudiantesCreados !== 1 ? 's' : '') + ' · ' + cobrosCreados + ' cuota' + (cobrosCreados !== 1 ? 's' : '') + ' importada' + (cobrosCreados !== 1 ? 's' : '') + ' ✓', 'ok');
+        var estudiantesCreados = (estDataArr || []).length;
+        var cobrosCreados = todasCuotas.length;
+
+        // FASE 4: crear usuarios ESTUDIANTE (acceso al portal) para los que no tienen cuenta
+        var usuariosCreados = 0, usuariosErr = 0;
+        var dnisParaUsuario = dnis.filter(function(dni){ return dniToId[dni]; });
+        if (dnisParaUsuario.length) {
+            var { data: usExist } = await sb.from('usuarios').select('dni').in('dni', dnisParaUsuario);
+            var dnisConUsuario = new Set((usExist||[]).map(function(u){ return String(u.dni); }));
+            var dnisNuevos = dnisParaUsuario.filter(function(dni){ return !dnisConUsuario.has(String(dni)); });
+            if (dnisNuevos.length) {
+                var _sess = await sb.auth.getSession();
+                var _tok  = _sess.data.session ? _sess.data.session.access_token : '';
+                var _edge = SUPABASE_URL + '/functions/v1/crear-usuario';
+                for (var _i = 0; _i < dnisNuevos.length; _i++) {
+                    var _dni = dnisNuevos[_i];
+                    var _e   = estMap[_dni];
+                    try {
+                        var _r = await fetch(_edge, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _tok, 'apikey': SUPABASE_KEY },
+                            body: JSON.stringify({
+                                email:           _e.email,
+                                password:        String(_dni),
+                                apellido:        _e.apellido,
+                                nombre:          _e.nombre,
+                                nombre_completo: _e.apellido + ', ' + _e.nombre,
+                                dni:             String(_dni),
+                                rol:             'ESTUDIANTE',
+                                asignaciones:    [],
+                                inscripciones:   []
+                            })
+                        });
+                        _r.ok ? usuariosCreados++ : usuariosErr++;
+                    } catch(_ex) { usuariosErr++; }
+                }
+            }
         }
+
+        var _msgP = [
+            estudiantesCreados + ' estudiante' + (estudiantesCreados !== 1 ? 's' : ''),
+            cobrosCreados + ' cuota' + (cobrosCreados !== 1 ? 's' : '') + ' importada' + (cobrosCreados !== 1 ? 's' : '')
+        ];
+        if (usuariosCreados > 0) _msgP.push(usuariosCreados + ' usuario' + (usuariosCreados !== 1 ? 's' : '') + ' portal creado' + (usuariosCreados !== 1 ? 's' : '') + ' (clave=DNI)');
+        toast(_msgP.join(' · ') + ' ✓', 'ok');
+        if (usuariosErr > 0) toast(usuariosErr + ' usuario' + (usuariosErr !== 1 ? 's' : '') + ' no pudieron crearse (email inválido o ya existe en Auth). Crear manualmente desde Usuarios.', 'err');
 
         cerrar('modal-importar');
         document.getElementById('imp-prev').classList.remove('show');
@@ -2495,6 +2345,7 @@ async function _procesarImport(file) {
         console.error(e);
         toast('Error al importar: ' + e.message, 'err');
     } finally {
+        V.busy = false;
         spin(false);
     }
 }
@@ -2609,7 +2460,7 @@ async function aprobarCuota() {
             await sb.from('pagos').insert({
                 cobro_id: _aprCobro.cobro_id, monto: montoAprobado,
                 fecha_pago: hoy(), recibo_url: reciboUrl
-            }).then(function(){}).catch(function(){});
+            }).then(function(){}).catch(function(e){ console.error('pagos insert:', e); });
             toast('Pago parcial registrado → PAGO_PARCIAL (' + fMonto(montoAprobado) + ') ✓', 'ok');
         }
         cerrar('modal-aprobacion');
@@ -2659,18 +2510,40 @@ async function _ejecutarRechazo(cobroId) {
    VER DOCUMENTO (comprobante o recibo)
 ══════════════════════════════════════════════════ */
 async function verDocumento(rawUrl, tipo, concepto) {
-    var url = await obtenerUrlFirmadaComprobante(rawUrl);
+    var url;
+    try {
+        url = await obtenerUrlFirmadaComprobante(rawUrl);
+    } catch (e) {
+        console.error('verDocumento:', e);
+        alert('No se pudo obtener el link del documento.');
+        return;
+    }
     if (!url) { alert('No se pudo obtener el link del documento.'); return; }
     document.getElementById('doc-titulo').textContent = '📎 ' + tipo;
     document.getElementById('doc-sub').textContent    = concepto;
     document.getElementById('doc-descargar').href     = url;
     var cont = document.getElementById('doc-contenido');
+    cont.innerHTML = '';
     if (/\.pdf$/i.test(rawUrl)) {
-        cont.innerHTML = '<iframe src="' + url + '" style="width:100%;height:500px;border:none;border-radius:8px;"></iframe>';
+        var iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.style.cssText = 'width:100%;height:500px;border:none;border-radius:8px;';
+        cont.appendChild(iframe);
     } else {
-        var imgHtml = '<img src="' + url + '" style="max-width:100%;max-height:500px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15);">';
-        var linkHtml = '<p style="margin-top:8px;"><a href="' + url + '" target="_blank" style="font-size:14px;color:#1d4ed8;">Abrir en nueva pestaña →</a></p>';
-        cont.innerHTML = imgHtml + linkHtml;
+        var img = document.createElement('img');
+        img.src = url;
+        img.style.cssText = 'max-width:100%;max-height:500px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15);';
+        var p = document.createElement('p');
+        p.style.marginTop = '8px';
+        var a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.style.cssText = 'font-size:14px;color:#1d4ed8;';
+        a.textContent = 'Abrir en nueva pestaña →';
+        p.appendChild(a);
+        cont.appendChild(img);
+        cont.appendChild(p);
     }
     abrir('modal-ver-doc');
 }
@@ -2698,26 +2571,7 @@ function volverAPrograma() {
 function abrir(id)  { document.getElementById(id).classList.add('show'); }
 function cerrar(id) { document.getElementById(id).classList.remove('show'); }
 function spin(v)    { document.getElementById('spinner').classList.toggle('show', v); }
-function hoy()      { return new Date().toISOString().split('T')[0]; }
-
-function toast(msg, tipo) {
-    var c = document.getElementById('toasts');
-    var d = document.createElement('div');
-    d.className = 'toast ' + (tipo || '');
-    d.textContent = msg;
-    c.appendChild(d);
-    setTimeout(function() { if (d.parentNode) d.remove(); }, 3500);
-}
-
-function fMonto(n) {
-    if (n === null || n === undefined) return '–';
-    return '$' + Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-function fMillones(n) {
-    var num = parseFloat(n);
-    if (isNaN(num)) return '$0,00';
-    return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
+var fMillones = fMontoConSigno;
 
 
 /* ══════════════════════════════════════════════════
@@ -2767,15 +2621,15 @@ function renderEditarCuotas() {
         <div style="background:#f8fafc;border-radius:10px;padding:12px 14px;margin-bottom:10px;border:2px solid #e0e0e0;">
             <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;">
                 <div>
-                    <label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">CONCEPTO</label>
+                    <label class="u-lbl-blue">CONCEPTO</label>
                     <input type="text" value="${escapeHtml(c.concepto || '')}" onchange="_ecCuotasEditadas[${i}].concepto=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
                 </div>
                 <div>
-                    <label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">PERÍODO</label>
+                    <label class="u-lbl-blue">PERÍODO</label>
                     <input type="text" value="${escapeHtml(c.periodo || '')}" onchange="_ecCuotasEditadas[${i}].periodo=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
                 </div>
                 <div>
-                    <label style="font-size:10px;font-weight:600;color:#0369a1;display:block;margin-bottom:3px;">VENCIMIENTO</label>
+                    <label class="u-lbl-blue">VENCIMIENTO</label>
                     <input type="date" value="${c.fecha_vencimiento || ''}" onchange="_ecCuotasEditadas[${i}].fecha_vencimiento=this.value;" style="width:100%;padding:6px 8px;border:1.5px solid #93c5fd;border-radius:6px;font-size:12px;font-family:&quot;DM Sans&quot;,sans-serif;">
                 </div>
             </div>
@@ -2791,6 +2645,8 @@ function actualizarResumenEC() {
 }
 
 async function guardarEdicionCuotas() {
+    if (V.busy) return;
+    V.busy = true;
     spin(true);
     try {
         var sb = await getSupabase();
@@ -2833,6 +2689,7 @@ async function guardarEdicionCuotas() {
         console.error(e);
         toast('Error: ' + e.message, 'err');
     } finally {
+        V.busy = false;
         spin(false);
     }
 }
@@ -2881,7 +2738,7 @@ function renderEliminarGlobal() {
             </div>
             <div style="flex:1;">
                 <div style="font-weight:700;font-size:13px;color:#5C1018;">${escapeHtml(col.concepto_base)}</div>
-                <div style="font-size:11px;color:#888;margin-top:2px;">
+                <div style="font-size:11px;color:#767676;margin-top:2px;">
                     ${escapeHtml(col.periodo || '')} · ${cobrosCol.length} estudiante${cobrosCol.length !== 1 ? 's' : ''}
                     ${abonadas ? ` · <span style="color:#15803d;font-weight:600;">${abonadas} abonada${abonadas > 1 ? 's' : ''}</span>` : ''}
                     ${parciales ? ` · <span style="color:#92400e;font-weight:600;">${parciales} parcial${parciales > 1 ? 'es' : ''}</span>` : ''}
@@ -2985,7 +2842,7 @@ async function _ejecutarEliminarGlobal(concepto, periodo) {
             .eq('periodo', periodo || '');
         if (pagosCandidatos.error) throw pagosCandidatos.error;
         var ids = (pagosCandidatos.data || []).map(function(x) { return x.cobro_id; });
-        if (!ids.length) { toast('No se encontraron cuotas para eliminar', 'err'); spin(false); return; }
+        if (!ids.length) { toast('No se encontraron cuotas para eliminar', 'err'); return; }
 
         var pagosRes = await sb.from('pagos').select('cobro_id').in('cobro_id', ids);
         if (pagosRes.error) throw pagosRes.error;
@@ -3012,10 +2869,6 @@ async function _ejecutarEliminarGlobal(concepto, periodo) {
     }
 }
 
-function escapeHtml(str) {
-    return String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-}
-
 /* ══════════════════════════════════════════════════
    POPUP INLINE — EDITAR CELDA DE CUOTA
 ══════════════════════════════════════════════════ */
@@ -3023,7 +2876,14 @@ var _cpopCobroId = null;
 
 function abrirCeldaPopup(event, infoJson) {
     event.stopPropagation();
-    var info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
+    var info;
+    try {
+        info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
+    } catch (e) {
+        console.error('abrirCeldaPopup: JSON inválido', e);
+        toast('Error al leer datos de la cuota. Recargá la página.', 'err');
+        return;
+    }
     _cpopCobroId = info.cobro_id;
     // Guardar info completa para no necesitar GET extra al guardar
     window._cpopInfo = info;
@@ -3031,16 +2891,39 @@ function abrirCeldaPopup(event, infoJson) {
     document.getElementById('cpop-title').textContent =
         (info.concepto || 'Cuota') + (info.periodo ? ' · ' + info.periodo : '');
 
-    // Resetear siempre para no mostrar valores de la celda anterior
-    var montoActual = (info.monto !== null && info.monto !== undefined && info.monto !== '') ? Number(info.monto) : '';
-    var inputMonto = document.getElementById('cpop-monto');
-    inputMonto.value = montoActual === '' ? '' : montoActual;
-    inputMonto.disabled = false;   // siempre habilitar primero
+    var corrSection   = document.getElementById('cpop-corr-section');
+    var normalSection = document.getElementById('cpop-normal-section');
 
-    var noAplica = info.no_aplica === true;
-    document.getElementById('cpop-noapl').checked = noAplica;
-    inputMonto.disabled = noAplica;
-    document.getElementById('cpop-noapl-label').classList.toggle('active', noAplica);
+    if (info.es_pago_aprobado) {
+        // Modo corrección: mostrar sección de corrección, ocultar normal
+        normalSection.style.display = 'none';
+        corrSection.style.display   = 'block';
+        var montoFinal   = Number(info.monto_final   || 0);
+        var montoAbonado = Number(info.monto_abonado || 0);
+        var saldo        = Number(info.saldo_pendiente || 0);
+        var corrInfo = document.getElementById('cpop-corr-info');
+        corrInfo.innerHTML = 'Total: <strong>$' + montoFinal.toLocaleString('es-AR') + '</strong>'
+            + ' &nbsp;|&nbsp; Abonado: <strong>$' + montoAbonado.toLocaleString('es-AR') + '</strong>'
+            + (saldo > 0 ? ' &nbsp;|&nbsp; Saldo: <strong>$' + saldo.toLocaleString('es-AR') + '</strong>' : '');
+        var inputCorr = document.getElementById('cpop-corr-monto');
+        inputCorr.value = montoAbonado > 0 ? montoAbonado : '';
+        inputCorr.max   = montoFinal;
+        setTimeout(function() { inputCorr.focus(); inputCorr.select(); }, 80);
+    } else {
+        // Modo normal: ocultar corrección, mostrar normal
+        corrSection.style.display   = 'none';
+        normalSection.style.display = 'block';
+        // Resetear siempre para no mostrar valores de la celda anterior
+        var montoActual = (info.monto !== null && info.monto !== undefined && info.monto !== '') ? Number(info.monto) : '';
+        var inputMonto = document.getElementById('cpop-monto');
+        inputMonto.value = montoActual === '' ? '' : montoActual;
+        inputMonto.disabled = false;
+        var noAplica = info.no_aplica === true;
+        document.getElementById('cpop-noapl').checked = noAplica;
+        inputMonto.disabled = noAplica;
+        document.getElementById('cpop-noapl-label').classList.toggle('active', noAplica);
+        setTimeout(function() { document.getElementById('cpop-monto').focus(); }, 80);
+    }
 
     // Posicionar el popup cerca de la celda clickeada
     var popup = document.getElementById('cell-popup');
@@ -3060,8 +2943,6 @@ function abrirCeldaPopup(event, infoJson) {
     }
     popup.style.top  = top  + 'px';
     popup.style.left = left + 'px';
-
-    setTimeout(function() { document.getElementById('cpop-monto').focus(); }, 80);
 }
 
 function toggleNoAplica() {
@@ -3078,58 +2959,190 @@ function cerrarCeldaPopup() {
     _cpopCobroId = null;
 }
 
+async function corregirMontoPago() {
+    var info = window._cpopInfo || {};
+    var cobroId = _cpopCobroId;
+    if (!cobroId) { toast('Error: cobro no identificado', 'err'); return; }
+    var dniEst = String(info.dni || '');
+    if (!dniEst) { toast('Error: DNI no identificado', 'err'); return; }
+
+    var montoStr = document.getElementById('cpop-corr-monto').value.trim();
+    var nuevoAbonado = parseFloat(montoStr);
+    if (!montoStr || isNaN(nuevoAbonado) || nuevoAbonado <= 0) {
+        toast('Ingresá un monto abonado válido mayor a cero', 'err');
+        return;
+    }
+    var montoFinal = Number(info.monto_final || 0);
+    if (nuevoAbonado > montoFinal) {
+        toast('El monto abonado no puede superar el total (' + fMonto(montoFinal) + ')', 'err');
+        return;
+    }
+
+    nuevoAbonado = redondear2(nuevoAbonado);
+    var nuevoSaldo  = redondear2(montoFinal - nuevoAbonado);
+    var nuevoEstado = nuevoAbonado >= montoFinal ? 'ABONADA' : 'PAGO_PARCIAL';
+
+    cerrarCeldaPopup();
+    spin(true);
+    try {
+        var sb = await getSupabase();
+
+        // Actualizar cobro
+        var res = await sb.from('cobros').update({
+            monto_abonado:    nuevoAbonado,
+            saldo_pendiente:  nuevoSaldo,
+            estado:           nuevoEstado,
+            updated_at:       new Date().toISOString()
+        }).eq('cobro_id', cobroId).eq('dni', dniEst);
+        if (res.error) throw res.error;
+
+        // Sincronizar tabla pagos: limpiar y reinsertar con monto corregido
+        var delRes = await sb.from('pagos').delete().eq('cobro_id', cobroId);
+        if (delRes.error) throw delRes.error;
+        var insRes = await sb.from('pagos').insert({
+            cobro_id:         cobroId,
+            dni:              dniEst,
+            monto:            nuevoAbonado,
+            tipo:             nuevoEstado === 'ABONADA' ? 'COMPLETO' : 'PARCIAL',
+            fecha_pago:       new Date().toISOString().slice(0, 10),
+            observaciones:    'Monto corregido por administrador'
+        });
+        if (insRes.error) throw insRes.error;
+
+        toast('Monto corregido ✓', 'ok');
+        await cargar();
+    } catch(e) {
+        console.error(e);
+        toast('Error al corregir: ' + e.message, 'err');
+    } finally {
+        spin(false);
+    }
+}
+
+async function anularPago() {
+    var info = window._cpopInfo || {};
+    var cobroId = _cpopCobroId;
+    if (!cobroId) { toast('Error: cobro no identificado', 'err'); return; }
+    var dniEst = String(info.dni || '');
+    if (!dniEst) { toast('Error: DNI no identificado', 'err'); return; }
+
+    if (!confirm('¿Anular el pago registrado? El cobro volverá a estado NO_ABONADA y se eliminarán los registros de pago.')) return;
+
+    var montoFinal = Number(info.monto_final || 0);
+    var hoy = new Date();
+    var vence = info.fecha_vencimiento ? new Date(info.fecha_vencimiento) : null;
+    var estadoAnulado = (vence && vence < hoy && montoFinal > 0) ? 'EN_MORA' : 'NO_ABONADA';
+
+    cerrarCeldaPopup();
+    spin(true);
+    try {
+        var sb = await getSupabase();
+
+        var res = await sb.from('cobros').update({
+            monto_abonado:    0,
+            saldo_pendiente:  montoFinal,
+            estado:           estadoAnulado,
+            fecha_aprobacion: null,
+            recibo_url:       null,
+            updated_at:       new Date().toISOString()
+        }).eq('cobro_id', cobroId).eq('dni', dniEst);
+        if (res.error) throw res.error;
+
+        var delRes = await sb.from('pagos').delete().eq('cobro_id', cobroId);
+        if (delRes.error) throw delRes.error;
+
+        toast('Pago anulado. Estado: ' + estadoAnulado + ' ✓', 'ok');
+        await cargar();
+    } catch(e) {
+        console.error(e);
+        toast('Error al anular: ' + e.message, 'err');
+    } finally {
+        spin(false);
+    }
+}
+
 async function guardarCeldaPopup() {
-    if (!_cpopCobroId) return;
-    var cobroId  = _cpopCobroId;
     var cpopInfo = window._cpopInfo || {};
+    var esNuevo  = !_cpopCobroId;   // cobro inexistente en la BD (ej. importado sin cobro)
+    // Sin cobro existente ni info de cuota a crear: nada que guardar.
+    if (!_cpopCobroId && !cpopInfo._sin_cobro) return;
+    var cobroId  = _cpopCobroId;
     var dniEst   = String(cpopInfo.dni || '');
-    if (!dniEst) { toast('Error: DNI no identificado', 'err'); spin(false); return; }
+    if (!dniEst) { toast('Error: DNI no identificado', 'err'); return; }
+    if (esNuevo && (!COHORTE_ID || !PROGRAMA_ID || !cpopInfo.concepto)) {
+        toast('Error: faltan datos para crear el cobro. Recargá la página.', 'err');
+        return;
+    }
 
     var noAplica = document.getElementById('cpop-noapl').checked;
     var montoStr = document.getElementById('cpop-monto').value.trim();
-    var tieneMonto = montoStr !== '' && !isNaN(parseFloat(montoStr));
+    var montoNum  = parseFloat(montoStr);
+    // Monto=0 sin no_aplica es un dato incompleto → tratarlo como sin monto (A_DEFINIR)
+    var tieneMonto = montoStr !== '' && !isNaN(montoNum) && montoNum > 0;
 
     spin(true);
     cerrarCeldaPopup();
     try {
         var sb = await getSupabase();
         var res;
+        var payload;
 
         if (noAplica) {
-            res = await sb.from('cobros').update({
+            payload = {
                 monto_original:       null,
                 monto_final:          null,
                 saldo_pendiente:      null,
                 descuento_porcentaje: 0,
                 estado:               'NO_APLICA',
                 no_aplica:            true
-            }).eq('cobro_id', cobroId).eq('dni', dniEst);
+            };
         } else if (!tieneMonto) {
-            res = await sb.from('cobros').update({
+            payload = {
                 monto_original:  null,
                 monto_final:     null,
                 saldo_pendiente: null,
                 estado:          'A_DEFINIR',
                 no_aplica:       false
-            }).eq('cobro_id', cobroId).eq('dni', dniEst);
+            };
         } else {
             var montoOriginal = redondear2(parseFloat(montoStr));
             var pct         = Number(cpopInfo.descuento_porcentaje) || 0;
             var montoFinal  = pct > 0 ? redondear2(montoOriginal * (1 - pct / 100)) : montoOriginal;
             var saldoPend   = montoFinal;
-            var nuevoEstado = normalizarEstadoCuota(montoFinal, saldoPend, cpopInfo.fecha_vencimiento || null, cpopInfo.estado_actual || 'NO_ABONADA');
-            res = await sb.from('cobros').update({
+            var estadoBase  = (cpopInfo.estado_actual === 'A_DEFINIR') ? 'NO_ABONADA' : (cpopInfo.estado_actual || 'NO_ABONADA');
+            var nuevoEstado = normalizarEstadoCuota(montoFinal, saldoPend, cpopInfo.fecha_vencimiento || null, estadoBase);
+            payload = {
                 monto_original:       montoOriginal,
                 monto_final:          montoFinal,
                 saldo_pendiente:      saldoPend,
                 descuento_porcentaje: pct,
                 estado:               nuevoEstado,
                 no_aplica:            false
-            }).eq('cobro_id', cobroId).eq('dni', dniEst);
+            };
+        }
+
+        if (esNuevo) {
+            // El cobro no existe (cuota importada sin registro): crearlo.
+            payload.dni               = dniEst;
+            payload.programa_id       = PROGRAMA_ID;
+            payload.cohorte_id        = COHORTE_ID;
+            payload.concepto          = cpopInfo.concepto;
+            payload.periodo           = cpopInfo.periodo || null;
+            payload.fecha_vencimiento = cpopInfo.fecha_vencimiento || null;
+            res = await sb.from('cobros').insert(payload);
+        } else {
+            res = await sb.from('cobros').update(payload).eq('cobro_id', cobroId).eq('dni', dniEst);
         }
 
         if (res.error) throw res.error;
-        toast('Cuota actualizada ✓', 'ok');
+
+        // Si la cuota quedó vencida (EN_MORA), aplicar el recargo de mora ahora
+        // para mostrar el monto final con interés en un solo paso (sin recargar).
+        if (payload.estado === 'EN_MORA') {
+            await aplicarMoraCohorteJS(COHORTE_ID);
+        }
+
+        toast(esNuevo ? 'Cuota creada ✓' : 'Cuota actualizada ✓', 'ok');
         await cargar();
     } catch(e) {
         console.error(e);
@@ -3137,14 +3150,6 @@ async function guardarCeldaPopup() {
     } finally {
         spin(false);
     }
-}
-
-// Celda sin cobro generado: informar al admin que recargue
-function avisarSinCobro(event, infoJson) {
-    event.stopPropagation();
-    var info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
-    toast('Esta cuota no tiene registro en la BD. Recargá la página — el sistema la generará automáticamente al inscribir al estudiante.', 'err');
-    console.warn('Sin cobro para:', info.concepto, info.periodo, 'DNI:', info.dni);
 }
 
 // Cerrar modales al hacer clic fuera

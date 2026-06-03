@@ -4,26 +4,12 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SiGPo - Detalle de Cohorte</title>
+    <title>Detalle de Cohorte</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        :root {
-            --primary: #5C1018;
-            --primary-2: #8C1A28;
-            --accent: #C49A2A;
-            --bg: #f8f6f1;
-            --white: #ffffff;
-            --text: #2c2c2c;
-            --muted: #6b7280;
-            --line: #e5e7eb;
-            --success: #2d7a4f;
-            --warning: #e67e22;
-            --danger: #c0392b;
-            --info: #4338ca;
-            --shadow: 0 10px 28px rgba(0,0,0,0.08);
-        }
+
 
         body {
             font-family: 'DM Sans', sans-serif;
@@ -130,7 +116,7 @@
             height: 20px;
             border-radius: 10px;
             padding: 0 6px;
-            background: #ef4444;
+            background: var(--clr-danger);
             color: var(--white);
             font-size: 11px;
             font-weight: 700;
@@ -138,72 +124,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .notif-panel {
-            display: none;
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            width: min(420px, 92vw);
-            background: var(--white);
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            box-shadow: 0 18px 50px rgba(0,0,0,0.18);
-            overflow: hidden;
-            color: var(--text);
-        }
-
-        .notif-panel.open { display: block; }
-
-        .notif-header {
-            padding: 16px 18px;
-            border-bottom: 1px solid var(--line);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .notif-header h3 {
-            font-size: 16px;
-            color: var(--primary);
-        }
-
-        .notif-header button {
-            border: none;
-            background: none;
-            color: var(--accent);
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .notif-list { max-height: 420px; overflow-y: auto; }
-
-        .notif-item {
-            padding: 14px 18px;
-            border-bottom: 1px solid #f2f2f2;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .notif-item:hover { background: #faf8f3; }
-        .notif-item:last-child { border-bottom: none; }
-        .notif-item.unread { background: #fff9ec; }
-        .notif-item h4 {
-            font-size: 14px;
-            color: var(--primary);
-            margin-bottom: 5px;
-        }
-        .notif-item p {
-            font-size: 13px;
-            color: var(--muted);
-            line-height: 1.45;
-            margin-bottom: 6px;
-        }
-        .notif-item small {
-            color: #9ca3af;
-            font-size: 12px;
         }
 
         .page {
@@ -381,8 +301,8 @@
         .table-wrapper {
             overflow: auto;
             max-width: 100%;
-            max-height: calc(100vh - 290px);
-            min-height: 280px;
+            flex: 1;
+            min-height: 0;
         }
 
         table {
@@ -414,14 +334,13 @@
         th.student-col { min-width: 220px; position: sticky; left: 0; z-index: 9; background: #f8f6f1; box-shadow: 2px 0 4px rgba(0,0,0,0.08); }
         td.student-cell { position: sticky; left: 0; z-index: 2; background: #fff; box-shadow: 2px 0 4px rgba(0,0,0,0.07); }
         tbody tr:nth-child(even) td.student-cell { background: #f9f8f5; }
-        tr:hover td.student-cell { background: #f0ede6 !important; }
         th.dni-col { min-width: 110px; }
         th.email-col { min-width: 220px; }
         th.discount-col { min-width: 120px; }
         th.cuota-header { text-align: center; min-width: 98px; }
         th.tot-pagar { background: #3730a3; color: #fff; text-align: center; min-width: 118px; }
-        th.tot-abonado { background: #2d7a4f; color: #fff; text-align: center; min-width: 118px; }
-        th.tot-saldo { background: #c0392b; color: #fff; text-align: center; min-width: 118px; }
+        th.tot-abonado { background: var(--clr-success); color: #fff; text-align: center; min-width: 118px; }
+        th.tot-saldo { background: var(--clr-danger); color: #fff; text-align: center; min-width: 118px; }
 
         td {
             padding: 10px 8px;
@@ -431,7 +350,6 @@
         }
 
         tbody tr:nth-child(even) td { background: #f9f8f5; }
-        tr:hover td { background: #f0ede6 !important; }
 
         .student-cell {
             font-weight: 700;
@@ -544,7 +462,7 @@
 
         .td-tot-abonado {
             background: #d4edda;
-            color: #2d7a4f;
+            color: var(--clr-success);
             font-weight: 700;
             text-align: center;
             white-space: nowrap;
@@ -552,7 +470,7 @@
 
         .td-saldo-pend {
             background: #f8d7da;
-            color: #c0392b;
+            color: var(--clr-danger);
             font-weight: 700;
             text-align: center;
             white-space: nowrap;
@@ -560,7 +478,7 @@
 
         .td-saldo-ok {
             background: #d4edda;
-            color: #2d7a4f;
+            color: var(--clr-success);
             font-weight: 700;
             text-align: center;
             white-space: nowrap;
@@ -692,7 +610,7 @@
         .ap-info-box { background:#f8f6f1; padding:14px 16px; border-radius:10px; margin-bottom:16px; }
         .ap-info-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
         .ap-info-item { display:flex; flex-direction:column; }
-        .ap-info-lbl { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; }
+        .ap-info-lbl { font-size:11px; color:#767676; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; }
         .ap-info-val { font-size:14px; font-weight:600; color:var(--text); }
         .ap-info-val.big { font-size:20px; color:var(--primary); }
         .ap-sec-title { font-size:14px; font-weight:700; color:var(--primary); margin:16px 0 10px; padding-bottom:6px; border-bottom:2px solid #e0e0e0; }
@@ -711,14 +629,14 @@
         .ap-calc-box { background:linear-gradient(135deg,#e8f4f8,#d1ecf1); padding:12px 16px; border-radius:8px; border-left:4px solid #0c5460; margin-top:12px; }
         .ap-calc-row { display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
         .ap-calc-row.total { font-weight:700; border-top:1px solid #aecdd5; margin-top:4px; padding-top:7px; }
-        .ap-alert { background:#fff3cd; border-left:4px solid #e67e22; padding:10px 14px; border-radius:8px; margin-top:12px; font-size:12px; color:#856404; }
+        .ap-alert { background:#fff3cd; border-left:4px solid var(--clr-warning); padding:10px 14px; border-radius:8px; margin-top:12px; font-size:12px; color:#856404; }
         .ap-upload-box { border:3px dashed #d0d0d0; border-radius:10px; padding:22px; text-align:center; background:#f8f6f1; cursor:pointer; transition:all 0.2s; }
         .ap-upload-box:hover { border-color:var(--accent,#C49A2A); background:#fff9e6; }
-        .ap-file-uploaded { background:#d4edda; border:2px solid #2d7a4f; border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; }
+        .ap-file-uploaded { background:#d4edda; border:2px solid var(--clr-success); border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; }
         .ap-warn-nofile { background:#fff3cd; border-left:4px solid #ffc107; padding:8px 12px; border-radius:8px; margin-top:8px; font-size:12px; color:#856404; font-weight:600; }
         .ap-rechazo-sec { display:none; margin-top:14px; }
         .ap-rechazo-sec.active { display:block; }
-        .ap-rechazo-sec textarea { width:100%; padding:10px; border:2px solid var(--danger,#c0392b); border-radius:8px; font-size:13px; font-family:inherit; resize:vertical; min-height:70px; }
+        .ap-rechazo-sec textarea { width:100%; padding:10px; border:2px solid var(--clr-danger); border-radius:8px; font-size:13px; font-family:inherit; resize:vertical; min-height:70px; }
         .ap-footer-normal { display:flex; }
         .ap-footer-rechazo { display:none; }
 
@@ -894,7 +812,7 @@
 
         .cuota-delete {
             background: #fee2e2;
-            color: #dc2626;
+            color: var(--clr-danger);
             border: none;
             width: 30px;
             height: 30px;
@@ -1110,7 +1028,7 @@
         .pcuota-paso { font-size:13px; font-weight:700; color:#5C1018; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.4px; }
         .pcuota-fila { display:grid; grid-template-columns:auto 1fr 110px 110px 130px auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; transition:border-color 0.2s; }
         .pcuota-fila:focus-within { border-color:#C49A2A; }
-        .pcuota-fila.fila-irreg { border-color:#e67e22; background:#fffbf5; }
+        .pcuota-fila.fila-irreg { border-color:var(--clr-warning); background:#fffbf5; }
         .pcuota-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
         .pcuota-fila input { width:100%; padding:7px 9px; border:1.5px solid #ddd; border-radius:7px; font-size:12px; font-family:'DM Sans',sans-serif; transition:border-color 0.2s; background:white; box-sizing:border-box; }
         .pcuota-fila input:focus { outline:none; border-color:#5C1018; }
@@ -1120,7 +1038,7 @@
         .pcuota-monto::before { content:'$'; position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:12px; color:#999; pointer-events:none; }
         .pcuota-del { background:none; border:none; cursor:pointer; color:#e74c3c; font-size:17px; padding:4px; border-radius:6px; transition:background 0.2s; line-height:1; align-self:end; margin-bottom:2px; }
         .pcuota-del:hover { background:#fdecea; }
-        .btn-pcuota-agregar { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:#2d7a4f; color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-pcuota-agregar { margin-top:4px; margin-bottom:6px; padding:8px 16px; background:var(--clr-success); color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
         .btn-pcuota-agregar:hover { background:#246441; }
         .pcuota-destino { background:#f0f8ff; border:1.5px solid #b3d4f0; border-radius:10px; padding:14px 16px; }
 
@@ -1136,7 +1054,7 @@
         #modal-descuento-new .modal-footer { padding:14px 22px; border-top:1px solid #f0ede6; display:flex; justify-content:flex-end; gap:10px; }
         .btn-cancel-desc { padding:9px 18px; background:white; border:2px solid #ddd; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; color:#666; font-family:'DM Sans',sans-serif; }
         .btn-cancel-desc:hover { background:#f0f0f0; }
-        .btn-save-desc { padding:9px 18px; background:#10b981; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-save-desc { padding:9px 18px; background:var(--clr-success); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
         .btn-save-desc:hover { background:#0d9268; }
         .desc-periodo-fila { display:grid; grid-template-columns:26px 90px 130px 130px 1fr auto; gap:8px; align-items:end; margin-bottom:8px; background:#f8f6f1; border-radius:10px; padding:10px 12px; border:2px solid transparent; }
         .desc-periodo-fila label { display:block; font-size:10px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
@@ -1178,7 +1096,7 @@
         .cell-popup-monto {
             display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
         }
-        .cell-popup-monto span { font-size: 13px; color: #888; font-weight: 600; }
+        .cell-popup-monto span { font-size: 13px; color: #767676; font-weight: 600; }
         .cell-popup-monto input {
             width: 120px; padding: 6px 8px; border: 2px solid #e0e0e0;
             border-radius: 6px; font-size: 13px; font-family: 'DM Sans', sans-serif;
@@ -1209,9 +1127,16 @@
         #modal-editar-cuotas-coop.show { display:flex; }
         #modal-eliminar-global-coop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center; }
         #modal-eliminar-global-coop.show { display:flex; }
+
+    /* ── utilidades inline repetidas ── */
+    .u-lbl  { font-size:10px; color:#767676; font-weight:600; text-transform:uppercase; margin-bottom:2px; }
+    .u-lbl-blue { font-size:10px; font-weight:600; color:#0369a1; display:block; margin-bottom:3px; }
+    .u-hint { font-size:9px; color:#bbb; margin-top:2px; }
+    .u-sub  { font-size:11px; color:#767676; margin-top:2px; }
+    .btn-mas { padding:8px 22px; background:#fff; border:1.5px solid #c7d2fe; border-radius:8px; color:#4338ca; font-size:13px; font-weight:600; cursor:pointer; }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
     <style>
         /* Sobreescribe el gradiente del tema: header uniforme en color claro */
         body > .header { background: var(--primary-2) !important; }
@@ -1232,7 +1157,7 @@
         #tablaContainer { flex:1; display:flex; flex-direction:column; min-height:0; }
         .table-wrapper { flex:1 !important; max-height: none !important; overflow: auto !important; min-height:0; }
         .legend { flex-shrink:0; }
-        body { zoom: 1.0 !important; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+        body { display:flex; flex-direction:column; height:125vh; overflow-x:auto; overflow-y:hidden; }
         body > .header { flex-shrink:0; }
     </style>
 </head>
@@ -1252,23 +1177,17 @@
 
             <div class="header-right">
                 <div style="display:flex;align-items:center;gap:12px;">
-                    <div style="position: relative;" id="notifWrapper">
-                        <button class="icon-btn" type="button" onclick="toggleNotificaciones()" aria-label="Notificaciones">
+                    <div class="notif-wrapper" style="position:relative;" id="notifWrapper">
+                        <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                             🔔
-                            <span class="notif-badge" id="notifBadge">0</span>
+                            <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:var(--clr-danger);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
                         </button>
-
-                        <div class="notif-panel" id="notifPanel">
-                            <div class="notif-header">
-                                <h3>Notificaciones</h3>
-                                <button type="button" onclick="marcarTodasLeidas()">Marcar todas como leídas</button>
+                        <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:1000;border:1px solid #e5e7eb;color:#111;">
+                            <div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;">
+                                <span style="font-weight:700;color:#5C1018;font-size:14px;">Notificaciones</span>
+                                <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
                             </div>
-                            <div class="notif-list" id="notifList">
-                                <div class="loading-block">
-                                    <div class="loading-spinner"></div>
-                                    <div>Cargando notificaciones...</div>
-                                </div>
-                            </div>
+                            <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
                         </div>
                     </div>
                     <button class="btn-logout" type="button" onclick="cerrarSesion()">Cerrar sesión</button>
@@ -1442,7 +1361,7 @@
                     <label for="aprobReciboFile" style="cursor:pointer;display:block;">
                         <div style="font-size:32px;margin-bottom:6px;">📎</div>
                         <strong>Click para seleccionar archivo</strong>
-                        <p style="font-size:12px;color:#888;margin-top:4px;">PDF o imagen · Máximo 10 MB</p>
+                        <p style="font-size:12px;color:#767676;margin-top:4px;">PDF o imagen · Máximo 10 MB</p>
                     </label>
                 </div>
                 <div class="ap-file-uploaded" id="apFileUploaded" style="display:none;">
@@ -1457,11 +1376,11 @@
 
                 <!-- Sección de rechazo -->
                 <div class="ap-rechazo-sec" id="apRechazoSec">
-                    <div class="ap-sec-title" style="color:var(--danger,#c0392b);border-bottom-color:var(--danger,#c0392b);">✕ Motivo de Rechazo</div>
+                    <div class="ap-sec-title" style="color:var(--clr-danger);border-bottom-color:var(--clr-danger);">✕ Motivo de Rechazo</div>
                     <textarea id="apRechazoMotivo" placeholder="Ingrese el motivo del rechazo (opcional)…"></textarea>
                 </div>
 
-                <div id="aprobMsgBox" style="margin-top:10px;font-size:13px;color:var(--danger,#c0392b);"></div>
+                <div id="aprobMsgBox" style="margin-top:10px;font-size:13px;color:var(--clr-danger);"></div>
             </div>
             <div class="modal-footer ap-footer-normal" id="apFooterNormal">
                 <div class="footer-buttons">
@@ -1494,7 +1413,7 @@
             </div>
             <div class="modal-footer">
                 <div class="footer-buttons">
-                    <a id="verDocDescargar" href="#" target="_blank" class="btn success" style="text-decoration:none;">⬇ Descargar</a>
+                    <a id="verDocDescargar" href="#" target="_blank" rel="noopener noreferrer" class="btn success" style="text-decoration:none;">⬇ Descargar</a>
                     <button class="btn light" type="button" onclick="cerrarVerDoc()">Cerrar</button>
                 </div>
             </div>
@@ -1562,12 +1481,14 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
         let programaId = '';
         let cohorteId = '';
         let filtroActivo = 'todos';
+        let _coopBusy = false; // mutex — evita doble submit
         let vistaData = {
             programa: null,
             cohorte: null,
@@ -1578,10 +1499,13 @@
         let estudianteDescuentoActual = null;
         let cuotasParaCrear = [];
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
+            var sb = await getSupabase();
+            var { data: { session } } = await sb.auth.getSession();
+            if (!session) { window.location.href = 'portal_login.html'; return; }
             var sesion = getSesion();
             if (!sesion) { window.location.href = 'portal_login.html'; return; }
-            document.addEventListener('click', cerrarPanelNotificacionesSiCorresponde);
+            document.addEventListener('click', function(e){ var w=document.getElementById('notifWrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';}});
             document.addEventListener('keydown', manejarEscape);
 
             programaId = obtenerParametroUrl('programaId') || obtenerParametroUrl('programa_id') || '';
@@ -1591,27 +1515,35 @@
 
         function cargarVista() {
             cargarDetalleCohorte();
-            cargarNotificaciones();
+            obtenerNotificaciones('COOPERADORA').then(renderNotificaciones);
         }
 
         async function cargarDetalleCohorte() {
             mostrarLoadingTabla();
             try {
                 var sb = await getSupabase();
-                var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
-                    sb.from('cohortes').select('*, programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
+                var [rCoh, rCob, rInsc, rEgr, rCfg] = await Promise.all([
+                    sb.from('cohortes').select('cohorte_id,nombre,estado,fecha_inicio,fecha_fin,programa_id,programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
                     sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,monto_transferido,estado,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId),
-                    sb.from('inscripciones').select('estudiante_id,descuento_porcentaje,estado_academico,descuento_motivo').eq('cohorte_id', cohorteId),
-                    sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
-                    sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', cohorteId)
+                    obtenerInscripcionesPorCohorte(cohorteId, 'estudiante_id, descuento_porcentaje, estado_academico, descuento_motivo'),
+                    obtenerEgresosResumenPorCohorte(cohorteId),
+                    obtenerConfiguracion()
                 ]);
 
                 var cohorte = rCoh.data || {};
                 var prog = cohorte.programas || {};
                 var cobros = rCob.data || [];
-                var inscripciones = rInsc.data || [];
+                var inscripciones = rInsc || [];
+                var egresosRaw = rEgr || [];
+                var cfg = rCfg || {};
+                var etiquetasConfig = cfg.etiquetas
+                    ? cfg.etiquetas.split(',').map(function(e) { return e.trim(); }).filter(Boolean)
+                    : [];
+                var inscIds = inscripciones.map(function(i){ return i.estudiante_id; });
+                var rEst = inscIds.length
+                    ? await sb.from('estudiantes').select('id,dni,nombre,apellido,email').in('id', inscIds)
+                    : { data: [] };
                 var estList = rEst.data || [];
-                var egresosRaw = rEgr.data || [];
 
                 var estByDni = {};
                 estList.forEach(function(e){ estByDni[String(e.dni)] = e; });
@@ -1630,8 +1562,11 @@
                         ? Number(c.monto_abonado)
                         : Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
                     var saldoC = Number(c.saldo_pendiente||0);
+                    var _hoyStr = new Date().toISOString().split('T')[0];
+                    var _esPagada = c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL';
                     var estadoRaw = c.no_aplica ? 'NODEBE'
-                        : (c.recibo_url && saldoC > 0) ? 'PAGO_PARCIAL'
+                        : (abonado > 0 && saldoC > 0) ? 'PAGO_PARCIAL'
+                        : (!_esPagada && c.fecha_vencimiento && c.fecha_vencimiento < _hoyStr && Number(c.monto_final||0) > 0) ? 'EN_MORA'
                         : (c.estado||'NO_ABONADA');
                     dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, montoTransferido:(c.monto_transferido ? Number(c.monto_transferido) : null), texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'', recibo_url:c.recibo_url||'' });
                 });
@@ -1649,8 +1584,11 @@
                 var respuesta = {
                     programa: { programaId:cohorte.programa_id||programaId, nombre:prog.nombre||'Programa', tipo:prog.tipo||'', estado:prog.estado||'ACTIVO' },
                     cohorte: { cohorteId:cohorte.cohorte_id||cohorteId, nombre:cohorte.nombre||'Cohorte', fechaInicio:cohorte.fecha_inicio||'', fechaFin:cohorte.fecha_fin||'', activa:cohorte.estado==='ACTIVO', cantidadCuotasDefault:maxCuota },
-                    estudiantes: Object.values(dniMap),
-                    etiquetasDescuento: ['Beca parcial','Docente','Convenio','Pronto pago']
+                    estudiantes: Object.values(dniMap).sort(function(a,b){
+                        var r = String(a.apellido||'').localeCompare(String(b.apellido||''), 'es', { sensitivity:'base' });
+                        return r !== 0 ? r : String(a.nombre||'').localeCompare(String(b.nombre||''), 'es', { sensitivity:'base' });
+                    }),
+                    etiquetasDescuento: etiquetasConfig
                 };
                 vistaData = normalizarDetalle(respuesta);
                 vistaData.egresos = egresosRaw;
@@ -1709,14 +1647,15 @@
             const estadoOriginal = (cuota.estado || '').toString().toUpperCase().trim();
             let estado = 'noabonada'; // default: sin comprobante, no venció
 
-            if (estadoOriginal === 'ABONADA' || estadoOriginal === 'PAGADA') estado = 'abonada';
+            if (cuota.no_aplica || cuota.noDebeAbonar) estado = 'nodebe';
+            else if (estadoOriginal === 'ABONADA' || estadoOriginal === 'PAGADA') estado = 'abonada';
             else if (estadoOriginal === 'PAGO_PARCIAL' || estadoOriginal === 'PARCIAL') estado = 'parcial';
             else if (estadoOriginal === 'VENCIDA' || estadoOriginal === 'MORA' || estadoOriginal === 'EN MORA' || estadoOriginal === 'EN_MORA') estado = 'mora';
             else if (estadoOriginal === 'PENDIENTE') estado = 'pendiente';
             else if (estadoOriginal === 'NO_ABONADA' || estadoOriginal === 'NO ABONADA') estado = 'noabonada';
             else if (estadoOriginal === 'A_DEFINIR' || estadoOriginal === 'A DEFINIR' || estadoOriginal === 'NO DEFINIDO') estado = 'adefinir';
-            else if (estadoOriginal === 'NODEBE' || estadoOriginal === 'NO_DEBE_ABONAR') estado = 'nodebe';
-            else if (cuota.noDebeAbonar) estado = 'nodebe';
+            else if (estadoOriginal === 'NODEBE' || estadoOriginal === 'NO_APLICA' || estadoOriginal === 'NO_DEBE_ABONAR') estado = 'nodebe';
+            else if (Number(cuota.monto_final || cuota.montoFinal || 0) === 0) estado = 'adefinir';
 
             // Si hay comprobante subido pero el estado DB es inconsistente (carga manual), forzar pendiente
             if (cuota.comprobante_url && estado !== 'abonada' && estado !== 'parcial' && estado !== 'nodebe' && estado !== 'adefinir') {
@@ -1750,7 +1689,7 @@
         }
 
         function renderEncabezado() {
-            document.title = 'SiGPo - ' + vistaData.programa.nombre;
+            document.title = vistaData.programa.nombre;
             document.getElementById('headerCohorte').textContent = vistaData.programa.nombre;
             document.getElementById('hdrCohorteNombre').textContent = vistaData.cohorte.nombre;
             document.getElementById('headerPrograma').textContent = formatearRangoFechas(vistaData.cohorte.fechaInicio, vistaData.cohorte.fechaFin);
@@ -1784,7 +1723,7 @@
             document.getElementById('statEgresos').textContent  = formatearMoneda(egrExec);
             var sEl = document.getElementById('statSaldo');
             sEl.textContent = formatearMoneda(saldo);
-            sEl.style.color = saldo >= 0 ? '#2d7a4f' : '#c0392b';
+            sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
         }
 
         function renderTabla() {
@@ -1845,10 +1784,10 @@
                     <div class="legend-item"><div class="legend-color abonada"></div><span>Abonada</span></div>
                     <div class="legend-item"><div class="legend-color parcial"></div><span>Pago parcial</span></div>
                     <div class="legend-item"><div class="legend-color mora"></div><span>En mora</span></div>
-                    <div class="legend-item"><div class="legend-color" style="background:#fef3c7;border-color:#f59e0b;"></div><span>Pendiente de revisión</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#fef3c7;border-color:var(--clr-warning);"></div><span>Pendiente de revisión</span></div>
                     <div class="legend-item"><div class="legend-color" style="background:#e0e7ff;border-color:#6366f1;"></div><span>No abonada</span></div>
                     <div class="legend-item"><div class="legend-color" style="background:#f3f4f6;border-color:#9ca3af;"></div><span>A definir</span></div>
-                    <div class="legend-item"><div class="legend-color nodebe"></div><span>No debe abonar</span></div>
+                    <div class="legend-item"><div class="legend-color nodebe"></div><span>No aplica</span></div>
                 </div>
             `;
         }
@@ -1883,7 +1822,7 @@
 
         function renderCeldaCuota(cuota, noDebeAbonar, descuentoPorcentaje) {
             if (!cuota || cuota.estado === 'nodebe' || noDebeAbonar) {
-                return `<td class="cuota-cell cuota-nodebe">no debe<br />abonar</td>`;
+                return `<td class="cuota-cell cuota-nodebe">No aplica</td>`;
             }
 
             const clases = 'cuota-cell cuota-' + cuota.estado;
@@ -1942,7 +1881,7 @@
 
             const badgeLabels = {
                 abonada: 'Abonada', parcial: 'Parcial', mora: 'En mora',
-                pendiente: 'Revisión', noabonada: 'Por abonar', adefinir: 'A definir'
+                pendiente: 'Revisión', noabonada: 'No abonada', adefinir: 'A definir'
             };
             const badgeLabel = badgeLabels[cuota.estado] || cuota.estado;
             const esEditable = !['abonada', 'parcial', 'pendiente', 'nodebe'].includes(cuota.estado);
@@ -1958,7 +1897,7 @@
                     no_aplica: cuota.estado === 'nodebe'
                   })) + ')" style="cursor:pointer;"'
                 : '';
-            const editHint = esEditable ? '<div style="font-size:9px;color:#bbb;margin-top:2px;">✏️ editar</div>' : '';
+            const editHint = esEditable ? '<div class="u-hint">✏️ editar</div>' : '';
             return `
                 <td class="${clases}" title="${escapeHtml(tooltip)}"${editAttr}>
                     <span class="cuota-amount">${escapeHtml(top)}</span>
@@ -2097,7 +2036,7 @@
             }
             var t = document.createElement('div');
             t.style.cssText = 'padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;color:white;box-shadow:0 8px 24px rgba(0,0,0,0.2);max-width:340px;';
-            t.style.background = tipo === 'error' ? '#ef4444' : tipo === 'success' ? '#10b981' : '#5C1018';
+            t.style.background = tipo === 'error' ? 'var(--clr-danger)' : tipo === 'success' ? 'var(--clr-success)' : '#5C1018';
             t.textContent = msg;
             tw.appendChild(t);
             setTimeout(function(){ if (t.parentNode) t.parentNode.removeChild(t); }, 3500);
@@ -2181,6 +2120,8 @@
                 if (!p.desde) { mostrarToast('Período ' + (pi+1) + ': indicá la fecha de inicio', 'error'); return; }
                 if (p.hasta && p.hasta < p.desde) { mostrarToast('Período ' + (pi+1) + ': la fecha fin debe ser posterior al inicio', 'error'); return; }
             }
+            if (_coopBusy) return;
+            _coopBusy = true;
             mostrarSpinner(true);
             try {
                 var sb = await getSupabase();
@@ -2200,6 +2141,7 @@
                 }).eq('estudiante_id', est.estudianteId).eq('cohorte_id', vistaData.cohorte.cohorteId);
                 if (resInsc.error) throw resInsc.error;
 
+                var cobroUpdates = [];
                 for (var i = 0; i < est.cuotas.length; i++) {
                     var c = est.cuotas[i];
                     if (['abonada','parcial','pendiente','mora'].includes(c.estado)) continue;
@@ -2216,7 +2158,7 @@
                     }
 
                     if (!c.montoFinal && c.montoFinal !== 0) {
-                        await sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobroId);
+                        cobroUpdates.push(sb.from('cobros').update({ descuento_porcentaje: pctAplicar }).eq('cobro_id', c.cobroId));
                         continue;
                     }
 
@@ -2226,12 +2168,17 @@
                     var nuevoSaldo = Math.round(Math.max(0, nuevoFinal - abonado) * 100) / 100;
                     var nuevoEstado = (nuevoSaldo <= 0) ? 'ABONADA' : (fCuota && fCuota < hoyStr ? 'EN_MORA' : 'NO_ABONADA');
 
-                    await sb.from('cobros').update({
+                    cobroUpdates.push(sb.from('cobros').update({
                         descuento_porcentaje: pctAplicar,
                         monto_final:          nuevoFinal,
                         saldo_pendiente:      nuevoSaldo,
                         estado:               nuevoEstado
-                    }).eq('cobro_id', c.cobroId);
+                    }).eq('cobro_id', c.cobroId));
+                }
+                if (cobroUpdates.length) {
+                    var cobroResults = await Promise.all(cobroUpdates);
+                    var cobroErr = cobroResults.find(function(r){ return r.error; });
+                    if (cobroErr) throw cobroErr.error;
                 }
 
                 mostrarToast('Descuento actualizado ✓', 'success');
@@ -2241,6 +2188,7 @@
                 console.error(e);
                 mostrarToast('Error al guardar: ' + (e.message||''), 'error');
             } finally {
+                _coopBusy = false;
                 mostrarSpinner(false);
             }
         }
@@ -2371,6 +2319,8 @@
                 (est.cuotas || []).forEach(function(c) { maxNroExist = Math.max(maxNroExist, Number(c.numeroCuota || 0)); });
             });
 
+            if (_coopBusy) return;
+            _coopBusy = true;
             mostrarSpinner(true);
             try {
                 var sb = await getSupabase();
@@ -2410,6 +2360,7 @@
                 console.error(e);
                 mostrarToast('Error al crear el plan: ' + (e.message || ''), 'error');
             } finally {
+                _coopBusy = false;
                 mostrarSpinner(false);
             }
         }
@@ -2714,74 +2665,50 @@
         }
 
         function exportarExcel() {
-            const payload = {
-                programaId: vistaData.programa.programaId,
-                cohorteId: vistaData.cohorte.cohorteId,
-                filtro: filtroActivo
-            };
-
-            if (estaEnAppsScript()) {
-                google.script.run
-                    .withSuccessHandler(function (respuesta) {
-                        if (respuesta && respuesta.url) {
-                            window.open(respuesta.url, '_blank');
-                        }
-                    })
-                    .withFailureHandler(function (error) {
-                        alert(obtenerMensajeError(error, 'No se pudo exportar el Excel.'));
-                    })
-                    .exportarEstadoPagosCohorte(payload);
-                descargarCSVLocal();
-            }
-        }
-
-        function descargarCSVLocal() {
+            if (!vistaData || !vistaData.estudiantes) { alert('No hay datos cargados para exportar.'); return; }
             const cuotaDefs = obtenerCuotaDefs();
             const lista = vistaData.estudiantes.filter(function (est) { return coincideFiltro(est, filtroActivo); });
+            if (!lista.length) { alert('No hay estudiantes para exportar con el filtro actual.'); return; }
 
-            const rows = [];
-            const headers = ['Estudiante', 'DNI', 'Email', 'Descuento'].concat(cuotaDefs.map(function (q) { return q.label; })).concat(['Total a pagar', 'Abonado', 'Saldo']);
-            rows.push(headers);
+            const estadoLabel = { mora:'En Mora', parcial:'Pago Parcial', aldia:'Al día', nodebe:'No debe', A_DEFINIR:'A definir', NO_ABONADA:'No abonada', ABONADA:'Abonada', PAGO_PARCIAL:'Pago Parcial', EN_MORA:'En Mora' };
+
+            const headers = ['Estudiante', 'DNI', 'Email', 'Descuento']
+                .concat(cuotaDefs.map(function (q) { return q.label; }))
+                .concat(['Total a pagar', 'Abonado', 'Saldo']);
+            const filas = [headers];
 
             lista.forEach(function (est) {
                 const totales = calcularTotalesEstudiante(est);
-                const row = [
+                const fila = [
                     est.nombreCompleto,
                     est.dni,
                     est.email,
-                    est.noDebeAbonar ? 'No debe abonar' : (est.descuentoPorcentaje + '%')
+                    est.noDebeAbonar ? 'No debe abonar' : (est.descuentoPorcentaje ? est.descuentoPorcentaje + '%' : '0%')
                 ];
-
                 cuotaDefs.forEach(function (q) {
                     const cuota = obtenerCuotaEstudiante(est, q.key);
                     if (!cuota || cuota.estado === 'nodebe' || est.noDebeAbonar) {
-                        row.push('no debe abonar');
+                        fila.push('No debe');
                     } else if (cuota.aDefinir) {
-                        row.push('A definir');
-                        row.push((cuota.texto || formatearMoneda(cuota.montoFinal || cuota.montoBase || 0)) + ' (' + cuota.estado + ')');
+                        fila.push('A definir');
+                    } else {
+                        const monto = Number(cuota.montoFinal || cuota.montoBase || 0);
+                        const label = estadoLabel[cuota.estado] || cuota.estado || '';
+                        fila.push(monto + (label ? ' (' + label + ')' : ''));
                     }
                 });
-
-                row.push(formatearMoneda(totales.totalPagar), formatearMoneda(totales.totalAbonado), formatearMoneda(totales.saldo));
-                rows.push(row);
+                fila.push(totales.totalPagar, totales.totalAbonado, totales.saldo);
+                filas.push(fila);
             });
 
-            const csv = rows.map(function (row) {
-                return row.map(function (cell) {
-                    const value = String(cell == null ? '' : cell).replaceAll('"', '""');
-                    return '"' + value + '"';
-                }).join(',');
-            }).join('\n');
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'estado_pagos_' + vistaData.cohorte.nombre.replaceAll(' ', '_') + '.csv';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(url);
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(filas);
+            const baseCols = [{wch:30},{wch:12},{wch:28},{wch:12}];
+            const cuotaCols = cuotaDefs.map(function(){ return {wch:18}; });
+            ws['!cols'] = baseCols.concat(cuotaCols).concat([{wch:14},{wch:14},{wch:14}]);
+            const nombreCohorte = (vistaData.cohorte.nombre || 'cohorte').replace(/[^a-zA-Z0-9_\-]/g, '_');
+            XLSX.utils.book_append_sheet(wb, ws, 'Estado de Pagos');
+            XLSX.writeFile(wb, 'estado_pagos_' + nombreCohorte + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
         function volverACohortes(event) {
@@ -2829,7 +2756,7 @@
                 cerrarModalDescuento();
                 return;
             }
-            document.getElementById('notifPanel').classList.remove('open');
+            var _dd=document.getElementById('notif-dropdown');if(_dd)_dd.style.display='none';
         }
 
         function mostrarMensaje(id, texto, tipo) {
@@ -2843,73 +2770,8 @@
             box.textContent = texto;
         }
 
-        function cargarNotificaciones() {
-            obtenerNotificaciones('COOPERADORA').then(function(datos) {
-                notificaciones = Array.isArray(datos) ? datos.map(function(n){ return { titulo:n.tipo||'Notificación', mensaje:n.mensaje||'', fechaRelativa:'', leida:!!n.leida, urlDestino:'' }; }) : [];
-                renderNotificaciones();
-            }).catch(function() {
-                notificaciones = [];
-                renderNotificaciones();
-            });
-        }
-
-        function renderNotificaciones() {
-            const badge = document.getElementById('notifBadge');
-            const lista = document.getElementById('notifList');
-            const sinLeer = notificaciones.filter(function (n) { return !n.leida; }).length;
-
-            badge.textContent = sinLeer;
-            badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-
-            if (!notificaciones.length) {
-                lista.innerHTML = `
-                    <div class="loading-block" style="padding:28px 18px;">
-                        <div style="font-size:38px; margin-bottom:10px; opacity:0.35;">🔕</div>
-                        <div>No hay notificaciones por ahora.</div>
-                    </div>
-                `;
-                return;
-            }
-
-            lista.innerHTML = notificaciones.map(function (n, index) {
-                return `
-                    <div class="notif-item ${n.leida ? '' : 'unread'}" onclick="abrirNotificacion(${index})">
-                        <h4>${escapeHtml(n.titulo || 'Notificación')}</h4>
-                        <p>${escapeHtml(n.mensaje || '')}</p>
-                        <small>${escapeHtml(n.fechaRelativa || '')}</small>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function abrirNotificacion(index) {
-            const notif = notificaciones[index];
-            if (!notif) return;
-
-            notif.leida = true;
-            renderNotificaciones();
-
-            if (notif.urlDestino) {
-                if (estaEnAppsScript()) window.top.location.href = notif.urlDestino;
-                else window.location.href = notif.urlDestino;
-            }
-        }
-
-        function toggleNotificaciones() {
-            document.getElementById('notifPanel').classList.toggle('open');
-        }
-
-        function cerrarPanelNotificacionesSiCorresponde(evento) {
-            const wrapper = document.getElementById('notifWrapper');
-            if (!wrapper || wrapper.contains(evento.target)) return;
-            document.getElementById('notifPanel').classList.remove('open');
-        }
-
-        function marcarTodasLeidas() {
-            notificaciones = notificaciones.map(function (n) { n.leida = true; return n; });
-            renderNotificaciones();
-            if (typeof marcarTodasNotificacionesLeidas === 'function') marcarTodasNotificacionesLeidas();
-        }
+        function toggleNotif() { var dd=document.getElementById('notif-dropdown'); dd.style.display=dd.style.display==='block'?'none':'block'; }
+        function marcarTodasLeidas() { _notifs.forEach(function(n){n.leida=true;}); renderNotificaciones(_notifs); marcarTodasNotificacionesLeidas(); }
 
         function mostrarLoadingTabla() {
             document.getElementById('tablaContainer').innerHTML = `
@@ -2958,14 +2820,7 @@
             return mapa[tipo] || tipo;
         }
 
-        function formatearMoneda(valor) {
-            return Number(valor || 0).toLocaleString('es-AR', {
-                style: 'currency',
-                currency: 'ARS',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        }
+        var formatearMoneda = fMonto;
 
         function _parseFechaLocal(valor) {
             // Parsear YYYY-MM-DD como fecha local para evitar corrimiento de timezone
@@ -3027,15 +2882,6 @@
             return fecha.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' }).toUpperCase();
         }
 
-        function escapeHtml(valor) {
-            return String(valor == null ? '' : valor)
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '&lt;')
-                .replaceAll('>', '&gt;')
-                .replaceAll('"', '&quot;')
-                .replaceAll("'", '&#39;');
-        }
-
         function escapeJs(valor) {
             return String(valor == null ? '' : valor)
                 .replaceAll('\\', '\\\\')
@@ -3067,11 +2913,25 @@
                 document.getElementById('verDocSub').textContent = '';
                 document.getElementById('verDocDescargar').href = url;
                 var cont = document.getElementById('verDocContenido');
+                cont.innerHTML = '';
                 if (/\.pdf$/i.test(comprobanteUrl)) {
-                    cont.innerHTML = '<iframe src="' + url + '" style="width:100%;height:480px;border:none;border-radius:8px;"></iframe>';
+                    var iframe = document.createElement('iframe');
+                    iframe.src = url;
+                    iframe.style.cssText = 'width:100%;height:480px;border:none;border-radius:8px;';
+                    cont.appendChild(iframe);
                 } else {
-                    cont.innerHTML = '<img src="' + url + '" style="max-width:100%;max-height:480px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15);">'
-                        + '<p style="margin-top:8px;"><a href="' + url + '" target="_blank" style="font-size:13px;color:#4338ca;">Abrir en nueva pestaña →</a></p>';
+                    var img = document.createElement('img');
+                    img.src = url;
+                    img.style.cssText = 'max-width:100%;max-height:480px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.15);';
+                    var p = document.createElement('p');
+                    p.style.marginTop = '8px';
+                    var a = document.createElement('a');
+                    a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+                    a.style.cssText = 'font-size:13px;color:#4338ca;';
+                    a.textContent = 'Abrir en nueva pestaña →';
+                    p.appendChild(a);
+                    cont.appendChild(img);
+                    cont.appendChild(p);
                 }
                 abrirOverlay('modalVerDocOverlay');
             } catch(e) {
@@ -3301,7 +3161,7 @@
         function _coopRenderEditarCuotas() {
             var cont = document.getElementById('ec-lista-coop');
             if (!cont) return;
-            if (!_coopEcCuotasEditadas.length) { cont.innerHTML = '<p style="color:#888;font-size:13px;">Sin cuotas.</p>'; return; }
+            if (!_coopEcCuotasEditadas.length) { cont.innerHTML = '<p style="color:#767676;font-size:13px;">Sin cuotas.</p>'; return; }
             var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
             html += '<thead><tr style="background:#f3f4f6;"><th style="padding:8px 10px;text-align:left;">Concepto</th><th style="padding:8px 10px;text-align:left;">Período</th><th style="padding:8px 10px;text-align:left;">Vencimiento</th></tr></thead><tbody>';
             _coopEcCuotasEditadas.forEach(function(cu, i) {
@@ -3320,6 +3180,8 @@
         }
 
         async function _coopGuardarEdicionCuotas() {
+            if (_coopBusy) return;
+            _coopBusy = true;
             mostrarSpinner(true);
             try {
                 var sb = await getSupabase();
@@ -3340,6 +3202,7 @@
             } catch(e) {
                 mostrarToast('Error al guardar: ' + (e.message || e), 'error');
             } finally {
+                _coopBusy = false;
                 mostrarSpinner(false);
             }
         }
@@ -3376,7 +3239,7 @@
                 html += '<span style="font-size:13px;'+(bloqueada?'color:#9ca3af;':'')+'">'+escapeHtml(cu.nombre)+' — '+escapeHtml(cu.mes)+labelBloq+'</span>';
                 html += '</div>';
             });
-            cont.innerHTML = html || '<p style="color:#888;font-size:13px;">Sin cuotas.</p>';
+            cont.innerHTML = html || '<p style="color:#767676;font-size:13px;">Sin cuotas.</p>';
             _coopEgUpdateSelCount();
         }
 
@@ -3401,6 +3264,8 @@
             });
             if (!seleccionadas.length) return;
             if (!confirm('¿Eliminar ' + seleccionadas.length + ' cuota(s) para todos los estudiantes de la cohorte? Esta acción no se puede deshacer.')) return;
+            if (_coopBusy) return;
+            _coopBusy = true;
             mostrarSpinner(true);
             try {
                 var sb = await getSupabase();
@@ -3418,6 +3283,7 @@
             } catch(e) {
                 mostrarToast('Error al eliminar: ' + (e.message || e), 'error');
             } finally {
+                _coopBusy = false;
                 mostrarSpinner(false);
             }
         }
@@ -3486,6 +3352,8 @@
             var montoStr  = document.getElementById('cpop-monto').value.trim();
             var tieneMonto = montoStr !== '' && !isNaN(parseFloat(montoStr));
 
+            if (_coopBusy) return;
+            _coopBusy = true;
             mostrarSpinner(true);
             cerrarCeldaPopupCoop();
             try {
@@ -3523,6 +3391,7 @@
                 console.error(e);
                 mostrarToast('Error al guardar: ' + (e.message || e), 'error');
             } finally {
+                _coopBusy = false;
                 mostrarSpinner(false);
             }
         }

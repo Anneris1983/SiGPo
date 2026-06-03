@@ -14,42 +14,12 @@
     var _notifs = [];
     function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
     document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
-    function renderNotificaciones(datos) {
-        _notifs = datos || [];
-        var sinLeer = _notifs.filter(function(n) { return !n.leida; }).length;
-        var badge = document.getElementById('notif-badge'); badge.textContent = sinLeer; badge.style.display = sinLeer > 0 ? 'flex' : 'none';
-        var lista = document.getElementById('notif-list');
-        if (_notifs.length === 0) { lista.innerHTML = '<div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">No hay notificaciones</div>'; return; }
-        var iconos = { pago:'💰', mora:'🔴', solicitud:'📋', reclamo:'⚠️', alerta:'🚨' };
-        var colores = { pago:'#dcfce7', mora:'#fee2e2', solicitud:'#dbeafe', reclamo:'#fef3c7', alerta:'#fce7f3' };
-        lista.innerHTML = _notifs.map(function(n) {
-            return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + n.id + '\')">'
-                + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo]||'#f3f4f6') + ';">' + (iconos[n.tipo]||'🔔') + '</div>'
-                + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + n.mensaje + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (n.tiempo||'') + '</div></div></div>';
-        }).join('');
-    }
-    function leerNotif(id) { _notifs.forEach(function(n) { if (n.id === id) n.leida = true; }); renderNotificaciones(_notifs); }
-    function marcarTodasLeidas() { _notifs.forEach(function(n) { n.leida = true; }); renderNotificaciones(_notifs); }
-    // Notificaciones cargadas por supabase.js automáticamente
+    // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 
 </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary:      #5C1018;
-            --indigo:       #4f46e5;
-            --indigo-dark:  #4338ca;
-            --accent:       #8C1A28;
-            --success:      #16a34a;
-            --danger:       #dc2626;
-            --cyan:         #0891b2;
-            --bg:           #f8f6f1;
-            --white:        #fff;
-            --border:       #e0e0e0;
-            --muted:        #666;
-            --shadow:       0 2px 12px rgba(0,0,0,0.07);
-            --radius:       12px;
-        }
+
         body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: #333; font-size: 14px; }
 
         /* ══ HEADER ══ */
@@ -192,7 +162,6 @@
         thead tr { background: var(--primary); color: #fff; }
         th { padding: 12px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
         tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .12s; }
-        tbody tr:hover { background: #f5f3ff; }
         td { padding: 12px 14px; }
         tfoot tr { background: #eef2ff; font-weight: 700; }
         .positive { color: var(--success); font-weight: 600; }
@@ -214,7 +183,7 @@
         }
         .btn-action:active { transform: scale(.97); }
         /* Verde */
-        .btn-excel  { background: #16a34a; color: #fff; }
+        .btn-excel  { background: var(--clr-success); color: #fff; }
         .btn-excel:hover  { background: #15803d; }
         /* Azul oscuro */
         .btn-pdf    { background: #5C1018; color: #fff; }
@@ -234,8 +203,8 @@
             .progress-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
         </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
     <style>
     body { zoom: 1.0 !important; }
     .container { max-width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
@@ -257,7 +226,7 @@
                 <div class="notif-wrapper" style="position:relative;">
                     <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
                         <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
-                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
+                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:var(--clr-danger);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
                     </button>
                     <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
                         <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
@@ -428,8 +397,9 @@
 <!-- ══════════════════════════════════════════════════════════
      SCRIPTS
 ══════════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
 // ── Instancias de Chart.js ──
 let chartHistorico = null;
@@ -460,8 +430,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 async function cargarDatos() {
     try {
         var sb = await getSupabase();
-        var rCobros  = await sb.from('cobros').select('*');
-        var rEgresos = await sb.from('egresos').select('*');
+        var rCobros  = await sb.from('cobros').select('programa_id,cohorte_id,fecha_vencimiento,estado,monto_final,saldo_pendiente,estudiante_id');
+        var rEgresos = await sb.from('egresos').select('programa_id,cohorte_id,fecha_pago,fecha_estimada,tipo,estado,monto_pagado');
         _cobros  = rCobros.data  || [];
         _egresos = rEgresos.data || [];
         // ── Aplicar filtros desde Cashflow ──
@@ -482,6 +452,8 @@ async function cargarDatos() {
         poblarSelects();
     } catch(e) {
         console.error('cargarDatos error:', e);
+        var _band = document.getElementById('filter-band');
+        if (_band) _band.innerHTML = '<span style="color:var(--clr-danger);">⚠️ Error al cargar los datos: ' + esc(e.message || e) + '</span>';
         poblarSelects();
     }
 }
@@ -753,7 +725,7 @@ function renderChartVariacion(d1, d2, p1, p2) {
                 backgroundColor: vals.map(v =>
                     v >= 0 ? 'rgba(22,163,74,0.80)' : 'rgba(220,38,38,0.80)'),
                 borderColor: vals.map(v =>
-                    v >= 0 ? '#16a34a' : '#dc2626'),
+                    v >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)'),
                 borderWidth: 1.5,
                 borderRadius: 8,
             }]
@@ -795,7 +767,7 @@ function renderChartDonut(d1, p1) {
             labels: ['Cuotas', 'Matrículas / Inscripciones', 'Otros ingresos'],
             datasets: [{
                 data: [cuotas, matriculas, otros],
-                backgroundColor: ['#4f46e5', '#16a34a', '#8C1A28'],
+                backgroundColor: ['#4f46e5', 'var(--clr-success)', '#8C1A28'],
                 borderColor: '#fff',
                 borderWidth: 3,
             }]
@@ -854,23 +826,25 @@ function renderTabla(d1, d2) {
 function exportarExcel() {
     const p1 = document.getElementById('periodo1').value;
     const p2 = document.getElementById('periodo2').value;
-    if (typeof google !== 'undefined') {
-        google.script.run
-            .withSuccessHandler(url => { if (url) window.open(url, '_blank'); })
-            .exportarComparativoExcel({ p1, p2, ...(window.FILTROS_ACTIVOS || {}) });
-        alert(`Exportando comparativo ${p1} vs ${p2} a Excel…\n(Disponible en Google Apps Script)`);
-    }
+    var d1 = getDato(p1);
+    var d2 = getDato(p2);
+    var rows = [
+        { 'Métrica': 'Período 1', 'Valor P1': p1, 'Valor P2': p2, 'Variación $': '', 'Variación %': '' },
+        { 'Métrica': 'Ingresos',            'Valor P1': d1.ingresos,    'Valor P2': d2.ingresos,    'Variación $': d1.ingresos - d2.ingresos,    'Variación %': d2.ingresos    ? Math.round((d1.ingresos    - d2.ingresos)    / Math.abs(d2.ingresos)    * 100) + '%' : '—' },
+        { 'Métrica': 'Egresos',             'Valor P1': d1.egresos,     'Valor P2': d2.egresos,     'Variación $': d1.egresos  - d2.egresos,     'Variación %': d2.egresos     ? Math.round((d1.egresos     - d2.egresos)     / Math.abs(d2.egresos)     * 100) + '%' : '—' },
+        { 'Métrica': 'Balance Neto',        'Valor P1': d1.balance,     'Valor P2': d2.balance,     'Variación $': d1.balance  - d2.balance,     'Variación %': d2.balance     ? Math.round((d1.balance     - d2.balance)     / Math.abs(d2.balance)     * 100) + '%' : '—' },
+        { 'Métrica': 'Estudiantes activos', 'Valor P1': d1.estudiantes, 'Valor P2': d2.estudiantes, 'Variación $': d1.estudiantes - d2.estudiantes, 'Variación %': d2.estudiantes ? Math.round((d1.estudiantes - d2.estudiantes) / Math.abs(d2.estudiantes) * 100) + '%' : '—' },
+        { 'Métrica': 'Morosidad total',     'Valor P1': d1.morosidad,   'Valor P2': d2.morosidad,   'Variación $': d1.morosidad - d2.morosidad,  'Variación %': d2.morosidad   ? Math.round((d1.morosidad   - d2.morosidad)   / Math.abs(d2.morosidad)   * 100) + '%' : '—' },
+    ];
+    if (!rows.length) { alert('No hay datos para exportar.'); return; }
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, 'Comparativo');
+    XLSX.writeFile(wb, 'reporte_comparativo_' + p1.replace(/\s+/g,'-') + '_vs_' + p2.replace(/\s+/g,'-') + '.xlsx');
 }
 
 function exportarPDF() {
-    const p1 = document.getElementById('periodo1').value;
-    const p2 = document.getElementById('periodo2').value;
-    if (typeof google !== 'undefined') {
-        google.script.run
-            .withSuccessHandler(url => { if (url) window.open(url, '_blank'); })
-            .exportarComparativoPDF({ p1, p2, ...(window.FILTROS_ACTIVOS || {}) });
-        alert(`Exportando comparativo ${p1} vs ${p2} a PDF…\n(Disponible en Google Apps Script)`);
-    }
+    window.print();
 }
 </script>
 

@@ -1,6 +1,6 @@
 /**
  * ══════════════════════════════════════════════════════════════
- * SiGPo — supabase.js
+ * supabase.js
  * Cliente Supabase + funciones de API para todas las vistas
  * ══════════════════════════════════════════════════════════════
  */
@@ -17,6 +17,18 @@ function escapeHtml(str) {
 
 const SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
+
+// Preconnect al dominio de la API para reducir latencia TLS en cada página.
+// Se inyecta una sola vez: si la etiqueta ya existe no se duplica.
+(function() {
+    if (typeof document === 'undefined') return;
+    ['https://fdevypdowdhqaxvfiywt.supabase.co', 'https://cdn.jsdelivr.net'].forEach(function(origin) {
+        if (document.querySelector('link[rel="preconnect"][href="' + origin + '"]')) return;
+        var l = document.createElement('link');
+        l.rel = 'preconnect'; l.href = origin; l.crossOrigin = '';
+        document.head.appendChild(l);
+    });
+}());
 
 // ══════════════════════════════════════════════════════════════
 // INICIALIZAR CLIENTE
@@ -51,12 +63,9 @@ async function getSupabase() {
 async function login(dni, password) {
     const sb = await getSupabase();
 
-    // Primero buscar el email real del usuario por DNI
+    // Lookup por DNI via RPC (SECURITY DEFINER): evita exponer tabla usuarios a anon
     const { data: usuarioPre, error: errPre } = await sb
-        .from('usuarios')
-        .select('rol, apellido, nombre, nombre_completo, email, programa_id, dni, activo')
-        .eq('dni', String(dni))
-        .single();
+        .rpc('get_login_data', { user_dni: String(dni) });
 
     if (errPre || !usuarioPre) {
         return { ok: false, mensaje: 'DNI o contraseña incorrectos' };
@@ -77,13 +86,14 @@ async function login(dni, password) {
 
     const usuario = usuarioPre;
 
-    localStorage.setItem('sigpo_rol', usuario.rol);
-    localStorage.setItem('sigpo_nombre', usuario.nombre_completo);
-    localStorage.setItem('sigpo_apellido', usuario.apellido || '');
-    localStorage.setItem('sigpo_nombre2', usuario.nombre || '');
-    localStorage.setItem('sigpo_dni', usuario.dni);
-    localStorage.setItem('sigpo_email', usuario.email);
+    localStorage.setItem('sigpo_rol',         usuario.rol);
+    localStorage.setItem('sigpo_nombre',      usuario.nombre_completo);
+    localStorage.setItem('sigpo_apellido',    usuario.apellido || '');
+    localStorage.setItem('sigpo_nombre2',     usuario.nombre || '');
+    localStorage.setItem('sigpo_dni',         usuario.dni);
+    localStorage.setItem('sigpo_email',       usuario.email);
     localStorage.setItem('sigpo_programa_id', usuario.programa_id || '');
+    localStorage.setItem('sigpo_usuario_id',  String(usuario.usuario_id || ''));
 
     return {
         ok: true,
@@ -103,6 +113,7 @@ async function logout() {
     localStorage.removeItem('sigpo_dni');
     localStorage.removeItem('sigpo_email');
     localStorage.removeItem('sigpo_programa_id');
+    localStorage.removeItem('sigpo_usuario_id');
     return { ok: true };
 }
 
@@ -110,11 +121,12 @@ function getSesion() {
     const rol = localStorage.getItem('sigpo_rol');
     if (!rol) return null;
     return {
-        rol: rol,
-        nombre: localStorage.getItem('sigpo_nombre'),
-        dni: localStorage.getItem('sigpo_dni'),
-        email: localStorage.getItem('sigpo_email'),
-        programa_id: localStorage.getItem('sigpo_programa_id')
+        rol:         rol,
+        nombre:      localStorage.getItem('sigpo_nombre'),
+        dni:         localStorage.getItem('sigpo_dni'),
+        email:       localStorage.getItem('sigpo_email'),
+        programa_id: localStorage.getItem('sigpo_programa_id'),
+        usuario_id:  localStorage.getItem('sigpo_usuario_id') || null
     };
 }
 
@@ -128,7 +140,7 @@ async function requireAuth() {
     // Verify role from DB using the authenticated JWT (not localStorage)
     const { data: usuario, error } = await sb
         .from('usuarios')
-        .select('rol, nombre_completo, apellido, nombre, dni, email, programa_id')
+        .select('usuario_id, rol, nombre_completo, apellido, nombre, dni, email, programa_id')
         .eq('auth_user_id', session.user.id)
         .maybeSingle();
     if (error || !usuario) {
@@ -143,6 +155,7 @@ async function requireAuth() {
     localStorage.setItem('sigpo_dni',         usuario.dni);
     localStorage.setItem('sigpo_email',       usuario.email);
     localStorage.setItem('sigpo_programa_id', String(usuario.programa_id || ''));
+    localStorage.setItem('sigpo_usuario_id',  String(usuario.usuario_id || ''));
     return getSesion();
 }
 
@@ -289,6 +302,80 @@ function fFecha(fecha) {
     return partes[2] + '/' + partes[1] + '/' + partes[0];
 }
 
+// ══════════════════════════════════════════════════════════════
+// UTILIDADES COMPARTIDAS DE NEGOCIO
+// Disponibles en todos los HTML que incluyan supabase.js
+// ══════════════════════════════════════════════════════════════
+
+function hoy() { return new Date().toISOString().split('T')[0]; }
+
+function redondear2(n) { return Math.round((Number(n)||0)*100)/100; }
+
+function keyCuota(c, p) { return String(c||'')+'||'+String(p||''); }
+
+function tieneMontoDefinido(c) {
+    return !(c==null||c.monto_final===null||c.monto_final===undefined||c.monto_final===''||isNaN(Number(c.monto_final)));
+}
+
+function vencioCuota(c) {
+    if (!c||!c.fecha_vencimiento) return false;
+    return String(c.fecha_vencimiento) < hoy();
+}
+
+function calcMontoAbonado(c) {
+    if (c && c.monto_abonado != null && Number(c.monto_abonado) > 0)
+        return redondear2(Number(c.monto_abonado));
+    return redondear2(Math.max(0,(Number(c&&c.monto_final)||0)-(Number(c&&c.saldo_pendiente)||0)));
+}
+
+/** Formato estándar: $90.000,50 */
+function fMonto(n) {
+    if (n===null||n===undefined) return '–';
+    return '$'+Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+/** Formato abreviado para dashboards: $1,5M · $90k · $500,00 */
+function fMillones(n) {
+    if (n===null||n===undefined||n==='') return '—';
+    var v = Math.round(Number(n)||0);
+    if (v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
+    if (v>=1000) return '$'+Math.round(v/1000)+'k';
+    return fMonto(n);
+}
+
+/** Formato con signo para egresos/flujos: -$5.000,00 */
+function fMontoConSigno(n) {
+    if (n===null||n===undefined) return '–';
+    var num = parseFloat(n);
+    if (isNaN(num)) return '–';
+    return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+/** Fecha corta: "15 May" */
+function fFechaCorta(str) {
+    if (!str) return '—';
+    var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    var p = String(str).split('T')[0].split('-');
+    if (p.length!==3) return str;
+    return p[2]+' '+meses[parseInt(p[1],10)-1];
+}
+
+/** Alias de escapeHtml para compatibilidad con archivos que usan esc() */
+var esc = escapeHtml;
+
+/** Toast de notificación unificado. tipo: 'ok' | 'err' | '' */
+function toast(msg, tipo) {
+    var cont = document.getElementById('toasts') || document.getElementById('toast');
+    if (!cont) return;
+    var d = document.createElement('div');
+    // Aplica ambas convenciones de clase: '.toast.ok/.err' (mayoría de páginas)
+    // y '.toast-ok/.toast-err' (consumidores previos de supabase.js).
+    d.className = 'toast'+(tipo==='err'?' err toast-err':tipo==='ok'?' ok toast-ok':'');
+    d.textContent = msg;
+    cont.appendChild(d);
+    setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); }, 3500);
+}
+
 function tiempoRelativo(fecha) {
     var ahora = new Date();
     var diff = ahora - new Date(fecha);
@@ -327,7 +414,7 @@ function renderNotificaciones(datos) {
     lista.innerHTML = _notifs.map(function (n) {
         return '<div style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:' + (n.leida ? '#fff' : '#fffbeb') + ';" onclick="leerNotif(\'' + escapeHtml(n.id) + '\')">'
             + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:' + (colores[n.tipo] || '#f3f4f6') + ';">' + (iconos[n.tipo] || '🔔') + '</div>'
-            + '<div style="flex:1;"><p style="font-size:13px;color:#374151;line-height:1.4;">' + escapeHtml(n.mensaje) + '</p><div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + escapeHtml(n.tiempo) + '</div></div></div>';
+            + '<div style="flex:1;"><p style="font-size:13px;color:#000;line-height:1.4;">' + escapeHtml(n.mensaje) + '</p><div style="font-size:11px;color:#000;margin-top:3px;">' + escapeHtml(n.tiempo) + '</div></div></div>';
     }).join('');
 }
 
@@ -499,6 +586,31 @@ async function obtenerDetallePrograma(programaId) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// CONFIGURACIÓN (con caché de sesión — 5 minutos)
+// ══════════════════════════════════════════════════════════════
+
+var _cfgCache = null;
+var _cfgCacheTs = 0;
+var _CFG_TTL = 5 * 60 * 1000;
+
+async function obtenerConfiguracion() {
+    var now = Date.now();
+    if (_cfgCache && (now - _cfgCacheTs) < _CFG_TTL) return _cfgCache;
+    var sb = await getSupabase();
+    var { data } = await sb.from('configuracion').select('clave,valor');
+    var cfg = {};
+    (data || []).forEach(function(r) { cfg[r.clave] = r.valor; });
+    cfg.moraPct = parseFloat(cfg.mora_porcentaje) || 5;
+    _cfgCache = cfg;
+    _cfgCacheTs = now;
+    return cfg;
+}
+
+function invalidarConfiguracion() {
+    _cfgCache = null;
+    _cfgCacheTs = 0;
+}
+
 // COBROS (CUOTAS)
 // ══════════════════════════════════════════════════════════════
 
@@ -530,7 +642,8 @@ async function subirComprobante(cobroId, file, fechaTransferencia, montoTransfer
 
     if (uploadErr) return { ok: false, mensaje: 'Error al subir archivo: ' + uploadErr.message };
 
-    const { data: urlData } = sb.storage.from('comprobantes').getPublicUrl(fileName);
+    const { data: urlData, error: urlErr } = sb.storage.from('comprobantes').getPublicUrl(fileName);
+    if (urlErr || !urlData || !urlData.publicUrl) return { ok: false, mensaje: 'Error al obtener URL del archivo' };
 
     const updateData = {
         estado: 'PENDIENTE',
@@ -551,7 +664,10 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
 
     let reciboUrl = null;
     if (reciboFile) {
-        const fileName = 'recibos/' + cobroId + '/' + Date.now() + '_' + reciboFile.name;
+        const safeName = reciboFile.name
+            .normalize('NFD').replace(/[̀-ͯ]/g, '')
+            .replace(/[^a-zA-Z0-9._-]/g, '_');
+        const fileName = 'recibos/' + cobroId + '/' + Date.now() + '_' + safeName;
         const { error: uploadErr } = await sb.storage.from('comprobantes').upload(fileName, reciboFile);
         if (uploadErr) return { ok: false, mensaje: 'Error al subir recibo' };
         const { data: urlData } = sb.storage.from('comprobantes').getPublicUrl(fileName);
@@ -572,13 +688,22 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
             recibo_url: reciboUrl
         }).eq('cobro_id', cobroId);
     } else {
-        var nuevoSaldo = Math.round((Number(cobro.monto_final) - Number(montoAprobado)) * 100) / 100;
-        await sb.from('cobros').update({
-            estado: 'PAGO_PARCIAL',
-            saldo_pendiente: nuevoSaldo,
-            monto_abonado: Number(montoAprobado),
+        // El monto ingresado es el INCREMENTO de este pago: acumular sobre lo
+        // ya abonado en pagos parciales previos (no sobrescribir).
+        var abonadoPrevio = Number(cobro.monto_abonado) || 0;
+        var abonadoTotal  = redondear2(abonadoPrevio + Number(montoAprobado));
+        var nuevoSaldo    = redondear2(Number(cobro.monto_final) - abonadoTotal);
+        var estadoNuevo   = nuevoSaldo <= 0 ? 'ABONADA' : 'PAGO_PARCIAL';
+        var updateParcial = {
+            estado: estadoNuevo,
+            saldo_pendiente: Math.max(0, nuevoSaldo),
+            monto_abonado: abonadoTotal,
             recibo_url: reciboUrl
-        }).eq('cobro_id', cobroId);
+        };
+        if (estadoNuevo === 'ABONADA') {
+            updateParcial.fecha_aprobacion = new Date().toISOString().split('T')[0];
+        }
+        await sb.from('cobros').update(updateParcial).eq('cobro_id', cobroId);
 
         await sb.from('pagos').insert({
             cobro_id: cobroId,
@@ -612,7 +737,7 @@ async function rechazarPago(cobroId) {
 
     if (!cobro.monto_final || cobro.monto_final === 0) {
         nuevoEstado = 'A_DEFINIR';
-    } else if (cobro.fecha_vencimiento && new Date(cobro.fecha_vencimiento) < new Date()) {
+    } else if (vencioCuota(cobro)) {
         nuevoEstado = 'EN_MORA';
     } else {
         const { data: pagos } = await sb.from('pagos').select('monto').eq('cobro_id', cobroId);
@@ -678,6 +803,50 @@ async function obtenerEgresos(filtros) {
     return data || [];
 }
 
+// Resumen ligero de egresos de una cohorte (tipo, monto_pagado, monto_original)
+// Idéntico en: administrador_4_cohorte, cooperadora_5_cohorte, coordinador_3_cohorte,
+//              profesor_2_cohorte, Secretaria_4_Tabla, secretaria_3_detalle_cohorte
+async function obtenerEgresosResumenPorCohorte(cohorteId) {
+    const sb = await getSupabase();
+    const { data, error } = await sb.from('egresos')
+        .select('tipo, monto_pagado, monto_original')
+        .eq('cohorte_id', cohorteId);
+    if (error) throw error;
+    return data || [];
+}
+
+// Inscripciones de una cohorte. campos: string de columnas para SELECT (opcional)
+async function obtenerInscripcionesPorCohorte(cohorteId, campos) {
+    const sb = await getSupabase();
+    const select = campos || 'estudiante_id, descuento_porcentaje, estado_academico, descuento_motivo, descuento_desde, descuento_hasta';
+    const { data, error } = await sb.from('inscripciones')
+        .select(select)
+        .eq('cohorte_id', cohorteId);
+    if (error) throw error;
+    // Normalizar campos opcionales para evitar 'undefined' en la UI
+    return (data || []).map(function(r) {
+        return Object.assign({ descuento_motivo: null, descuento_desde: null, descuento_hasta: null }, r);
+    });
+}
+
+// Cobros para reportes de tasa de deserción (campo fijo, todos los programas)
+async function obtenerCobrosParaDesercion() {
+    const sb = await getSupabase();
+    const { data, error } = await sb.from('cobros')
+        .select('programa_id, cohorte_id, dni, estado, fecha_vencimiento, monto_final, saldo_pendiente');
+    if (error) throw error;
+    return data || [];
+}
+
+// Catálogo de programas con campos configurables
+async function obtenerProgramasCatalogo(campos) {
+    const sb = await getSupabase();
+    const select = campos || 'programa_id, nombre, tipo';
+    const { data, error } = await sb.from('programas').select(select).order('nombre');
+    if (error) throw error;
+    return data || [];
+}
+
 async function guardarEgreso(datos) {
     const sb = await getSupabase();
     if (datos.egreso_id) {
@@ -698,18 +867,6 @@ async function eliminarEgreso(egresoId) {
     const sb = await getSupabase();
     const { error } = await sb.from('egresos').delete().eq('egreso_id', egresoId);
     return { ok: !error };
-}
-
-// ══════════════════════════════════════════════════════════════
-// CONFIGURACIÓN
-// ══════════════════════════════════════════════════════════════
-
-async function obtenerConfiguracion() {
-    const sb = await getSupabase();
-    const { data } = await sb.from('configuracion').select('*');
-    var result = {};
-    (data || []).forEach(function (row) { result[row.clave] = row.valor; });
-    return result;
 }
 
 async function guardarConfiguracion(datos) {
@@ -763,19 +920,22 @@ async function obtenerProgramasCoordinador(usuarioId) {
 /**
  * Retorna un array de programa_id asignados al usuario con ese dni.
  * Usado por las páginas de coordinador/profesor para filtrar datos.
+ * Usa usuario_id cacheado en localStorage para hacer una sola consulta.
  */
 async function obtenerProgramasAsignadosPorDni(dni) {
     const sb = await getSupabase();
-    const { data: usuario } = await sb
-        .from('usuarios')
-        .select('usuario_id')
-        .eq('dni', String(dni))
-        .single();
-    if (!usuario) return [];
+    let uid = localStorage.getItem('sigpo_usuario_id');
+    if (!uid) {
+        // Fallback: buscar por dni si el cache no está disponible
+        const { data: u } = await sb.from('usuarios').select('usuario_id').eq('dni', String(dni)).single();
+        if (!u) return [];
+        uid = String(u.usuario_id);
+        localStorage.setItem('sigpo_usuario_id', uid);
+    }
     const { data: asignaciones } = await sb
         .from('coordinadores_programas')
         .select('programa_id')
-        .eq('coordinador_id', usuario.usuario_id);
+        .eq('coordinador_id', uid);
     if (!asignaciones || !asignaciones.length) return [];
     return [...new Set(asignaciones.map(function(a){ return a.programa_id; }))];
 }
@@ -784,19 +944,21 @@ async function obtenerProgramasAsignadosPorDni(dni) {
  * Retorna { progIds, cohIds } para un coordinador.
  * progIds = programas asignados sin cohorte específica (ve todas las cohortes del programa).
  * cohIds  = cohortes específicas asignadas.
+ * Usa usuario_id cacheado en localStorage para hacer una sola consulta.
  */
 async function obtenerAsignacionesCoordinador(dni) {
     const sb = await getSupabase();
-    const { data: usuario } = await sb
-        .from('usuarios')
-        .select('usuario_id')
-        .eq('dni', String(dni))
-        .single();
-    if (!usuario) return { progIds: [], cohIds: [] };
+    let uid = localStorage.getItem('sigpo_usuario_id');
+    if (!uid) {
+        const { data: u } = await sb.from('usuarios').select('usuario_id').eq('dni', String(dni)).single();
+        if (!u) return { progIds: [], cohIds: [] };
+        uid = String(u.usuario_id);
+        localStorage.setItem('sigpo_usuario_id', uid);
+    }
     const { data: asigs } = await sb
         .from('coordinadores_programas')
         .select('programa_id, cohorte_id')
-        .eq('coordinador_id', usuario.usuario_id);
+        .eq('coordinador_id', uid);
     if (!asigs || !asigs.length) return { progIds: [], cohIds: [] };
     const progIds = [...new Set(asigs.filter(function(a){ return !a.cohorte_id; }).map(function(a){ return a.programa_id; }))];
     const cohIds  = [...new Set(asigs.filter(function(a){ return  a.cohorte_id; }).map(function(a){ return a.cohorte_id; }))];
@@ -849,117 +1011,45 @@ async function darDeAlta(usuarioId) {
 
 async function obtenerDashboardAdmin() {
     const sb = await getSupabase();
+    const { data, error } = await sb.rpc('dashboard_stats_admin');
+    if (error) throw error;
 
-    const [progRes, cohRes, inscRes, cobRes, egrRes] = await Promise.all([
-        sb.from('programas').select('*'),
-        sb.from('cohortes').select('*'),
-        sb.from('inscripciones').select('estudiante_id,cohorte_id'),
-        sb.from('cobros').select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,comprobante_url'),
-        sb.from('egresos').select('egreso_id,programa_id,cohorte_id,tipo,monto_pagado,monto_original')
-    ]);
-
-    var programas     = progRes.data  || [];
-    var cohortes      = cohRes.data   || [];
-    var inscripciones = inscRes.data  || [];
-    var cobros        = cobRes.data   || [];
-    var egresos       = egrRes.data   || [];
-
-    // Mapa: cohorte_id → programa_id
-    var cohProgMap = {};
-    cohortes.forEach(function(c) { cohProgMap[c.cohorte_id] = c.programa_id; });
-
-    // Estudiantes activos: por enrollment (estudiante × programa), no por persona única.
-    // Un estudiante inscripto en 2 programas = 2 unidades de seguimiento distintas
-    // (cobros distintos, deuda distinta, saldo distinto).
-    var totalEstActivos = new Set(
-        inscripciones.map(function(i){
-            return i.estudiante_id + '|' + (cohProgMap[i.cohorte_id] || '');
-        })
-    ).size;
-
-    var totalRecaudado = cobros
-        .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
-        .reduce(function (s, c) { return s + Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)); }, 0);
-    var totalEgresos = egresos
-        .filter(function(e){ return e.tipo === 'EJECUTADO'; })
-        .reduce(function (s, e) { return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
-
-    // Mora global: por enrollment (dni × programa) — mismo criterio que el conteo de activos
-    var dnisConMora = new Set(
-        cobros.filter(function(c){ return c.estado === 'EN_MORA'; })
-              .map(function(c){
-                  var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id];
-                  return c.dni + '|' + pid;
-              })
-    );
-    var cuotasEnMora = cobros.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
-
-    var totalProgramasPosgrado = programas.filter(function(p){ return getCategoriaPrograma(p.tipo) === 'Programa'; }).length;
-    var totalCursos            = programas.filter(function(p){ return getCategoriaPrograma(p.tipo) === 'Curso'; }).length;
+    var r = data; // JSON returned by the RPC
+    var totalInscriptos = Number(r.totalInscriptos || 0);
+    var totalEnMora     = Number(r.totalEnMora     || 0);
 
     return {
-        totalProgramas:          programas.length,
-        totalProgramasPosgrado:  totalProgramasPosgrado,
-        totalCursos:             totalCursos,
-        estudiantesActivos:      totalEstActivos,
-        alDia:                   Math.max(0, totalEstActivos - dnisConMora.size),
-        enMora:                  dnisConMora.size,
-        cuotasEnMora:            cuotasEnMora,
-        recaudado:               totalRecaudado,
-        egresos:                 totalEgresos,
-        saldo:                   totalRecaudado - totalEgresos,
-        programas: programas.map(function(p) {
-            var cohsProg   = cohortes.filter(function(c){ return String(c.programa_id) === String(p.programa_id); });
-            var cohIdsProg = cohsProg.map(function(c){ return c.cohorte_id; });
-
-            // Estudiantes del programa: inscriptos en sus cohortes (igual que secretaría)
-            var estProg = new Set(
-                inscripciones
-                    .filter(function(i){ return cohIdsProg.indexOf(i.cohorte_id) >= 0; })
-                    .map(function(i){ return i.estudiante_id; })
-            );
-
-            var cobrosProg = cobros.filter(function(c){
-                var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id];
-                return String(pid) === String(p.programa_id);
-            });
-            var egresosProg = egresos.filter(function(e){
-                var pid = e.programa_id != null ? e.programa_id : cohProgMap[e.cohorte_id];
-                return String(pid) === String(p.programa_id);
-            });
-
-            var dnisConMoraProg = new Set(
-                cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).map(function(c){ return c.dni; })
-            );
-            var cuotasMoraProg    = cobrosProg.filter(function(c){ return c.estado === 'EN_MORA'; }).length;
-            var pendCooperadora   = cobrosProg.filter(function(c){ return c.comprobante_url && c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL'; }).length;
-
-            var recaudadoProg = cobrosProg
-                .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
-                .reduce(function(s, c){ return s + Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)); }, 0);
-            var egresosPagadosProg = egresosProg
-                .filter(function(e){ return e.tipo === 'EJECUTADO'; })
-                .reduce(function(s, e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
-
-            var totalEstProg = estProg.size;
-            var enMoraProg   = dnisConMoraProg.size;
-
+        totalProgramas:         (r.programas || []).length,
+        totalProgramasPosgrado: Number(r.totalProgramasPosgrado || 0),
+        totalCursos:            Number(r.totalCursos            || 0),
+        estudiantesActivos:     totalInscriptos,
+        alDia:                  Math.max(0, totalInscriptos - totalEnMora),
+        enMora:                 totalEnMora,
+        cuotasEnMora:           Number(r.totalCuotasEnMora  || 0),
+        totalReadmisiones:      Number(r.totalReadmisiones  || 0),
+        totalReadmisionesPendientes: Number(r.totalReadmisionesPendientes || 0),
+        recaudado:              Number(r.totalIngresos      || 0),
+        egresos:                Number(r.totalEgresos       || 0),
+        saldo:                  Number(r.saldoNeto          || 0),
+        programas: (r.programas || []).map(function(p) {
+            var inscriptos = Number(p.inscriptos || 0);
+            var enMora     = Number(p.enMora     || 0);
             return {
                 id:                p.programa_id,
                 nombre:            p.nombre,
                 tipo:              p.tipo,
                 estado:            p.estado,
-                categoria:         getCategoriaPrograma(p.tipo),
+                categoria:         p.categoria,
                 labelNomenclatura: getLabelNomenclaturaPlural(p.tipo),
-                estudiantes:       totalEstProg,
-                cohortes:          cohsProg.length,
-                alDia:             Math.max(0, totalEstProg - enMoraProg),
-                enMora:            enMoraProg,
-                cuotasEnMora:      cuotasMoraProg,
-                pendCooperadora:   pendCooperadora,
-                recaudado:         recaudadoProg,
-                egresos:           egresosPagadosProg,
-                saldo:             recaudadoProg - egresosPagadosProg
+                estudiantes:       inscriptos,
+                cohortes:          Number(p.numCohortes      || 0),
+                alDia:             Math.max(0, inscriptos - enMora),
+                enMora:            enMora,
+                cuotasEnMora:      Number(p.cuotasEnMora     || 0),
+                pendCooperadora:   Number(p.pendCooperadora  || 0),
+                recaudado:         Number(p.ingresosEstimados|| 0),
+                egresos:           Number(p.egresosTotales   || 0),
+                saldo:             Number(p.saldoNeto        || 0)
             };
         })
     };
@@ -968,11 +1058,6 @@ async function obtenerDashboardAdmin() {
 // ══════════════════════════════════════════════════════════════
 // FACTURACIÓN (ESTUDIANTE)
 // ══════════════════════════════════════════════════════════════
-
-async function guardarDatosFacturacion(datos) {
-    console.log('Datos facturación:', datos);
-    return { ok: true };
-}
 
 // ══════════════════════════════════════════════════════════════
 // PERFIL DE USUARIO
@@ -1006,6 +1091,20 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 });
 
+// Cierre de modales con tecla ESC — funciona en todos los archivos
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    // Buscar modal visible (.modal-overlay.show o [id^="modal-"].show)
+    var abierto = document.querySelector('.modal-overlay.show');
+    if (abierto) {
+        abierto.classList.remove('show');
+        return;
+    }
+    // Alternativa: paneles tipo sidebar con clase .show
+    var panel = document.querySelector('.panel.show, .drawer.show');
+    if (panel) panel.classList.remove('show');
+});
+
 // ══════════════════════════════════════════════════════════════
 // POLYFILL: google.script.run → Supabase
 // Intercepta las llamadas antiguas de GAS y las redirige a Supabase
@@ -1029,11 +1128,53 @@ var _gasFunctions = {
 
     // Dashboard
     obtenerDashboardAdmin:       obtenerDashboardAdmin,
-    obtenerDashboardCoordinador: async function() { return obtenerDashboardAdmin(); },
+    obtenerDashboardCoordinador: async function() {
+        const sb = await getSupabase();
+        const { data, error } = await sb.rpc('dashboard_stats_coordinador');
+        if (error) throw error;
+        var r = data;
+        var totalInscriptos = Number(r.totalInscriptos || 0);
+        var totalEnMora     = Number(r.totalEnMora     || 0);
+        return {
+            totalProgramas:        (r.programas || []).length,
+            estudiantesActivos:    totalInscriptos,
+            alDia:                 Math.max(0, totalInscriptos - totalEnMora),
+            enMora:                totalEnMora,
+            cuotasEnMora:          Number(r.totalCuotasEnMora || 0),
+            recaudado:             Number(r.totalIngresos     || 0),
+            egresos:               Number(r.totalEgresos      || 0),
+            saldo:                 Number(r.saldoNeto         || 0),
+            programas: (r.programas || []).map(function(p) {
+                var inscriptos = Number(p.inscriptos || 0);
+                var enMora     = Number(p.enMora     || 0);
+                return {
+                    id:                p.programa_id,
+                    nombre:            p.nombre,
+                    tipo:              p.tipo,
+                    estado:            p.estado,
+                    categoria:         p.categoria,
+                    labelNomenclatura: getLabelNomenclaturaPlural(p.tipo),
+                    estudiantes:       inscriptos,
+                    cohortes:          Number(p.numCohortes      || 0),
+                    alDia:             Math.max(0, inscriptos - enMora),
+                    enMora:            enMora,
+                    cuotasEnMora:      Number(p.cuotasEnMora     || 0),
+                    pendCooperadora:   Number(p.pendCooperadora  || 0),
+                    recaudado:         Number(p.ingresosEstimados|| 0),
+                    egresos:           Number(p.egresosTotales   || 0),
+                    saldo:             Number(p.saldoNeto        || 0)
+                };
+            })
+        };
+    },
 
     // Programas / Cohortes
-    obtenerDetallePrograma: obtenerDetallePrograma,
-    getProgramas:           obtenerProgramas,
+    obtenerDetallePrograma:            obtenerDetallePrograma,
+    getProgramas:                      obtenerProgramas,
+    obtenerProgramasCatalogo:          obtenerProgramasCatalogo,
+    obtenerEgresosResumenPorCohorte:   obtenerEgresosResumenPorCohorte,
+    obtenerInscripcionesPorCohorte:    obtenerInscripcionesPorCohorte,
+    obtenerCobrosParaDesercion:        obtenerCobrosParaDesercion,
     cambiarEstadoCohorte:   async function(id, estado) {
         var sb = await getSupabase();
         var r = await sb.from('cohortes').update({ estado: estado }).eq('cohorte_id', id);
@@ -1086,9 +1227,6 @@ var _gasFunctions = {
         var r = await sb.from('usuarios').select('*').eq('usuario_id', id).single();
         return r.data;
     },
-
-    // Facturación
-    guardarDatosFacturacion: guardarDatosFacturacion,
 
     // Reportes / Exportaciones (en desarrollo)
     getDatosComparativo:              async function() { return { periodos: [], datos: [] }; },

@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Profesor - SiGPo</title>
+    <title>Dashboard Profesor</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        :root { --primary:#5C1018; --accent:#8C1A28; --bg:#f8f6f1; --success:#2d7a4f; --warning:#e67e22; --danger:#c0392b; --info:#4338ca; --muted:#6b7280; --line:#e5e7eb; }
+
         body { font-family:'DM Sans',sans-serif; background:var(--bg); color:#2c2c2c; font-size: 14px; }
         .header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:20px 40px; box-shadow:0 4px 20px rgba(0,0,0,0.1); }
-        .header-content { max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+        .header-content { display:flex; justify-content:space-between; align-items:center; gap:16px; }
         .header-left h1 { font-family:'Crimson Pro',serif; font-size:24px; margin-bottom:3px; }
         .header-left p { opacity:.85; font-size:13px; }
         .logout-btn { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:9px 18px; border-radius:8px; font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .2s; }
@@ -21,7 +21,7 @@
         .notif-wrapper { position:relative; display:inline-block; }
         .notif-btn { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:9px 13px; border-radius:8px; font-size:18px; cursor:pointer; position:relative; transition:background .2s; }
         .notif-btn:hover { background:rgba(255,255,255,0.28); }
-        #notif-badge { position:absolute; top:-4px; right:-4px; background:#ef4444; color:white; border-radius:50%; min-width:18px; height:18px; font-size:10px; font-weight:700; display:none; align-items:center; justify-content:center; padding:0 3px; }
+        #notif-badge { position:absolute; top:-4px; right:-4px; background:var(--clr-danger); color:white; border-radius:50%; min-width:18px; height:18px; font-size:10px; font-weight:700; display:none; align-items:center; justify-content:center; padding:0 3px; }
         #notif-dropdown { display:none; position:absolute; right:0; top:48px; width:320px; background:white; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.15); z-index:500; overflow:hidden; color:#2c2c2c; border:1px solid #e5e7eb; }
         .notif-head { padding:14px 16px; border-bottom:1px solid #f0f0f0; font-weight:700; color:#5C1018; font-size:14px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
         .notif-head button { background:none; border:none; color:#8C1A28; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
@@ -57,8 +57,8 @@
         .error-banner { background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; padding:14px 18px; border-radius:8px; margin-bottom:20px; font-size:14px; display:none; }
         .readonly-notice { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:10px 16px; border-radius:8px; margin-bottom:24px; font-size:13px; }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
     <style>
         .stat-card { overflow: visible !important; }
         .container { max-width: 100% !important; }
@@ -118,11 +118,14 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
 var _programas = [], _cohortes = [], _cohProgMap = {};
 
 document.addEventListener('DOMContentLoaded', async function() {
+    var _sb = await getSupabase();
+    var { data: { session: _session } } = await _sb.auth.getSession();
+    if (!_session) { window.location.href = 'portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion || sesion.rol !== 'PROFESOR') { window.location.href = 'portal_login.html'; return; }
     document.getElementById('headerSub').textContent = (sesion.nombre || 'Profesor/a');

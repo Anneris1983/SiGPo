@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facturación del Estudiante - SiGPo</title>
+    <title>Facturación del Estudiante</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary:#5C1018; --primary-2:#8C1A28; --accent:#C49A2A; --bg:#f8f6f1; --success:#2d7a4f; --danger:#c0392b; --muted:#6b7280; --line:#e5e7eb; }
+
         body { font-family:'DM Sans',sans-serif; background:var(--bg); font-size:14px; color:#2c2c2c; }
 
         /* HEADER */
         .header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:18px 28px; position:sticky; top:0; z-index:100; box-shadow:0 4px 20px rgba(0,0,0,0.12); }
-        .header-inner { max-width:900px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+        .header-inner { display:flex; justify-content:space-between; align-items:center; gap:16px; }
         .header-left h1 { font-family:'Crimson Pro',serif; font-size:22px; margin-bottom:3px; }
         .header-left p { font-size:13px; opacity:0.85; }
         .btn-back { background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.3); color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; }
@@ -88,7 +88,8 @@
         .role-banner { display:none; background:#fff9e6; border:1px solid #fbbf24; border-radius:8px; padding:10px 14px; font-size:13px; color:#92400e; margin-bottom:16px; }
         .role-banner.show { display:flex; align-items:center; gap:8px; }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
 </head>
 <body>
 <div id="spinner"><div class="spin-circle"></div><span style="color:#5C1018;font-weight:600;font-size:14px;">Cargando...</span></div>
@@ -96,10 +97,10 @@
 <div class="header">
     <div class="header-inner">
         <div class="header-left">
+            <button class="btn-back" onclick="history.back()">← Volver</button>
             <h1>📄 Datos de Facturación</h1>
             <p id="hdr-sub">Cargando…</p>
         </div>
-        <button class="btn-back" onclick="history.back()">← Volver</button>
     </div>
 </div>
 
@@ -172,7 +173,7 @@
             </div>
             <div class="upload-form">
                 <div class="upload-field">
-                    <label>Descripción <span style="color:#ef4444;">*</span></label>
+                    <label>Descripción <span style="color:var(--clr-danger);">*</span></label>
                     <input type="text" id="upDesc" placeholder="Ej: Factura cuota Enero 2026">
                 </div>
                 <div class="upload-field">
@@ -205,7 +206,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
 var QS    = new URLSearchParams(location.search);
 var DNI   = QS.get('dni') || '';
@@ -216,6 +217,9 @@ var _file = null;
 var _facturas = [];
 
 document.addEventListener('DOMContentLoaded', async function() {
+    var _sb = await getSupabase();
+    var { data: { session: _session } } = await _sb.auth.getSession();
+    if (!_session) { window.location.href = 'portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion) { window.location.href = 'portal_login.html'; return; }
     ROL = sesion.rol || '';
@@ -395,7 +399,7 @@ function spin(on) { document.getElementById('spinner').classList.toggle('show', 
 function escHtml(v) { return String(v==null?'':v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
 function toast(msg, type) {
     var t = document.createElement('div');
-    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:' + (type==='err'?'#c0392b':'#2d7a4f') + ';color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:9999;max-width:340px;';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:' + (type==='err'?'var(--clr-danger)':'var(--clr-success)') + ';color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:9999;max-width:340px;';
     t.textContent = msg;
     document.body.appendChild(t);
     setTimeout(function() { t.remove(); }, 3500);

@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle Cohorte - Profesor SiGPo</title>
+    <title>Detalle Cohorte - Profesor</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        :root { --primary:#5C1018; --accent:#8C1A28; --bg:#f8f6f1; --success:#2d7a4f; --warning:#e67e22; --danger:#c0392b; --muted:#6b7280; --line:#e5e7eb; }
+
         body { font-family:'DM Sans',sans-serif; background:var(--bg); color:#2c2c2c; font-size: 14px; }
         .header { background:linear-gradient(135deg,#5C1018 0%,#8C1A28 100%); color:white; padding:20px 40px; box-shadow:0 4px 20px rgba(0,0,0,.1); }
-        .header-content { max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+        .header-content { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
         .header-left h1 { font-family:'Crimson Pro',serif; font-size:22px; margin-bottom:3px; }
         .header-left p  { opacity:.85; font-size:13px; }
         .header-btns { display:flex; gap:10px; }
@@ -47,7 +47,6 @@
         table { width:100%; border-collapse:collapse; font-size:13px; }
         thead th { background:var(--primary); color:white; padding:10px 12px; text-align:left; font-weight:600; white-space:nowrap; }
         tbody tr { border-bottom:1px solid var(--line); transition:background .12s; }
-        tbody tr:hover { background:#f8f6f1; }
         tbody td { padding:10px 12px; vertical-align:middle; }
         .badge { display:inline-block; padding:3px 9px; border-radius:12px; font-size:11px; font-weight:700; white-space:nowrap; }
         .badge-abonada    { background:#d1fae5; color:#065f46; }
@@ -70,13 +69,14 @@
         .pag-btn:hover:not(.active):not(:disabled) { border-color:var(--primary); }
         .pag-btn:disabled { opacity:.4; cursor:default; }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
 </head>
 <body>
 <div class="header">
     <div class="header-content">
         <div class="header-left">
+            <button class="btn-back" onclick="navegar('profesor_1_dashboard.html')">← Volver</button>
             <h1 id="cohTitle">Cargando…</h1>
             <p id="cohSub">—</p>
         </div>
@@ -88,7 +88,6 @@
                     <div id="notif-list" style="max-height:340px;overflow-y:auto;"><div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;">Cargando…</div></div>
                 </div>
             </div>
-            <button class="btn-back" onclick="navegar('profesor_1_dashboard.html')">← Volver</button>
             <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
         </div>
     </div>
@@ -130,7 +129,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
 var _estudiantes = [];  // [{dni, nombre, apellido, estadoGlobal, cobros:[...]}]
 var _filtroEstado = 'TODOS';
@@ -138,6 +137,9 @@ var _pagina = 1;
 var PAGE_SIZE = 20;
 
 document.addEventListener('DOMContentLoaded', async function() {
+    var _sb = await getSupabase();
+    var { data: { session: _session } } = await _sb.auth.getSession();
+    if (!_session) { window.location.href = 'portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion || sesion.rol !== 'PROFESOR') { window.location.href = 'portal_login.html'; return; }
     var params = new URLSearchParams(window.location.search);
@@ -154,14 +156,14 @@ async function cargar(sesion, cohorteId) {
     var [cohRes, cobRes, egrRes, inscRes] = await Promise.all([
         sb.from('cohortes').select('cohorte_id,nombre,programa_id,estado,fecha_inicio,fecha_fin').eq('cohorte_id', cohorteId).single(),
         sb.from('cobros').select('dni,concepto,periodo,fecha_vencimiento,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', cohorteId).order('fecha_vencimiento'),
-        sb.from('egresos').select('tipo,monto_pagado,monto_original').eq('cohorte_id', cohorteId),
-        sb.from('inscripciones').select('estudiante_id,cohorte_id,estado_academico').eq('cohorte_id', cohorteId)
+        obtenerEgresosResumenPorCohorte(cohorteId),
+        obtenerInscripcionesPorCohorte(cohorteId, 'estudiante_id, cohorte_id, estado_academico')
     ]);
 
     var coh    = cohRes.data;
     var cobros = cobRes.data || [];
-    var egres  = egrRes.data || [];
-    var insc   = inscRes.data || [];
+    var egres  = egrRes;
+    var insc   = inscRes;
 
     if (!coh) { mostrarError('Cohorte no encontrada.'); return; }
 
@@ -180,9 +182,22 @@ async function cargar(sesion, cohorteId) {
     document.getElementById('cohTitle').textContent = coh.nombre || 'Cohorte';
     document.getElementById('cohSub').textContent   = progNom + (coh.fecha_inicio ? ' · ' + coh.fecha_inicio.substring(0,7) : '') + (coh.fecha_fin ? ' → ' + coh.fecha_fin.substring(0,7) : '');
 
+    // Agrupar cobros por DNI (necesario para stats y tabla)
+    var porDni = {};
+    cobros.forEach(function(c) {
+        if (!porDni[c.dni]) porDni[c.dni] = [];
+        porDni[c.dni].push(c);
+    });
+
     // Stats
     var totalEst = new Set(insc.map(function(i){ return i.estudiante_id; })).size;
     var dnisConMora = new Set(cobros.filter(function(c){ return c.estado==='EN_MORA'; }).map(function(c){ return c.dni; }));
+    var alDiaCount = dnis.filter(function(dni) {
+        var cobs = porDni[dni] || [];
+        if (cobs.some(function(c){ return c.estado==='EN_MORA'; })) return false;
+        var deuda = cobs.reduce(function(s,c){ if(c.estado==='ABONADA') return s; return s+Number(c.saldo_pendiente||c.monto_final||0); }, 0);
+        return deuda === 0;
+    }).length;
     var recaudado   = cobros.filter(function(c){ return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL'; })
                             .reduce(function(s,c){ return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0)); },0);
     var egrExec     = egres.filter(function(e){ return e.tipo==='EJECUTADO'; })
@@ -190,7 +205,7 @@ async function cargar(sesion, cohorteId) {
     var saldo = recaudado - egrExec;
 
     document.getElementById('s-est').textContent   = totalEst;
-    document.getElementById('s-aldia').textContent = totalEst - dnisConMora.size;
+    document.getElementById('s-aldia').textContent = alDiaCount;
     document.getElementById('s-mora').textContent  = dnisConMora.size;
     document.getElementById('s-rec').textContent   = fM(recaudado);
     document.getElementById('s-egr').textContent   = fM(egrExec);
@@ -198,13 +213,7 @@ async function cargar(sesion, cohorteId) {
     sEl.textContent = fM(saldo);
     sEl.className   = 'stat-value ' + (saldo < 0 ? 'danger' : 'success');
 
-    // Construir tabla de estudiantes: agrupar cobros por DNI
-    var porDni = {};
-    cobros.forEach(function(c) {
-        if (!porDni[c.dni]) porDni[c.dni] = [];
-        porDni[c.dni].push(c);
-    });
-
+    // Construir tabla de estudiantes
     _estudiantes = dnis.map(function(dni) {
         var usu   = usuMap[dni] || {};
         var cobs  = porDni[dni] || [];

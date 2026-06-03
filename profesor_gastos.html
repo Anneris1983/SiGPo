@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gastos - Profesor | SiGPo</title>
+    <title>Gastos - Profesor</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #5C1018; --accent: #C49A2A; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
+
         body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
 
         /* HEADER */
@@ -55,7 +55,6 @@
         thead tr { background: var(--primary); color: white; }
         th { padding: 12px 14px; text-align: left; font-weight: 600; font-size: 12px; white-space: nowrap; }
         td { padding: 12px 14px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-        tbody tr:hover { background: #fafaf8; }
         .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-ejecutado  { background: #fce7e7; color: #991b1b; }
         .badge-proyectado { background: #fef3c7; color: #92400e; }
@@ -74,8 +73,8 @@
         @media (max-width: 700px)  { .summary-cards { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 640px) { .header, .container { padding-left: 16px; padding-right: 16px; } }
     </style>
-    <link rel="stylesheet" href="sigpo-theme.css">
-    <link rel="stylesheet" href="sigpo-compact.css">
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
     <style>
         .container { max-width: 100% !important; width: 100% !important; margin: 20px 0 !important; padding: 0 32px !important; box-sizing: border-box !important; }
     </style>
@@ -195,7 +194,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
+<script src="supabase.js?v=20250529"></script>
 <script>
 var _todos = [];
 var _progMap = {};
@@ -342,6 +341,9 @@ function renderTabla(data) {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+    var _sb = await getSupabase();
+    var { data: { session: _session } } = await _sb.auth.getSession();
+    if (!_session) { window.location.href = 'portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion || sesion.rol !== 'PROFESOR') { window.location.href = 'portal_login.html'; return; }
     document.getElementById('header-sub').textContent = (sesion.nombre || 'Profesor/a') + ' · Gastos de mis programas y cohortes asignadas';
@@ -383,7 +385,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     } catch(err) {
         console.error(err);
-        document.getElementById('tabla-body').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#ef4444;padding:40px;">Error al cargar datos</td></tr>';
+        document.getElementById('tabla-body').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--clr-danger);padding:40px;">Error al cargar datos</td></tr>';
     }
 });
 </script>

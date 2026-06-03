@@ -22,7 +22,7 @@
 
 var SUPABASE_URL  = 'https://fdevypdowdhqaxvfiywt.supabase.co';
 var SUPABASE_KEY  = 'REEMPLAZAR_CON_SERVICE_ROLE_KEY'; // ← solo en script.google.com, nunca en el repo
-var SECRET        = 'SIGPO_KEY_FCE_2025';
+var SECRET        = 'REEMPLAZAR_CON_SECRETO'; // ← solo en script.google.com; debe coincidir con GAS_SECRET (secreto Edge Function en Supabase)
 var NOMBRE_INST   = 'Secretaría de Posgrado — FCE UNCUYO';
 
 // ══════════════════════════════════════════════════════════════
@@ -40,8 +40,11 @@ var PROGRAMA_IDS = [REEMPLAZAR_CON_ID_DEL_PROGRAMA]; // ← número(s), sin comi
 function ejecutarTareasDiarias() {
   var dia = new Date().getDate();
   Logger.log('=== SiGPo coordinador — día ' + dia + ' — programas: [' + PROGRAMA_IDS.join(',') + '] ===');
-  if (dia === 1)  enviarRecordatoriosVencimiento();
-  if (dia === 16) enviarReclamosMora();
+  if (dia === 1) {
+    enviarRecordatoriosVencimiento(); // recordatorio de cuota que vence este mes
+    enviarReclamosMora();             // reclamo de mora a los morosos
+  }
+  if (dia === 16) enviarReclamosMora(); // segundo reclamo de mora del mes
 }
 
 function configurarTriggers() {
@@ -50,6 +53,72 @@ function configurarTriggers() {
   });
   ScriptApp.newTrigger('ejecutarTareasDiarias').timeBased().everyDays(1).atHour(7).create();
   Logger.log('✅ Trigger diario 07:00 configurado.');
+}
+
+// ══════════════════════════════════════════════════════════════
+// COLA DE RECLAMOS — reemplaza al doPost (que fallaba por POST externo)
+// El botón inserta en 'reclamos_pendientes'. Supabase (pg_net) le pega
+// a doGet?action=procesar al instante (event-driven, sin polling).
+// doGet agenda un disparador de una sola vez → procesarReclamosPendientes
+// drena la cola con todo el presupuesto de ejecución (hasta ~6 min).
+// ══════════════════════════════════════════════════════════════
+
+// Llamado por Supabase (GET) cuando hay un reclamo nuevo. Agenda el procesamiento.
+function doGet(e) {
+  var out = ContentService.createTextOutput();
+  out.setMimeType(ContentService.MimeType.JSON);
+  try {
+    var p = (e && e.parameter) || {};
+    if (p.secret !== SECRET) { out.setContent(JSON.stringify({ ok:false, error:'No autorizado' })); return out; }
+    if (p.action === 'procesar') {
+      // Dedupe: si ya hay un procesamiento agendado, no creamos otro.
+      var yaAgendado = ScriptApp.getProjectTriggers().some(function(t) {
+        return t.getHandlerFunction() === 'procesarReclamosPendientes';
+      });
+      if (!yaAgendado) ScriptApp.newTrigger('procesarReclamosPendientes').timeBased().after(3000).create();
+      out.setContent(JSON.stringify({ ok:true, agendado: !yaAgendado }));
+    } else {
+      out.setContent(JSON.stringify({ ok:true, msg:'SiGPo mailer activo' }));
+    }
+  } catch(err) {
+    out.setContent(JSON.stringify({ ok:false, error: err.message }));
+  }
+  return out;
+}
+
+function procesarReclamosPendientes() {
+  // Limpiar los disparadores de una sola vez creados por doGet (evita acumulación).
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'procesarReclamosPendientes') ScriptApp.deleteTrigger(t);
+  });
+
+  var total = 0, vueltas = 0;
+  while (vueltas < 10) {  // hasta 10 tandas de 50 = 500 por ejecución
+    vueltas++;
+    var pend = _sbGet(
+      'reclamos_pendientes?select=id,to_email,subject,body,reply_to,intentos' +
+      '&estado=eq.pendiente' +
+      '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
+      '&order=created_at.asc&limit=50'
+    );
+    if (!pend.length) break;
+
+    pend.forEach(function(r) {
+      try {
+        var opts = { name: NOMBRE_INST, htmlBody: String(r.body || '').replace(/\n/g, '<br>') };
+        if (r.reply_to) opts.replyTo = r.reply_to;
+        MailApp.sendEmail(r.to_email, r.subject, r.body, opts);
+        _sbPatch('reclamos_pendientes?id=eq.' + r.id, { estado: 'enviado', sent_at: new Date().toISOString() });
+        total++;
+      } catch(err) {
+        _sbPatch('reclamos_pendientes?id=eq.' + r.id, {
+          estado: 'error', error_msg: String(err.message).slice(0,300), intentos: (r.intentos || 0) + 1
+        });
+        Logger.log('❌ error #' + r.id + ': ' + err.message);
+      }
+    });
+  }
+  Logger.log('Reclamos procesados: ' + total);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -192,6 +261,26 @@ function _sbGet(path) {
   }
 }
 
+function _sbPatch(path, data) {
+  try {
+    var resp = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + path, {
+      method: 'patch',
+      contentType: 'application/json',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+      payload: JSON.stringify(data),
+      muteHttpExceptions: true
+    });
+    if (resp.getResponseCode() >= 300) {
+      Logger.log('_sbPatch error ' + resp.getResponseCode() + ': ' + resp.getContentText().substring(0,200));
+      return false;
+    }
+    return true;
+  } catch(err) {
+    Logger.log('_sbPatch excepción: ' + err.message);
+    return false;
+  }
+}
+
 function _cuentasCorrientesLote(dnis, cohorteIds) {
   if (!dnis.length || !cohorteIds.length) return {};
   var todas = _sbGet(
@@ -215,13 +304,27 @@ function _cargarContexto(cobros) {
     porDni[c.dni].push(c);
   });
   var dnis      = Object.keys(porDni);
-  var usuarios  = dnis.length ? _sbGet('usuarios?select=dni,nombre,apellido,email&dni=in.(' + dnis.join(',') + ')') : [];
+  // El email del destinatario puede estar en 'usuarios' (si tiene cuenta) o en
+  // 'estudiantes' (alta administrativa sin cuenta). Combinamos ambas fuentes:
+  // se prioriza usuarios y, si falta el dato, se completa desde estudiantes.
+  var usuarios    = dnis.length ? _sbGet('usuarios?select=dni,nombre,apellido,email&dni=in.(' + dnis.join(',') + ')') : [];
+  var estudiantes = dnis.length ? _sbGet('estudiantes?select=dni,nombre,apellido,email&dni=in.(' + dnis.join(',') + ')') : [];
+  var usuMap = _indexar(estudiantes, 'dni');       // base: estudiantes
+  usuarios.forEach(function(u) {                    // usuarios pisa/completa
+    var prev = usuMap[u.dni] || {};
+    usuMap[u.dni] = {
+      dni:      u.dni,
+      nombre:   u.nombre   || prev.nombre   || '',
+      apellido: u.apellido || prev.apellido || '',
+      email:    u.email    || prev.email    || ''
+    };
+  });
   var programas = _sbGet('programas?select=programa_id,nombre');
   var cohIds    = _uniq(cobros.map(function(c){ return c.cohorte_id; }));
   var cohortes  = cohIds.length ? _sbGet('cohortes?select=cohorte_id,nombre,programa_id&cohorte_id=in.(' + cohIds.join(',') + ')') : [];
   return {
     porDni:  porDni,
-    usuMap:  _indexar(usuarios,  'dni'),
+    usuMap:  usuMap,
     progMap: _indexar(programas, 'programa_id'),
     cohMap:  _indexar(cohortes,  'cohorte_id')
   };
@@ -292,7 +395,7 @@ function _wrapHtml(contenido) {
   return '<!DOCTYPE html><html><head><meta charset="UTF-8">' + _CSS + '</head><body>' +
     '<div class="hdr"><h1>' + NOMBRE_INST + '</h1><p>Sistema de Gestión de Posgrado</p></div>' +
     '<div class="bod">' + contenido + '</div>' +
-    '<div class="ftr">Este es un mensaje automático del sistema SiGPo. Por consultas comuníquese con la Secretaría de Posgrado.</div>' +
+    '<div class="ftr">Este es un mensaje automático. Por consultas comuníquese con la Secretaría de Posgrado.</div>' +
     '</body></html>';
 }
 
@@ -311,20 +414,42 @@ function _filasCC(cc) {
 }
 
 function _htmlRecordatorio(nombre, prog, mesNom, anio, cuotasMes, cc) {
-  var filasCuota = cuotasMes.map(function(c) {
-    return '<tr class="pend"><td>' + (c.concepto||'—') + '</td><td>' + (c.periodo||'—') + '</td>' +
-           '<td>15/' + String(new Date().getMonth()+1).padStart(2,'0') + '/' + anio + '</td>' +
-           '<td><strong>' + _fmtPeso(c.monto_final) + '</strong></td></tr>';
-  }).join('');
-  var deudaPrev = cc.filter(function(c){ return c.estado === 'EN_MORA'; })
-                    .reduce(function(s,c){ return s + Number(c.saldo_pendiente||c.monto_final||0); }, 0);
+  var deudaMora = cc.filter(function(c){ return c.estado === 'EN_MORA'; })
+                   .reduce(function(s,c){ return s + Number(c.saldo_pendiente||c.monto_final||0); }, 0);
+
+  // Sección cuota del mes (solo si tiene vencimiento en el mes actual)
+  var seccionMes = '';
+  if (cuotasMes.length > 0) {
+    var fechaVenc  = _fmtFecha(cuotasMes[0].fecha_vencimiento);
+    var filasCuota = cuotasMes.map(function(c) {
+      return '<tr class="pend"><td>' + (c.concepto||'—') + '</td><td>' + (c.periodo||'—') + '</td>' +
+             '<td>' + _fmtFecha(c.fecha_vencimiento) + '</td>' +
+             '<td><strong>' + _fmtPeso(c.monto_final) + '</strong></td></tr>';
+    }).join('');
+    seccionMes =
+      '<div class="aviso">Le recordamos que la cuota del mes de <strong>' + mesNom + ' ' + anio + '</strong> ' +
+      'vence el <strong>' + fechaVenc + '</strong>.</div>' +
+      '<table><tr><th>Concepto</th><th>Período</th><th>Vencimiento</th><th>Monto</th></tr>' + filasCuota + '</table>';
+  }
+
+  // Sección mora (tanto para "tiene cuota + mora" como para "solo mora")
+  var seccionMora = deudaMora > 0
+    ? '<div class="alerta">' + (cuotasMes.length > 0 ? 'Además, registra' : 'Registra') +
+      ' una deuda en mora de <span class="deuda">' + _fmtPeso(deudaMora) + '</span>. ' +
+      'Tenga en cuenta que sobre el saldo en mora se aplican los intereses vigentes. Le solicitamos regularizar su situación a la brevedad.</div>'
+    : '';
+
+  // Intro diferenciada: con o sin cuota del mes
+  var intro = cuotasMes.length > 0
+    ? '<p>Estimado/a <strong>' + nombre + '</strong>,</p>'
+    : '<p>Estimado/a <strong>' + nombre + '</strong>,</p>' +
+      '<p>Con motivo del inicio del mes de <strong>' + mesNom + ' ' + anio + '</strong> le informamos ' +
+      'sobre el estado de sus cuotas en el programa <strong>' + prog + '</strong>.</p>';
+
   return _wrapHtml(
-    '<p>Estimado/a <strong>' + nombre + '</strong>,</p>' +
-    '<div class="aviso">Le recordamos que la/s siguiente/s cuota/s del programa <strong>' + prog + '</strong> ' +
-    'vence/n el <strong>15 de ' + mesNom + ' ' + anio + '</strong>.</div>' +
-    '<table><tr><th>Concepto</th><th>Período</th><th>Vencimiento</th><th>Monto</th></tr>' + filasCuota + '</table>' +
-    (deudaPrev > 0 ?
-      '<div class="alerta">Además, registra una deuda previa en mora de <span class="deuda">' + _fmtPeso(deudaPrev) + '</span>. Le solicitamos regularizar su situación.</div>' : '') +
+    intro +
+    seccionMes +
+    seccionMora +
     '<h3 style="color:#1e3a5f;">Estado de cuenta corriente</h3>' +
     '<table><tr><th>Concepto</th><th>Período</th><th>Vencimiento</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr>' +
     _filasCC(cc) + '</table>' +
