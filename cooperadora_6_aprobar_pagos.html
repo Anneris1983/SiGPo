@@ -489,13 +489,28 @@
             +'<input type="file" id="recibo-file" accept=".pdf,.jpg,.jpeg,.png" style="width:100%;padding:6px;border:1.5px dashed #C49A2A;border-radius:6px;cursor:pointer;font-size:12px;background:white;">'
             +'</div>';
 
-        /* Pago parcial input */
+        /* Pago parcial input
+           - Se pre-carga con el monto que el estudiante declaró en ESTA
+             transferencia (monto_transferido), no con el acumulado.
+           - El tope (max) es el saldo pendiente real, no el total de la cuota. */
+        var saldoCap   = (c.saldo_pendiente != null && Number(c.saldo_pendiente) > 0)
+            ? Number(c.saldo_pendiente) : Number(c.monto_final);
+        var prefillMt  = (c.monto_transferido && Number(c.monto_transferido) > 0)
+            ? Number(c.monto_transferido) : '';
+        var yaAbonado  = (c.monto_abonado != null && Number(c.monto_abonado) > 0)
+            ? Number(c.monto_abonado) : 0;
+        var contextoHtml = yaAbonado > 0
+            ? '<div style="font-size:11px;color:#92400e;margin-bottom:8px;background:#fff7ed;border-radius:6px;padding:6px 10px;">Ya abonado en pagos previos: <strong>'+fMillones(yaAbonado)+'</strong> · Saldo pendiente: <strong>'+fMillones(saldoCap)+'</strong></div>'
+            : '';
         var parcialHtml = '<div style="margin-top:12px;padding:14px;background:#f0f8ff;border-radius:8px;border:1px solid #cce5ff;">'
-            +'<div style="font-size:13px;font-weight:600;color:#5C1018;margin-bottom:8px;">Monto parcial a aprobar:</div>'
+            +'<div style="font-size:13px;font-weight:600;color:#5C1018;margin-bottom:8px;">Monto de ESTA transferencia a aprobar:</div>'
+            +contextoHtml
             +'<div style="display:flex;gap:8px;align-items:center;">'
-            +'<input type="number" id="monto-parcial" placeholder="Ingresá el monto" min="1" max="'+Number(c.monto_final)+'" step="100" style="flex:1;padding:9px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:\'DM Sans\',sans-serif;">'
+            +'<input type="number" id="monto-parcial" value="'+prefillMt+'" placeholder="Monto de este pago" min="1" max="'+saldoCap+'" step="100" style="flex:1;padding:9px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:\'DM Sans\',sans-serif;">'
             +'<button class="btn" style="background:var(--clr-warning);color:white;white-space:nowrap;" onclick="accionParcial()">📊 Aprobar Parcial</button>'
-            +'</div></div>';
+            +'</div>'
+            +'<div style="font-size:11px;color:#64748b;margin-top:6px;">Ingresá solo lo que pagó en este comprobante, no el total acumulado. El sistema lo suma a lo ya abonado.</div>'
+            +'</div>';
 
         cuotasDiv.innerHTML = comprobanteHtml
             +'<div style="margin-top:8px;font-size:13px;color:#555;margin-bottom:8px;">Vencimiento: <strong>'+fFecha(c.fecha_vencimiento)+'</strong></div>'
