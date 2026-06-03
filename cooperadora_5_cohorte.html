@@ -1318,6 +1318,9 @@
                 <!-- Comprobante existente -->
                 <div id="aprobComprobanteArea" style="margin-bottom:14px;"></div>
 
+                <!-- Banner: monto declarado por el estudiante (se muestra solo en pagos parciales declarados) -->
+                <div id="apDeclaradoBanner" style="display:none;margin-bottom:14px;padding:12px 16px;background:#fef9e7;border-radius:8px;border:1px solid #f0d060;font-size:13px;color:#92400e;"></div>
+
                 <!-- Opciones de pago -->
                 <div class="ap-sec-title">¿Cómo registrar este pago?</div>
                 <div class="ap-payment-opts">
@@ -3054,6 +3057,24 @@
                 ? Number(cuota.montoTransferido) : '';
             document.getElementById('apMontoAbonado').value = mtDeclarado;
             apCalcularResto();
+
+            // Si el estudiante declaró un monto parcial, auto-seleccionar "Pago parcial"
+            // y mostrar un banner informativo para evitar aprobación accidental como "Completo".
+            var banner = document.getElementById('apDeclaradoBanner');
+            var esParcialDec = mtDeclarado !== '' && Number(mtDeclarado) > 0 && Number(mtDeclarado) < (cuota ? cuota.montoFinal : Infinity);
+            if (esParcialDec) {
+                apSelectTipo('partial');
+                if (banner) {
+                    var saldoRest = Math.max(0, (cuota.montoFinal || 0) - Number(mtDeclarado));
+                    banner.style.display = 'block';
+                    banner.innerHTML = '💰 El estudiante declaró un <strong>pago parcial</strong> de <strong>' + apFmt(Number(mtDeclarado)) + '</strong>'
+                        + ' sobre un total de ' + apFmt(cuota.montoFinal || 0)
+                        + '<br><span style="font-size:12px;opacity:.8;">Saldo que quedaría pendiente: <strong>' + apFmt(saldoRest) + '</strong></span>';
+                }
+            } else {
+                apSelectTipo('full');
+                if (banner) banner.style.display = 'none';
+            }
 
             var sub = estudiante ? (estudiante.nombreCompleto + ' · ' + (cuota.nombre || 'Cuota') + ' · ' + apFmt(total)) : cobroId;
             document.getElementById('aprobModalSub').textContent = sub;
