@@ -948,16 +948,28 @@ async function obtenerProgramasCoordinador(usuarioId) {
  * Usado por las páginas de coordinador/profesor para filtrar datos.
  * Usa usuario_id cacheado en localStorage para hacer una sola consulta.
  */
+/**
+ * Resuelve el usuario_id a partir del DNI de forma AUTORITATIVA (consulta la tabla
+ * usuarios; la RLS permite leer la fila propia). NO usa el sigpo_usuario_id de
+ * localStorage como fuente, porque ese valor es global al navegador y se contamina
+ * cuando se inicia sesión con distintos usuarios en pestañas/sesiones distintas
+ * (causa de que un profesor viera "0 asignaciones": leía el id de otro usuario).
+ * Cachea en memoria por dni (no en localStorage) para evitar reconsultas en la página.
+ */
+var _uidPorDniCache = {};
+async function _resolverUsuarioIdPorDni(sb, dni) {
+    var key = String(dni);
+    if (_uidPorDniCache[key]) return _uidPorDniCache[key];
+    const { data: u } = await sb.from('usuarios').select('usuario_id').eq('dni', key).single();
+    if (!u) return null;
+    _uidPorDniCache[key] = String(u.usuario_id);
+    return _uidPorDniCache[key];
+}
+
 async function obtenerProgramasAsignadosPorDni(dni) {
     const sb = await getSupabase();
-    let uid = localStorage.getItem('sigpo_usuario_id');
-    if (!uid) {
-        // Fallback: buscar por dni si el cache no está disponible
-        const { data: u } = await sb.from('usuarios').select('usuario_id').eq('dni', String(dni)).single();
-        if (!u) return [];
-        uid = String(u.usuario_id);
-        localStorage.setItem('sigpo_usuario_id', uid);
-    }
+    const uid = await _resolverUsuarioIdPorDni(sb, dni);
+    if (!uid) return [];
     const { data: asignaciones } = await sb
         .from('coordinadores_programas')
         .select('programa_id')
@@ -967,20 +979,15 @@ async function obtenerProgramasAsignadosPorDni(dni) {
 }
 
 /**
- * Retorna { progIds, cohIds } para un coordinador.
+ * Retorna { progIds, cohIds } para un coordinador/profesor.
  * progIds = programas asignados sin cohorte específica (ve todas las cohortes del programa).
  * cohIds  = cohortes específicas asignadas.
- * Usa usuario_id cacheado en localStorage para hacer una sola consulta.
+ * Resuelve el usuario_id por DNI (autoritativo), no por el cache global de localStorage.
  */
 async function obtenerAsignacionesCoordinador(dni) {
     const sb = await getSupabase();
-    let uid = localStorage.getItem('sigpo_usuario_id');
-    if (!uid) {
-        const { data: u } = await sb.from('usuarios').select('usuario_id').eq('dni', String(dni)).single();
-        if (!u) return { progIds: [], cohIds: [] };
-        uid = String(u.usuario_id);
-        localStorage.setItem('sigpo_usuario_id', uid);
-    }
+    const uid = await _resolverUsuarioIdPorDni(sb, dni);
+    if (!uid) return { progIds: [], cohIds: [] };
     const { data: asigs } = await sb
         .from('coordinadores_programas')
         .select('programa_id, cohorte_id')

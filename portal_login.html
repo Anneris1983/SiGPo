@@ -345,14 +345,20 @@ async function iniciarSesion() {
             return;
         }
 
-        var respPre = await sb.from('usuarios').select('rol, nombre_completo, email, programa_id, dni').eq('dni', dni).single();
+        var respPre = await sb.from('usuarios').select('usuario_id, rol, nombre_completo, apellido, nombre, email, programa_id, dni').eq('dni', dni).single();
         var usuario = respPre.data;
 
         localStorage.setItem('sigpo_rol', usuario.rol);
         localStorage.setItem('sigpo_nombre', usuario.nombre_completo);
+        localStorage.setItem('sigpo_apellido', usuario.apellido || '');
+        localStorage.setItem('sigpo_nombre2', usuario.nombre || '');
         localStorage.setItem('sigpo_dni', usuario.dni);
         localStorage.setItem('sigpo_email', usuario.email);
         localStorage.setItem('sigpo_programa_id', usuario.programa_id || '');
+        // CRÍTICO: persistir el usuario_id. Sin esto, queda el id del login
+        // anterior en localStorage y obtenerAsignacionesCoordinador / dashboards
+        // de profesor y coordinador leen las asignaciones del usuario equivocado.
+        localStorage.setItem('sigpo_usuario_id', String(usuario.usuario_id || ''));
 
         var destino = RUTAS[usuario.rol] || 'portal_estudiante_2_dashboard.html';
         window.location.href = destino;
@@ -439,9 +445,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     await sb.auth.signOut();
     localStorage.removeItem('sigpo_rol');
     localStorage.removeItem('sigpo_nombre');
+    localStorage.removeItem('sigpo_apellido');
+    localStorage.removeItem('sigpo_nombre2');
     localStorage.removeItem('sigpo_dni');
     localStorage.removeItem('sigpo_email');
     localStorage.removeItem('sigpo_programa_id');
+    localStorage.removeItem('sigpo_usuario_id');
     document.getElementById('dni').focus();
 });
 </script>
