@@ -407,7 +407,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js?v=20250529"></script>
 <script>
-var G = { egresos: [], programas: [], gastoAEjecutar: null, editing: null, tabActiva: 'proyectados' };
+var G = { egresos: [], programas: [], gastoAEjecutar: null, editing: null, tabActiva: 'proyectados',
+          filtros: { proyectados: { texto:'', categoria:'', programa:'' }, ejecutados: { texto:'', categoria:'', programa:'' } } };
 
 var fMonto = fMontoConSigno;
 function fFechaCorta(f) {
@@ -433,6 +434,24 @@ function renderTabla(tipo) {
     var lista = tipo==='proyectados'
         ? G.egresos.filter(function(e){ return !esEjecutado(e); })
         : G.egresos.filter(esEjecutado);
+
+    // Aplicar filtros de búsqueda / categoría / programa de la pestaña.
+    var f = (G.filtros && G.filtros[tipo]) || { texto:'', categoria:'', programa:'' };
+    var q = (f.texto || '').trim().toLowerCase();
+    if (q) {
+        lista = lista.filter(function(e){
+            return (String(e.concepto||'') + ' ' + String(e.proveedor||'')).toLowerCase().indexOf(q) >= 0;
+        });
+    }
+    if (f.categoria && f.categoria.indexOf('Todas') !== 0) {
+        lista = lista.filter(function(e){ return (e.categoria||'') === f.categoria; });
+    }
+    if (f.programa && f.programa.indexOf('Todos') !== 0) {
+        lista = lista.filter(function(e){
+            return String(e.programa_id||'') === f.programa || nomProg(e.programa_id) === f.programa;
+        });
+    }
+
     var tbody = document.querySelector('#tabla' + (tipo==='proyectados'?'Proyectados':'Ejecutados') + ' tbody');
     if (!tbody) return;
     if (!lista.length) { tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;color:#aaa;">No hay registros</td></tr>'; return; }
@@ -599,10 +618,10 @@ async function confirmarEjecucion() {
 
 function importarProyectados() { document.getElementById('modalImportar').classList.add('active'); document.getElementById('tipoImportacion').value='proyectados'; }
 function importarEjecutados() { document.getElementById('modalImportar').classList.add('active'); document.getElementById('tipoImportacion').value='ejecutados'; }
-function procesarExcel(file) { if (!file) return; cerrarModal('modalImportar'); }
-function buscar(texto, tipo) { renderTabla(tipo); }
-function filtrarCategoria(cat, tipo) { renderTabla(tipo); }
-function filtrarPrograma(prog, tipo) { renderTabla(tipo); }
+function procesarExcel(file) { if (!file) return; cerrarModal('modalImportar'); alert('Importación no disponible aún.'); }
+function buscar(texto, tipo) { G.filtros[tipo].texto = texto || ''; renderTabla(tipo); }
+function filtrarCategoria(cat, tipo) { G.filtros[tipo].categoria = cat || ''; renderTabla(tipo); }
+function filtrarPrograma(prog, tipo) { G.filtros[tipo].programa = prog || ''; renderTabla(tipo); }
 
 function exportarExcelTab(tipo) {
     var esEjec = tipo === 'ejecutados';
@@ -655,11 +674,8 @@ async function cargarDatos() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-    var sb = await getSupabase();
-    var { data: { session } } = await sb.auth.getSession();
-    if (!session) { window.location.href = 'portal_login.html'; return; }
-    var sesion = getSesion();
-    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    var sesion = await requireAuth();
+    if (!sesion || sesion.rol !== 'COOPERADORA') { window.location.href = 'portal_login.html'; return; }
     cargarDatos();
     obtenerNotificaciones('COOPERADORA').then(renderNotificaciones);
 });

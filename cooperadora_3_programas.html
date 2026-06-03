@@ -202,10 +202,10 @@
                 +   '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">'
                 +     '<div class="program-icon">' + iconoTipo(p.tipo) + '</div>'
                 +     '<span style="display:inline-flex;align-items:center;gap:5px;background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">'
-                +       '<span style="width:7px;height:7px;border-radius:50%;background:' + estadoColor + ';display:inline-block;"></span>' + estadoLabel
+                +       '<span style="width:7px;height:7px;border-radius:50%;background:' + estadoColor + ';display:inline-block;"></span>' + esc(estadoLabel)
                 +     '</span>'
                 +   '</div>'
-                +   '<div class="program-name" style="margin-bottom:12px;">' + (p.nombre || '—') + '</div>'
+                +   '<div class="program-name" style="margin-bottom:12px;">' + esc(p.nombre || '—') + '</div>'
                 +   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:13px;color:#555;margin-bottom:12px;">'
                 +     '<div>Estudiantes: <strong>' + (p.estudiantes || 0) + '</strong></div>'
                 +     '<div>Cohortes: <strong>' + (p.cohortes || 0) + '</strong></div>'
@@ -274,11 +274,8 @@
 
     /* ══ INIT ══ */
     document.addEventListener('DOMContentLoaded', async function() {
-        var _sb = await getSupabase();
-        var { data: { session: _session } } = await _sb.auth.getSession();
-        if (!_session) { window.location.href = 'portal_login.html'; return; }
-        var sesion = getSesion();
-        if (!sesion) { navegar('portal_login.html'); return; }
+        var sesion = await requireAuth();
+        if (!sesion || sesion.rol !== 'COOPERADORA') { window.location.href = 'portal_login.html'; return; }
 
         Promise.all([
             obtenerDashboardAdmin(),

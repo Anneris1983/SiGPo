@@ -443,11 +443,12 @@
     function fmt(n) { return '$' + (n||0).toLocaleString('es-AR', {minimumFractionDigits:2}); }
 
     function calculateRemaining() {
-        var total = _cobroData ? (_cobroData.monto_final || _cobroData.monto || 0) : 0;
+        // Partimos del saldo pendiente real (descuenta lo ya abonado), no del monto total.
+        var saldo = _cobroData ? (_cobroData.saldo_pendiente != null ? Number(_cobroData.saldo_pendiente) : (_cobroData.monto_final || _cobroData.monto || 0)) : 0;
         var paid = parseFloat(document.getElementById('monto-abonado').value) || 0;
-        document.getElementById('calc-total').textContent = fmt(total);
+        document.getElementById('calc-total').textContent = fmt(saldo);
         document.getElementById('calc-paid').textContent = fmt(paid);
-        document.getElementById('calc-remaining').textContent = fmt(total - paid);
+        document.getElementById('calc-remaining').textContent = fmt(saldo - paid);
     }
 
     function handleFileUpload(event) {
@@ -487,8 +488,9 @@
         if (vals[4]) { vals[4].textContent = fmt(cobro.monto_final || cobro.monto); vals[4].classList.add('highlight'); }
         if (vals[5]) { vals[5].textContent = estadoLabel[cobro.estado] || cobro.estado || '—'; if (cobro.estado==='EN_MORA') vals[5].style.color='var(--danger)'; }
         var total = cobro.monto_final || cobro.monto || 0;
-        document.getElementById('calc-total').textContent = fmt(total);
-        document.getElementById('calc-remaining').textContent = fmt(total);
+        var saldo = cobro.saldo_pendiente != null ? Number(cobro.saldo_pendiente) : total;
+        document.getElementById('calc-total').textContent = fmt(saldo);
+        document.getElementById('calc-remaining').textContent = fmt(saldo);
         var descFull = document.querySelector('#full-option .radio-description');
         if (descFull) descFull.textContent = 'El estudiante pagó el monto total de la cuota ('+fmt(total)+')';
     }
@@ -511,7 +513,7 @@
         var esFull = document.getElementById('full-payment').checked;
         var file = document.getElementById('recibo-file').files[0];
         if (!file) { alert('Debes subir el recibo oficial antes de aprobar.'); return; }
-        var tipo = esFull ? 'COMPLETO' : 'PARCIAL';
+        var tipo = esFull ? 'COMPLETO' : 'parcial';
         var monto = esFull ? (_cobroData.monto_final || _cobroData.monto) : (parseFloat(document.getElementById('monto-abonado').value) || 0);
         if (!esFull && (!monto || monto <= 0)) { alert('Ingresá el monto abonado.'); return; }
         var btn = document.getElementById('btn-aprobar');
@@ -533,11 +535,8 @@
     // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 
     document.addEventListener('DOMContentLoaded', async function() {
-        var _sb = await getSupabase();
-        var { data: { session: _session } } = await _sb.auth.getSession();
-        if (!_session) { window.location.href = 'portal_login.html'; return; }
-        var sesion = getSesion();
-        if (!sesion) { window.location.href = 'portal_login.html'; return; }
+        var sesion = await requireAuth();
+        if (!sesion || sesion.rol !== 'COOPERADORA') { window.location.href = 'portal_login.html'; return; }
         document.getElementById('btn-aprobar').onclick = aprobarCobro;
         cargarCobro();
         obtenerNotificaciones('COOPERADORA').then(renderNotificaciones);
@@ -584,27 +583,27 @@
                 <div class="info-grid">
                     <div class="info-item">
                         <div class="info-label">Estudiante</div>
-                        <div class="info-value">María González</div>
+                        <div class="info-value">—</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">DNI</div>
-                        <div class="info-value">23456789</div>
+                        <div class="info-value">—</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Programa</div>
-                        <div class="info-value">Esp. Costos 2025-2026</div>
+                        <div class="info-value">—</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Cuota</div>
-                        <div class="info-value">Cuota 5 - Diciembre 2025</div>
+                        <div class="info-value">—</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Monto Total Cuota</div>
-                        <div class="info-value highlight">$115.762,50</div>
+                        <div class="info-value highlight">—</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Estado Actual</div>
-                        <div class="info-value" style="color: var(--danger);">En Mora</div>
+                        <div class="info-value">—</div>
                     </div>
                 </div>
             </div>

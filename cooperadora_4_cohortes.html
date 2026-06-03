@@ -364,7 +364,7 @@ function renderCohortes(data) {
         return '<div class="cohorte-card' + (esActiva ? ' active' : '') + '" onclick="irACohorte(' + c.id + ', event)">'
             + '<div class="cohorte-left">'
             + '<div class="cohorte-title">' + esc(c.nombre || 'Cohorte') + '</div>'
-            + '<div class="cohorte-dates">' + (c.fechaInicio || '') + ' – ' + (c.fechaFin || '') + '</div>'
+            + '<div class="cohorte-dates">' + esc(c.fechaInicio || '') + ' – ' + esc(c.fechaFin || '') + '</div>'
             + '<div class="cohorte-stats">'
             + '<div class="stat-box"><div class="stat-label">ESTUDIANTES</div><div class="stat-value">' + (c.estudiantes || 0) + '</div></div>'
             + '<div class="stat-box"><div class="stat-label">AL DÍA</div><div class="stat-value" style="color:var(--clr-success)">' + (c.alDia || 0) + '</div></div>'
@@ -393,11 +393,8 @@ function cargarCohortes() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-    var _sb = await getSupabase();
-    var { data: { session: _session } } = await _sb.auth.getSession();
-    if (!_session) { window.location.href = 'portal_login.html'; return; }
-    var sesion = getSesion();
-    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    var sesion = await requireAuth();
+    if (!sesion || sesion.rol !== 'COOPERADORA') { window.location.href = 'portal_login.html'; return; }
     if (_programaId) cargarCohortes();
     else document.querySelector('.cohortes-list').innerHTML = '<div style="padding:40px;text-align:center;color:#999;">No se especificó un programa</div>';
     obtenerNotificaciones('COOPERADORA').then(renderNotificaciones);

@@ -348,11 +348,8 @@
     var _programaId = _params.get('programaId') || _params.get('programa_id') || '';
 
     document.addEventListener('DOMContentLoaded', async function() {
-        var sb = await getSupabase();
-        var { data: { session } } = await sb.auth.getSession();
-        if (!session) { window.location.href = 'portal_login.html'; return; }
-        var sesion = getSesion();
-        if (!sesion) { window.location.href = 'portal_login.html'; return; }
+        var sesion = await requireAuth();
+        if (!sesion || sesion.rol !== 'COOPERADORA') { window.location.href = 'portal_login.html'; return; }
 
         // Actualizar breadcrumb con parámetros de vuelta
         var volverUrl = 'cooperadora_5_cohorte.html';

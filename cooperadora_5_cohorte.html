@@ -1505,11 +1505,8 @@
         let cuotasParaCrear = [];
 
         document.addEventListener('DOMContentLoaded', async function () {
-            var sb = await getSupabase();
-            var { data: { session } } = await sb.auth.getSession();
-            if (!session) { window.location.href = 'portal_login.html'; return; }
-            var sesion = getSesion();
-            if (!sesion) { window.location.href = 'portal_login.html'; return; }
+            var sesion = await requireAuth();
+            if (!sesion || sesion.rol !== 'COOPERADORA') { window.location.href = 'portal_login.html'; return; }
             document.addEventListener('click', function(e){ var w=document.getElementById('notifWrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';}});
             document.addEventListener('keydown', manejarEscape);
 

@@ -254,7 +254,6 @@
             <a href="cooperadora_3_programas.html" class="btn-action">
                 &#x1F393; Programas/Cursos Posgrados
             </a>
-            </a>
         </div>
 
         <!-- TABS -->
@@ -679,11 +678,9 @@
         var btn = document.querySelector('#ap-footer-rechazo .btn-danger');
         if (btn) { btn.disabled = true; btn.textContent = 'Rechazando…'; }
         try {
-            var sb = await getSupabase();
-            var update = { estado: 'NO_ABONADA', comprobante_url: null, comprobante_fecha: null };
-            if (motivo) update.observaciones = motivo;
-            var res = await sb.from('cobros').update(update).eq('cobro_id', _cobroId);
-            if (res.error) throw res.error;
+            var res = await rechazarPago(_cobroId);
+            if (!res || !res.ok) throw new Error((res && res.mensaje) || 'No se pudo rechazar el pago.');
+            alert(res.mensaje || 'Pago rechazado.');
             cerrarModalAprobar();
             recargarComprobantes();
         } catch(e) {
@@ -758,21 +755,21 @@
             return '<div class="comprobante-card' + (esReciente ? ' new' : '') + '">'
                 + '<div class="comprobante-header">'
                 +   '<div class="student-info">'
-                +     '<h3>' + nombre + (esReciente ? ' <span class="new-badge">NUEVO</span>' : '') + '</h3>'
-                +     '<p>DNI: ' + dni + ' - ' + programa + '</p>'
+                +     '<h3>' + esc(nombre) + (esReciente ? ' <span class="new-badge">NUEVO</span>' : '') + '</h3>'
+                +     '<p>DNI: ' + esc(dni) + ' - ' + esc(programa) + '</p>'
                 +   '</div>'
                 +   '<div class="time-badge' + (esReciente ? ' recent' : '') + '">&#x23F1;&#xFE0F; ' + tiempo + '</div>'
                 + '</div>'
                 + '<div class="cuota-info"><div class="cuota-grid">'
-                +   '<div class="cuota-item"><div class="cuota-label">Cuota</div><div class="cuota-value">' + cuotaLabel + '</div></div>'
-                +   '<div class="cuota-item"><div class="cuota-label">Monto</div><div class="cuota-value highlight">' + monto + '</div></div>'
-                +   '<div class="cuota-item"><div class="cuota-label">Vencimiento</div><div class="cuota-value">' + vencimiento + '</div></div>'
-                +   '<div class="cuota-item"><div class="cuota-label">Estado</div><div class="cuota-value" style="color:' + (enMora ? 'var(--danger)' : 'var(--success)') + ';">' + estadoLabel + '</div></div>'
+                +   '<div class="cuota-item"><div class="cuota-label">Cuota</div><div class="cuota-value">' + esc(cuotaLabel) + '</div></div>'
+                +   '<div class="cuota-item"><div class="cuota-label">Monto</div><div class="cuota-value highlight">' + esc(monto) + '</div></div>'
+                +   '<div class="cuota-item"><div class="cuota-label">Vencimiento</div><div class="cuota-value">' + esc(vencimiento) + '</div></div>'
+                +   '<div class="cuota-item"><div class="cuota-label">Estado</div><div class="cuota-value" style="color:' + (enMora ? 'var(--danger)' : 'var(--success)') + ';">' + esc(estadoLabel) + '</div></div>'
                 + '</div></div>'
                 + '<div class="files-section">'
                 +   '<div class="file-preview" onclick="' + modalCall + '">'
                 +     '<div class="file-icon">&#x1F4CE;</div>'
-                +     '<div class="file-details"><div class="file-name">' + archivoNombre + '</div><div class="file-meta">Subido: ' + fFecha(c.comprobante_fecha || c.updated_at || c.created_at) + '</div></div>'
+                +     '<div class="file-details"><div class="file-name">' + esc(archivoNombre) + '</div><div class="file-meta">Subido: ' + fFecha(c.comprobante_fecha || c.updated_at || c.created_at) + '</div></div>'
                 +   '</div>'
                 + '</div>'
                 + '<div class="actions">'
@@ -830,11 +827,8 @@
 
     /* == INIT == */
     document.addEventListener('DOMContentLoaded', async function() {
-        var _sb = await getSupabase();
-        var { data: { session: _session } } = await _sb.auth.getSession();
-        if (!_session) { window.location.href = 'portal_login.html'; return; }
-        var sesion = getSesion();
-        if (!sesion) { navegar('portal_login.html'); return; }
+        var sesion = await requireAuth();
+        if (!sesion || sesion.rol !== 'COOPERADORA') { window.location.href = 'portal_login.html'; return; }
 
         /* Dashboard stats + comprobantes pendientes + notificaciones en paralelo */
         Promise.all([
