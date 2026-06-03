@@ -746,11 +746,18 @@ async function obtenerUrlFirmadaComprobante(comprobanteUrl) {
     return result.data.signedUrl;
 }
 
-async function rechazarPago(cobroId) {
+async function rechazarPago(cobroId, forzar) {
     const sb = await getSupabase();
 
     const { data: cobro } = await sb.from('cobros').select('*').eq('cobro_id', cobroId).single();
     if (!cobro) return { ok: false };
+
+    // Protege cuotas ya abonadas para evitar revertir pagos confirmados por
+    // error. El admin puede forzar el rechazo (forzar=true) para corregir
+    // una aprobación errónea de cooperadora.
+    if (cobro.estado === 'ABONADA' && !forzar) {
+        return { ok: false, mensaje: 'Esta cuota ya está abonada. Solo el administrador puede revertirla.' };
+    }
 
     var nuevoEstado = 'NO_ABONADA';
 
