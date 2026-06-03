@@ -377,9 +377,12 @@ var CT_VIEW = {
         else if (estado === 'PAGO_PARCIAL')   txt = fMonto(montoAbonado)+'<br><small style="font-size:9px;opacity:.8;">de '+fMonto(c.monto_final)+'</small>';
         else if (estado === 'PENDIENTE') {
             var mt = c.monto_transferido && Number(c.monto_transferido) > 0 ? Number(c.monto_transferido) : null;
-            txt = (mt && mt < Number(c.monto_final||0))
-                ? fMonto(mt)+'<br><small style="font-size:9px;opacity:.8;">🕓 En revisión</small>'
-                : '🕓 En revisión';
+            if (mt && mt < Number(c.monto_final||0)) {
+                var faltaP = Math.max(0, Number(c.monto_final||0) - mt);
+                txt = fMonto(mt)+'<br><small style="font-size:9px;opacity:.8;">de '+fMonto(c.monto_final)+' · falta '+fMonto(faltaP)+'</small><br><small style="font-size:9px;opacity:.7;">🕓 parcial en revisión</small>';
+            } else {
+                txt = '🕓 En revisión';
+            }
         }
         else txt = fMonto(c.monto_final);
         var title = escHtml(c.concepto+' · '+(c.periodo||'')+' | Estado: '+estado+' | Abonado: '+fMonto(montoAbonado)+' | Saldo: '+fMonto(c.saldo_pendiente)+(c.fecha_vencimiento?' | Vence: '+c.fecha_vencimiento:''));

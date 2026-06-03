@@ -1853,9 +1853,13 @@
             } else if (cuota.estado === 'mora') {
                 sub = 'Vence ' + formatearFechaCorta(cuota.fechaVencimiento);
             } else if (cuota.estado === 'pendiente') {
-                sub = (cuota.montoTransferido && cuota.montoTransferido > 0 && cuota.montoTransferido < cuota.montoFinal)
-                    ? '🕐 Parcial: ' + formatearMoneda(cuota.montoTransferido)
-                    : '🕐 En revisión';
+                if (cuota.montoTransferido && cuota.montoTransferido > 0 && cuota.montoTransferido < cuota.montoFinal) {
+                    var faltaCP = Math.max(0, (cuota.montoFinal || 0) - cuota.montoTransferido);
+                    top = formatearMoneda(cuota.montoTransferido);
+                    sub = 'de ' + formatearMoneda(cuota.montoFinal || 0) + ' · falta ' + formatearMoneda(faltaCP) + '<br>🕐 parcial en revisión';
+                } else {
+                    sub = '🕐 En revisión';
+                }
             } else if (cuota.estado === 'abonada') {
                 sub = 'Saldo $0';
             } else if (cuota.estado === 'noabonada') {
