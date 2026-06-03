@@ -829,6 +829,16 @@ async function enviarComprobante() {
     if (!nroOp)                { toast('⚠️ Ingresá el número de operación', 'err'); return; }
     if (!monto || +monto <= 0) { toast('⚠️ Ingresá el monto transferido', 'err'); return; }
 
+    // Aviso (no bloqueante): si el monto declarado supera el saldo pendiente de
+    // la cuota, pedir confirmación. La Cooperadora valida el monto al aprobar.
+    var saldoEsperado = (_cobroActual.saldo !== null && _cobroActual.saldo !== undefined)
+        ? Number(_cobroActual.saldo) : Number(_cobroActual.monto);
+    if (!isNaN(saldoEsperado) && saldoEsperado > 0 && +monto > saldoEsperado) {
+        if (!confirm('El monto declarado (' + fmt(+monto) + ') supera el saldo de esta cuota (' + fmt(saldoEsperado) + ').\n\n¿Querés enviar el comprobante igualmente?')) {
+            return;
+        }
+    }
+
     var btn    = document.getElementById('btnEnviar');
     var progEl = document.getElementById('uploadProgress');
     var barEl  = document.getElementById('uploadBar');
