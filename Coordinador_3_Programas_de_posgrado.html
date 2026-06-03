@@ -416,7 +416,7 @@ document.addEventListener('click', function(e){ var w=document.querySelector('.n
 
 function abrirLogout() { document.getElementById('logoutModal').classList.add('show'); }
 function cancelarLogout() { document.getElementById('logoutModal').classList.remove('show'); }
-function confirmarLogout() { sessionStorage.clear(); localStorage.removeItem('authToken'); localStorage.removeItem('usuario'); window.location.href = 'portal_login.html'; }
+function confirmarLogout() { logout().then(function(){ window.location.href = 'portal_login.html'; }); }
 document.getElementById('logoutModal').addEventListener('click', function(e) { if (e.target === this) cancelarLogout(); });
 
 async function cargarCohortes() {
@@ -425,7 +425,7 @@ async function cargarCohortes() {
         var q = sb.from('cohortes').select('*');
         if (_programaId) q = q.eq('programa_id', _programaId);
         var rC = await q;
-        var rCob = await sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente');
+        var rCob = await sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente,nro_cuota').eq('programa_id', _programaId);
         var rE = await sb.from('egresos').select('cohorte_id,monto_pagado,tipo');
         var cohortes = rC.data || [];
         var cobros = rCob.data || [];
@@ -461,11 +461,22 @@ async function cargarCohortes() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-    var _sb = await getSupabase();
-    var { data: { session: _session } } = await _sb.auth.getSession();
-    if (!_session) { window.location.href = 'portal_login.html'; return; }
-    var sesion = getSesion();
-    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    var sesion = await requireAuth();
+    if (!sesion || sesion.rol !== 'COORDINADOR') { window.location.href = 'portal_login.html'; return; }
+    // IDOR: validar que el programa de la URL esté asignado al coordinador
+    var asig = await obtenerAsignacionesCoordinador(sesion.dni);
+    var cohIdsAsig = asig.cohIds || [];
+    var autorizado = asig.progIds.includes(Number(_programaId));
+    if (!autorizado && cohIdsAsig.length) {
+        var sbV = await getSupabase();
+        var rV = await sbV.from('cohortes').select('cohorte_id').eq('programa_id', _programaId).in('cohorte_id', cohIdsAsig);
+        autorizado = !!(rV.data && rV.data.length);
+    }
+    if (!_programaId || !autorizado) {
+        document.getElementById('page-subtitle').textContent = 'No tenés acceso a este programa.';
+        document.getElementById('cohortes-list').innerHTML = '<p style="color:#666;padding:20px;">No tenés acceso a este programa.</p>';
+        return;
+    }
     cargarCohortes();
     if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones('COORDINADOR').then(renderNotificaciones);
 });

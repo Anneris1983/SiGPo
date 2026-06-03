@@ -465,11 +465,20 @@ const V = {
 };
 
 document.addEventListener('DOMContentLoaded', async function() {
-    var sb = await getSupabase();
-    var { data: { session } } = await sb.auth.getSession();
-    if (!session) { window.location.href = 'portal_login.html'; return; }
-    var sesion = getSesion();
-    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    var sesion = await requireAuth();
+    if (!sesion || sesion.rol !== 'COORDINADOR') { window.location.href = 'portal_login.html'; return; }
+    // IDOR: validar que la cohorte de la URL esté asignada al coordinador
+    var asig = await obtenerAsignacionesCoordinador(sesion.dni);
+    var autorizado = (asig.cohIds || []).includes(Number(COHORTE_ID));
+    if (!autorizado && (asig.progIds || []).length) {
+        var sbV = await getSupabase();
+        var rV = await sbV.from('cohortes').select('programa_id').eq('cohorte_id', COHORTE_ID).single();
+        autorizado = !!(rV.data && asig.progIds.includes(rV.data.programa_id));
+    }
+    if (!COHORTE_ID || !autorizado) {
+        document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#666;font-family:sans-serif;">No tenés acceso a esta cohorte.</div>';
+        return;
+    }
     cargar();
 });
 document.addEventListener('click', function(e) {
@@ -987,13 +996,6 @@ async function exportarExcel() {
 
 function irEstudiante(dni) { navegar('detalle_estudiante_cohorte.html?dni=' + encodeURIComponent(String(dni)) + (COHORTE_ID ? '&cohorte_id=' + encodeURIComponent(COHORTE_ID) : '') + (PROGRAMA_ID ? '&programa_id=' + encodeURIComponent(PROGRAMA_ID) : '')); }
 function volverADashboard() { navegar('coordinador_1_dashboard.html'); }
-function navegar(destino, params={}) {
-    const qs = new URLSearchParams(params).toString();
-    if (estaEnAppsScript()) {
-        window.top.location.href = '?page=' + destino.replace('.html', '').split('?')[0] + (qs ? '&' + qs : '');
-        window.location.href = destino + (qs ? '?' + qs : '');
-    }
-}
 
 async function cargarNotificaciones() {
     try {

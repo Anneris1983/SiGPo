@@ -247,11 +247,8 @@
     var notificaciones = [];
 
     document.addEventListener('DOMContentLoaded', async function() {
-        var _sb = await getSupabase();
-        var { data: { session: _session } } = await _sb.auth.getSession();
-        if (!_session) { window.location.href = 'portal_login.html'; return; }
-        var sesion = getSesion();
-        if (!sesion) { window.location.href = 'portal_login.html'; return; }
+        var sesion = await requireAuth();
+        if (!sesion || sesion.rol !== 'COORDINADOR') { window.location.href = 'portal_login.html'; return; }
         document.addEventListener('click', cerrarNotifSiCorresponde);
         cargarVista();
         cargarNotificaciones();
@@ -261,11 +258,16 @@
         try {
             var sesion = getSesion();
             var sb = await getSupabase();
-            var progIds = sesion ? await obtenerProgramasAsignadosPorDni(sesion.dni) : [];
+            // Asignaciones del coordinador:
+            //  - progIds: programas asignados SIN cohorte específica → ve TODAS sus cohortes
+            //  - cohIdsAsignadas: cohortes específicas asignadas → ve SOLO esas
+            var asig = sesion ? await obtenerAsignacionesCoordinador(sesion.dni) : { progIds: [], cohIds: [] };
+            var progIds = asig.progIds;
+            var cohIdsAsignadas = asig.cohIds;
 
             document.getElementById('headerTitle').textContent = sesion.nombre || 'Coordinador/a';
 
-            if (!progIds.length) {
+            if (!progIds.length && !cohIdsAsignadas.length) {
                 document.getElementById('headerSub').textContent = 'Sin programas asignados';
                 document.getElementById('statEstudiantes').textContent = '0';
                 document.getElementById('statAlDia').textContent = '0';
@@ -275,13 +277,25 @@
                 renderDashboard(); return;
             }
 
-            var [rP, rC, rCob] = await Promise.all([
-                sb.from('programas').select('*').in('programa_id', progIds),
-                sb.from('cohortes').select('*').in('programa_id', progIds),
-                sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente').in('programa_id', progIds)
+            // Round 1: cohortes asignadas (por programa completo Y/O por cohorte específica)
+            var cohQueries = [];
+            if (progIds.length)         cohQueries.push(sb.from('cohortes').select('*').in('programa_id', progIds));
+            if (cohIdsAsignadas.length) cohQueries.push(sb.from('cohortes').select('*').in('cohorte_id', cohIdsAsignadas));
+            var cohResults = await Promise.all(cohQueries);
+            var cohMap = {};
+            cohResults.forEach(function(r){ (r.data||[]).forEach(function(c){ cohMap[c.cohorte_id] = c; }); });
+            var cohortes = Object.keys(cohMap).map(function(k){ return cohMap[k]; });
+
+            // Programas referenciados por las cohortes visibles (cubre programas completos y cohortes específicas)
+            var allProgIds = [...new Set(cohortes.map(function(c){ return c.programa_id; }).concat(progIds))];
+            var cohIds = cohortes.map(function(c){ return c.cohorte_id; });
+
+            // Round 2: programas y cobros filtrados por las cohortes del coordinador
+            var [rP, rCob] = await Promise.all([
+                allProgIds.length ? sb.from('programas').select('*').in('programa_id', allProgIds) : Promise.resolve({data:[]}),
+                cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
             ]);
             var programas = rP.data || [];
-            var cohortes = rC.data || [];
             var cobros = rCob.data || [];
 
             var cohProgMap = {};

@@ -399,24 +399,35 @@ async function cargarVista() {
         var filtAnio = (todosAnios && todosAnios.checked) ? '' : ((selAnio && selAnio.value) || DEFAULT_ANIO);
 
         var sb = await getSupabase();
-        var _sb = await getSupabase();
-        var { data: { session: _session } } = await _sb.auth.getSession();
-        if (!_session) { window.location.href = 'portal_login.html'; return; }
         var sesion = getSesion();
-        var progIds = sesion ? await obtenerProgramasAsignadosPorDni(sesion.dni) : [];
-        var qP   = sb.from('programas').select('programa_id,nombre');
-        var qC   = sb.from('cohortes').select('cohorte_id,nombre,programa_id');
-        var qCob = sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento,fecha_pago');
-        var qEgr = sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada');
-        if (progIds.length) {
-            qP   = qP.in('programa_id', progIds);
-            qC   = qC.in('programa_id', progIds);
-            qCob = qCob.in('programa_id', progIds);
-            qEgr = qEgr.in('programa_id', progIds);
+        // Asignaciones del coordinador:
+        //  - progIds: programas asignados SIN cohorte específica → ve TODAS sus cohortes
+        //  - cohIdsAsignadas: cohortes específicas asignadas → ve SOLO esas
+        var asig = sesion ? await obtenerAsignacionesCoordinador(sesion.dni) : { progIds: [], cohIds: [] };
+        var progIds = asig.progIds;
+        var cohIdsAsignadas = asig.cohIds;
+        if (!progIds.length && !cohIdsAsignadas.length) {
+            document.getElementById('statusBar').textContent = 'No tenés programas asignados.';
+            return;
         }
-        var [rP, rC, rCob, rEgr] = await Promise.all([qP, qC, qCob, qEgr]);
+
+        // Cohortes visibles: programas completos Y/O cohortes específicas
+        var cohQueries = [];
+        if (progIds.length)         cohQueries.push(sb.from('cohortes').select('cohorte_id,nombre,programa_id').in('programa_id', progIds));
+        if (cohIdsAsignadas.length) cohQueries.push(sb.from('cohortes').select('cohorte_id,nombre,programa_id').in('cohorte_id', cohIdsAsignadas));
+        var cohResults = await Promise.all(cohQueries);
+        var cohMap = {};
+        cohResults.forEach(function(r){ (r.data||[]).forEach(function(c){ cohMap[c.cohorte_id] = c; }); });
+        var cohortes = Object.keys(cohMap).map(function(k){ return cohMap[k]; });
+        var cohIds = cohortes.map(function(c){ return c.cohorte_id; });
+        var allProgIds = [...new Set(cohortes.map(function(c){ return c.programa_id; }).concat(progIds))];
+
+        var [rP, rCob, rEgr] = await Promise.all([
+            allProgIds.length ? sb.from('programas').select('programa_id,nombre').in('programa_id', allProgIds) : Promise.resolve({data:[]}),
+            cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento,fecha_pago').in('cohorte_id', cohIds) : Promise.resolve({data:[]}),
+            cohIds.length ? sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
+        ]);
         var programas = rP.data || [];
-        var cohortes = rC.data || [];
         var cobros = rCob.data || [];
         var egresos = rEgr.data || [];
         _cobrosExport = cobros;
@@ -818,10 +829,7 @@ function exportar(tipo) {
 }
 
 function volverDashboard() {
-    if (estaEnAppsScript()) {
-        window.top.location.href = '?page=coordinador_1_dashboard';
-        window.location.href = 'coordinador_1_dashboard.html';
-    }
+    navegar('coordinador_1_dashboard.html');
 }
 
 
@@ -877,8 +885,8 @@ function obtenerDemoData(payload) {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-    var sesion = getSesion();
-    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    var sesion = await requireAuth();
+    if (!sesion || sesion.rol !== 'COORDINADOR') { window.location.href = 'portal_login.html'; return; }
     cargarVista();
 });
 </script>

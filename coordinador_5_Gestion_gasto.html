@@ -513,11 +513,8 @@
         };
 
         document.addEventListener('DOMContentLoaded', async function() {
-            var _sb = await getSupabase();
-            var { data: { session: _session } } = await _sb.auth.getSession();
-            if (!_session) { window.location.href = 'portal_login.html'; return; }
-            var sesion = getSesion();
-            if (!sesion) { window.location.href = 'portal_login.html'; return; }
+            var sesion = await requireAuth();
+            if (!sesion || sesion.rol !== 'COORDINADOR') { window.location.href = 'portal_login.html'; return; }
             cargarVista();
         });
 
@@ -943,6 +940,16 @@
                 return;
             }
 
+            // Defense-in-depth: el programa/cohorte elegido debe estar entre los autorizados
+            if (programaId && !(state.programasList || []).some(function(p){ return String(p.programa_id) === String(programaId); })) {
+                toast('No tenés acceso a ese programa.', 'err');
+                return;
+            }
+            if (cohorteId && !(state.cohortesList || []).some(function(c){ return String(c.cohorte_id) === String(cohorteId); })) {
+                toast('No tenés acceso a esa cohorte.', 'err');
+                return;
+            }
+
             var datos = {
                 tipo:            tipo === 'ejecutados' ? 'EJECUTADO' : 'PROYECTADO',
                 estado:          tipo === 'ejecutados' ? 'CANCELADO' : 'PENDIENTE',
@@ -1103,10 +1110,7 @@
 
         function volverDashboard(event) {
             if (event) event.preventDefault();
-            if (estaEnAppsScript()) {
-                window.top.location.href = '?page=coordinador_1_dashboard';
-                window.location.href = 'coordinador_1_dashboard.html';
-            }
+            navegar('coordinador_1_dashboard.html');
         }
 
 

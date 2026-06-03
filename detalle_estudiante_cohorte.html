@@ -195,13 +195,25 @@ document.addEventListener('click', function(e){ var w=document.querySelector('.n
 // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 
 document.addEventListener('DOMContentLoaded', async function() {
-    var _sb = await getSupabase();
-    var { data: { session: _session } } = await _sb.auth.getSession();
-    if (!_session) { window.location.href = 'portal_login.html'; return; }
-    var sesion = getSesion();
+    var sesion = await requireAuth();
     var roles_ok = ['ADMINISTRADOR','COORDINADOR','SECRETARIA','PROFESOR'];
     if (!sesion || !roles_ok.includes(sesion.rol)) { window.location.href='portal_login.html'; return; }
     if (!DNI) { toast('DNI no especificado','err'); return; }
+
+    // IDOR: para COORDINADOR, la cohorte debe estar entre sus asignaciones
+    if (sesion.rol === 'COORDINADOR') {
+        var asig = await obtenerAsignacionesCoordinador(sesion.dni);
+        var autorizado = (asig.cohIds || []).includes(Number(COHORTE_ID));
+        if (!autorizado && (asig.progIds || []).length && COHORTE_ID) {
+            var sbV = await getSupabase();
+            var rV = await sbV.from('cohortes').select('programa_id').eq('cohorte_id', COHORTE_ID).single();
+            autorizado = !!(rV.data && asig.progIds.includes(rV.data.programa_id));
+        }
+        if (!COHORTE_ID || !autorizado) {
+            document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#666;font-family:sans-serif;">No tenés acceso a este estudiante.</div>';
+            return;
+        }
+    }
 
     if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones(sesion.rol).then(renderNotificaciones);
 
