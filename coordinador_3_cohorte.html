@@ -798,7 +798,10 @@ async function cargar() {
             programa: { nombre: cohorte.programas ? cohorte.programas.nombre : (progData.nombre||''), programa_id: cohorte.programa_id || PROGRAMA_ID, gas_url: progData.gas_url || (cohorte.programas ? cohorte.programas.gas_url : '') || '', email_remitente: progData.email_remitente || (cohorte.programas ? cohorte.programas.email_remitente : '') || '' },
             cohorte:  { nombre:cohorte.nombre||'Cohorte', cohorte_id:cohorte.cohorte_id||COHORTE_ID, fecha_inicio:cohorte.fecha_inicio||'', fecha_fin:cohorte.fecha_fin||'', estado:cohorte.estado||'' },
             columnas: columnas,
-            estudiantes: Object.values(dniMap)
+            estudiantes: Object.values(dniMap).sort(function(a,b){
+                var r = String(a.apellido||'').localeCompare(String(b.apellido||''), 'es', { sensitivity:'base' });
+                return r !== 0 ? r : String(a.nombre||'').localeCompare(String(b.nombre||''), 'es', { sensitivity:'base' });
+            })
         };
         V.data = normalizarVista(res);
         V.data.programa.gas_url        = progData.gas_url || (cohorte.programas ? cohorte.programas.gas_url : '') || '';

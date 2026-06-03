@@ -1584,7 +1584,10 @@
                 var respuesta = {
                     programa: { programaId:cohorte.programa_id||programaId, nombre:prog.nombre||'Programa', tipo:prog.tipo||'', estado:prog.estado||'ACTIVO' },
                     cohorte: { cohorteId:cohorte.cohorte_id||cohorteId, nombre:cohorte.nombre||'Cohorte', fechaInicio:cohorte.fecha_inicio||'', fechaFin:cohorte.fecha_fin||'', activa:cohorte.estado==='ACTIVO', cantidadCuotasDefault:maxCuota },
-                    estudiantes: Object.values(dniMap),
+                    estudiantes: Object.values(dniMap).sort(function(a,b){
+                        var r = String(a.apellido||'').localeCompare(String(b.apellido||''), 'es', { sensitivity:'base' });
+                        return r !== 0 ? r : String(a.nombre||'').localeCompare(String(b.nombre||''), 'es', { sensitivity:'base' });
+                    }),
                     etiquetasDescuento: etiquetasConfig
                 };
                 vistaData = normalizarDetalle(respuesta);

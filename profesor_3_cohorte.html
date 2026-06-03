@@ -283,11 +283,15 @@ async function cargar() {
         });
 
         var progNombre = cohorte.programas ? cohorte.programas.nombre : (cohorte.programa_id ? 'Programa' : '—');
+        var listaEst = Object.values(dniMap).sort(function(a,b){
+            var r = String(a.apellido||'').localeCompare(String(b.apellido||''), 'es', { sensitivity:'base' });
+            return r !== 0 ? r : String(a.nombre||'').localeCompare(String(b.nombre||''), 'es', { sensitivity:'base' });
+        });
         V.data = {
             programa: { nombre: progNombre, programaId: cohorte.programa_id || null },
             cohorte:  { cohorteId: COHORTE_ID, nombre: cohorte.nombre || 'Cohorte', fecha_inicio: cohorte.fecha_inicio||'', fecha_fin: cohorte.fecha_fin||'' },
-            columnas: derivarColumnas(Object.values(dniMap)),
-            estudiantes: Object.values(dniMap),
+            columnas: derivarColumnas(listaEst),
+            estudiantes: listaEst,
             egresos: rEgr || []
         };
         renderHeader();
