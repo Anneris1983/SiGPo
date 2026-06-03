@@ -696,8 +696,18 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
     } else {
         // El monto ingresado es el INCREMENTO de este pago: acumular sobre lo
         // ya abonado en pagos parciales previos (no sobrescribir).
+        var montoInc = Number(montoAprobado);
+        if (!(montoInc > 0)) {
+            return { ok: false, mensaje: 'El monto del pago debe ser mayor a cero' };
+        }
+        // El incremento no puede superar el saldo pendiente (tolerancia 1 centavo
+        // por redondeo): evita que monto_abonado supere monto_final.
+        var saldoActual = Number(cobro.saldo_pendiente);
+        if (!isNaN(saldoActual) && saldoActual > 0 && montoInc > saldoActual + 0.01) {
+            return { ok: false, mensaje: 'El monto (' + fMonto(montoInc) + ') supera el saldo pendiente (' + fMonto(saldoActual) + ')' };
+        }
         var abonadoPrevio = Number(cobro.monto_abonado) || 0;
-        var abonadoTotal  = redondear2(abonadoPrevio + Number(montoAprobado));
+        var abonadoTotal  = redondear2(abonadoPrevio + montoInc);
         var nuevoSaldo    = redondear2(Number(cobro.monto_final) - abonadoTotal);
         var estadoNuevo   = nuevoSaldo <= 0 ? 'ABONADA' : 'PAGO_PARCIAL';
         var updateParcial = {
