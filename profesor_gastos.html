@@ -350,19 +350,29 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     try {
         var sb = await getSupabase();
-        var progIds = await obtenerProgramasAsignadosPorDni(sesion.dni);
+        var asig            = await obtenerAsignacionesCoordinador(sesion.dni);
+        var progIds         = asig.progIds;
+        var cohIdsAsignadas = asig.cohIds;
 
-        if (!progIds.length) {
+        if (!progIds.length && !cohIdsAsignadas.length) {
             document.getElementById('tabla-body').innerHTML = '<tr><td colspan="8"><div class="empty-state"><div>📭</div>No tenés programas asignados.</div></td></tr>';
             return;
         }
 
-        var [rP, rC] = await Promise.all([
-            sb.from('programas').select('programa_id,nombre').in('programa_id', progIds),
-            sb.from('cohortes').select('cohorte_id,programa_id').in('programa_id', progIds)
-        ]);
+        // Cohortes visibles: programas completos Y/O cohortes específicas
+        var cohQueries = [];
+        if (progIds.length)         cohQueries.push(sb.from('cohortes').select('cohorte_id,programa_id').in('programa_id', progIds));
+        if (cohIdsAsignadas.length) cohQueries.push(sb.from('cohortes').select('cohorte_id,programa_id').in('cohorte_id', cohIdsAsignadas));
+        var cohResults = await Promise.all(cohQueries);
+        var cohMap = {};
+        cohResults.forEach(function(r){ (r.data||[]).forEach(function(c){ cohMap[c.cohorte_id] = c.programa_id; }); });
+        var cohIds = Object.keys(cohMap).map(function(k){ return Number(k); });
+        var allProgIds = [...new Set(Object.values(cohMap).concat(progIds))];
+
+        var rP = allProgIds.length
+            ? await sb.from('programas').select('programa_id,nombre').in('programa_id', allProgIds)
+            : { data: [] };
         (rP.data || []).forEach(function(p){ _progMap[p.programa_id] = p.nombre; });
-        var cohIds = (rC.data || []).map(function(c){ return c.cohorte_id; });
 
         var rE = cohIds.length
             ? await sb.from('egresos')

@@ -132,11 +132,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 async function cargar(sesion) {
     var sb = await getSupabase();
 
-    var progIds = await obtenerProgramasAsignadosPorDni(sesion.dni);
-    if (progIds.indexOf(parseInt(PROGRAMA_ID,10)) < 0 && progIds.indexOf(PROGRAMA_ID) < 0) {
-        mostrarError('No tenés acceso a este programa.');
-        return;
-    }
+    var asig    = await obtenerAsignacionesCoordinador(sesion.dni);
+    var pidNum  = parseInt(PROGRAMA_ID, 10);
+    var esProgramaCompleto = asig.progIds.indexOf(pidNum) >= 0 || asig.progIds.indexOf(PROGRAMA_ID) >= 0;
+    // Cohortes específicas asignadas que pertenecen a este programa (se resuelve más abajo)
+    var cohIdsAsignadas = asig.cohIds || [];
 
     var [rProg, rCoh, rCob, rEgr, rInsc] = await Promise.all([
         sb.from('programas').select('programa_id,nombre,tipo').eq('programa_id', PROGRAMA_ID).single(),
@@ -148,6 +148,18 @@ async function cargar(sesion) {
 
     var prog = rProg.data || {};
     var cohortes = rCoh.data || [];
+
+    // Control de acceso: programa completo, o al menos una cohorte específica de este programa
+    var cohIdsDeEstePrograma = cohortes.map(function(c){ return c.cohorte_id; });
+    var cohAsignadasAqui = cohIdsAsignadas.filter(function(id){ return cohIdsDeEstePrograma.indexOf(id) >= 0; });
+    if (!esProgramaCompleto && !cohAsignadasAqui.length) {
+        mostrarError('No tenés acceso a este programa.');
+        return;
+    }
+    // Si el acceso es por cohortes específicas, mostrar SOLO esas cohortes
+    if (!esProgramaCompleto) {
+        cohortes = cohortes.filter(function(c){ return cohAsignadasAqui.indexOf(c.cohorte_id) >= 0; });
+    }
     var cobros = rCob.data || [];
     var egresos = rEgr.data || [];
     var inscs = rInsc.data || [];
