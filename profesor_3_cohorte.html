@@ -236,23 +236,30 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!COHORTE_ID) { alert('Cohorte no especificada.'); history.back(); return; }
     if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones('PROFESOR').then(renderNotificaciones);
     initFiltros();
-    try { await cargar(); } catch(e) { spin(false); console.error(e); alert('Error al cargar: ' + e.message); }
+    try { await cargar(sesion); } catch(e) { spin(false); console.error(e); alert('Error al cargar: ' + e.message); }
 });
 
 /* ── CARGAR DATOS ── */
-async function cargar() {
+async function cargar(sesion) {
     spin(true);
     try {
         var sb = await getSupabase();
         var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
             sb.from('cohortes').select('*, programas(nombre)').eq('cohorte_id', COHORTE_ID).single(),
-            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
+            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,monto_abonado,monto_transferido,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
             obtenerInscripcionesPorCohorte(COHORTE_ID, 'estudiante_id, descuento_porcentaje, estado_academico'),
             sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
             obtenerEgresosResumenPorCohorte(COHORTE_ID)
         ]);
 
         var cohorte = rCoh.data || {};
+
+        // Control de acceso por cohorte: programa completo o cohorte específica asignada
+        var asig = await obtenerAsignacionesCoordinador(sesion.dni);
+        var pidNum = parseInt(cohorte.programa_id, 10);
+        var tieneAcceso = (asig.progIds || []).indexOf(pidNum) >= 0 || (asig.progIds || []).indexOf(cohorte.programa_id) >= 0 || (asig.cohIds || []).indexOf(COHORTE_ID) >= 0;
+        if (!tieneAcceso) { spin(false); alert('No tenés acceso a esta cohorte.'); history.back(); return; }
+
         var cobros  = rCob.data || [];
         var inscripciones = rInsc;
         var estList = rEst.data || [];

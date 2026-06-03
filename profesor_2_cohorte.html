@@ -136,6 +136,11 @@ var _filtroEstado = 'TODOS';
 var _pagina = 1;
 var PAGE_SIZE = 20;
 
+/* ── NOTIFICACIONES ── */
+function toggleNotif() { var dd=document.getElementById('notif-dropdown'); if(dd)dd.style.display=dd.style.display==='block'?'none':'block'; }
+document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
+// renderNotificaciones / leerNotif / marcarTodasNotificacionesLeidas: usa supabase.js
+
 document.addEventListener('DOMContentLoaded', async function() {
     var _sb = await getSupabase();
     var { data: { session: _session } } = await _sb.auth.getSession();
@@ -145,6 +150,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var params = new URLSearchParams(window.location.search);
     var cid = params.get('cohorte_id');
     if (!cid) { window.location.href = 'profesor_1_dashboard.html'; return; }
+    if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones('PROFESOR').then(renderNotificaciones);
     try { await cargar(sesion, Number(cid)); }
     catch(e) { mostrarError('Error al cargar datos: ' + e.message); }
 });
@@ -166,6 +172,12 @@ async function cargar(sesion, cohorteId) {
     var insc   = inscRes;
 
     if (!coh) { mostrarError('Cohorte no encontrada.'); return; }
+
+    // Control de acceso por cohorte: programa completo o cohorte específica asignada
+    var asig = await obtenerAsignacionesCoordinador(sesion.dni);
+    var pidNum = parseInt(coh.programa_id, 10);
+    var tieneAcceso = (asig.progIds || []).indexOf(pidNum) >= 0 || (asig.progIds || []).indexOf(coh.programa_id) >= 0 || (asig.cohIds || []).indexOf(cohorteId) >= 0;
+    if (!tieneAcceso) { mostrarError('No tenés acceso a esta cohorte.'); return; }
 
     // Round 2: programa + nombres de usuarios (depende de cobros para DNIs)
     var dnis = [...new Set(cobros.map(function(c){ return c.dni; }))];
