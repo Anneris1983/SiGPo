@@ -508,10 +508,10 @@
                             '<div class="carrera-header">' +
                                 '<div>' +
                                     '<div class="carrera-nombre">' +
-                                        (getIconoTipo(prog.tipo) || '📚') + ' ' + (prog.nombre || '—') +
+                                        (getIconoTipo(prog.tipo) || '📚') + ' ' + esc(prog.nombre || '—') +
                                     '</div>' +
                                     '<div class="carrera-cohorte">' +
-                                        labelCoh + ': ' + (coh.nombre || '—') +
+                                        labelCoh + ': ' + esc(coh.nombre || '—') +
                                     '</div>' +
                                 '</div>' +
                                 badge +
@@ -571,8 +571,8 @@
                     proxHtml +=
                         '<div class="cuota-item">' +
                             '<div class="cuota-info">' +
-                                '<strong>' + c.concepto + (c.periodo ? ' — ' + c.periodo : '') + '</strong>' +
-                                '<small>' + progNombre + ' · Vence: ' + fFecha(c.fecha_vencimiento) + '</small>' +
+                                '<strong>' + esc(c.concepto) + (c.periodo ? ' — ' + esc(c.periodo) : '') + '</strong>' +
+                                '<small>' + esc(progNombre) + ' · Vence: ' + fFecha(c.fecha_vencimiento) + '</small>' +
                             '</div>' +
                             '<div class="cuota-right">' +
                                 '<div class="cuota-monto">' + fM(c.monto_final) + '</div>' +
@@ -600,8 +600,8 @@
                 morasHtml +=
                     '<div class="cuota-item">' +
                         '<div class="cuota-info">' +
-                            '<strong>' + c.concepto + (c.periodo ? ' — ' + c.periodo : '') + '</strong>' +
-                            '<small>' + progNombre + ' · Venció: ' + fFecha(c.fecha_vencimiento) + '</small>' +
+                            '<strong>' + esc(c.concepto) + (c.periodo ? ' — ' + esc(c.periodo) : '') + '</strong>' +
+                            '<small>' + esc(progNombre) + ' · Venció: ' + fFecha(c.fecha_vencimiento) + '</small>' +
                         '</div>' +
                         '<div class="cuota-right">' +
                             '<div class="cuota-monto" style="color:var(--danger);">' + fM(c.saldo_pendiente) + '</div>' +
@@ -625,10 +625,10 @@
             var email = cfg.email_banco || '';
 
             document.getElementById('datos-bancarios').innerHTML =
-                '<div><strong>CBU:</strong> ' + cbu + '</div>' +
-                '<div><strong>Alias:</strong> ' + alias + '</div>' +
-                (titular ? '<div><strong>Titular:</strong> ' + titular + '</div>' : '') +
-                (email ? '<div><strong>Email:</strong> ' + email + '</div>' : '');
+                '<div><strong>CBU:</strong> ' + esc(cbu) + '</div>' +
+                '<div><strong>Alias:</strong> ' + esc(alias) + '</div>' +
+                (titular ? '<div><strong>Titular:</strong> ' + esc(titular) + '</div>' : '') +
+                (email ? '<div><strong>Email:</strong> ' + esc(email) + '</div>' : '');
 
         } catch(e) {
             console.error(e);
@@ -786,7 +786,7 @@
             var nombre   = _estudiante ? (_estudiante.nombre   || '') : '';
             var nombreCompleto = apellido ? (apellido + ', ' + nombre) : (_sesion.nombre || '');
 
-            var codigo = 'LD-' + cohorteId + '-' + dni + '-' + Date.now().toString(36).toUpperCase();
+            var codigo = 'LD-' + cohorteId + '-' + Math.random().toString(36).slice(2, 10).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
             var ts     = Date.now();
             var storagePath = dni + '-' + cohorteId + '-' + ts + '.pdf';
             var pdfPublicUrl = SUPABASE_STORAGE_URL + storagePath;

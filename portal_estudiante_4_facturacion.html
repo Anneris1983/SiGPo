@@ -221,35 +221,35 @@
         <div class="datos-grid">
             <div class="dato-item">
                 <div class="dato-label">Razón Social / Nombre</div>
-                <div class="dato-value" id="v-razon">María González</div>
+                <div class="dato-value" id="v-razon">—</div>
             </div>
             <div class="dato-item">
                 <div class="dato-label">CUIT</div>
-                <div class="dato-value" id="v-cuit">27-12345678-3</div>
+                <div class="dato-value" id="v-cuit">—</div>
             </div>
             <div class="dato-item">
                 <div class="dato-label">Condición IVA</div>
-                <div class="dato-value" id="v-iva">Consumidor Final</div>
+                <div class="dato-value" id="v-iva">—</div>
             </div>
             <div class="dato-item">
                 <div class="dato-label">Código Postal</div>
-                <div class="dato-value" id="v-cp">5500</div>
+                <div class="dato-value" id="v-cp">—</div>
             </div>
             <div class="dato-item">
                 <div class="dato-label">Provincia</div>
-                <div class="dato-value" id="v-provincia">Mendoza</div>
+                <div class="dato-value" id="v-provincia">—</div>
             </div>
             <div class="dato-item">
                 <div class="dato-label">Teléfono</div>
-                <div class="dato-value" id="v-telefono">2615-551234</div>
+                <div class="dato-value" id="v-telefono">—</div>
             </div>
             <div class="dato-item full">
                 <div class="dato-label">Dirección Fiscal</div>
-                <div class="dato-value" id="v-direccion">Av. San Martín 1450, Godoy Cruz, Mendoza</div>
+                <div class="dato-value" id="v-direccion">—</div>
             </div>
             <div class="dato-item full">
                 <div class="dato-label">Email para comprobantes</div>
-                <div class="dato-value" id="v-email">maria.gonzalez@email.com</div>
+                <div class="dato-value" id="v-email">—</div>
             </div>
         </div>
 
@@ -439,6 +439,7 @@ async function cargarDatos() {
         renderVista(_datosEstudiante);
     } catch(e) {
         console.error(e);
+        alert('⚠️ No se pudieron cargar tus datos de facturación. Recargá la página.');
     } finally {
         spin(false);
     }
@@ -597,9 +598,9 @@ function renderFacturas(facturas) {
 async function verFacturaEst(url) {
     try {
         var sb = await getSupabase();
-        var path = url.split('/object/public/comprobantes/')[1];
-        if (!path) { window.open(url, '_blank'); return; }
-        var res = await sb.storage.from('comprobantes').createSignedUrl(path, 120);
+        var match = String(url).match(/\/object\/(?:public|sign|authenticated)\/comprobantes\/(.+)/);
+        if (!match) { window.open(url, '_blank'); return; }
+        var res = await sb.storage.from('comprobantes').createSignedUrl(match[1], 120);
         if (res.error) throw res.error;
         window.open(res.data.signedUrl, '_blank');
     } catch(e) {

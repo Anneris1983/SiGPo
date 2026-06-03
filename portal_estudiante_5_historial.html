@@ -431,7 +431,7 @@
         var sel = document.getElementById('filtroPrograma');
         sel.innerHTML = '<option value="todos">Todos los programas</option>' +
             Object.keys(progs).map(function(id) {
-                return '<option value="' + id + '">' + progs[id] + '</option>';
+                return '<option value="' + id + '">' + esc(progs[id]) + '</option>';
             }).join('');
     }
 
@@ -599,7 +599,7 @@
                 : '';
 
             return '<div class="distrib-card' + (activa ? ' active' : '') + '" onclick="seleccionarProgramaDesdeCard(\'' + pid + '\')" title="Ver historial solo de este programa">' +
-                '<div class="distrib-nombre">' + p.nombre + '</div>' +
+                '<div class="distrib-nombre">' + esc(p.nombre) + '</div>' +
                 '<div class="distrib-row"><span class="distrib-label">Pagado</span><span class="distrib-valor" style="color:var(--success)">' + fM(p.abonado) + '</span></div>' +
                 filaRevision +
                 filaSinPagar +
@@ -634,10 +634,10 @@
                 '<div class="timeline-dot ' + dot + '"></div>' +
                 '<div class="timeline-content">' +
                 '<div class="timeline-header">' +
-                '<div class="timeline-titulo">' + ico + ' ' + etq + ' — ' + c.concepto + (c.periodo ? ' (' + c.periodo + ')' : '') + '</div>' +
+                '<div class="timeline-titulo">' + ico + ' ' + etq + ' — ' + esc(c.concepto) + (c.periodo ? ' (' + esc(c.periodo) + ')' : '') + '</div>' +
                 '<div class="timeline-fecha">Vence: ' + fFecha(c.fecha_vencimiento) + '</div>' +
                 '</div>' +
-                '<div class="timeline-desc">' + prog + (c.cohorte_id ? ' · ' + (_cohortes[c.cohorte_id] || '') : '') + '</div>' +
+                '<div class="timeline-desc">' + esc(prog) + (c.cohorte_id ? ' · ' + esc(_cohortes[c.cohorte_id] || '') : '') + '</div>' +
                 '<div class="timeline-monto ' + (abon > 0 ? 'monto-pos' : '') + '">' +
                     (abon > 0 ? '+' + fM(abon) + ' abonado' : (Number(c.saldo_pendiente) > 0 ? 'Saldo: ' + fM(c.saldo_pendiente) : '')) +
                 '</div></div></div>';
@@ -745,8 +745,8 @@
 
                 return '<tr>' +
                     '<td>' + fFecha(c.fecha_vencimiento) + '</td>' +
-                    '<td style="font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + pn + '">' + pn + '</td>' +
-                    '<td>' + c.concepto + (c.periodo ? ' <span style="color:#aaa;font-size:11px;">(' + c.periodo + ')</span>' : '') + '</td>' +
+                    '<td style="font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + esc(pn) + '">' + esc(pn) + '</td>' +
+                    '<td>' + esc(c.concepto) + (c.periodo ? ' <span style="color:#aaa;font-size:11px;">(' + esc(c.periodo) + ')</span>' : '') + '</td>' +
                     '<td>' + (desc > 0 ? '<span style="text-decoration:line-through;color:#bbb;font-size:12px;">' + fM(orig) + '</span>' : fM(orig)) + '</td>' +
                     '<td>' + (desc > 0 ? '<span style="color:var(--success);font-weight:600;">-' + desc + '%</span>' : '—') + '</td>' +
                     '<td style="font-weight:700;">' + fM(fin) + '</td>' +

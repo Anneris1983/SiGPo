@@ -671,7 +671,7 @@ function buildCard(c) {
             + '<div><div class="detail-label">Concepto</div><div class="detail-value">' + esc(c.concepto) + '</div></div>'
             + '<div><div class="detail-label">Período</div><div class="detail-value">' + esc(c.periodo) + '</div></div>'
             + '<div><div class="detail-label">Vencimiento</div><div class="detail-value">' + c.venc + '</div></div>'
-            + '<div><div class="detail-label">Monto abonado</div><div class="detail-value highlight-success">' + fmt(c.monto) + '</div></div>'
+            + '<div><div class="detail-label">Monto abonado</div><div class="detail-value highlight-success">' + fmt(c.pagado) + '</div></div>'
             + '<div><div class="detail-label">Fecha de pago</div><div class="detail-value highlight-success">' + (c.fechaPago || '—') + '</div></div>'
             + (c.desc > 0 ? '<div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">' + fmt(c.original) + '</div></div><div><div class="detail-label">Descuento</div><div class="detail-value highlight-success">-' + c.desc + '%</div></div>' : '');
         var btns = '';
@@ -686,7 +686,7 @@ function buildCard(c) {
             + '<div><div class="detail-label">Concepto</div><div class="detail-value">' + esc(c.concepto) + '</div></div>'
             + '<div><div class="detail-label">Período</div><div class="detail-value">' + esc(c.periodo) + '</div></div>'
             + '<div><div class="detail-label">Venció el</div><div class="detail-value" style="color:var(--danger);">' + c.venc + '</div></div>'
-            + '<div><div class="detail-label">Total a pagar hoy</div><div class="detail-value highlight-danger">' + fmt(c.monto) + '</div></div>'
+            + (c.pagado > 0 ? '<div><div class="detail-label">Ya pagaste</div><div class="detail-value highlight-info">' + fmt(c.pagado) + '</div></div><div><div class="detail-label">Saldo pendiente</div><div class="detail-value highlight-danger">' + fmt(c.saldo) + '</div></div>' : '<div><div class="detail-label">Total a pagar hoy</div><div class="detail-value highlight-danger">' + fmt(c.monto) + '</div></div>')
             + (c.desc > 0 ? '<div><div class="detail-label">Descuento</div><div class="detail-value" style="color:#bbb;font-size:12px;">-' + c.desc + '% perdido por mora</div></div>' : '');
         footerBtn  = '<button class="btn btn-primary btn-sm" onclick="abrirModal(' + c.cobro_id + ')">📤 Subir Comprobante</button>';
         footerLeft = '<span style="color:var(--danger);">⚠️ ' + c.diasMora + ' días de atraso</span>';
@@ -980,7 +980,7 @@ async function verDocumento(url, tipo, concepto) {
             fallback.id = 'pdf-fallback';
             fallback.style.cssText = 'display:none;padding:32px;text-align:center;';
             fallback.innerHTML = '<p style="margin-bottom:16px;color:#666;">El browser bloqueó la vista previa del PDF.</p>'
-                + '<a href="' + storageUrl + '" target="_blank" class="btn btn-primary btn-sm">📄 Abrir PDF en nueva pestaña</a>';
+                + '<a href="' + esc(storageUrl) + '" target="_blank" class="btn btn-primary btn-sm">📄 Abrir PDF en nueva pestaña</a>';
 
             iframe.onerror = function() {
                 iframe.style.display = 'none';
@@ -999,7 +999,7 @@ async function verDocumento(url, tipo, concepto) {
             var imgFallback = document.createElement('div');
             imgFallback.style.cssText = 'display:none;padding:32px;text-align:center;';
             imgFallback.innerHTML = '<p style="margin-bottom:16px;color:#666;">No se pudo mostrar la imagen.</p>'
-                + '<a href="' + storageUrl + '" target="_blank" class="btn btn-primary btn-sm">🖼️ Abrir en nueva pestaña</a>';
+                + '<a href="' + esc(storageUrl) + '" target="_blank" class="btn btn-primary btn-sm">🖼️ Abrir en nueva pestaña</a>';
 
             img.onerror = function() {
                 img.style.display = 'none';
@@ -1008,7 +1008,7 @@ async function verDocumento(url, tipo, concepto) {
 
             var link = document.createElement('p');
             link.style.marginTop = '10px';
-            link.innerHTML = '<a href="' + storageUrl + '" target="_blank" style="font-size:13px;color:#5C1018;">Abrir en nueva pestaña →</a>';
+            link.innerHTML = '<a href="' + esc(storageUrl) + '" target="_blank" style="font-size:13px;color:#5C1018;">Abrir en nueva pestaña →</a>';
 
             body.innerHTML = '';
             body.appendChild(img);
@@ -1021,7 +1021,7 @@ async function verDocumento(url, tipo, concepto) {
         body.innerHTML =
             '<div style="padding:32px;text-align:center;">'
             + '<p style="color:#991b1b;margin-bottom:16px;">❌ No se pudo cargar el documento.</p>'
-            + '<a href="' + url + '" target="_blank" class="btn btn-primary btn-sm">🔗 Abrir enlace directo</a>'
+            + '<a href="' + esc(url) + '" target="_blank" class="btn btn-primary btn-sm">🔗 Abrir enlace directo</a>'
             + '</div>';
         document.getElementById('docModalDescargar').href = url;
     }

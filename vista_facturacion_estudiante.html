@@ -220,9 +220,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     var _sb = await getSupabase();
     var { data: { session: _session } } = await _sb.auth.getSession();
     if (!_session) { window.location.href = 'portal_login.html'; return; }
-    var sesion = getSesion();
-    if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    var sesion = await requireAuth();
+    if (!sesion || ['ESTUDIANTE','COOPERADORA','SECRETARIA','ADMINISTRADOR'].indexOf(sesion.rol) === -1) { window.location.href = 'portal_login.html'; return; }
     ROL = sesion.rol || '';
+    if (ROL === 'ESTUDIANTE') { DNI = String(sesion.dni || ''); }
     if (!DNI) { alert('DNI no especificado.'); history.back(); return; }
     spin(true);
     try {
@@ -351,7 +352,7 @@ async function subirFactura() {
         if (upErr) throw new Error('Error al subir archivo: ' + upErr.message);
         var { data: urlData } = sb.storage.from('comprobantes').getPublicUrl(filePath);
         var { error: insErr } = await sb.from('facturas').insert({
-            estudiante_dni: parseInt(DNI),
+            estudiante_dni: DNI,
             descripcion: desc,
             periodo: periodo || null,
             archivo_url: urlData.publicUrl,
