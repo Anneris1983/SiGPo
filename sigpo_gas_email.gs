@@ -132,7 +132,8 @@ function enviarRecordatoriosVencimiento() {
 
   Logger.log('--- Recordatorios de vencimiento: ' + mesNom + ' ' + anio + ' ---');
 
-  var cobros = _sbGet(
+  // Cuotas con vencimiento en el mes actual
+  var cobrosMes = _sbGet(
     'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
     '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
     '&estado=not.in.(ABONADA,A_DEFINIR)' +
@@ -141,20 +142,40 @@ function enviarRecordatoriosVencimiento() {
     '&fecha_vencimiento=lte.' + hasta
   );
 
-  if (!cobros.length) { Logger.log('Sin cobros pendientes este mes.'); return; }
+  // Cobros EN_MORA de meses anteriores: también reciben el recordatorio mensual
+  var cobrosMoraAnt = _sbGet(
+    'cobros?select=cobro_id,dni,cohorte_id,programa_id,concepto,periodo,nro_cuota,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
+    '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
+    '&estado=eq.EN_MORA' +
+    '&fecha_vencimiento=lt.' + desde
+  );
 
-  var ctx      = _cargarContexto(cobros);
-  var ccPorDni = _cuentasCorrientesLote(Object.keys(ctx.porDni), Object.keys(ctx.cohMap));
+  var todosCobros = cobrosMes.concat(cobrosMoraAnt);
+  if (!todosCobros.length) { Logger.log('Sin cobros pendientes ni en mora.'); return; }
+
+  // Índice de cuotas del mes por DNI
+  var porDniMes = {};
+  cobrosMes.forEach(function(c) {
+    if (!porDniMes[c.dni]) porDniMes[c.dni] = [];
+    porDniMes[c.dni].push(c);
+  });
+
+  var ctx          = _cargarContexto(todosCobros);
+  var todosLosDnis = _uniq(todosCobros.map(function(c){ return c.dni; }));
+  var ccPorDni     = _cuentasCorrientesLote(todosLosDnis, Object.keys(ctx.cohMap));
 
   var enviados = 0;
-  Object.keys(ctx.porDni).forEach(function(dni) {
+  todosLosDnis.forEach(function(dni) {
     var usu = ctx.usuMap[dni];
     if (!usu || !usu.email) { Logger.log('Sin email: DNI ' + dni); return; }
-    var cuotasMes = ctx.porDni[dni];
-    var progNom   = _nombrePrograma(cuotasMes[0], ctx);
-    var cc        = ccPorDni[dni] || [];
-    var subject = 'Recordatorio de cuota — ' + progNom + ' — ' + mesNom + ' ' + anio;
-    var html    = _htmlRecordatorio(_nombreCompleto(usu), progNom, mesNom, anio, cuotasMes, cc);
+    var cuotasMes  = porDniMes[dni] || [];
+    var todasCtas  = cuotasMes.length ? cuotasMes : (ctx.porDni[dni] || []);
+    var progNom    = _nombrePrograma(todasCtas[0], ctx);
+    var cc         = ccPorDni[dni] || [];
+    var subject    = cuotasMes.length > 0
+      ? 'Recordatorio de cuota — ' + progNom + ' — ' + mesNom + ' ' + anio
+      : 'Recordatorio de deuda en mora — ' + progNom + ' — ' + mesNom + ' ' + anio;
+    var html       = _htmlRecordatorio(_nombreCompleto(usu), progNom, mesNom, anio, cuotasMes, cc);
     if (_enviarMail(usu.email, subject, html)) enviados++;
   });
 
@@ -397,21 +418,42 @@ function _filasCC(cc) {
 }
 
 function _htmlRecordatorio(nombre, prog, mesNom, anio, cuotasMes, cc) {
-  var fechaVenc = _fmtFecha(cuotasMes[0].fecha_vencimiento);
-  var filasCuota = cuotasMes.map(function(c) {
-    return '<tr class="pend"><td>' + (c.concepto||'—') + '</td><td>' + (c.periodo||'—') + '</td>' +
-           '<td>' + _fmtFecha(c.fecha_vencimiento) + '</td>' +
-           '<td><strong>' + _fmtPeso(c.monto_final) + '</strong></td></tr>';
-  }).join('');
-  var deudaPrev = cc.filter(function(c){ return c.estado === 'EN_MORA'; })
-                    .reduce(function(s,c){ return s + Number(c.saldo_pendiente||c.monto_final||0); }, 0);
+  var deudaMora = cc.filter(function(c){ return c.estado === 'EN_MORA'; })
+                   .reduce(function(s,c){ return s + Number(c.saldo_pendiente||c.monto_final||0); }, 0);
+
+  // Sección cuota del mes (solo si tiene vencimiento en el mes actual)
+  var seccionMes = '';
+  if (cuotasMes.length > 0) {
+    var fechaVenc  = _fmtFecha(cuotasMes[0].fecha_vencimiento);
+    var filasCuota = cuotasMes.map(function(c) {
+      return '<tr class="pend"><td>' + (c.concepto||'—') + '</td><td>' + (c.periodo||'—') + '</td>' +
+             '<td>' + _fmtFecha(c.fecha_vencimiento) + '</td>' +
+             '<td><strong>' + _fmtPeso(c.monto_final) + '</strong></td></tr>';
+    }).join('');
+    seccionMes =
+      '<div class="aviso">Le recordamos que la cuota del mes de <strong>' + mesNom + ' ' + anio + '</strong> ' +
+      'vence el <strong>' + fechaVenc + '</strong>.</div>' +
+      '<table><tr><th>Concepto</th><th>Período</th><th>Vencimiento</th><th>Monto</th></tr>' + filasCuota + '</table>';
+  }
+
+  // Sección mora (tanto para "tiene cuota + mora" como para "solo mora")
+  var seccionMora = deudaMora > 0
+    ? '<div class="alerta">' + (cuotasMes.length > 0 ? 'Además, registra' : 'Registra') +
+      ' una deuda en mora de <span class="deuda">' + _fmtPeso(deudaMora) + '</span>. ' +
+      'Tenga en cuenta que sobre el saldo en mora se aplican los intereses vigentes. Le solicitamos regularizar su situación a la brevedad.</div>'
+    : '';
+
+  // Intro diferenciada: con o sin cuota del mes
+  var intro = cuotasMes.length > 0
+    ? '<p>Estimado/a <strong>' + nombre + '</strong>,</p>'
+    : '<p>Estimado/a <strong>' + nombre + '</strong>,</p>' +
+      '<p>Con motivo del inicio del mes de <strong>' + mesNom + ' ' + anio + '</strong> le informamos ' +
+      'sobre el estado de sus cuotas en el programa <strong>' + prog + '</strong>.</p>';
+
   return _wrapHtml(
-    '<p>Estimado/a <strong>' + nombre + '</strong>,</p>' +
-    '<div class="aviso">Le recordamos que la cuota del mes de <strong>' + mesNom + ' ' + anio + '</strong> ' +
-    'vence el <strong>' + fechaVenc + '</strong>.</div>' +
-    '<table><tr><th>Concepto</th><th>Período</th><th>Vencimiento</th><th>Monto</th></tr>' + filasCuota + '</table>' +
-    (deudaPrev > 0 ?
-      '<div class="alerta">Además, registra una deuda previa en mora de <span class="deuda">' + _fmtPeso(deudaPrev) + '</span>. Le solicitamos regularizar su situación.</div>' : '') +
+    intro +
+    seccionMes +
+    seccionMora +
     '<h3 style="color:#1e3a5f;">Estado de cuenta corriente</h3>' +
     '<table><tr><th>Concepto</th><th>Período</th><th>Vencimiento</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr>' +
     _filasCC(cc) + '</table>' +
