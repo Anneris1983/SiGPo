@@ -992,16 +992,27 @@ async function obtenerAsignacionesCoordinador(dni) {
 }
 
 /**
- * Asignar programas a un coordinador (reemplaza los existentes)
+ * Asignar programas/cohortes a un coordinador o profesor (reemplaza los existentes).
+ * Acepta dos formatos en `asignaciones` (retrocompatible):
+ *  - Array de ids de programa:        [7, 8]            → asignación a programa completo
+ *  - Array de objetos:                [{programa_id, cohorte_id}, ...] → respeta cohorte específica
+ * Si cohorte_id es null/undefined, queda como asignación a programa completo (ve todas las cohortes).
  */
-async function asignarProgramasCoordinador(usuarioId, programaIds) {
+async function asignarProgramasCoordinador(usuarioId, asignaciones) {
     const sb = await getSupabase();
     // Borrar asignaciones previas
     await sb.from('coordinadores_programas').delete().eq('coordinador_id', usuarioId);
-    if (!programaIds || !programaIds.length) return { ok: true };
-    // Insertar nuevas
-    const rows = programaIds.map(function(pid) {
-        return { coordinador_id: usuarioId, programa_id: pid };
+    if (!asignaciones || !asignaciones.length) return { ok: true };
+    // Insertar nuevas — normaliza ambos formatos a {coordinador_id, programa_id, cohorte_id}
+    const rows = asignaciones.map(function(a) {
+        if (a !== null && typeof a === 'object') {
+            return {
+                coordinador_id: usuarioId,
+                programa_id: a.programa_id,
+                cohorte_id: a.cohorte_id != null ? a.cohorte_id : null
+            };
+        }
+        return { coordinador_id: usuarioId, programa_id: a, cohorte_id: null };
     });
     const { error } = await sb.from('coordinadores_programas').insert(rows);
     return { ok: !error };

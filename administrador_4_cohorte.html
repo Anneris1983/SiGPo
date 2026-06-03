@@ -1543,8 +1543,12 @@ function planActualizarResumen() {
 
 async function guardarCuotas() {
     if (!planFilas.length) { toast('Agregá al menos una cuota', 'err'); return; }
-    var dnis = V.data.estudiantes.map(function(e) { return e.dni; });
-    if (!dnis.length) { toast('No hay estudiantes en esta cohorte', 'err'); return; }
+    // Solo generar cuotas para estudiantes ACTIVOS: evita cobros "zombie" para
+    // quienes están dados de baja (estado_academico === 'BAJA').
+    var dnis = V.data.estudiantes
+        .filter(function(e) { return e.estado_academico !== 'BAJA'; })
+        .map(function(e) { return e.dni; });
+    if (!dnis.length) { toast('No hay estudiantes activos en esta cohorte', 'err'); return; }
 
     if (V.busy) return;
     V.busy = true;
@@ -2032,6 +2036,8 @@ async function exportarExcel() {
             est.cobros.forEach(function(c) { cobrosMap[keyCuota(c.concepto, c.periodo)] = c; });
             var totP = 0, totA = 0, totS = 0;
             est.cobros.forEach(function(c) {
+                // Excluir cuotas NO_APLICA de los totales, igual que la grilla en pantalla.
+                if (c.no_aplica === true || resolverEstadoCobro(c) === 'NO_APLICA') return;
                 totP += Number(c.monto_final) || 0;
                 totA += calcMontoAbonado(c);
                 totS += Number(c.saldo_pendiente) || 0;
@@ -2447,6 +2453,7 @@ async function aprobarCuota() {
             // Regla 2: aprobación total → ABONADA
             var r = await sb.from('cobros').update({
                 estado: 'ABONADA', saldo_pendiente: 0,
+                monto_abonado: Number(_aprCobro.monto_final),
                 recibo_url: reciboUrl, fecha_aprobacion: hoy()
             }).eq('cobro_id', _aprCobro.cobro_id);
             if (r.error) throw r.error;
@@ -2457,7 +2464,9 @@ async function aprobarCuota() {
             var nuevoAbonado = redondear2(yaAbonado + montoAprobado);
             var nuevoSaldo   = redondear2(Math.max(0, (Number(_aprCobro.monto_final)||0) - nuevoAbonado));
             var r = await sb.from('cobros').update({
-                estado: 'PAGO_PARCIAL', saldo_pendiente: nuevoSaldo, recibo_url: reciboUrl
+                estado: 'PAGO_PARCIAL', saldo_pendiente: nuevoSaldo,
+                monto_abonado: nuevoAbonado, saldo_mora_base: null,
+                recibo_url: reciboUrl
             }).eq('cobro_id', _aprCobro.cobro_id);
             if (r.error) throw r.error;
             // Registrar en tabla pagos (opcional)
