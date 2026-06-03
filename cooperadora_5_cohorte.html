@@ -1564,8 +1564,15 @@
                     var saldoC = Number(c.saldo_pendiente||0);
                     var _hoyStr = new Date().toISOString().split('T')[0];
                     var _esPagada = c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL';
+                    var _tieneRecibo = !!c.recibo_url;
+                    var _tieneComp   = !!c.comprobante_url;
                     var estadoRaw = c.no_aplica ? 'NODEBE'
+                        : (c.monto_final == null || Number(c.monto_final) === 0) ? 'A_DEFINIR'
+                        : (saldoC <= 0 && ((_tieneRecibo && abonado >= Number(c.monto_final||0)) || c.estado === 'ABONADA')) ? 'ABONADA'
+                        : (abonado > 0 && saldoC > 0 && (_tieneRecibo || c.estado === 'PAGO_PARCIAL')) ? 'PAGO_PARCIAL'
+                        : (_tieneComp && !_tieneRecibo && abonado <= 0) ? 'PENDIENTE'
                         : (abonado > 0 && saldoC > 0) ? 'PAGO_PARCIAL'
+                        : (c.estado === 'PENDIENTE') ? 'PENDIENTE'
                         : (!_esPagada && c.fecha_vencimiento && c.fecha_vencimiento < _hoyStr && Number(c.monto_final||0) > 0) ? 'EN_MORA'
                         : (c.estado||'NO_ABONADA');
                     dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, montoTransferido:(c.monto_transferido ? Number(c.monto_transferido) : null), texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'', recibo_url:c.recibo_url||'' });
@@ -1821,8 +1828,11 @@
         }
 
         function renderCeldaCuota(cuota, noDebeAbonar, descuentoPorcentaje) {
-            if (!cuota || cuota.estado === 'nodebe' || noDebeAbonar) {
+            if (noDebeAbonar || (cuota && cuota.estado === 'nodebe')) {
                 return `<td class="cuota-cell cuota-nodebe">No aplica</td>`;
+            }
+            if (!cuota) {
+                return `<td class="cuota-cell cuota-adefinir" title="Sin cobro generado para esta cuota"><span style="color:var(--clr-warning);font-size:10px;font-style:italic;">A definir</span></td>`;
             }
 
             const clases = 'cuota-cell cuota-' + cuota.estado;
@@ -1833,7 +1843,8 @@
                 top = 'A definir';
                 sub = cuota.fechaVencimiento ? formatearFechaCorta(cuota.fechaVencimiento) : '';
             } else if (cuota.estado === 'parcial') {
-                sub = 'Saldo ' + formatearMoneda(cuota.saldoPendiente);
+                top = formatearMoneda(cuota.montoAbonado || 0);
+                sub = 'de ' + formatearMoneda(cuota.montoFinal || cuota.montoBase || 0);
             } else if (cuota.estado === 'mora') {
                 sub = 'Vence ' + formatearFechaCorta(cuota.fechaVencimiento);
             } else if (cuota.estado === 'pendiente') {

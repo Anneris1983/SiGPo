@@ -367,28 +367,31 @@ var CT_VIEW = {
     },
 
     celdaVacia: function(est, col) {
-        return '<td data-est="NO_APLICA">no debe<br>abonar</td>';
+        return '<td data-est="A_DEFINIR" title="Sin cobro generado para esta cuota"><span style="color:var(--clr-warning);font-size:10px;font-style:italic;">A definir</span></td>';
     },
 
-    celda: function(c, est) {
+    celda: function(c, est, estado, montoAbonado, col) {
         var txt = '';
-        if      (c.estado === 'ABONADA')      txt = fMonto(c.monto_final);
-        else if (c.estado === 'PAGO_PARCIAL')  txt = fMonto(c.monto_abonado)+'<br><small style="font-size:9px;opacity:.8;">de '+fMonto(c.monto_final)+'</small>';
-        else if (c.estado === 'PENDIENTE')     txt = 'en revisión';
-        else if (c.estado === 'NO_ABONADA')    txt = fMonto(c.saldo_pendiente||c.monto_final);
-        else if (c.estado === 'EN_MORA')       txt = fMonto(c.saldo_pendiente||c.monto_final);
-        else if (c.estado === 'A_DEFINIR')     txt = 'a definir';
+        if      (estado === 'NO_APLICA')      txt = '— no aplica';
+        else if (estado === 'A_DEFINIR')      txt = 'A definir';
+        else if (estado === 'PAGO_PARCIAL')   txt = fMonto(montoAbonado)+'<br><small style="font-size:9px;opacity:.8;">de '+fMonto(c.monto_final)+'</small>';
+        else if (estado === 'PENDIENTE') {
+            var mt = c.monto_transferido && Number(c.monto_transferido) > 0 ? Number(c.monto_transferido) : null;
+            txt = (mt && mt < Number(c.monto_final||0))
+                ? fMonto(mt)+'<br><small style="font-size:9px;opacity:.8;">🕓 En revisión</small>'
+                : '🕓 En revisión';
+        }
         else txt = fMonto(c.monto_final);
-        var title = escHtml(c.concepto+' · '+(c.periodo||'')+' | Estado: '+c.estado+' | Abonado: '+fMonto(c.monto_abonado)+' | Saldo: '+fMonto(c.saldo_pendiente)+(c.fecha_vencimiento?' | Vence: '+c.fecha_vencimiento:''));
+        var title = escHtml(c.concepto+' · '+(c.periodo||'')+' | Estado: '+estado+' | Abonado: '+fMonto(montoAbonado)+' | Saldo: '+fMonto(c.saldo_pendiente)+(c.fecha_vencimiento?' | Vence: '+c.fecha_vencimiento:''));
         var btnComp   = c.comprobante_url ? '<button class="clink clink-comp" onclick="verArchivo(\''+escJs(c.comprobante_url)+'\')" title="Ver comprobante">📎 Comp.</button>' : '';
         var btnRecibo = c.recibo_url      ? '<button class="clink clink-recibo" onclick="verArchivo(\''+escJs(c.recibo_url)+'\')" title="Ver recibo">🧾 Recibo</button>' : '';
         var links = (btnComp||btnRecibo) ? '<div class="cell-links">'+btnComp+btnRecibo+'</div>' : '';
         var badge = '';
-        if      (c.estado === 'EN_MORA')      badge = '<span class="est-badge badge-mora">En mora</span>';
-        else if (c.estado === 'NO_ABONADA')   badge = '<span class="est-badge badge-noabonada">No abonada</span>';
-        else if (c.estado === 'PAGO_PARCIAL') badge = '<span class="est-badge badge-parcial">Pago parcial</span>';
-        else if (c.estado === 'PENDIENTE')    badge = '<span class="est-badge badge-pendiente">En revisión</span>';
-        return '<td data-est="'+c.estado+'" title="'+title+'">'+badge+txt+links+'</td>';
+        if      (estado === 'EN_MORA')      badge = '<span class="est-badge badge-mora">En mora</span>';
+        else if (estado === 'NO_ABONADA')   badge = '<span class="est-badge badge-noabonada">No abonada</span>';
+        else if (estado === 'PAGO_PARCIAL') badge = '<span class="est-badge badge-parcial">Pago parcial</span>';
+        else if (estado === 'PENDIENTE')    badge = '<span class="est-badge badge-pendiente">En revisión</span>';
+        return '<td data-est="'+estado+'" title="'+title+'">'+badge+txt+links+'</td>';
     },
 
     fila: function(est, estadoGen, celdas, totP, totA, totS) {
