@@ -1340,12 +1340,14 @@
                 <!-- Input pago parcial -->
                 <div class="ap-partial-sec" id="apPartialSec">
                     <div class="ap-input-grp" style="margin-bottom:10px;">
-                        <label for="apMontoAbonado">💰 Monto Abonado</label>
-                        <input type="number" id="apMontoAbonado" placeholder="Ejemplo: 70000" step="0.01" oninput="apCalcularResto()">
+                        <label for="apMontoAbonado">💰 Monto de esta transferencia</label>
+                        <input type="number" id="apMontoAbonado" placeholder="Monto de este pago" step="0.01" oninput="apCalcularResto()">
+                        <div style="font-size:11px;color:#64748b;margin-top:4px;">Ingresá solo lo que pagó en este comprobante, no el total acumulado. El sistema lo suma a lo ya abonado.</div>
                     </div>
                     <div class="ap-calc-box">
                         <div class="ap-calc-row"><span>Monto total de la cuota:</span><strong id="apCalcTotal">—</strong></div>
-                        <div class="ap-calc-row"><span>Monto abonado:</span><strong id="apCalcPaid">$0,00</strong></div>
+                        <div class="ap-calc-row"><span>Ya abonado (pagos previos):</span><strong id="apCalcPrevio">$0,00</strong></div>
+                        <div class="ap-calc-row"><span>Este pago:</span><strong id="apCalcPaid">$0,00</strong></div>
                         <div class="ap-calc-row total"><span>Saldo pendiente:</span><strong id="apCalcResto">—</strong></div>
                     </div>
                     <div class="ap-alert">
@@ -2974,10 +2976,14 @@
 
         function apCalcularResto() {
             var total = _aprobCuota ? (_aprobCuota.montoFinal || 0) : 0;
+            var yaAbonado = _aprobCuota ? (Number(_aprobCuota.montoAbonado) || 0) : 0;
+            // Saldo antes de este pago: el real de la BD, o total − abonado previo.
+            var saldoActual = _aprobCuota ? (Number(_aprobCuota.saldoPendiente) || (total - yaAbonado)) : 0;
             var paid = parseFloat(document.getElementById('apMontoAbonado').value) || 0;
             document.getElementById('apCalcTotal').textContent = apFmt(total);
+            document.getElementById('apCalcPrevio').textContent = apFmt(yaAbonado);
             document.getElementById('apCalcPaid').textContent = apFmt(paid);
-            document.getElementById('apCalcResto').textContent = apFmt(total - paid);
+            document.getElementById('apCalcResto').textContent = apFmt(Math.max(0, saldoActual - paid));
         }
 
         function apHandleFile(event) {
@@ -3042,9 +3048,12 @@
             document.getElementById('apCuota').textContent = cuota ? (cuota.nombre || ('Cuota ' + (cuota.nroCuota || ''))) : '—';
             document.getElementById('apMonto').textContent = apFmt(total);
             document.getElementById('apFullDesc').textContent = 'El estudiante pagó el monto total de la cuota (' + apFmt(total) + ')';
-            document.getElementById('apCalcTotal').textContent = apFmt(total);
-            document.getElementById('apCalcResto').textContent = apFmt(total);
-            document.getElementById('apCalcPaid').textContent = apFmt(0);
+            // Pre-cargar el campo parcial con el monto que el estudiante declaró
+            // en ESTA transferencia (monto_transferido), no el acumulado.
+            var mtDeclarado = (cuota && cuota.montoTransferido && Number(cuota.montoTransferido) > 0)
+                ? Number(cuota.montoTransferido) : '';
+            document.getElementById('apMontoAbonado').value = mtDeclarado;
+            apCalcularResto();
 
             var sub = estudiante ? (estudiante.nombreCompleto + ' · ' + (cuota.nombre || 'Cuota') + ' · ' + apFmt(total)) : cobroId;
             document.getElementById('aprobModalSub').textContent = sub;
