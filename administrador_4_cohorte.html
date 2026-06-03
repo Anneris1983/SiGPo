@@ -1942,18 +1942,23 @@ async function enviarNotificaciones() {
             if (updRes.error) console.error('Error marcando cobros enviados:', updRes.error);
         }
 
-        // Envío real de emails via relay (Edge Function 'enviar-email')
+        // Encola los reclamos en lote; el GAS los envía (event-driven vía pg_net)
         var replyTo  = V.data.programa.email_remitente || '';
         var emailsOk = 0, emailsErr = 0;
-        for (var ei = 0; ei < emails.length; ei++) {
-            var em = emails[ei];
-            var ok = await enviarEmailGas(PROGRAMA_ID, em.to, em.subject, em.body, replyTo);
-            if (ok) emailsOk++; else emailsErr++;
+        var sbEnc = await getSupabase();
+        var rowsEnc = emails.map(function(em){ return {
+            programa_id: PROGRAMA_ID, to_email: em.to, subject: em.subject,
+            body: em.body, reply_to: replyTo || null, estado: 'pendiente'
+        }; });
+        if (rowsEnc.length) {
+            var insEnc = await sbEnc.from('reclamos_pendientes').insert(rowsEnc);
+            if (insEnc.error) { emailsErr = rowsEnc.length; console.error('encolar error:', insEnc.error.message); }
+            else { emailsOk = rowsEnc.length; }
         }
 
         var totalNotifs = notifs.length;
         var msgToast = '✓ ' + sel.length + ' estudiante' + (sel.length !== 1 ? 's' : '') + ' notificado' + (sel.length !== 1 ? 's' : '');
-        msgToast += ' · ' + emailsOk + ' email' + (emailsOk !== 1 ? 's' : '') + ' encolado' + (emailsOk !== 1 ? 's' : '') + ' (se envían en ≤1 min, 1 por estudiante)';
+        msgToast += ' · ' + emailsOk + ' email' + (emailsOk !== 1 ? 's' : '') + ' encolado' + (emailsOk !== 1 ? 's' : '') + ' (se envían en segundos, 1 por estudiante)';
         if (emailsErr > 0) msgToast += ' ⚠️ ' + emailsErr + ' error(es)';
         toast(msgToast, emailsErr > 0 ? 'err' : 'ok');
         cerrar('modal-correo');

@@ -1519,13 +1519,18 @@ async function reclamarSel() {
             emails.push({ to: est.email, subject: asuntoFinal, body: cuerpoBase + detalle, dni: est.dni });
         });
 
+        var rows = emails.map(function(e){ return {
+            programa_id: progIdEmail, to_email: e.to, subject: e.subject,
+            body: e.body, reply_to: replyTo || null, estado: 'pendiente'
+        }; });
         var ok = 0, err = 0, ultimoError = '';
-        for (var i = 0; i < emails.length; i++) {
-            var sent = await enviarEmailGas(progIdEmail, emails[i].to, emails[i].subject, emails[i].body, replyTo);
-            if (sent === true) ok++; else { err++; if (typeof sent === 'string') ultimoError = sent; }
+        if (rows.length) {
+            var insResp = await sb.from('reclamos_pendientes').insert(rows);
+            if (insResp.error) { err = rows.length; ultimoError = insResp.error.message; console.error('encolar error:', insResp.error.message); }
+            else { ok = rows.length; }
         }
 
-        var msg = '✓ ' + ok + ' reclamo' + (ok!==1?'s':'') + ' encolado' + (ok!==1?'s':'') + ' (se envían en ≤1 min)';
+        var msg = '✓ ' + ok + ' reclamo' + (ok!==1?'s':'') + ' encolado' + (ok!==1?'s':'') + ' (se envían en segundos)';
         if (err) msg += ' ⚠️ ' + err + ' error(es)' + (ultimoError ? ': ' + ultimoError : '');
         toast(msg, err ? 'err' : 'ok');
         deselAll();

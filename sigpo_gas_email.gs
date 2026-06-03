@@ -54,43 +54,68 @@ function configurarTriggers() {
 
 // ══════════════════════════════════════════════════════════════
 // COLA DE RECLAMOS — reemplaza al doPost (que fallaba por POST externo)
-// El botón del sistema inserta en la tabla 'reclamos_pendientes'.
-// Este trigger (cada 1 min) lee lo pendiente, envía y marca el estado.
-// Solo procesa los reclamos de los programas de este GAS (PROGRAMA_IDS).
+// El botón inserta en 'reclamos_pendientes'. Supabase (pg_net) le pega
+// a doGet?action=procesar al instante (event-driven, sin polling).
+// doGet agenda un disparador de una sola vez → procesarReclamosPendientes
+// drena la cola con todo el presupuesto de ejecución (hasta ~6 min).
 // ══════════════════════════════════════════════════════════════
-function procesarReclamosPendientes() {
-  var pend = _sbGet(
-    'reclamos_pendientes?select=id,to_email,subject,body,reply_to,intentos' +
-    '&estado=eq.pendiente' +
-    '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
-    '&order=created_at.asc&limit=50'
-  );
-  if (!pend.length) return;
-  Logger.log('Reclamos pendientes: ' + pend.length);
 
-  pend.forEach(function(r) {
-    try {
-      var opts = { name: NOMBRE_INST, htmlBody: String(r.body || '').replace(/\n/g, '<br>') };
-      if (r.reply_to) opts.replyTo = r.reply_to;
-      MailApp.sendEmail(r.to_email, r.subject, r.body, opts);
-      _sbPatch('reclamos_pendientes?id=eq.' + r.id, { estado: 'enviado', sent_at: new Date().toISOString() });
-      Logger.log('✅ enviado #' + r.id + ' → ' + r.to_email);
-    } catch(err) {
-      _sbPatch('reclamos_pendientes?id=eq.' + r.id, {
-        estado: 'error', error_msg: String(err.message).slice(0,300), intentos: (r.intentos || 0) + 1
+// Llamado por Supabase (GET) cuando hay un reclamo nuevo. Agenda el procesamiento.
+function doGet(e) {
+  var out = ContentService.createTextOutput();
+  out.setMimeType(ContentService.MimeType.JSON);
+  try {
+    var p = (e && e.parameter) || {};
+    if (p.secret !== SECRET) { out.setContent(JSON.stringify({ ok:false, error:'No autorizado' })); return out; }
+    if (p.action === 'procesar') {
+      // Dedupe: si ya hay un procesamiento agendado, no creamos otro.
+      var yaAgendado = ScriptApp.getProjectTriggers().some(function(t) {
+        return t.getHandlerFunction() === 'procesarReclamosPendientes';
       });
-      Logger.log('❌ error #' + r.id + ': ' + err.message);
+      if (!yaAgendado) ScriptApp.newTrigger('procesarReclamosPendientes').timeBased().after(3000).create();
+      out.setContent(JSON.stringify({ ok:true, agendado: !yaAgendado }));
+    } else {
+      out.setContent(JSON.stringify({ ok:true, msg:'SiGPo mailer activo' }));
     }
-  });
+  } catch(err) {
+    out.setContent(JSON.stringify({ ok:false, error: err.message }));
+  }
+  return out;
 }
 
-// Ejecutar UNA vez manualmente desde el editor para activar el trigger de 1 min.
-function configurarTriggerReclamos() {
+function procesarReclamosPendientes() {
+  // Limpiar los disparadores de una sola vez creados por doGet (evita acumulación).
   ScriptApp.getProjectTriggers().forEach(function(t) {
     if (t.getHandlerFunction() === 'procesarReclamosPendientes') ScriptApp.deleteTrigger(t);
   });
-  ScriptApp.newTrigger('procesarReclamosPendientes').timeBased().everyMinutes(1).create();
-  Logger.log('✅ Trigger de reclamos (cada 1 min) configurado.');
+
+  var total = 0, vueltas = 0;
+  while (vueltas < 10) {  // hasta 10 tandas de 50 = 500 por ejecución
+    vueltas++;
+    var pend = _sbGet(
+      'reclamos_pendientes?select=id,to_email,subject,body,reply_to,intentos' +
+      '&estado=eq.pendiente' +
+      '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
+      '&order=created_at.asc&limit=50'
+    );
+    if (!pend.length) break;
+
+    pend.forEach(function(r) {
+      try {
+        var opts = { name: NOMBRE_INST, htmlBody: String(r.body || '').replace(/\n/g, '<br>') };
+        if (r.reply_to) opts.replyTo = r.reply_to;
+        MailApp.sendEmail(r.to_email, r.subject, r.body, opts);
+        _sbPatch('reclamos_pendientes?id=eq.' + r.id, { estado: 'enviado', sent_at: new Date().toISOString() });
+        total++;
+      } catch(err) {
+        _sbPatch('reclamos_pendientes?id=eq.' + r.id, {
+          estado: 'error', error_msg: String(err.message).slice(0,300), intentos: (r.intentos || 0) + 1
+        });
+        Logger.log('❌ error #' + r.id + ': ' + err.message);
+      }
+    });
+  }
+  Logger.log('Reclamos procesados: ' + total);
 }
 
 // ══════════════════════════════════════════════════════════════
