@@ -393,9 +393,8 @@
             <button class="filter-btn" data-f="A_DEFINIR">A definir</button>
         </div>
         <div class="actions">
-            <button class="btn btn-crear" onclick="abrirCrearCuota()">➕ Crear plan de cuotas</button>
-            <button class="btn btn-editar-cuotas" onclick="abrirEditarCuotas()">✏️ Editar cuotas</button>
-            <button class="btn btn-eliminar-global" onclick="abrirEliminarCuotasGlobal()">🗑 Eliminar cuota</button>
+            <!-- El coordinador no gestiona cuotas (solo las consulta para reclamar).
+                 Botones de crear/editar/eliminar plan de cuotas deshabilitados a propósito. -->
             <button class="btn btn-outline" onclick="abrirCorreo()">✉️ Editar correos de reclamo</button>
             <button class="btn btn-primary" id="btn-reclamar" disabled onclick="reclamarSel()">📧 Reclamar seleccionados</button>
             <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar a Excel</button>
@@ -984,44 +983,31 @@ var CT_VIEW = {
         else if (c.estado === 'PAGO_PARCIAL') badge = '<span class="est-badge badge-parcial">Pago parcial</span>';
         else if (c.estado === 'PENDIENTE')    badge = '<span class="est-badge badge-pendiente">En revisión</span>';
         else if (c.estado === 'NO_APLICA')    badge = '';
-        const esEditable = !['ABONADA','PAGO_PARCIAL','PENDIENTE','NO_APLICA'].includes(c.estado);
-        const editAttr = esEditable
-            ? ' onclick="event.stopPropagation();abrirCeldaPopup(event,' + escapeHtml(JSON.stringify({
-                cobro_id: c.cobro_id,
-                dni: String(est.dni),
-                concepto: c.concepto,
-                periodo: c.periodo || '',
-                monto: c.monto_original,
-                descuento_porcentaje: est.descuento_porcentaje || c.descuento_porcentaje || 0,
-                fecha_vencimiento: c.fecha_vencimiento || null,
-                estado_actual: c.estado,
-                no_aplica: c.estado === 'NO_APLICA'
-              })) + ')" style="cursor:pointer;"'
-            : '';
-        const editHint = esEditable ? '<div class="u-hint">✏️ editar</div>' : '';
-        return `<td data-est="${c.estado}" title="${escapeHtml(title)}"${editAttr}>${badge}${txt}${editHint}${links}</td>`;
+        // El coordinador solo consulta las cuotas: no puede editar, aprobar ni rechazar.
+        // (La edición por celda queda deshabilitada; sí puede ver comprobantes y recibos.)
+        return `<td data-est="${c.estado}" title="${escapeHtml(title)}">${badge}${txt}${links}</td>`;
     },
 
     fila: function(est, estadoGen, celdas, totP, totA, totS) {
         const tr = document.createElement('tr');
-        tr.className = 'fila-est' + (est.estado_academico === 'BAJA_COHORTE' ? ' fila-pasiva-cohorte' : '');
+        tr.className = 'fila-est' + (est.estado_academico === 'BAJA' ? ' fila-pasiva-cohorte' : '');
         tr.dataset.dni = est.dni;
         tr.dataset.est = estadoGen;
 
-        const btnEstado = est.estado_academico === 'BAJA_COHORTE'
+        const btnEstado = est.estado_academico === 'BAJA'
             ? `<button class="btn-alta-coh" type="button" title="Reactivar en esta cohorte" onclick="event.stopPropagation();confirmarCambioEstado(${est.dni}, '${escapeJs(est.apellido + ', ' + est.nombre)}', 'ACTIVO')">↑ Dar alta</button>`
-            : `<button class="btn-baja-coh" type="button" title="Dar de baja en esta cohorte" onclick="event.stopPropagation();confirmarCambioEstado(${est.dni}, '${escapeJs(est.apellido + ', ' + est.nombre)}', 'BAJA_COHORTE')">↓ Dar baja</button>`;
+            : `<button class="btn-baja-coh" type="button" title="Dar de baja en esta cohorte" onclick="event.stopPropagation();confirmarCambioEstado(${est.dni}, '${escapeJs(est.apellido + ', ' + est.nombre)}', 'BAJA')">↓ Dar baja</button>`;
 
         tr.innerHTML = `
           <td style="text-align:center;"><input type="checkbox" class="chk-e" data-dni="${est.dni}" onchange="onChk()"></td>
           <td class="cell-name" onclick="irEstudiante(${est.dni})">${escapeHtml(est.apellido)}, ${escapeHtml(est.nombre)}</td>
           <td class="cell-desc" style="color:${est.descuento_porcentaje>0?'var(--success)':'#aaa'}">
-            ${est.descuento_porcentaje}% <button class="edit-btn" type="button" title="Editar descuento" onclick='event.stopPropagation();abrirDescuento({ dni:${est.dni}, apellido:${JSON.stringify(est.apellido)}, nombre:${JSON.stringify(est.nombre)}, pct:${est.descuento_porcentaje} }, this)'>✏️</button>
+            ${est.descuento_porcentaje}%
           </td>
           <td class="cell-email">${escapeHtml(est.email)}</td>
           <td style="text-align:center;border-right:1px solid #ebebeb;">
             <div style="display:inline-flex;flex-direction:column;align-items:center;gap:4px;">
-              <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;${est.estado_academico === 'BAJA_COHORTE' ? 'background:#fde8e1;color:var(--clr-danger);' : 'background:#d1fae5;color:#065f46;'}">${est.estado_academico === 'BAJA_COHORTE' ? 'Baja' : 'Activo'}</span>
+              <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;${est.estado_academico === 'BAJA' ? 'background:#fde8e1;color:var(--clr-danger);' : 'background:#d1fae5;color:#065f46;'}">${est.estado_academico === 'BAJA' ? 'Baja' : 'Activo'}</span>
               ${btnEstado}
             </div>
           </td>
@@ -1405,7 +1391,7 @@ async function guardarCuotas() {
 let _bcDni = null, _bcNombre = '', _bcNuevoEstado = '';
 function confirmarCambioEstado(dni, nombre, nuevoEstado) {
     _bcDni = dni; _bcNombre = nombre; _bcNuevoEstado = nuevoEstado;
-    const esBaja = nuevoEstado === 'BAJA_COHORTE';
+    const esBaja = nuevoEstado === 'BAJA';
     const hdr = document.getElementById('mbc-hdr');
     const btn = document.getElementById('mbc-btn');
     hdr.style.background = esBaja ? 'linear-gradient(135deg,#e65100 0%,#f59e0b 100%)' : 'linear-gradient(135deg,#2d7a4f 0%,#4caf50 100%)';
@@ -1436,15 +1422,27 @@ async function ejecutarCambioEstado() {
     V.busy = true;
     spin(true);
     try {
-        if (estaEnAppsScript()) await gs('cambiarEstadoEstudianteEnCohorte', { dni:_bcDni, cohorteId:COHORTE_ID, programaId:PROGRAMA_ID, estadoAcademico:_bcNuevoEstado });
-        else await delay(400);
-        const est = V.data.estudiantes.find(e => e.dni === _bcDni);
-        if (est) est.estado_academico = _bcNuevoEstado;
+        // Fuente de verdad: tabla inscripciones (estado_academico: ACTIVO | BAJA)
+        const est = V.data.estudiantes.find(e => String(e.dni) === String(_bcDni));
+        if (!est) throw new Error('Estudiante no encontrado en memoria');
+        if (!est.id) throw new Error('No se pudo determinar la inscripción del estudiante');
+
+        const sb = await getSupabase();
+        const { error } = await sb.from('inscripciones')
+            .update({ estado_academico: _bcNuevoEstado })
+            .eq('estudiante_id', est.id)
+            .eq('cohorte_id', COHORTE_ID);
+        if (error) throw error;
+
+        est.estado_academico = _bcNuevoEstado;
         renderTabla();
-        toast(_bcNuevoEstado === 'BAJA_COHORTE' ? `${_bcNombre} dado/a de baja en esta cohorte ✓` : `${_bcNombre} reactivado/a en esta cohorte ✓`, 'ok');
+        toast(_bcNuevoEstado === 'BAJA' ? `${_bcNombre} dado/a de baja en esta cohorte ✓` : `${_bcNombre} reactivado/a en esta cohorte ✓`, 'ok');
         cerrar('modal-baja-cohorte');
-    } catch(e) { toast('Error al procesar','err'); }
-    finally { spin(false); }
+    } catch(e) {
+        console.error(e);
+        toast('Error al procesar: ' + (e.message || e), 'err');
+    }
+    finally { V.busy = false; spin(false); }
 }
 
 function abrirCorreo() { cargarPlantilla(); abrir('modal-correo'); }
@@ -1592,7 +1590,7 @@ async function exportarExcel() {
                 est.apellido, est.nombre, est.dni, est.email,
                 est.descuento_porcentaje + '%',
                 etiquetas[estadoGen] || estadoGen,
-                est.estado_academico === 'BAJA_COHORTE' ? 'Baja' : 'Activo'
+                est.estado_academico === 'BAJA' ? 'Baja' : 'Activo'
             ];
             columnas.forEach(col => {
                 const c = cobrosMap[col.concepto_base+'||'+(col.periodo||'')];
@@ -1797,7 +1795,7 @@ function obtenerDemoData() {
                 { cobro_id:11, concepto:'Cuota 03', periodo:'May 2025', fecha_vencimiento:'2025-05-15', monto_original:90000, descuento_porcentaje:0, monto_final:90000, monto_abonado:0, saldo_pendiente:90000, estado:'NO_ABONADA' }
               ]
             },
-            { dni:34567890, apellido:'Martínez', nombre:'Laura', email:'laura.martinez@email.com', telefono:'2615553456', descuento_porcentaje:5, estado_academico:'BAJA_COHORTE',
+            { dni:34567890, apellido:'Martínez', nombre:'Laura', email:'laura.martinez@email.com', telefono:'2615553456', descuento_porcentaje:5, estado_academico:'BAJA',
               cobros:[
                 { cobro_id:12, concepto:'Inscripción', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15', fecha_pago:'2025-03-12', monto_original:50000, descuento_porcentaje:5, monto_final:47500, monto_abonado:47500, saldo_pendiente:0, estado:'ABONADA' },
                 { cobro_id:13, concepto:'Cuota 01', periodo:'Mar 2025', fecha_vencimiento:'2025-03-15', fecha_pago:'2025-03-12', monto_original:90000, descuento_porcentaje:5, monto_final:85500, monto_abonado:85500, saldo_pendiente:0, estado:'ABONADA' }
