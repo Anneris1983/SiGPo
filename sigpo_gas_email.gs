@@ -53,6 +53,47 @@ function configurarTriggers() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// COLA DE RECLAMOS — reemplaza al doPost (que fallaba por POST externo)
+// El botón del sistema inserta en la tabla 'reclamos_pendientes'.
+// Este trigger (cada 1 min) lee lo pendiente, envía y marca el estado.
+// Solo procesa los reclamos de los programas de este GAS (PROGRAMA_IDS).
+// ══════════════════════════════════════════════════════════════
+function procesarReclamosPendientes() {
+  var pend = _sbGet(
+    'reclamos_pendientes?select=id,to_email,subject,body,reply_to,intentos' +
+    '&estado=eq.pendiente' +
+    '&programa_id=in.(' + PROGRAMA_IDS.join(',') + ')' +
+    '&order=created_at.asc&limit=50'
+  );
+  if (!pend.length) return;
+  Logger.log('Reclamos pendientes: ' + pend.length);
+
+  pend.forEach(function(r) {
+    try {
+      var opts = { name: NOMBRE_INST, htmlBody: String(r.body || '').replace(/\n/g, '<br>') };
+      if (r.reply_to) opts.replyTo = r.reply_to;
+      MailApp.sendEmail(r.to_email, r.subject, r.body, opts);
+      _sbPatch('reclamos_pendientes?id=eq.' + r.id, { estado: 'enviado', sent_at: new Date().toISOString() });
+      Logger.log('✅ enviado #' + r.id + ' → ' + r.to_email);
+    } catch(err) {
+      _sbPatch('reclamos_pendientes?id=eq.' + r.id, {
+        estado: 'error', error_msg: String(err.message).slice(0,300), intentos: (r.intentos || 0) + 1
+      });
+      Logger.log('❌ error #' + r.id + ': ' + err.message);
+    }
+  });
+}
+
+// Ejecutar UNA vez manualmente desde el editor para activar el trigger de 1 min.
+function configurarTriggerReclamos() {
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'procesarReclamosPendientes') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('procesarReclamosPendientes').timeBased().everyMinutes(1).create();
+  Logger.log('✅ Trigger de reclamos (cada 1 min) configurado.');
+}
+
+// ══════════════════════════════════════════════════════════════
 // DÍA 1 — RECORDATORIO DE VENCIMIENTO DE CUOTA
 // ══════════════════════════════════════════════════════════════
 
@@ -189,6 +230,26 @@ function _sbGet(path) {
   } catch(err) {
     Logger.log('_sbGet excepción: ' + err.message);
     return [];
+  }
+}
+
+function _sbPatch(path, data) {
+  try {
+    var resp = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + path, {
+      method: 'patch',
+      contentType: 'application/json',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+      payload: JSON.stringify(data),
+      muteHttpExceptions: true
+    });
+    if (resp.getResponseCode() >= 300) {
+      Logger.log('_sbPatch error ' + resp.getResponseCode() + ': ' + resp.getContentText().substring(0,200));
+      return false;
+    }
+    return true;
+  } catch(err) {
+    Logger.log('_sbPatch excepción: ' + err.message);
+    return false;
   }
 }
 

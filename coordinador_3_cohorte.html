@@ -1525,7 +1525,7 @@ async function reclamarSel() {
             if (sent === true) ok++; else { err++; if (typeof sent === 'string') ultimoError = sent; }
         }
 
-        var msg = '✓ ' + ok + ' email' + (ok!==1?'s':'') + ' enviado' + (ok!==1?'s':'');
+        var msg = '✓ ' + ok + ' reclamo' + (ok!==1?'s':'') + ' encolado' + (ok!==1?'s':'') + ' (se envían en ≤1 min)';
         if (err) msg += ' ⚠️ ' + err + ' error(es)' + (ultimoError ? ': ' + ultimoError : '');
         toast(msg, err ? 'err' : 'ok');
         deselAll();
@@ -1534,21 +1534,24 @@ async function reclamarSel() {
     finally { V.busy = false; spin(false); }
 }
 
+// Encola el reclamo en Supabase. El GAS (trigger cada 1 min) lo lee y envía
+// desde la cuenta del programa. Evita el POST directo al GAS (que fallaba).
 async function enviarEmailGas(programaId, to, subject, body, replyTo) {
     try {
         var sb = await getSupabase();
-        var resp = await sb.functions.invoke('enviar-email', {
-            body: { programaId: programaId, to: to, subject: subject, body: body, replyTo: replyTo || '' }
+        var resp = await sb.from('reclamos_pendientes').insert({
+            programa_id: programaId,
+            to_email:    to,
+            subject:     subject,
+            body:        body,
+            reply_to:    replyTo || null,
+            estado:      'pendiente'
         });
-        if (resp.error) { console.error('relay error para', to, ':', resp.error.message); return resp.error.message || 'error de red'; }
-        if (resp.data && resp.data.ok === true) return true;
-        var detalle = (resp.data && resp.data.error) ? String(resp.data.error) : 'el servidor de correo rechazó el envío';
-        console.error('GAS rechazó para', to, ':', detalle);
-        if (resp.data && resp.data.debug) console.error('GAS debug:', JSON.stringify(resp.data.debug));
-        return detalle;
+        if (resp.error) { console.error('encolar error para', to, ':', resp.error.message); return resp.error.message || 'error al encolar'; }
+        return true;
     } catch(err) {
         console.error('enviarEmailGas excepción:', err);
-        return err.message || 'excepción al enviar';
+        return err.message || 'excepción al encolar';
     }
 }
 async function exportarExcel() {
