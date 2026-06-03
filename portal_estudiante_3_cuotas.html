@@ -851,7 +851,7 @@ async function enviarComprobante() {
 
         // ── Paso 1: subir archivo usando subirComprobante de supabase.js ──
         lblEl.textContent = 'Subiendo archivo…';
-        var resultado = await subirComprobante(cobroId, _fileActual, fechaTransf);
+        var resultado = await subirComprobante(cobroId, _fileActual, fechaTransf, monto);
         clearInterval(timer);
 
         if (!resultado.ok) {

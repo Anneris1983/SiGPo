@@ -698,7 +698,10 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
             estado: estadoNuevo,
             saldo_pendiente: Math.max(0, nuevoSaldo),
             monto_abonado: abonadoTotal,
-            recibo_url: reciboUrl
+            recibo_url: reciboUrl,
+            // Resetear la base de mora para que el próximo recálculo parta del
+            // nuevo saldo remanente (no de la base de una mora anterior).
+            saldo_mora_base: null
         };
         if (estadoNuevo === 'ABONADA') {
             updateParcial.fecha_aprobacion = new Date().toISOString().split('T')[0];
