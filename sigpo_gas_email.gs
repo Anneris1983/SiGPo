@@ -322,13 +322,27 @@ function _cargarContexto(cobros) {
     porDni[c.dni].push(c);
   });
   var dnis      = Object.keys(porDni);
-  var usuarios  = dnis.length ? _sbGet('usuarios?select=dni,nombre,apellido,email&dni=in.(' + dnis.join(',') + ')') : [];
+  // El email del destinatario puede estar en 'usuarios' (si tiene cuenta) o en
+  // 'estudiantes' (alta administrativa sin cuenta). Combinamos ambas fuentes:
+  // se prioriza usuarios y, si falta el dato, se completa desde estudiantes.
+  var usuarios    = dnis.length ? _sbGet('usuarios?select=dni,nombre,apellido,email&dni=in.(' + dnis.join(',') + ')') : [];
+  var estudiantes = dnis.length ? _sbGet('estudiantes?select=dni,nombre,apellido,email&dni=in.(' + dnis.join(',') + ')') : [];
+  var usuMap = _indexar(estudiantes, 'dni');       // base: estudiantes
+  usuarios.forEach(function(u) {                    // usuarios pisa/completa
+    var prev = usuMap[u.dni] || {};
+    usuMap[u.dni] = {
+      dni:      u.dni,
+      nombre:   u.nombre   || prev.nombre   || '',
+      apellido: u.apellido || prev.apellido || '',
+      email:    u.email    || prev.email    || ''
+    };
+  });
   var programas = _sbGet('programas?select=programa_id,nombre');
   var cohIds    = _uniq(cobros.map(function(c){ return c.cohorte_id; }));
   var cohortes  = cohIds.length ? _sbGet('cohortes?select=cohorte_id,nombre,programa_id&cohorte_id=in.(' + cohIds.join(',') + ')') : [];
   return {
     porDni:  porDni,
-    usuMap:  _indexar(usuarios,  'dni'),
+    usuMap:  usuMap,
     progMap: _indexar(programas, 'programa_id'),
     cohMap:  _indexar(cohortes,  'cohorte_id')
   };
