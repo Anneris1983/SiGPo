@@ -15,6 +15,16 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
+// Escapa un valor para insertarlo en un string JS de comilla simple que vive
+// dentro de un atributo HTML de comilla doble, p.ej.  onclick="fn('VALOR')".
+// Necesario porque escapeHtml() por sí solo NO sirve en este contexto: el
+// navegador decodifica las entidades del atributo ANTES de que el parser JS lo
+// lea, así que un &#39; vuelve a ser ' y rompe/inyecta el string (XSS).
+// Paso 1: escapar el contexto JS (\ y '). Paso 2: escapar el contexto HTML.
+function escapeJsAttr(str) {
+    return escapeHtml(String(str == null ? '' : str).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+}
+
 const SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
 
@@ -362,6 +372,7 @@ function fFechaCorta(str) {
 
 /** Alias de escapeHtml para compatibilidad con archivos que usan esc() */
 var esc = escapeHtml;
+var escJs = escapeJsAttr;
 
 /** Toast de notificación unificado. tipo: 'ok' | 'err' | '' */
 function toast(msg, tipo) {

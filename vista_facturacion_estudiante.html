@@ -280,7 +280,7 @@ function renderFacturas() {
     lista.innerHTML = _facturas.map(function(f) {
         var fecha = f.created_at ? new Date(f.created_at).toLocaleDateString('es-AR') : '';
         var delBtn = (ROL === 'COOPERADORA' || ROL === 'SECRETARIA' || ROL === 'ADMINISTRADOR')
-            ? `<button class="btn-del" onclick="eliminarFactura('${escHtml(f.id)}')" title="Eliminar">🗑</button>` : '';
+            ? `<button class="btn-del" onclick="eliminarFactura('${escJs(f.id)}')" title="Eliminar">🗑</button>` : '';
         return `<div class="factura-item">
             <div class="factura-icon">🧾</div>
             <div class="factura-info">
@@ -288,7 +288,7 @@ function renderFacturas() {
                 <div class="factura-meta">${f.periodo ? 'Período: ' + escHtml(f.periodo) + ' · ' : ''}${fecha}</div>
             </div>
             <div class="factura-actions">
-                <button class="btn-ver" onclick="verFactura('${escHtml(f.archivo_url || '')}')">📎 Ver</button>
+                <button class="btn-ver" onclick="verFactura('${escJs(f.archivo_url || '')}')">📎 Ver</button>
                 ${delBtn}
             </div>
         </div>`;

@@ -675,8 +675,8 @@ function buildCard(c) {
             + '<div><div class="detail-label">Fecha de pago</div><div class="detail-value highlight-success">' + (c.fechaPago || '—') + '</div></div>'
             + (c.desc > 0 ? '<div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">' + fmt(c.original) + '</div></div><div><div class="detail-label">Descuento</div><div class="detail-value highlight-success">-' + c.desc + '%</div></div>' : '');
         var btns = '';
-        if (c.comprobante_url) btns += '<button class="btn btn-outline btn-sm" onclick="verDocumento(\'' + esc(c.comprobante_url) + '\',\'Comprobante\',\'' + esc(c.concepto) + '\')">📎 Comprobante</button> ';
-        if (c.recibo_url)      btns += '<button class="btn btn-success btn-sm" onclick="verDocumento(\'' + esc(c.recibo_url) + '\',\'Recibo\',\'' + esc(c.concepto) + '\')">🧾 Recibo</button>';
+        if (c.comprobante_url) btns += '<button class="btn btn-outline btn-sm" onclick="verDocumento(\'' + escJs(c.comprobante_url) + '\',\'Comprobante\',\'' + escJs(c.concepto) + '\')">📎 Comprobante</button> ';
+        if (c.recibo_url)      btns += '<button class="btn btn-success btn-sm" onclick="verDocumento(\'' + escJs(c.recibo_url) + '\',\'Recibo\',\'' + escJs(c.concepto) + '\')">🧾 Recibo</button>';
         footerBtn  = btns || '<span style="color:#aaa;font-size:12px;">Sin documentos adjuntos</span>';
         footerLeft = 'Pagada el ' + (c.fechaPago || '—');
 
@@ -703,7 +703,7 @@ function buildCard(c) {
             + '<div><div class="detail-label">Saldo pendiente</div><div class="detail-value highlight-danger">' + fmt(c.saldo) + '</div></div>'
             + (c.desc > 0 ? '<div><div class="detail-label">Descuento aplicado</div><div class="detail-value highlight-success">-' + c.desc + '%</div></div>' : '');
         var btns2 = '<button class="btn btn-primary btn-sm" onclick="abrirModal(' + c.cobro_id + ')">📤 Completar Pago</button>';
-        if (c.recibo_url) btns2 += ' <button class="btn btn-outline btn-sm" onclick="verDocumento(\'' + esc(c.recibo_url) + '\',\'Recibo Parcial\',\'' + esc(c.concepto) + '\')">🧾 Ver recibo</button>';
+        if (c.recibo_url) btns2 += ' <button class="btn btn-outline btn-sm" onclick="verDocumento(\'' + escJs(c.recibo_url) + '\',\'Recibo Parcial\',\'' + escJs(c.concepto) + '\')">🧾 Ver recibo</button>';
         footerBtn  = btns2;
         footerLeft = 'Pago parcial registrado · Saldo restante: ' + fmt(c.saldo);
 
@@ -723,7 +723,7 @@ function buildCard(c) {
                 : '<div><div class="detail-label">Monto a pagar</div><div class="detail-value">' + fmt(c.monto) + '</div></div>')
             + (c.desc > 0 ? '<div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">' + fmt(c.original) + '</div></div><div><div class="detail-label">Descuento</div><div class="detail-value highlight-success">-' + c.desc + '%</div></div>' : '');
         var btnPend = '';
-        if (c.comprobante_url) btnPend = '<button class="btn btn-warning btn-sm" onclick="verDocumento(\'' + esc(c.comprobante_url) + '\',\'Comprobante enviado\',\'' + esc(c.concepto) + '\')">👁️ Ver comprobante</button>';
+        if (c.comprobante_url) btnPend = '<button class="btn btn-warning btn-sm" onclick="verDocumento(\'' + escJs(c.comprobante_url) + '\',\'Comprobante enviado\',\'' + escJs(c.concepto) + '\')">👁️ Ver comprobante</button>';
         footerBtn  = btnPend;
         footerLeft = esParcialDec ? 'Pago parcial declarado · Esperando verificación de Cooperadora' : 'Pendiente de verificación por Cooperadora';
 

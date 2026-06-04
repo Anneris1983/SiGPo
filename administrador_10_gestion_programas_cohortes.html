@@ -361,7 +361,8 @@ async function cargarProgramas() {
         // Stats
         document.getElementById('stat-total').textContent = _programas.length;
         document.getElementById('stat-doc').textContent   = _programas.filter(function(p){return p.tipo==='DOCTORADO';}).length;
-        document.getElementById('stat-mae').textContent   = _programas.filter(function(p){return p.tipo==='MAESTRIA'||p.tipo==='MICRO_MAESTRIA';}).length;
+        // MICRO_MAESTRIA pertenece a la categoría Cursos (no Maestrías) — taxonomía de supabase.js.
+        document.getElementById('stat-mae').textContent   = _programas.filter(function(p){return p.tipo==='MAESTRIA';}).length;
         document.getElementById('stat-esp').textContent   = _programas.filter(function(p){return p.tipo==='ESPECIALIZACION';}).length;
         document.getElementById('stat-cur').textContent   = _programas.filter(function(p){return ['DIPLOMADO','DIPLOMATURA','MICRO_MAESTRIA','CURSO'].indexOf(p.tipo)>=0;}).length;
 
