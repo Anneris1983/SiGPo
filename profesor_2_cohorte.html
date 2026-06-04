@@ -289,9 +289,9 @@ function renderTabla() {
     }).join('');
 
     document.getElementById('tablaWrap').innerHTML =
-        '<table><thead><tr>' +
+        '<div style="overflow-x:auto;"><table><thead><tr>' +
         '<th>Apellido, Nombre</th><th>DNI</th><th>Estado</th><th>Cuotas</th><th>Pagado</th><th>Deuda</th>' +
-        '</tr></thead><tbody>' + rows + '</tbody></table>';
+        '</tr></thead><tbody>' + rows + '</tbody></table></div>';
 
     // Paginador
     var pags = '';
@@ -337,9 +337,9 @@ function renderCuotas(cobros) {
     }).join('');
 
     document.getElementById('cuotasWrap').innerHTML =
-        '<table><thead><tr>' +
+        '<div style="overflow-x:auto;"><table><thead><tr>' +
         '<th>Concepto</th><th>Período</th><th>Vencimiento</th><th>Estudiantes</th><th>Total</th><th>Recaudado</th><th>En Mora</th>' +
-        '</tr></thead><tbody>' + rows + '</tbody></table>';
+        '</tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
 function mostrarError(msg) {

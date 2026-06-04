@@ -891,9 +891,9 @@ function renderGastosAjustables() {
         return;
     }
 
-    container.innerHTML = '<table class="ajustables-table">'
+    container.innerHTML = '<div style="overflow-x:auto;"><table class="ajustables-table">'
         + '<thead><tr><th>Categoría</th><th>Tipo</th><th>Monto Proyectado</th><th>% del Total</th><th>Ahorro Virtualización</th></tr></thead>'
-        + '<tbody>' + filas + '</tbody></table>';
+        + '<tbody>' + filas + '</tbody></table></div>';
 }
 
 /* ── RENDER: AGING ── */
