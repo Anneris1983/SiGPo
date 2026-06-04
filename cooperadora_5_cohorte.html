@@ -2675,10 +2675,8 @@
         }
 
         function irAAprobarPagos() {
-            if (estaEnAppsScript()) {
-                window.top.location.href = '?page=cooperadora_6_aprobar_pagos&programaId=' + encodeURIComponent(vistaData.programa.programaId) + '&cohorteId=' + encodeURIComponent(vistaData.cohorte.cohorteId);
-                window.location.href = 'cooperadora_6_aprobar_pagos.html?programaId=' + encodeURIComponent(vistaData.programa.programaId) + '&cohorteId=' + encodeURIComponent(vistaData.cohorte.cohorteId);
-            }
+            // Hosting estático: navegar siempre al .html (no usar el branch ?page= de Apps Script).
+            window.location.href = 'cooperadora_6_aprobar_pagos.html?programaId=' + encodeURIComponent(vistaData.programa.programaId) + '&cohorteId=' + encodeURIComponent(vistaData.cohorte.cohorteId);
         }
 
         function exportarExcel() {
@@ -2730,11 +2728,9 @@
 
         function volverACohortes(event) {
             if (event) event.preventDefault();
-
-            if (estaEnAppsScript()) {
-                window.top.location.href = '?page=cooperadora_4_cohortes&programaId=' + encodeURIComponent(vistaData.programa.programaId || programaId);
-                window.location.href = 'cooperadora_4_cohortes.html?programaId=' + encodeURIComponent(vistaData.programa.programaId || programaId);
-            }
+            // Hosting estático: navegar siempre al .html (no usar el branch ?page= de Apps Script).
+            var pid = (vistaData && vistaData.programa && vistaData.programa.programaId) || (typeof programaId !== 'undefined' ? programaId : '');
+            window.location.href = 'cooperadora_4_cohortes.html?programaId=' + encodeURIComponent(pid);
         }
 
         function abrirOverlay(id) {
@@ -2757,22 +2753,17 @@
 
         function manejarEscape(evento) {
             if (evento.key !== 'Escape') return;
-            if (document.getElementById('modalVerDocOverlay').classList.contains('active')) {
-                cerrarVerDoc();
-                return;
-            }
-            if (document.getElementById('modalAprobacionOverlay').classList.contains('active')) {
-                cerrarAprobacionModal();
-                return;
-            }
-            if (document.getElementById('modalCuotasOverlay').classList.contains('active')) {
-                cerrarModalCrearCuotas();
-                return;
-            }
-            if (document.getElementById('modalDescuentoOverlay').classList.contains('active')) {
-                cerrarModalDescuento();
-                return;
-            }
+            // Guard cada modal: algunos overlays son código legado que ya no existe
+            // en el DOM; getElementById devolvería null y .classList rompería.
+            var ov;
+            ov = document.getElementById('modalVerDocOverlay');
+            if (ov && ov.classList.contains('active')) { cerrarVerDoc(); return; }
+            ov = document.getElementById('modalAprobacionOverlay');
+            if (ov && ov.classList.contains('active')) { cerrarAprobacionModal(); return; }
+            ov = document.getElementById('modalCuotasOverlay');
+            if (ov && ov.classList.contains('active')) { cerrarModalCrearCuotas(); return; }
+            ov = document.getElementById('modalDescuentoOverlay');
+            if (ov && ov.classList.contains('active')) { cerrarModalDescuento(); return; }
             var _dd=document.getElementById('notif-dropdown');if(_dd)_dd.style.display='none';
         }
 

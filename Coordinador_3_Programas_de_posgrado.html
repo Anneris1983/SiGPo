@@ -372,7 +372,7 @@
                 <div class="breadcrumb">
                     <a href="coordinador_1_dashboard.html">← Volver a Programas</a>
                 </div>
-                <h1>💼 Especialización en Costos y Gestión Empresarial</h1>
+                <h1 id="header-h1">Programa de Posgrado</h1>
                 <p>Selecciona una cohorte para ver sus estudiantes</p>
             </div>
             <div class="notif-wrapper" style="position:relative;">
@@ -419,14 +419,17 @@ function cancelarLogout() { document.getElementById('logoutModal').classList.rem
 function confirmarLogout() { logout().then(function(){ window.location.href = 'portal_login.html'; }); }
 document.getElementById('logoutModal').addEventListener('click', function(e) { if (e.target === this) cancelarLogout(); });
 
-async function cargarCohortes() {
+// cohIdsPermitidas: si el coordinador NO tiene acceso a nivel de programa, solo
+// puede ver las cohortes específicas asignadas (evita data-leak de otras cohortes).
+async function cargarCohortes(cohIdsPermitidas) {
     try {
         var sb = await getSupabase();
         var q = sb.from('cohortes').select('*');
         if (_programaId) q = q.eq('programa_id', _programaId);
+        if (cohIdsPermitidas && cohIdsPermitidas.length) q = q.in('cohorte_id', cohIdsPermitidas);
         var rC = await q;
         var rCob = await sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente,nro_cuota').eq('programa_id', _programaId);
-        var rE = await sb.from('egresos').select('cohorte_id,monto_pagado,tipo');
+        var rE = await sb.from('egresos').select('cohorte_id,monto_pagado,tipo').eq('programa_id', _programaId);
         var cohortes = rC.data || [];
         var cobros = rCob.data || [];
         var egresos = rE.data || [];
@@ -435,6 +438,8 @@ async function cargarCohortes() {
             var rP = await sb.from('programas').select('nombre').eq('programa_id', _programaId).single();
             var pNombre = rP.data ? rP.data.nombre : 'Cohortes';
             document.getElementById('page-title').textContent = pNombre;
+            var h1 = document.getElementById('header-h1');
+            if (h1 && rP.data) h1.textContent = pNombre;
         }
         var cohActivas = cohortes.filter(function(c){return c.estado==='ACTIVO';}).length;
         var dnisTotal = new Set(cobros.filter(function(c){return !_programaId||cohortes.some(function(co){return co.cohorte_id===c.cohorte_id;})}).map(function(c){return c.dni;}));
@@ -477,7 +482,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('cohortes-list').innerHTML = '<p style="color:#666;padding:20px;">No tenés acceso a este programa.</p>';
         return;
     }
-    cargarCohortes();
+    // Si tiene acceso a nivel de programa ve todas las cohortes; si solo tiene
+    // cohortes específicas, restringimos la lista a esas (anti data-leak).
+    cargarCohortes(autorizado && asig.progIds.includes(Number(_programaId)) ? null : cohIdsAsig);
     if (typeof obtenerNotificaciones === 'function') obtenerNotificaciones('COORDINADOR').then(renderNotificaciones);
 });
 </script>

@@ -200,8 +200,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!sesion || !roles_ok.includes(sesion.rol)) { window.location.href='portal_login.html'; return; }
     if (!DNI) { toast('DNI no especificado','err'); return; }
 
-    // IDOR: para COORDINADOR, la cohorte debe estar entre sus asignaciones
-    if (sesion.rol === 'COORDINADOR') {
+    // IDOR: COORDINADOR y PROFESOR usan el mismo modelo de asignación
+    // (coordinadores_programas). La cohorte solicitada debe estar entre sus
+    // asignaciones (cohorte específica) o pertenecer a un programa asignado.
+    if (sesion.rol === 'COORDINADOR' || sesion.rol === 'PROFESOR') {
         var asig = await obtenerAsignacionesCoordinador(sesion.dni);
         var autorizado = (asig.cohIds || []).includes(Number(COHORTE_ID));
         if (!autorizado && (asig.progIds || []).length && COHORTE_ID) {

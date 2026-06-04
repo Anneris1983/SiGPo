@@ -453,13 +453,62 @@
         if (!okExt) { alerta.textContent='⚠️ El archivo debe ser Excel (.xlsx o .xls).'; alerta.style.display='block'; success.style.display='none'; return; }
         alerta.style.display = 'none';
         try {
-            var payload = { programa, cohorte, cuotas:Number(cuotas), mesPrimeraCuota:mes, comentarios:document.getElementById('sol-comentarios').value.trim(), archivo:await leerArchivoBase64(archivo) };
-            if (estaEnAppsScript()) {
-                google.script.run.withSuccessHandler(function() { success.style.display='block'; setTimeout(cerrarModalSolicitud, 2200); })
-                                  .withFailureHandler(function() { alerta.textContent='⚠️ No se pudo enviar la solicitud.'; alerta.style.display='block'; })
-                                  .enviarSolicitudProgramaCurso(payload);
-            } else { success.style.display='block'; setTimeout(cerrarModalSolicitud, 2200); }
-        } catch(e) { alerta.textContent='⚠️ No se pudo leer el archivo Excel.'; alerta.style.display='block'; }
+            var sb = await getSupabase();
+            var sesion = getSesion() || {};
+            var comentarios = document.getElementById('sol-comentarios').value.trim();
+
+            // 1) Subir el Excel a storage para que el administrador pueda descargarlo.
+            var archivoUrl = '';
+            try {
+                var safeName = archivo.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9._-]/g,'_');
+                var path = 'solicitudes/' + (sesion.dni||'sin_dni') + '/' + Date.now() + '_' + safeName;
+                var up = await sb.storage.from('comprobantes').upload(path, archivo);
+                if (!up.error) {
+                    var pub = sb.storage.from('comprobantes').getPublicUrl(path);
+                    archivoUrl = (pub.data && pub.data.publicUrl) || '';
+                }
+            } catch(_) { /* la subida es best-effort: la solicitud se registra igual */ }
+
+            // 2) Mensaje de la solicitud.
+            var quien = (sesion.nombre || sesion.dni || 'Un coordinador');
+            var mensaje = 'Solicitud de programa/curso de ' + quien + '. ' +
+                'Programa: ' + programa + ' · Cohorte/Edición: ' + cohorte + ' · ' +
+                'Cuotas: ' + cuotas + ' · 1ra cuota: ' + mes +
+                (comentarios ? ' · Comentarios: ' + comentarios : '') +
+                (archivoUrl ? ' · Plan adjunto: ' + archivoUrl : ' · (no se pudo adjuntar el Excel)');
+
+            // 3) Persistir notificación interna para TODOS los administradores.
+            var rNotif = await sb.from('notificaciones').insert({
+                usuario_dni: null,
+                rol_destino: 'ADMINISTRADOR',
+                tipo: 'solicitud',
+                mensaje: mensaje.substring(0, 500)
+            });
+            if (rNotif.error) throw rNotif.error;
+
+            // 4) Email a los administradores activos (best-effort, vía Edge Function → GAS).
+            try {
+                var rAdmins = await sb.from('usuarios').select('email').eq('rol','ADMINISTRADOR').eq('activo', true);
+                var admins = (rAdmins.data || []).map(function(u){ return u.email; }).filter(Boolean);
+                for (var i=0;i<admins.length;i++) {
+                    await sb.functions.invoke('enviar-email', { body: {
+                        programaId: null,
+                        to: admins[i],
+                        subject: 'Nueva solicitud de programa/curso — ' + programa,
+                        body: mensaje,
+                        replyTo: sesion.email || ''
+                    }});
+                }
+            } catch(_) { /* el email es best-effort: la solicitud ya quedó registrada */ }
+
+            success.style.display = 'block';
+            setTimeout(cerrarModalSolicitud, 2200);
+        } catch(e) {
+            alerta.textContent = '⚠️ No se pudo registrar la solicitud. Intentá nuevamente.';
+            alerta.style.display = 'block';
+            success.style.display = 'none';
+            console.error('enviarSolicitud:', e);
+        }
     }
 
     function cargarNotificaciones() {

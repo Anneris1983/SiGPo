@@ -977,6 +977,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!session) { window.location.href = 'portal_login.html'; return; }
     var sesion = getSesion();
     if (!sesion) { window.location.href = 'portal_login.html'; return; }
+    if (sesion.rol !== 'ADMINISTRADOR') { window.location.href = 'portal_login.html'; return; }
     if (!COHORTE_ID || !PROGRAMA_ID) {
         toast('Faltan parámetros cohorte_id y programa_id en la URL', 'err');
         return;
