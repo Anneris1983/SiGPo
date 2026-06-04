@@ -1,0 +1,12 @@
+{
+  "_comentario": "Copiá este archivo a 'credenciales.json' y completá las contraseñas reales de cada rol. credenciales.json está en .gitignore y NUNCA se sube. Si no querés probar un rol, dejá su password en \"\" y se saltea.",
+  "baseUrl": "http://127.0.0.1:8088",
+  "roles": {
+    "ADMINISTRADOR": { "dni": "30819115", "password": "" },
+    "SECRETARIA":    { "dni": "28893036", "password": "" },
+    "COOPERADORA":   { "dni": "20202020", "password": "" },
+    "COORDINADOR":   { "dni": "98765432", "password": "" },
+    "PROFESOR":      { "dni": "59874563", "password": "" },
+    "ESTUDIANTE":    { "dni": "12345678", "password": "" }
+  }
+}
