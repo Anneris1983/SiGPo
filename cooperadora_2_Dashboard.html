@@ -491,12 +491,14 @@
         document.getElementById('btnDescargar').href = url;
         document.getElementById('btnDescargar').setAttribute('download', filename);
 
+        // Escapar para contexto de atributo (URL) y de texto (filename) — anti-XSS.
+        var urlAttr = esc(url);
         if (['jpg', 'jpeg', 'png', 'gif', 'webp'].indexOf(ext) >= 0) {
-            visorFrame.innerHTML = '<img src="' + url + '" alt="Comprobante" style="max-width:100%;max-height:420px;object-fit:contain;display:block;" />';
+            visorFrame.innerHTML = '<img src="' + urlAttr + '" alt="Comprobante" style="max-width:100%;max-height:420px;object-fit:contain;display:block;" />';
         } else if (ext === 'pdf') {
-            visorFrame.innerHTML = '<iframe src="' + url + '" style="width:100%;height:420px;border:none;display:block;"></iframe>';
+            visorFrame.innerHTML = '<iframe src="' + urlAttr + '" style="width:100%;height:420px;border:none;display:block;"></iframe>';
         } else {
-            visorFrame.innerHTML = '<div class="visor-placeholder"><div class="icon">&#x1F4C4;</div><p class="filename">' + filename + '</p><p>Descargue el archivo para verlo.</p></div>';
+            visorFrame.innerHTML = '<div class="visor-placeholder"><div class="icon">&#x1F4C4;</div><p class="filename">' + esc(filename) + '</p><p>Descargue el archivo para verlo.</p></div>';
         }
 
         document.getElementById('modalOverlay').classList.add('active');

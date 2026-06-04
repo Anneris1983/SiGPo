@@ -283,10 +283,13 @@ function _sbPatch(path, data) {
 
 function _cuentasCorrientesLote(dnis, cohorteIds) {
   if (!dnis.length || !cohorteIds.length) return {};
+  // Excluir cuotas NO_APLICA: no son deuda del estudiante y no deben figurar en
+  // el estado de cuenta del email (evita mostrar deudas que no corresponden).
   var todas = _sbGet(
     'cobros?select=dni,concepto,periodo,fecha_vencimiento,monto_final,saldo_pendiente,estado' +
     '&dni=in.(' + dnis.join(',') + ')' +
     '&cohorte_id=in.(' + cohorteIds.join(',') + ')' +
+    '&no_aplica=not.is.true' +
     '&order=fecha_vencimiento.asc'
   );
   var porDni = {};

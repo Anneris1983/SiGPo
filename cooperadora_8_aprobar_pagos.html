@@ -493,6 +493,29 @@
         document.getElementById('calc-remaining').textContent = fmt(saldo);
         var descFull = document.querySelector('#full-option .radio-description');
         if (descFull) descFull.textContent = 'El estudiante pagó el monto total de la cuota ('+fmt(total)+')';
+        // Metadata real del comprobante
+        var fm = document.getElementById('file-meta');
+        if (fm) {
+            if (cobro.comprobante_fecha) {
+                var d = new Date(cobro.comprobante_fecha);
+                fm.textContent = 'Subido: ' + d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+            } else {
+                fm.textContent = cobro.comprobante_url ? 'Comprobante adjunto' : 'Sin comprobante adjunto';
+            }
+        }
+        var fn = document.getElementById('file-name');
+        if (fn && cobro.comprobante_url) {
+            try { fn.textContent = decodeURIComponent(String(cobro.comprobante_url).split('/').pop().split('?')[0]); } catch(_) {}
+        }
+        // Botón ver comprobante → URL firmada
+        var vb = document.getElementById('view-file-btn');
+        if (vb) {
+            vb.onclick = async function() {
+                if (!cobro.comprobante_url) { alert('No hay comprobante adjunto.'); return; }
+                try { var u = await obtenerUrlFirmadaComprobante(cobro.comprobante_url); window.open(u || cobro.comprobante_url, '_blank'); }
+                catch(e) { window.open(cobro.comprobante_url, '_blank'); }
+            };
+        }
     }
 
     async function cargarCobro() {
@@ -612,10 +635,10 @@
             <div class="comprobante-preview">
                 <div class="file-icon-large">📄</div>
                 <div class="file-details">
-                    <div class="file-name">transferencia_diciembre.pdf</div>
-                    <div class="file-meta">Subido: 24/03/2026 15:45 • Tamaño: 1.2 MB</div>
+                    <div class="file-name" id="file-name">Comprobante</div>
+                    <div class="file-meta" id="file-meta">—</div>
                 </div>
-                <button class="view-file-btn">👁️ Ver Comprobante</button>
+                <button class="view-file-btn" id="view-file-btn">👁️ Ver Comprobante</button>
             </div>
 
             <div class="section-title">¿Cómo registrar este pago?</div>

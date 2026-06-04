@@ -138,12 +138,13 @@ async function cargar(sesion) {
     // Cohortes específicas asignadas que pertenecen a este programa (se resuelve más abajo)
     var cohIdsAsignadas = asig.cohIds || [];
 
-    var [rProg, rCoh, rCob, rEgr, rInsc] = await Promise.all([
+    var [rProg, rCoh, rCob, rEgr] = await Promise.all([
         sb.from('programas').select('programa_id,nombre,tipo').eq('programa_id', PROGRAMA_ID).single(),
         sb.from('cohortes').select('cohorte_id,nombre,estado,fecha_inicio,fecha_fin').eq('programa_id', PROGRAMA_ID),
         sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente').eq('programa_id', PROGRAMA_ID),
-        sb.from('egresos').select('cohorte_id,tipo,monto_pagado,monto_original').eq('programa_id', PROGRAMA_ID),
-        sb.from('inscripciones').select('estudiante_id,cohorte_id').eq('programa_id', PROGRAMA_ID)
+        sb.from('egresos').select('cohorte_id,tipo,monto_pagado,monto_original').eq('programa_id', PROGRAMA_ID)
+        // inscripciones se omite: no tiene columna programa_id (se llega vía cohortes)
+        // y el conteo de estudiantes ya se deriva de cobros (dnis).
     ]);
 
     var prog = rProg.data || {};
@@ -162,7 +163,6 @@ async function cargar(sesion) {
     }
     var cobros = rCob.data || [];
     var egresos = rEgr.data || [];
-    var inscs = rInsc.data || [];
 
     document.getElementById('hdr-programa').textContent = prog.nombre || 'Programa';
     var activas = cohortes.filter(function(c){return c.estado==='ACTIVO';}).length;
@@ -174,7 +174,6 @@ async function cargar(sesion) {
     lista.innerHTML = cohortes.map(function(c) {
         var cobs = cobros.filter(function(x){return x.cohorte_id===c.cohorte_id;});
         var egrs = egresos.filter(function(x){return x.cohorte_id===c.cohorte_id&&x.tipo==='EJECUTADO';});
-        var inscC = inscs.filter(function(i){return i.cohorte_id===c.cohorte_id;});
         var dnis = new Set(cobs.map(function(x){return x.dni;}));
         var alDia = new Set(cobs.filter(function(x){return x.estado==='ABONADA';}).map(function(x){return x.dni;})).size;
         var mora  = new Set(cobs.filter(function(x){return x.estado==='EN_MORA';}).map(function(x){return x.dni;})).size;

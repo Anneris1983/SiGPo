@@ -643,20 +643,20 @@ function renderEntrada(log) {
 
     var detalles = '';
     if (log.tipo === 'cobro') {
-        detalles += 'Estudiante: ' + (log.estudiante || log.dni) + ' (DNI: ' + (log.dni || '—') + ')<br>';
-        detalles += 'Cuota: ' + (log.cuota || '—') + '<br>';
-        detalles += 'Cohorte/Edición: ' + (log.cohorte || '—') + '<br>';
+        detalles += 'Estudiante: ' + escHtml(log.estudiante || log.dni) + ' (DNI: ' + escHtml(log.dni || '—') + ')<br>';
+        detalles += 'Cuota: ' + escHtml(log.cuota || '—') + '<br>';
+        detalles += 'Cohorte/Edición: ' + escHtml(log.cohorte || '—') + '<br>';
         detalles += 'Estado anterior → nuevo: ' + badgeEstado(log.estado_ant) + ' → ' + badgeEstado(log.estado_nuevo) + '<br>';
         if (log.monto) detalles += 'Monto: ' + formatPeso(log.monto) + '<br>';
         if (log.saldo && Number(log.saldo) > 0) detalles += 'Saldo pendiente: ' + formatPeso(log.saldo) + '<br>';
-        detalles += 'Registrado por: ' + (log.registrado_email) + ' <span style="color:#888;">[' + (log.registrado_rol || 'SISTEMA') + ']</span>';
+        detalles += 'Registrado por: ' + escHtml(log.registrado_email) + ' <span style="color:#888;">[' + escHtml(log.registrado_rol || 'SISTEMA') + ']</span>';
     } else {
-        detalles += 'Estudiante: ' + (log.estudiante || '—') + '<br>';
-        detalles += 'Programa: ' + (log.programa_nombre || '—') + '<br>';
-        detalles += 'Cohorte/Edición: ' + (log.cohorte || '—') + '<br>';
+        detalles += 'Estudiante: ' + escHtml(log.estudiante || '—') + '<br>';
+        detalles += 'Programa: ' + escHtml(log.programa_nombre || '—') + '<br>';
+        detalles += 'Cohorte/Edición: ' + escHtml(log.cohorte || '—') + '<br>';
         detalles += 'Estado anterior → nuevo: ' + badgeEstado(log.estado_ant) + ' → ' + badgeEstado(log.estado_nuevo) + '<br>';
         if (log.motivo) detalles += 'Motivo: ' + escHtml(log.motivo) + '<br>';
-        detalles += 'Registrado por: ' + (log.registrado_email) + ' <span style="color:#888;">[' + (log.registrado_rol || 'SISTEMA') + ']</span>';
+        detalles += 'Registrado por: ' + escHtml(log.registrado_email) + ' <span style="color:#888;">[' + escHtml(log.registrado_rol || 'SISTEMA') + ']</span>';
     }
 
     return '<div class="log-entry ' + claseCard + '">'

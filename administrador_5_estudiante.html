@@ -209,23 +209,20 @@ document.addEventListener('DOMContentLoaded', async function() {
 async function cargar() {
     var sb = await getSupabase();
 
-    var [rEst, rCob, rCoh, rInsc] = await Promise.all([
+    var [rEst, rCob, rCoh] = await Promise.all([
         sb.from('estudiantes').select('*').eq('dni', DNI).single(),
         COHORTE_ID
             ? sb.from('cobros').select('cobro_id,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).eq('dni', DNI).order('fecha_vencimiento')
             : Promise.resolve({data:[]}),
         COHORTE_ID
             ? sb.from('cohortes').select('nombre,programas(nombre)').eq('cohorte_id', COHORTE_ID).single()
-            : Promise.resolve({data:null}),
-        COHORTE_ID
-            ? sb.from('inscripciones').select('descuento_porcentaje,estado_academico').eq('cohorte_id', COHORTE_ID).eq('estudiante_id', '').maybeSingle()
             : Promise.resolve({data:null})
+        // La inscripción (descuento) se busca abajo con el estudiante_id ya resuelto.
     ]);
 
     _est = rEst.data || {};
     var cobros = rCob.data || [];
     var coh = rCoh.data;
-    var insc = rInsc.data;
 
     // Header
     var nombre = (_est.apellido||'') + ', ' + (_est.nombre||'');
@@ -314,7 +311,15 @@ function renderCobros(cobros) {
     document.getElementById('st-saldo').style.color = totS > 0 ? 'var(--danger)' : 'var(--success)';
 }
 
-function verDoc(url) { window.open(url, '_blank'); }
+async function verDoc(url) {
+    // Genera una URL firmada (el bucket puede no ser público); fallback a la URL cruda.
+    try {
+        var firmada = await obtenerUrlFirmadaComprobante(url);
+        window.open(firmada || url, '_blank');
+    } catch(e) {
+        window.open(url, '_blank');
+    }
+}
 </script>
 </body>
 </html>

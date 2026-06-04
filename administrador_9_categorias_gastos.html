@@ -149,16 +149,16 @@
             categorias.forEach(cat => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="categoria-nombre">${cat.nombre}</td>
-                    <td><span class="badge badge-${cat.tipo.toLowerCase()}">${cat.tipo}</span></td>
+                    <td class="categoria-nombre">${esc(cat.nombre)}</td>
+                    <td><span class="badge badge-${esc(String(cat.tipo).toLowerCase())}">${esc(cat.tipo)}</span></td>
                     <td>
-                        <select class="select-tipo" data-categoria-id="${cat.id}">
-                            ${tiposDisponibles.map(tipo => 
-                                `<option value="${tipo}" ${tipo === cat.tipo ? 'selected' : ''}>${tipo}</option>`
+                        <select class="select-tipo" data-categoria-id="${esc(cat.id)}">
+                            ${tiposDisponibles.map(tipo =>
+                                `<option value="${esc(tipo)}" ${tipo === cat.tipo ? 'selected' : ''}>${esc(tipo)}</option>`
                             ).join('')}
                         </select>
                     </td>
-                    <td style="color: #666; font-size: 13px;">${cat.desc}</td>
+                    <td style="color: #666; font-size: 13px;">${esc(cat.desc)}</td>
                 `;
                 tbody.appendChild(tr);
             });

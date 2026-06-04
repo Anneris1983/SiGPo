@@ -591,11 +591,17 @@ function exportar(tipo) {
 
     try {
         if (tipo === 'resumen') {
+            // El grid tiene 6 valores en este orden:
+            // [0]=Recaudado [1]=Egresos [2]=Saldo [3]=Al Día [4]=En Mora [5]=Tasa
+            var sv = document.querySelectorAll('#summaryGrid .summary-value');
+            var gv = function(i){ return sv[i] ? sv[i].textContent : '—'; };
             var filas = [
-                { 'Indicador': 'Total Recaudado', 'Valor': document.querySelector('#summaryGrid .summary-value').textContent },
-                { 'Indicador': 'Estudiantes al Día', 'Valor': document.querySelectorAll('#summaryGrid .summary-value')[1].textContent },
-                { 'Indicador': 'En Mora', 'Valor': document.querySelectorAll('#summaryGrid .summary-value')[2].textContent },
-                { 'Indicador': 'Tasa de Pago', 'Valor': document.querySelectorAll('#summaryGrid .summary-value')[3].textContent }
+                { 'Indicador': 'Total Recaudado',     'Valor': gv(0) },
+                { 'Indicador': 'Egresos Ejecutados',  'Valor': gv(1) },
+                { 'Indicador': 'Saldo',               'Valor': gv(2) },
+                { 'Indicador': 'Estudiantes al Día',  'Valor': gv(3) },
+                { 'Indicador': 'En Mora',             'Valor': gv(4) },
+                { 'Indicador': 'Tasa de Pago',        'Valor': gv(5) }
             ];
             var ws = XLSX.utils.json_to_sheet(filas);
             XLSX.utils.book_append_sheet(wb, ws, 'Resumen');

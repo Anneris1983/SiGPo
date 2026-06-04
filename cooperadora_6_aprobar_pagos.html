@@ -249,19 +249,19 @@
     <div class="summary-bar">
         <div class="summary-card pend">
             <div class="summary-label">Comprobantes pendientes</div>
-            <div class="summary-value" style="color:var(--warning);">8</div>
+            <div class="summary-value" style="color:var(--warning);">—</div>
         </div>
         <div class="summary-card">
-            <div class="summary-label">Recaudado este mes</div>
-            <div class="summary-value">$450k</div>
+            <div class="summary-label">Saldo pendiente total</div>
+            <div class="summary-value">—</div>
         </div>
         <div class="summary-card rech">
             <div class="summary-label">Pagos parciales</div>
-            <div class="summary-value" style="color:var(--danger);">2</div>
+            <div class="summary-value" style="color:var(--danger);">—</div>
         </div>
         <div class="summary-card aprov">
             <div class="summary-label">Aprobados esta semana</div>
-            <div class="summary-value" style="color:var(--success);">12</div>
+            <div class="summary-value" style="color:var(--success);">—</div>
         </div>
     </div>
 
@@ -382,11 +382,28 @@
     }
 
     /* ── RESUMEN STATS ── */
-    function renderResumen() {
+    async function renderResumen() {
+        var cards = document.querySelectorAll('.summary-card');
         var pend = _cobros.length;
         document.querySelector('.summary-card.pend .summary-value').textContent = pend;
         var totalSaldo = _cobros.reduce(function(s,c){ return s+(Number(c.saldo_pendiente)||0); }, 0);
-        document.querySelectorAll('.summary-card')[1].querySelector('.summary-value').textContent = fMillones(totalSaldo);
+        cards[1].querySelector('.summary-value').textContent = fMillones(totalSaldo);
+        // Pagos parciales declarados entre los pendientes
+        var parciales = _cobros.filter(function(c){
+            return c.estado === 'PAGO_PARCIAL' || (Number(c.monto_abonado)||0) > 0;
+        }).length;
+        cards[2].querySelector('.summary-value').textContent = parciales;
+        // Aprobados esta semana (consulta acotada por programa/cohorte si vienen en la URL)
+        try {
+            var sb = await getSupabase();
+            var hace7 = new Date(Date.now() - 7*86400000).toISOString().split('T')[0];
+            var q = sb.from('cobros').select('cobro_id', { count:'exact', head:true })
+                      .eq('estado','ABONADA').gte('fecha_aprobacion', hace7);
+            if (_cohorteId)  q = q.eq('cohorte_id', _cohorteId);
+            if (_programaId) q = q.eq('programa_id', _programaId);
+            var r = await q;
+            cards[3].querySelector('.summary-value').textContent = (r.count != null ? r.count : 0);
+        } catch(e) { cards[3].querySelector('.summary-value').textContent = '0'; }
     }
 
     /* ── RENDER LISTA ── */
