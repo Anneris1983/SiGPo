@@ -684,19 +684,9 @@ function renderMora() {
                     pointBackgroundColor: '#c0392b',
                     fill: true,
                     tension: 0.3
-                },
-                {
-                    label: 'Intereses generados ($k)',
-                    data: d.intereses,
-                    borderColor: '#e67e22',
-                    backgroundColor: 'rgba(230,126,34,0.08)',
-                    borderWidth: 2,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#e67e22',
-                    fill: true,
-                    tension: 0.3,
-                    yAxisID: 'y2'
                 }
+                // Serie "Intereses generados" removida: el sistema no calcula
+                // intereses, mostraba siempre cero (dato engañoso).
             ]
         },
         options: {
@@ -704,7 +694,6 @@ function renderMora() {
             plugins: { legend: { position: 'top' } },
             scales: {
                 y:  { beginAtZero: true, grid: { color: '#f0f0f0' }, title: { display: true, text: 'Estudiantes' } },
-                y2: { beginAtZero: true, position: 'right', grid: { display: false }, title: { display: true, text: 'Intereses ($k)' }, ticks: { callback: v => '$' + v + 'k' } },
                 x:  { grid: { display: false } }
             }
         }
@@ -788,7 +777,7 @@ function exportar(tipo) {
         } else if (tipo === 'mora') {
             var em = reportesData.charts.evolucionMora;
             var filas = em.labels.map(function(lbl, i) {
-                return { 'Mes': lbl, 'Estudiantes en Mora': em.estudiantes[i] || 0, 'Intereses Generados ($k)': em.intereses[i] || 0 };
+                return { 'Mes': lbl, 'Estudiantes en Mora': em.estudiantes[i] || 0 };
             });
             if (!filas.length) { toast('Sin datos de mora para exportar.', 'err'); return; }
             var ws = XLSX.utils.json_to_sheet(filas);

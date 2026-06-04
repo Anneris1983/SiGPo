@@ -794,6 +794,7 @@
                         <td><span class="badge ${badgeClass}">${escapeHtml(g.estado)}</span></td>
                         <td>
                             <div class="actions-group">
+                                ${tipo === 'proyectados' && !esPagoParc ? `<button class="btn btn-success btn-icon" onclick="ejecutarGasto('${escapeJs(g.id)}')" title="Marcar como ejecutado">▶</button>` : ''}
                                 ${tipo === 'proyectados' && !esPagoParc ? `<button class="btn btn-primary btn-icon" onclick="editarGasto('${escapeJs(g.id)}', '${tipo}')" title="Editar">✏️</button>` : ''}
                                 ${tipo === 'proyectados' && !esPagoParc ? `<button class="btn btn-danger btn-icon" onclick="eliminarGasto('${escapeJs(g.id)}', '${tipo}')" title="Eliminar">🗑️</button>` : ''}
                             </div>
@@ -1035,19 +1036,62 @@
                 return;
             }
 
-            const tipo = document.getElementById('tipoImportacion').value;
+            const tipo = document.getElementById('tipoImportacion').value; // 'proyectados' | 'ejecutados'
             spin(true);
             try {
-                const archivo = await leerArchivoBase64(state.importFile);
+                // Parsear el Excel en el cliente. Columnas esperadas (como en la exportación):
+                // Fecha, Categoría, Concepto, Programa, Cohorte/Edición, Monto ($), Proveedor, Nº Comprobante
+                var buf = await state.importFile.arrayBuffer();
+                var wb = XLSX.read(buf, { type: 'array' });
+                var ws = wb.Sheets[wb.SheetNames[0]];
+                var filas = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                if (!filas.length) { toast('El archivo no tiene filas.', 'err'); spin(false); return; }
 
-                if (estaEnAppsScript()) {
-                    await gs('importarGastosCoordinador', { tipo, archivo });
+                // Mapas nombre→id para resolver programa/cohorte (solo los autorizados).
+                var progPorNombre = {};
+                (state.programasList || []).forEach(function(p){ progPorNombre[String(p.nombre).trim().toLowerCase()] = p.programa_id; });
+                var cohPorNombre = {};
+                (state.cohortesList || []).forEach(function(c){ cohPorNombre[String(c.nombre).trim().toLowerCase()] = c.cohorte_id; });
+
+                var val = function(row, claves){ for (var i=0;i<claves.length;i++){ if (row[claves[i]]!=null && row[claves[i]]!=='') return row[claves[i]]; } return ''; };
+                var importadas = 0, omitidas = 0;
+                for (var i=0;i<filas.length;i++) {
+                    var r = filas[i];
+                    var concepto = String(val(r, ['Concepto','concepto'])).trim();
+                    var monto    = Number(String(val(r, ['Monto ($)','Monto','monto'])).replace(/[^0-9.,-]/g,'').replace(/\./g,'').replace(',','.')) || Number(val(r,['Monto ($)','Monto','monto'])) || 0;
+                    var categoria= String(val(r, ['Categoría','Categoria','categoria'])).trim();
+                    if (!concepto || !monto) { omitidas++; continue; }
+                    var progNom = String(val(r, ['Programa','programa'])).trim().toLowerCase();
+                    var cohNom  = String(val(r, ['Cohorte/Edición','Cohorte','cohorte'])).trim().toLowerCase();
+                    var programaId = progNom ? (progPorNombre[progNom] || null) : null;
+                    var cohorteId  = cohNom  ? (cohPorNombre[cohNom]  || null) : null;
+                    // Solo importar si el programa/cohorte está autorizado (o queda sin asignar).
+                    if (cohNom && !cohorteId) { omitidas++; continue; }
+                    if (progNom && !programaId) { omitidas++; continue; }
+                    var fecha = String(val(r, ['Fecha','fecha'])).trim() || null;
+                    var datos = {
+                        tipo:            tipo === 'ejecutados' ? 'EJECUTADO' : 'PROYECTADO',
+                        estado:          tipo === 'ejecutados' ? 'CANCELADO' : 'PENDIENTE',
+                        fecha_estimada:  fecha,
+                        categoria:       categoria || null,
+                        concepto:        concepto,
+                        programa_id:     programaId,
+                        cohorte_id:      cohorteId,
+                        monto_original:  monto,
+                        monto_pagado:    tipo === 'ejecutados' ? monto : null,
+                        proveedor:       String(val(r, ['Proveedor','proveedor'])).trim() || null,
+                        nro_comprobante: String(val(r, ['Nº Comprobante','Nro Comprobante','comprobante'])).trim() || null
+                    };
+                    var res = await guardarEgreso(datos);
+                    if (res && res.ok) importadas++; else omitidas++;
                 }
 
                 cerrarModal('modalImportar');
                 quitarArchivoImportado();
-                toast(`Archivo importado como gastos ${tipo}.`, 'ok');
+                await cargarVista();
+                toast('Importadas ' + importadas + ' fila(s)' + (omitidas ? ' · ' + omitidas + ' omitida(s)' : '') + '.', importadas ? 'ok' : 'err');
             } catch (e) {
+                console.error('procesarImportacion:', e);
                 toast('No se pudo procesar el archivo.', 'err');
             } finally {
                 spin(false);
