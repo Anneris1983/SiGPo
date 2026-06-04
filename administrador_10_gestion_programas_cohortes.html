@@ -383,8 +383,8 @@ function renderProgramas(lista) {
     lista.forEach(function(p){
         var t = p.tipo||'OTRO';
         // Agrupar tipos
-        if (['DIPLOMADO','DIPLOMATURA'].indexOf(t) >= 0) t = 'CURSO';
-        if (t === 'MICRO_MAESTRIA') t = 'MAESTRIA';
+        // Taxonomía de supabase.js: MICRO_MAESTRIA pertenece a Cursos (no Maestrías).
+        if (['DIPLOMADO','DIPLOMATURA','MICRO_MAESTRIA'].indexOf(t) >= 0) t = 'CURSO';
         if(!grupos[t]) grupos[t]=[];
         grupos[t].push(p);
     });
