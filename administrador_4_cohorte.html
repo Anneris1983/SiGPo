@@ -480,6 +480,14 @@
                     ⚠️ <strong>Consejo:</strong> Si dejás el monto vacío, la cuota se guardará como <strong>A definir</strong> y no habilitará pagos hasta cargarle valor.
                 </div>
                 <button class="btn-agregar-cuota" onclick="planAgregar()">+ Agregar otra cuota</button>
+                <div style="margin-top:14px;display:flex;align-items:center;gap:10px;">
+                    <label style="font-weight:700;font-size:13px;color:var(--primary);">Moneda del plan</label>
+                    <select id="plan-moneda" onchange="planMoneda=this.value;planActualizarResumen();" style="padding:6px 10px;border:1px solid #ccc;border-radius:8px;font-size:13px;">
+                        <option value="ARS">Pesos argentinos (ARS · $)</option>
+                        <option value="USD">Dólares (USD · U$D)</option>
+                    </select>
+                    <span style="font-size:11px;color:#888;">Todas las cuotas de este plan usarán esta moneda.</span>
+                </div>
             </div>
             <div style="border-top:1px solid #eee;margin:14px 0 0;"></div>
             <div style="padding:14px 22px 20px;">
@@ -543,7 +551,7 @@
                 <div class="istep-num">1</div>
                 <div>
                     <h4>Descargá la plantilla</h4>
-                    <p>Columnas: <code>dni · apellido · nombre · email · descuento_porcentaje · descuento_desde · descuento_hasta · concepto · periodo · fecha_vencimiento · monto_original · monto_abonado · fecha_pago · estado · es_readmision</code></p>
+                    <p>Columnas: <code>dni · apellido · nombre · email · descuento_porcentaje · descuento_desde · descuento_hasta · concepto · periodo · fecha_vencimiento · monto_original · monto_abonado · fecha_pago · estado · moneda · es_readmision</code></p>
                     <button class="btn btn-outline" style="border-color:#6f42c1;color:#6f42c1;margin-top:8px;" onclick="dlPlantilla()">📄 Descargar plantilla .xlsx</button>
                 </div>
             </div>
@@ -851,6 +859,7 @@ const V = {
     busy:       false,  // mutex para operaciones async — evita doble submit
 };
 var planFilas = [];
+var planMoneda = 'ARS';
 var _bcDni = null, _bcNombre = '', _bcNuevoEstado = '';
 var _ecDni = null;
 var _ecCuotasEditadas = [];
@@ -873,7 +882,7 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
           .eq('cohorte_id', cohorteId)
           .single(),
         sb.from('cobros')
-          .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, no_aplica, es_readmision, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id, fecha_pago, fecha_aprobacion, comprobante_fecha')
+          .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, moneda, no_aplica, es_readmision, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id, fecha_pago, fecha_aprobacion, comprobante_fecha')
           .eq('cohorte_id', cohorteId)
           .eq('programa_id', programaId)
           .order('fecha_vencimiento'),
@@ -1135,19 +1144,19 @@ var CT_VIEW = {
         var txt;
         if (estado === 'NO_APLICA')         txt = '— no aplica';
         else if (!tieneMontoDefinido(c))    txt = 'A definir';
-        else if (estado === 'PAGO_PARCIAL') txt = fMonto(montoAbonado) + '<br><small style="font-size:9px;opacity:.8;">de ' + fMonto(c.monto_final) + '</small>';
+        else if (estado === 'PAGO_PARCIAL') txt = fMonto(montoAbonado, c.moneda) + '<br><small style="font-size:9px;opacity:.8;">de ' + fMonto(c.monto_final, c.moneda) + '</small>';
         else if (estado === 'PENDIENTE') {
             var mt = c.monto_transferido && Number(c.monto_transferido) > 0 ? Number(c.monto_transferido) : null;
             if (mt && mt < Number(c.monto_final||0)) {
                 var faltaP = Math.max(0, Number(c.monto_final||0) - mt);
-                txt = fMonto(mt) + '<br><small style="font-size:9px;opacity:.8;">de ' + fMonto(c.monto_final) + ' · falta ' + fMonto(faltaP) + '</small>'
+                txt = fMonto(mt, c.moneda) + '<br><small style="font-size:9px;opacity:.8;">de ' + fMonto(c.monto_final, c.moneda) + ' · falta ' + fMonto(faltaP, c.moneda) + '</small>'
                     + '<br><small style="font-size:9px;opacity:.7;">🕓 parcial en revisión</small>';
             } else {
                 txt = '🕓 En revisión';
             }
         }
         else if (estado === 'A_DEFINIR')    txt = 'A definir';
-        else                                txt = fMonto(c.monto_final);
+        else                                txt = fMonto(c.monto_final, c.moneda);
 
         /*
          * Botones por estado — Administrador: control total
@@ -1465,6 +1474,9 @@ function abrirCrearCuota() {
         ];
     }
 
+    planMoneda = 'ARS';
+    var selMon = document.getElementById('plan-moneda');
+    if (selMon) selMon.value = 'ARS';
     planRenderFilas();
     planActualizarResumen();
     planCheckAlerta();
@@ -1536,9 +1548,11 @@ function planCantEstudiantes() {
 }
 function planActualizarResumen() {
     var n = planCantEstudiantes(), q = planFilas.length;
+    var monLabel = planMoneda === 'USD' ? 'USD (U$D)' : 'ARS ($)';
     document.getElementById('plan-resumen').innerHTML =
         'Se crearán <strong>' + q + '</strong> cuota' + (q !== 1 ? 's' : '')
         + ' para <strong>' + n + '</strong> estudiante' + (n !== 1 ? 's' : '')
+        + ' en <strong>' + monLabel + '</strong>'
         + ' <span style="color:#999;">(' + (q * n) + ' registros totales)</span>';
 }
 
@@ -1608,6 +1622,7 @@ async function guardarCuotas() {
                     monto_final:          montoFinal,
                     saldo_pendiente:      montoFinal,
                     estado:               estado,
+                    moneda:               planMoneda,
                     es_readmision:        f.es_readmision || false
                 });
             });
@@ -2028,7 +2043,7 @@ async function exportarExcel() {
         var estudiantes = V.data.estudiantes;
 
         // Construir filas
-        var cabecera = ['Apellido', 'Nombre', 'DNI', 'Email', 'Descuento %', 'Estado General']
+        var cabecera = ['Apellido', 'Nombre', 'DNI', 'Email', 'Descuento %', 'Estado General', 'Moneda']
             .concat(columnas.map(function(c) { return c.concepto_base + ' (' + c.periodo + ')'; }))
             .concat(['Total a Pagar', 'Total Abonado', 'Saldo Pendiente']);
 
@@ -2036,14 +2051,20 @@ async function exportarExcel() {
             var cobrosMap = {};
             est.cobros.forEach(function(c) { cobrosMap[keyCuota(c.concepto, c.periodo)] = c; });
             var totP = 0, totA = 0, totS = 0;
+            var monedasEst = {};
             est.cobros.forEach(function(c) {
                 // Excluir cuotas NO_APLICA de los totales, igual que la grilla en pantalla.
                 if (c.no_aplica === true || resolverEstadoCobro(c) === 'NO_APLICA') return;
                 totP += Number(c.monto_final) || 0;
                 totA += calcMontoAbonado(c);
                 totS += Number(c.saldo_pendiente) || 0;
+                monedasEst[c.moneda || 'ARS'] = true;
             });
-            var fila = [est.apellido, est.nombre, est.dni, est.email, est.descuento_porcentaje, etiquetaEstado(calcEstadoGeneral(est.cobros))];
+            // Los montos NO se suman entre monedas distintas: si el estudiante mezcla
+            // monedas, lo marcamos para que el total no se interprete mal.
+            var monedaEst = Object.keys(monedasEst);
+            var monedaLabel = monedaEst.length > 1 ? '⚠ MIXTA' : (monedaEst[0] || 'ARS');
+            var fila = [est.apellido, est.nombre, est.dni, est.email, est.descuento_porcentaje, etiquetaEstado(calcEstadoGeneral(est.cobros)), monedaLabel];
             columnas.forEach(function(col) {
                 var c = cobrosMap[keyCuota(col.concepto_base, col.periodo)];
                 fila.push(c ? (Number(c.monto_final) || 0) : '');
@@ -2086,7 +2107,7 @@ function _dlPlantilla() {
     var cabecera = [
         'dni','apellido','nombre','email',
         'descuento_porcentaje','descuento_desde','descuento_hasta',
-        'concepto','periodo','fecha_vencimiento','monto_original','monto_abonado','fecha_pago','estado','es_readmision'
+        'concepto','periodo','fecha_vencimiento','monto_original','monto_abonado','fecha_pago','estado','moneda','es_readmision'
     ];
     var instrucciones = [
         'Obligatorio','Obligatorio','Obligatorio','Obligatorio',
@@ -2095,17 +2116,18 @@ function _dlPlantilla() {
         'Ej: Inscripción / Cuota 1','Ej: Abril de 2026','DD/MM/AAAA',
         'Precio base sin descuento','0 si no pagó nada','DD/MM/AAAA (solo si monto_abonado > 0)',
         'Opcional: ABONADA / EN_MORA / PAGO_PARCIAL / NO_ABONADA / A_DEFINIR / NO_APLICA (si se omite se calcula automáticamente)',
+        'Opcional: ARS o USD (si se omite = ARS)',
         'SI o 1 si es cuota de readmisión, vacío o NO si es cuota normal'
     ];
     var ejemplo = [
         '30123456','González','María','maria@email.com',
         '5','01/04/2026','',
-        'Readmisión','Abril de 2026','15/04/2026','90000','0','','NO_ABONADA','SI'
+        'Readmisión','Abril de 2026','15/04/2026','90000','0','','NO_ABONADA','ARS','SI'
     ];
     var ejemplo2 = [
         '30123456','González','María','maria@email.com',
         '5','01/04/2026','',
-        'Cuota 1','Mayo de 2026','15/05/2026','90000','90000','15/05/2026','ABONADA',''
+        'Cuota 1','Mayo de 2026','15/05/2026','90000','90000','15/05/2026','ABONADA','ARS',''
     ];
 
     var ws = XLSX.utils.aoa_to_sheet([cabecera, instrucciones, ejemplo, ejemplo2]);
@@ -2221,6 +2243,8 @@ function _impBuildEstMap(rows) {
                         : normalizarEstadoCuota(montoFinal, saldo, fechaVto, 'NO_ABONADA'))));
         var esNoAplica = estado === 'NO_APLICA';
         var esReadmision = /^(si|sí|1|yes|true)$/i.test(String(r.es_readmision || '').trim());
+        var monedaRaw = String(r.moneda || '').trim().toUpperCase();
+        var moneda = (monedaRaw === 'USD' || monedaRaw === 'U$D' || monedaRaw === 'DOLAR' || monedaRaw === 'DÓLAR' || monedaRaw === 'DOLARES' || monedaRaw === 'DÓLARES') ? 'USD' : 'ARS';
         estMap[dni].cuotas.push({
             concepto:             String(r.concepto || '').trim(),
             periodo:              String(r.periodo || '').trim(),
@@ -2231,6 +2255,7 @@ function _impBuildEstMap(rows) {
             monto_abonado:        esNoAplica ? 0 : abonado,
             saldo_pendiente:      esNoAplica ? null : saldo,
             estado:               estado,
+            moneda:               moneda,
             no_aplica:            esNoAplica,
             fecha_pago:           _impParseFecha(r.fecha_pago),
             es_readmision:        esReadmision

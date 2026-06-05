@@ -356,7 +356,7 @@
                     .eq('estudiante_id', estId),
 
                 sb.from('cobros')
-                    .select('cobro_id, concepto, periodo, fecha_vencimiento, fecha_pago, monto_final, saldo_pendiente, estado, no_aplica, cohorte_id, programa_id')
+                    .select('cobro_id, concepto, periodo, fecha_vencimiento, fecha_pago, monto_final, saldo_pendiente, estado, moneda, no_aplica, cohorte_id, programa_id')
                     .eq('dni', String(dni))
                     .order('fecha_vencimiento'),
 
@@ -408,18 +408,21 @@
                 proximas.length ? fFechaCorta(proximas[0].fecha_vencimiento) : '—';
 
             if (enMora > 0) {
-                var deudaMora = cobros
-                    .filter(function(c) {
-                        return estadoCobro(c) === 'EN_MORA';
-                    })
-                    .reduce(function(s, c) {
-                        return s + (Number(c.saldo_pendiente) || 0);
-                    }, 0);
+                // Los montos NO se suman entre monedas distintas: agrupamos la mora por moneda.
+                var moraPorMoneda = {};
+                cobros.filter(function(c) { return estadoCobro(c) === 'EN_MORA'; })
+                    .forEach(function(c) {
+                        var m = c.moneda || 'ARS';
+                        moraPorMoneda[m] = (moraPorMoneda[m] || 0) + (Number(c.saldo_pendiente) || 0);
+                    });
+                var moraTxt = Object.keys(moraPorMoneda).map(function(m) {
+                    return fM(moraPorMoneda[m], m);
+                }).join(' · ');
 
                 document.getElementById('alerta-mora-txt').innerHTML =
                     '<strong>Tenés ' + enMora + ' cuota' + (enMora > 1 ? 's' : '') +
                     ' vencida' + (enMora > 1 ? 's' : '') + '</strong><br>' +
-                    'Total en mora: ' + fM(deudaMora) +
+                    'Total en mora: ' + moraTxt +
                     '. Regularizá tu situación para mantener tu acceso.';
 
                 document.getElementById('alerta-mora').style.display = 'flex';
@@ -446,6 +449,8 @@
                     var coh = insc.cohortes || {};
                     var prog = coh.programas || {};
                     var cobrosCoh = cobrosMap[insc.cohorte_id] || [];
+                    // Moneda de la cohorte (una cohorte usa una sola moneda)
+                    var monedaCoh = (cobrosCoh.find(function(c){ return c.moneda; }) || {}).moneda || 'ARS';
 
                     // Todas las cuotas reales: excluye no_aplica y NO_APLICA, pero incluye A_DEFINIR sin monto
                     var conMonto = cobrosCoh.filter(function(c) {
@@ -532,7 +537,7 @@
                                     ? '<span style="color:var(--danger);"><strong>En mora:</strong> ' + moraCoh + '</span>'
                                     : '') +
                                 (deudaCoh > 0
-                                    ? '<span><strong>Saldo pendiente:</strong> ' + fM(deudaCoh) + '</span>'
+                                    ? '<span><strong>Saldo pendiente:</strong> ' + fM(deudaCoh, monedaCoh) + '</span>'
                                     : '') +
                                 (insc.descuento_porcentaje > 0
                                     ? '<span style="color:var(--success);"><strong>Descuento:</strong> ' + insc.descuento_porcentaje + '%</span>'
@@ -575,7 +580,7 @@
                                 '<small>' + esc(progNombre) + ' · Vence: ' + fFecha(c.fecha_vencimiento) + '</small>' +
                             '</div>' +
                             '<div class="cuota-right">' +
-                                '<div class="cuota-monto">' + fM(c.monto_final) + '</div>' +
+                                '<div class="cuota-monto">' + fM(c.monto_final, c.moneda) + '</div>' +
                                 esBadge +
                             '</div>' +
                         '</div>';
@@ -604,7 +609,7 @@
                             '<small>' + esc(progNombre) + ' · Venció: ' + fFecha(c.fecha_vencimiento) + '</small>' +
                         '</div>' +
                         '<div class="cuota-right">' +
-                            '<div class="cuota-monto" style="color:var(--danger);">' + fM(c.saldo_pendiente) + '</div>' +
+                            '<div class="cuota-monto" style="color:var(--danger);">' + fM(c.saldo_pendiente, c.moneda) + '</div>' +
                             '<span class="cuota-estado est-mora">EN MORA</span>' +
                         '</div>' +
                     '</div>';
@@ -780,6 +785,7 @@
             var coh  = insc.cohortes || {};
             var prog = coh.programas || {};
             var cobros = (_cobrosMap[cohorteId] || []).filter(function(c) { return !c.no_aplica; });
+            var simbPdf = simboloMoneda((cobros.find(function(c){ return c.moneda; }) || {}).moneda);
 
             var dni     = _sesion.dni || '';
             var apellido = _estudiante ? (_estudiante.apellido || '') : '';
@@ -880,7 +886,7 @@
                     c.periodo  || '—',
                     fv,
                     fp,
-                    '$' + Number(c.monto_final || 0).toLocaleString('es-AR', {minimumFractionDigits:2}),
+                    simbPdf + Number(c.monto_final || 0).toLocaleString('es-AR', {minimumFractionDigits:2}),
                     ESTADOS[c.estado] || c.estado || '—'
                 ];
             });
@@ -920,7 +926,7 @@
             doc.setFontSize(10);
             doc.setTextColor(255, 255, 255);
             doc.text('TOTAL ABONADO:', ml + 4, y + 7);
-            doc.text('$' + totalAbonado.toLocaleString('es-AR', {minimumFractionDigits:2}), W - mr - 4, y + 7, { align: 'right' });
+            doc.text(simbPdf + totalAbonado.toLocaleString('es-AR', {minimumFractionDigits:2}), W - mr - 4, y + 7, { align: 'right' });
             y += 16;
 
             // Texto certificante

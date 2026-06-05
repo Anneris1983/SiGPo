@@ -301,7 +301,7 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="inputMonto">Monto transferido (ARS) <span class="req">*</span></label>
+            <label class="form-label" for="inputMonto" id="lblMontoTransf">Monto transferido (ARS) <span class="req">*</span></label>
             <input type="number" class="form-input" id="inputMonto" placeholder="Ej: 90000" min="1" aria-label="Monto transferido en pesos">
         </div>
 
@@ -472,7 +472,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // 1. Traer cobros del estudiante
         var { data: cobros, error: errCobros } = await sb
             .from('cobros')
-            .select('cobro_id, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, no_aplica, comprobante_url, recibo_url, fecha_pago, cohorte_id, programa_id')
+            .select('cobro_id, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, moneda, no_aplica, comprobante_url, recibo_url, fecha_pago, cohorte_id, programa_id')
             .eq('dni', String(dni))
             .order('fecha_vencimiento');
 
@@ -527,6 +527,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     saldo:      saldoPend,
                     pagado:     montoAbonado,
                     estado:     estado,
+                    moneda:     c.moneda || 'ARS',
                     diasMora:   diasMora,
                     intereses:  0,   // el cálculo de intereses lo hace el backend; aquí solo mostramos lo que está en monto_final
                     comprobante_url:  c.comprobante_url  || null,
@@ -661,6 +662,8 @@ function renderCuotas(lista) {
 // CONSTRUIR CARD
 // ════════════════════════════════════════════════════
 function buildCard(c) {
+    // fmt local: usa la moneda de esta cuota (ARS/USD) en todo el card
+    var fmt = function(n) { return fMonto(n, c.moneda); };
     var prog    = PROGRAMAS.find(function(p) { return p.id === c.prog_id; });
     var cohorte = COHORTES.find(function(co) { return co.id === c.coh_id; });
     var infoExtra = '', gridHtml = '', footerBtn = '', footerLeft = '';
@@ -769,9 +772,12 @@ function abrirModal(cobroId) {
     if (!_cobroActual) { toast('No se encontró la cuota', 'err'); return; }
 
     var c = _cobroActual;
+    var fmt = function(n) { return fMonto(n, c.moneda); };
     var prog    = PROGRAMAS.find(function(p) { return p.id === c.prog_id; });
     var cohorte = COHORTES.find(function(co) { return co.id === c.coh_id; });
     var saldoModal = c.saldo !== null ? c.saldo : c.monto;
+    var lblMonto = document.getElementById('lblMontoTransf');
+    if (lblMonto) lblMonto.innerHTML = 'Monto transferido (' + (c.moneda === 'USD' ? 'USD' : 'ARS') + ') <span class="req">*</span>';
 
     document.getElementById('modalCuotaRef').innerHTML =
         '<strong>' + esc(c.concepto) + ' · ' + (ETIQUETAS[c.estado] || c.estado) + '</strong>'
@@ -825,6 +831,7 @@ function removeFile() {
 
 async function enviarComprobante() {
     if (!_cobroActual) return;
+    var fmt = function(n) { return fMonto(n, _cobroActual.moneda); };
 
     var fechaTransf = document.getElementById('inputFechaTransf').value;
     var nroOp       = document.getElementById('inputNroOp').value.trim();

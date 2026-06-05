@@ -522,7 +522,7 @@
     var _cobroId = null;
     var _cobroData = null;
 
-    function fmt(n) { return '$' + (n||0).toLocaleString('es-AR', {minimumFractionDigits:2}); }
+    function fmt(n) { return fMonto(n||0, _cobroData && _cobroData.moneda); }
 
     function abrirModalAprobar(cobroId) {
         _cobroId = cobroId;
@@ -741,7 +741,7 @@
             if (!nombre || nombre === ', ') nombre = c.dni || '—';
             var dni = estudiante.dni || c.dni || '—';
             var programa = c.programas ? c.programas.nombre : (c.programa_nombre || '—');
-            var monto = fMillones(c.monto_final || c.monto_cuota || 0);
+            var monto = fMillones(c.monto_final || c.monto_cuota || 0, c.moneda);
             var vencimiento = fFecha(c.fecha_vencimiento);
             var tiempo = tiempoRelativo(c.comprobante_fecha || c.updated_at || c.created_at);
             var esReciente = (new Date() - new Date(c.updated_at || c.created_at)) < 3600000;

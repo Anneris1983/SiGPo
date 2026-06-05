@@ -341,27 +341,34 @@ function calcMontoAbonado(c) {
     return redondear2(Math.max(0,(Number(c&&c.monto_final)||0)-(Number(c&&c.saldo_pendiente)||0)));
 }
 
-/** Formato estándar: $90.000,50 */
-function fMonto(n) {
+/** Símbolo de la moneda: ARS → '$' · USD → 'U$D ' */
+function simboloMoneda(moneda) {
+    return (moneda === 'USD') ? 'U$D ' : '$';
+}
+
+/** Formato estándar: $90.000,50 (o U$D 90.000,50). moneda es opcional, default ARS. */
+function fMonto(n, moneda) {
     if (n===null||n===undefined) return '–';
-    return '$'+Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    return simboloMoneda(moneda)+Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
-/** Formato abreviado para dashboards: $1,5M · $90k · $500,00 */
-function fMillones(n) {
+/** Formato abreviado para dashboards: $1,5M · $90k · $500,00. moneda opcional. */
+function fMillones(n, moneda) {
     if (n===null||n===undefined||n==='') return '—';
+    var sim = simboloMoneda(moneda);
     var v = Math.round(Number(n)||0);
-    if (v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
-    if (v>=1000) return '$'+Math.round(v/1000)+'k';
-    return fMonto(n);
+    if (v>=1000000) return sim+(v/1000000).toFixed(1)+'M';
+    if (v>=1000) return sim+Math.round(v/1000)+'k';
+    return fMonto(n, moneda);
 }
 
-/** Formato con signo para egresos/flujos: -$5.000,00 */
-function fMontoConSigno(n) {
+/** Formato con signo para egresos/flujos: -$5.000,00. moneda opcional. */
+function fMontoConSigno(n, moneda) {
     if (n===null||n===undefined) return '–';
     var num = parseFloat(n);
     if (isNaN(num)) return '–';
-    return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    var sim = simboloMoneda(moneda);
+    return (num<0?'-'+sim:sim)+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
 /** Fecha corta: "15 May" */

@@ -1262,6 +1262,14 @@
                         ⚠️ <strong>Consejo:</strong> Si dejás el monto vacío, la cuota se guardará como <strong>A definir</strong> y no habilitará pagos hasta cargarle valor.
                     </div>
                     <button class="btn-pcuota-agregar" onclick="pcuotaAgregar()">+ Agregar otra cuota</button>
+                    <div style="margin-top:14px;display:flex;align-items:center;gap:10px;">
+                        <label style="font-weight:700;font-size:13px;color:#5C1018;">Moneda del plan</label>
+                        <select id="pcuota-moneda" onchange="_pcuotaMoneda=this.value;pcuotaActualizarResumen();" style="padding:6px 10px;border:1px solid #ccc;border-radius:8px;font-size:13px;">
+                            <option value="ARS">Pesos argentinos (ARS · $)</option>
+                            <option value="USD">Dólares (USD · U$D)</option>
+                        </select>
+                        <span style="font-size:11px;color:#888;">Todas las cuotas usarán esta moneda.</span>
+                    </div>
                 </div>
                 <div style="border-top:1px solid #eee;margin:14px 0 0;"></div>
                 <div style="padding:14px 22px 20px;">
@@ -1526,7 +1534,7 @@
                 var sb = await getSupabase();
                 var [rCoh, rCob, rInsc, rEgr, rCfg] = await Promise.all([
                     sb.from('cohortes').select('cohorte_id,nombre,estado,fecha_inicio,fecha_fin,programa_id,programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
-                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,monto_transferido,estado,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId),
+                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,monto_transferido,estado,moneda,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId),
                     obtenerInscripcionesPorCohorte(cohorteId, 'estudiante_id, descuento_porcentaje, estado_academico, descuento_motivo'),
                     obtenerEgresosResumenPorCohorte(cohorteId),
                     obtenerConfiguracion()
@@ -1687,6 +1695,7 @@
                 aDefinir: Boolean(cuota.aDefinir || cuota.a_definir),
                 comprobanteUrl: cuota.comprobante_url || '',
                 reciboUrl: cuota.recibo_url || '',
+                moneda: cuota.moneda || 'ARS',
                 montoTransferido: cuota.montoTransferido != null ? Number(cuota.montoTransferido) : null
             };
         }
@@ -1837,6 +1846,8 @@
                 return `<td class="cuota-cell cuota-adefinir" title="Sin cobro generado para esta cuota"><span style="color:var(--clr-warning);font-size:10px;font-style:italic;">A definir</span></td>`;
             }
 
+            // formatearMoneda local: usa la moneda (ARS/USD) de esta cuota
+            const formatearMoneda = function(n) { return fMonto(n, cuota.moneda); };
             const clases = 'cuota-cell cuota-' + cuota.estado;
             let top = cuota.texto ? cuota.texto : formatearMoneda(cuota.montoFinal || cuota.montoBase || 0);
             let sub = '';
@@ -1858,7 +1869,7 @@
                     sub = '🕐 En revisión';
                 }
             } else if (cuota.estado === 'abonada') {
-                sub = 'Saldo $0';
+                sub = 'Saldo ' + formatearMoneda(0);
             } else if (cuota.estado === 'noabonada') {
                 sub = cuota.fechaVencimiento ? formatearFechaCorta(cuota.fechaVencimiento) : '';
             }
@@ -2212,6 +2223,7 @@
 
         /* ══ CREAR CUOTAS — estilo administrador ══ */
         var _pcuotaFilas = [];
+        var _pcuotaMoneda = 'ARS';
 
         function _pcuotaHoy() { return new Date().toISOString().split('T')[0]; }
         function _pcuotaPeriodoSig(offset) {
@@ -2260,6 +2272,9 @@
                 _pcuotaFilas = [{ nombre:label, periodo:_pcuotaPeriodoDeDate(sig), monto:'', vencimiento:sig.toISOString().split('T')[0] }];
             }
 
+            _pcuotaMoneda = 'ARS';
+            var _selMonCoop = document.getElementById('pcuota-moneda');
+            if (_selMonCoop) _selMonCoop.value = 'ARS';
             pcuotaRenderFilas();
             pcuotaActualizarResumen();
             pcuotaCheckAlerta();
@@ -2362,7 +2377,8 @@
                             descuento_porcentaje: pct,
                             monto_final:          montoFinal,
                             saldo_pendiente:      montoFinal,
-                            estado:               estado
+                            estado:               estado,
+                            moneda:               _pcuotaMoneda
                         });
                     });
                 });
@@ -2957,7 +2973,7 @@
 
         var _aprobCuota = null;
 
-        function apFmt(n) { return '$' + (n||0).toLocaleString('es-AR', {minimumFractionDigits:2}); }
+        function apFmt(n) { return fMonto(n||0, _aprobCuota && _aprobCuota.moneda); }
 
         function apSelectTipo(tipo) {
             var esFull = tipo === 'full';
