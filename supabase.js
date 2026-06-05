@@ -728,6 +728,11 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
 
     const aprobadoPor = sesion ? sesion.dni : null;
 
+    // Fecha efectiva del pago = cuando el estudiante subió el comprobante (no hoy).
+    const fechaPagoEfectivo = cobro.comprobante_fecha
+        ? String(cobro.comprobante_fecha).split('T')[0]
+        : new Date().toISOString().split('T')[0];
+
     if (tipo === 'COMPLETO' || tipo === 'total') {
         await sb.from('cobros').update({
             estado: 'ABONADA',
@@ -737,6 +742,12 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
             recibo_url: reciboUrl,
             aprobado_por: aprobadoPor
         }).eq('cobro_id', cobroId);
+        await sb.from('pagos').insert({
+            cobro_id: cobroId,
+            monto: Number(cobro.monto_final),
+            fecha_pago: fechaPagoEfectivo,
+            recibo_url: reciboUrl
+        });
     } else {
         // El monto ingresado es el INCREMENTO de este pago: acumular sobre lo
         // ya abonado en pagos parciales previos (no sobrescribir).
@@ -766,11 +777,10 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
             updateParcial.fecha_aprobacion = new Date().toISOString().split('T')[0];
         }
         await sb.from('cobros').update(updateParcial).eq('cobro_id', cobroId);
-
         await sb.from('pagos').insert({
             cobro_id: cobroId,
-            monto: montoAprobado,
-            fecha_pago: new Date().toISOString().split('T')[0],
+            monto: montoInc,
+            fecha_pago: fechaPagoEfectivo,
             recibo_url: reciboUrl
         });
     }

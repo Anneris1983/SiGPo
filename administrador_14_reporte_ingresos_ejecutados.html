@@ -116,16 +116,13 @@
             .progress-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
         </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js">
-    /* == NAVEGACION Y SESION == */
-            else { window.location.href = pagina; }
-    }
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
     /* == CAMPANA == */
     var _notifs = [];
     function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
     document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
     // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
-
 </script>
     <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
     <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
@@ -269,10 +266,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 async function cargarDatos() {
     try {
         var sb = await getSupabase();
-        var [cobros, programas] = await Promise.all([
+        var [cobros, programas, rPag] = await Promise.all([
             obtenerCobros(),
-            obtenerProgramasCatalogo()
+            obtenerProgramasCatalogo(),
+            sb.from('pagos').select('cobro_id,monto,fecha_pago')
         ]);
+        var _allPagos = rPag.data || [];
         // ── Aplicar filtros desde Cashflow ──
         try {
             var _fRaw = sessionStorage.getItem('sigpo_filtros_cashflow');
@@ -330,13 +329,17 @@ async function cargarDatos() {
         // Top 5 programs by collected amount
         var topProgs = Object.keys(recPorProg).sort(function(a,b){ return recPorProg[b] - recPorProg[a]; }).slice(0, 5);
 
-        // Get months for current year from fecha_pago of paid cobros
+        // Build cobro metadata map (cobro_id → cobro) for pagos lookup
+        var cobroMeta = {};
+        cobros.forEach(function(c) { cobroMeta[c.cobro_id] = c; });
+        // Get months for current year from pagos records (accurate per-payment dates)
         var mesesSet = {};
-        cobros.forEach(function(c) {
-            if (c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL') return;
-            if (!c.fecha_pago) return;
-            var yr = String(c.fecha_pago).split('T')[0].split('-')[0];
-            if (yr == anoActual) mesesSet[mesLabel(c.fecha_pago)] = c.fecha_pago.substring(0,7);
+        _allPagos.forEach(function(p) {
+            var c = cobroMeta[p.cobro_id];
+            if (!c) return;
+            if (!p.fecha_pago) return;
+            var yr = String(p.fecha_pago).split('T')[0].split('-')[0];
+            if (yr == anoActual) mesesSet[mesLabel(p.fecha_pago)] = String(p.fecha_pago).substring(0,7);
         });
         var mesesLabels = Object.keys(mesesSet).sort(function(a,b){
             return mesesSet[a].localeCompare(mesesSet[b]);
@@ -353,12 +356,13 @@ async function cargarDatos() {
         var datasets = topProgs.map(function(pid, idx) {
             var dataArr = mesesLabels.map(function(ml) {
                 var sum = 0;
-                cobros.forEach(function(c) {
+                _allPagos.forEach(function(p) {
+                    var c = cobroMeta[p.cobro_id];
+                    if (!c) return;
                     if (String(c.programa_id) !== String(pid)) return;
-                    if (c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL') return;
                     if (c.moneda === 'USD') return;
-                    if (!c.fecha_pago || mesLabel(c.fecha_pago) !== ml) return;
-                    sum += Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0));
+                    if (!p.fecha_pago || mesLabel(p.fecha_pago) !== ml) return;
+                    sum += Number(p.monto || 0);
                 });
                 return Math.round(sum / 1000);
             });
