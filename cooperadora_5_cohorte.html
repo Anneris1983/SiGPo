@@ -3130,7 +3130,7 @@
             var btn = document.querySelector('#apFooterRechazo .btn.danger');
             if (btn) { btn.disabled = true; btn.textContent = 'Rechazando…'; }
             try {
-                await rechazarPago(_aprobacionCobroId);
+                await rechazarPago(_aprobacionCobroId, false, motivo);
                 cerrarAprobacionModal();
                 await cargarDetalleCohorte();
             } catch(e) {

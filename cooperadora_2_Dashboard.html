@@ -680,7 +680,7 @@
         var btn = document.querySelector('#ap-footer-rechazo .btn-danger');
         if (btn) { btn.disabled = true; btn.textContent = 'Rechazando…'; }
         try {
-            var res = await rechazarPago(_cobroId);
+            var res = await rechazarPago(_cobroId, false, motivo);
             if (!res || !res.ok) throw new Error((res && res.mensaje) || 'No se pudo rechazar el pago.');
             alert(res.mensaje || 'Pago rechazado.');
             cerrarModalAprobar();

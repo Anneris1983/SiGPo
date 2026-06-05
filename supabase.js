@@ -762,7 +762,7 @@ async function obtenerUrlFirmadaComprobante(comprobanteUrl) {
     return result.data.signedUrl;
 }
 
-async function rechazarPago(cobroId, forzar) {
+async function rechazarPago(cobroId, forzar, motivoRechazo) {
     const sb = await getSupabase();
 
     const { data: cobro } = await sb.from('cobros').select('*').eq('cobro_id', cobroId).single();
@@ -787,10 +787,13 @@ async function rechazarPago(cobroId, forzar) {
         nuevoEstado = totalPagado > 0 ? 'PAGO_PARCIAL' : 'NO_ABONADA';
     }
 
+    const motivo = (motivoRechazo || '').trim();
+
     await sb.from('cobros').update({
         estado: nuevoEstado,
         comprobante_url: null,
-        comprobante_fecha: null
+        comprobante_fecha: null,
+        motivo_rechazo: motivo || null
     }).eq('cobro_id', cobroId);
 
     // Notificar al estudiante por email
@@ -815,6 +818,7 @@ async function rechazarPago(cobroId, forzar) {
                            + '  • Concepto: ' + concepto + '\n'
                            + (periodo ? '  • Período: ' + periodo + '\n' : '')
                            + '  • Programa: ' + prog.nombre + '\n\n'
+                           + (motivo ? 'Motivo del rechazo: ' + motivo + '\n\n' : '')
                            + 'Por favor, volvé a ingresar al portal, verificá los datos y subí el comprobante correcto.\n\n'
                            + 'Portal de estudiantes: https://anneris1983.github.io/SiGPo/portal_login.html\n\n'
                            + 'Ante cualquier consulta, respondé este correo.\n\n'
