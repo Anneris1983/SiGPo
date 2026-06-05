@@ -1,0 +1,6 @@
+# Planillas de importación generadas (contienen datos personales de estudiantes)
+plantilla_importacion_*.xlsx
+
+# Temporales
+_gen_*.py
+*.tmp
