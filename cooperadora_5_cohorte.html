@@ -1573,8 +1573,8 @@
                         : (saldoC <= 0 && ((_tieneRecibo && abonado >= Number(c.monto_final||0)) || c.estado === 'ABONADA')) ? 'ABONADA'
                         : (abonado > 0 && saldoC > 0 && (_tieneRecibo || c.estado === 'PAGO_PARCIAL')) ? 'PAGO_PARCIAL'
                         : (_tieneComp && !_tieneRecibo && abonado <= 0) ? 'PENDIENTE'
-                        : (abonado > 0 && saldoC > 0) ? 'PAGO_PARCIAL'
                         : (c.estado === 'PENDIENTE') ? 'PENDIENTE'
+                        : (abonado > 0 && saldoC > 0) ? 'PAGO_PARCIAL'
                         : (!_esPagada && c.fecha_vencimiento && c.fecha_vencimiento < _hoyStr && Number(c.monto_final||0) > 0) ? 'EN_MORA'
                         : (c.estado||'NO_ABONADA');
                     dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, montoTransferido:(c.monto_transferido ? Number(c.monto_transferido) : null), texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'', recibo_url:c.recibo_url||'' });
