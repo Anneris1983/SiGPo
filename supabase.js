@@ -380,6 +380,19 @@ function fFechaCorta(str) {
     return p[2]+' '+meses[parseInt(p[1],10)-1];
 }
 
+/** Muestra ARS y USD separados: "$X · U$D Y". Si USD=0 o no existe, solo muestra ARS. */
+function fMontoDual(ars, usd) {
+    var txt = fMonto(ars);
+    if (Number(usd || 0) > 0) txt += ' · ' + fMonto(usd, 'USD');
+    return txt;
+}
+/** Versión abreviada para dashboards: "$1,5M · U$D 900k". Si USD=0, solo ARS. */
+function fMillonesDual(ars, usd) {
+    var txt = fMillones(ars);
+    if (Number(usd || 0) > 0) txt += ' · ' + fMillones(usd, 'USD');
+    return txt;
+}
+
 /** Alias de escapeHtml para compatibilidad con archivos que usan esc() */
 var esc = escapeHtml;
 var escJs = escapeJsAttr;
@@ -554,7 +567,7 @@ async function obtenerDetallePrograma(programaId) {
     const [progRes, cohRes, cobRes, egrRes] = await Promise.all([
         sb.from('programas').select('*').eq('programa_id', programaId).single(),
         sb.from('cohortes').select('*').eq('programa_id', programaId).order('fecha_inicio', { ascending: false }),
-        sb.from('cobros').select('cobro_id,dni,cohorte_id,estado,monto_final,saldo_pendiente').eq('programa_id', programaId),
+        sb.from('cobros').select('cobro_id,dni,cohorte_id,estado,monto_final,saldo_pendiente,moneda').eq('programa_id', programaId),
         sb.from('egresos').select('egreso_id,cohorte_id,tipo,monto_pagado,monto_original').eq('programa_id', programaId)
     ]);
 
@@ -589,7 +602,12 @@ async function obtenerDetallePrograma(programaId) {
             var enMora   = dnisConMora.size;
             var alDia    = Math.max(0, totalEst - enMora);
 
-            var recaudado = cobrosCoh.reduce(function(s, c) {
+            var recaudadoARS = cobrosCoh.reduce(function(s, c) {
+                if ((c.moneda || 'ARS') !== 'ARS') return s;
+                return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
+            }, 0);
+            var recaudadoUSD = cobrosCoh.reduce(function(s, c) {
+                if (c.moneda !== 'USD') return s;
                 return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
             }, 0);
             var egresosMonto = egresosCoh.filter(function(e){ return e.tipo === 'EJECUTADO'; }).reduce(function(s, e) {
@@ -600,7 +618,8 @@ async function obtenerDetallePrograma(programaId) {
                 id: coh.cohorte_id, nombre: coh.nombre, estado: coh.estado,
                 fechaInicio: coh.fecha_inicio, fechaFin: coh.fecha_fin,
                 estudiantes: totalEst, alDia: alDia, enMora: enMora,
-                recaudado: recaudado, egresos: egresosMonto, saldo: recaudado - egresosMonto
+                recaudado: recaudadoARS, recaudadoARS: recaudadoARS, recaudadoUSD: recaudadoUSD,
+                egresos: egresosMonto, saldo: recaudadoARS - egresosMonto
             };
         })
     };
@@ -1133,7 +1152,9 @@ async function obtenerDashboardAdmin() {
         cuotasEnMora:           Number(r.totalCuotasEnMora  || 0),
         totalReadmisiones:      Number(r.totalReadmisiones  || 0),
         totalReadmisionesPendientes: Number(r.totalReadmisionesPendientes || 0),
-        recaudado:              Number(r.totalIngresos      || 0),
+        recaudado:              Number(r.totalIngresosARS   || 0),
+        recaudadoARS:           Number(r.totalIngresosARS   || 0),
+        recaudadoUSD:           Number(r.totalIngresosUSD   || 0),
         egresos:                Number(r.totalEgresos       || 0),
         saldo:                  Number(r.saldoNeto          || 0),
         programas: (r.programas || []).map(function(p) {
@@ -1152,7 +1173,9 @@ async function obtenerDashboardAdmin() {
                 enMora:            enMora,
                 cuotasEnMora:      Number(p.cuotasEnMora     || 0),
                 pendCooperadora:   Number(p.pendCooperadora  || 0),
-                recaudado:         Number(p.ingresosEstimados|| 0),
+                recaudado:         Number(p.ingresosARS      || 0),
+                recaudadoARS:      Number(p.ingresosARS      || 0),
+                recaudadoUSD:      Number(p.ingresosUSD      || 0),
                 egresos:           Number(p.egresosTotales   || 0),
                 saldo:             Number(p.saldoNeto        || 0)
             };
@@ -1246,7 +1269,9 @@ var _gasFunctions = {
             alDia:                 Math.max(0, totalInscriptos - totalEnMora),
             enMora:                totalEnMora,
             cuotasEnMora:          Number(r.totalCuotasEnMora || 0),
-            recaudado:             Number(r.totalIngresos     || 0),
+            recaudado:             Number(r.totalIngresosARS  || 0),
+            recaudadoARS:          Number(r.totalIngresosARS  || 0),
+            recaudadoUSD:          Number(r.totalIngresosUSD  || 0),
             egresos:               Number(r.totalEgresos      || 0),
             saldo:                 Number(r.saldoNeto         || 0),
             programas: (r.programas || []).map(function(p) {
@@ -1265,7 +1290,9 @@ var _gasFunctions = {
                     enMora:            enMora,
                     cuotasEnMora:      Number(p.cuotasEnMora     || 0),
                     pendCooperadora:   Number(p.pendCooperadora  || 0),
-                    recaudado:         Number(p.ingresosEstimados|| 0),
+                    recaudado:         Number(p.ingresosARS      || 0),
+                    recaudadoARS:      Number(p.ingresosARS      || 0),
+                    recaudadoUSD:      Number(p.ingresosUSD      || 0),
                     egresos:           Number(p.egresosTotales   || 0),
                     saldo:             Number(p.saldoNeto        || 0)
                 };

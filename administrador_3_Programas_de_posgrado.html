@@ -287,7 +287,7 @@ function renderPrograma(data) {
         var claseBtn = esActiva ? 'btn-toggle cerrar' : 'btn-toggle activar';
         var textoBtn = esActiva ? '🔒 Cerrar' : '✅ Activar';
         var nuevoEstado = esActiva ? 'CERRADO' : 'ACTIVO';
-        var saldo = (c.recaudado || 0) - (c.egresos || 0);
+        var saldo = (c.saldo !== undefined ? c.saldo : (c.recaudado || 0) - (c.egresos || 0));
         var claseSaldo = saldo >= 0 ? 'saldo-positivo' : 'saldo-negativo';
 
         return '<div class="' + claseCard + '" id="cohorte-' + c.id + '" onclick="irACohorte(' + c.id + ', event)">'
@@ -298,9 +298,9 @@ function renderPrograma(data) {
             + '<div class="stat-box"><div class="stat-label">Estudiantes</div><div class="stat-value">' + (c.estudiantes || 0) + '</div></div>'
             + '<div class="stat-box"><div class="stat-label">Al día</div><div class="stat-value success">' + (c.alDia || 0) + '</div></div>'
             + '<div class="stat-box"><div class="stat-label">En mora</div><div class="stat-value' + ((c.enMora || 0) > 0 ? ' danger' : '') + '">' + (c.enMora || 0) + '</div></div>'
-            + '<div class="stat-box"><div class="stat-label">Recaudado</div><div class="stat-value">' + fMillones(c.recaudado) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">Recaudado</div><div class="stat-value">' + fMillonesDual(c.recaudado, c.recaudadoUSD) + '</div></div>'
             + '<div class="stat-box"><div class="stat-label">Egresos</div><div class="stat-value warning">' + fMillones(c.egresos) + '</div></div>'
-            + '<div class="stat-box"><div class="stat-label">Saldo</div><div class="stat-value ' + ((c.saldo || 0) >= 0 ? 'success' : 'danger') + '">' + fMillones(c.saldo) + '</div></div>'
+            + '<div class="stat-box"><div class="stat-label">Saldo</div><div class="stat-value ' + (saldo >= 0 ? 'success' : 'danger') + '">' + fMillones(saldo) + (c.recaudadoUSD > 0 ? ' (ARS)' : '') + '</div></div>'
             + '</div></div>'
             + '<div class="cohorte-right">'
             + '<span class="' + claseBadge + '">' + textoBadge + '</span>'

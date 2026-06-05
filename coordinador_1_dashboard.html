@@ -293,7 +293,7 @@
             // Round 2: programas y cobros filtrados por las cohortes del coordinador
             var [rP, rCob] = await Promise.all([
                 allProgIds.length ? sb.from('programas').select('*').in('programa_id', allProgIds) : Promise.resolve({data:[]}),
-                cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
+                cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,moneda').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
             ]);
             var programas = rP.data || [];
             var cobros = rCob.data || [];
@@ -309,14 +309,17 @@
             // La misma cuota no puede contar en ambos grupos.
             var dnisEnMora = new Set(cobros.filter(function(c) { return c.estado === 'EN_MORA'; }).map(function(c) { return c.dni; }));
             var dnisAlDia  = new Set([...dnisTotal].filter(function(dni) { return !dnisEnMora.has(dni); }));
-            var recaudado = cobros.filter(function(c) { return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
-                                  .reduce(function(s,c) { return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
+            var recaudadoARS = cobros.filter(function(c) { return (c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL') && (c.moneda||'ARS') === 'ARS'; })
+                                     .reduce(function(s,c) { return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
+            var recaudadoUSD = cobros.filter(function(c) { return (c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL') && c.moneda === 'USD'; })
+                                     .reduce(function(s,c) { return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
+            var recaudado = recaudadoARS;
 
             document.getElementById('headerSub').textContent = programas.map(function(p) { return p.nombre; }).join(' · ');
             document.getElementById('statEstudiantes').textContent = dnisTotal.size;
             document.getElementById('statAlDia').textContent = dnisAlDia.size;
             document.getElementById('statMora').textContent = dnisEnMora.size;
-            document.getElementById('statRecaudado').textContent = '$' + Number(recaudado).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+            document.getElementById('statRecaudado').textContent = fMontoDual(recaudadoARS, recaudadoUSD);
 
             var programasStats = programas.map(function(p) {
                 var cohsProg = cohortes.filter(function(c) { return c.programa_id === p.programa_id; });
@@ -335,14 +338,16 @@
                 var dnisCoh = new Set(cobs.map(function(x) { return x.dni; }));
                 var mor = morSet.size;
                 var alD = [...dnisCoh].filter(function(dni) { return !morSet.has(dni); }).length;
-                var rec = cobs.filter(function(x) { return x.estado === 'ABONADA' || x.estado === 'PAGO_PARCIAL'; })
-                              .reduce(function(s,x) { return s + Math.max(0, Number(x.monto_final||0) - Number(x.saldo_pendiente||0)); }, 0);
+                var recARS = cobs.filter(function(x) { return (x.estado === 'ABONADA' || x.estado === 'PAGO_PARCIAL') && (x.moneda||'ARS') === 'ARS'; })
+                                 .reduce(function(s,x) { return s + Math.max(0, Number(x.monto_final||0) - Number(x.saldo_pendiente||0)); }, 0);
+                var recUSD = cobs.filter(function(x) { return (x.estado === 'ABONADA' || x.estado === 'PAGO_PARCIAL') && x.moneda === 'USD'; })
+                                 .reduce(function(s,x) { return s + Math.max(0, Number(x.monto_final||0) - Number(x.saldo_pendiente||0)); }, 0);
                 return {
                     cohorteId: c.cohorte_id, nombre: c.nombre || 'Cohorte',
                     programa: progNomMap[c.programa_id] || '',
                     estado: c.estado === 'ACTIVO' ? 'Activa' : 'Cerrada',
                     estudiantes: dnisCoh.size, alDia: alD, mora: mor,
-                    recaudado: '$' + Number(rec).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}),
+                    recaudado: fMontoDual(recARS, recUSD),
                     fechaInicio: c.fecha_inicio || '', fechaFin: c.fecha_fin || '',
                     destino: 'coordinador_3_cohorte.html?cohorte_id=' + c.cohorte_id
                 };

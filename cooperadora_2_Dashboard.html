@@ -850,7 +850,7 @@
             var notifs = resultados[2] || [];
 
             /* Stats */
-            document.getElementById('stat-recaudado').textContent = fMonto(dash.recaudado);
+            document.getElementById('stat-recaudado').textContent = fMontoDual(dash.recaudado, dash.recaudadoUSD);
             document.getElementById('stat-mora').textContent = dash.enMora !== undefined ? dash.enMora : '—';
             document.getElementById('stat-programas').textContent = dash.totalProgramas !== undefined ? dash.totalProgramas : '—';
 
