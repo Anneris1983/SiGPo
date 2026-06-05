@@ -403,7 +403,6 @@
                 <select id="c-tipo" aria-label="Tipo de correo" onchange="cargarPlantilla()">
                     <option value="recordatorio">📩 Recordatorio de vencimiento próximo</option>
                     <option value="reclamo">🔔 Reclamo por cuota vencida</option>
-                    <option value="coordinador">👨‍🏫 Aviso al coordinador</option>
                 </select>
             </div>
             <div class="mfield"><label for="c-asunto">Asunto</label><input type="text" id="c-asunto" aria-label="Asunto del correo"></div>
@@ -446,10 +445,6 @@ const PLANTILLAS_DEF = {
         asunto: 'Cuota vencida pendiente de pago: {cuota} - {programa}',
         cuerpo:  'Estimado/a {nombre} {apellido},\n\nLe informamos que la {cuota} del período {periodo} se encuentra vencida.\n\nSaldo pendiente: ${monto}\nCBU: {cbu} | Alias: {alias}\n\nLe solicitamos regularizar su situación.\n\nSecretaría de Posgrado - FCE UNCUYO'
     },
-    coordinador: {
-        asunto: 'Aviso de deuda: {programa}',
-        cuerpo:  'Estimado/a Coordinador/a,\n\nEl/la estudiante {apellido}, {nombre} (DNI {dni}) registra cuotas impagas en el programa "{programa}".\n\nSecretaría de Posgrado - FCE UNCUYO'
-    }
 };
 
 const V = {
