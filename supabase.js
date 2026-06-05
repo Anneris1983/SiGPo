@@ -295,10 +295,13 @@ async function marcarTodasNotificacionesLeidas() {
     const sb = await getSupabase();
     const sesion = getSesion();
     if (!sesion) return;
-    await sb.from('notificaciones')
-        .update({ leida: true })
-        .eq('usuario_dni', sesion.dni)
-        .eq('leida', false);
+    // Marcar las personales (usuario_dni) y las del rol (rol_destino)
+    await Promise.all([
+        sb.from('notificaciones').update({ leida: true })
+            .eq('usuario_dni', sesion.dni).eq('leida', false),
+        sb.from('notificaciones').update({ leida: true })
+            .eq('rol_destino', sesion.rol).eq('leida', false)
+    ]);
 }
 
 /**
@@ -696,13 +699,16 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
         return { ok: false, mensaje: 'Esta cuota ya está abonada' };
     }
 
+    const aprobadoPor = sesion ? sesion.dni : null;
+
     if (tipo === 'COMPLETO' || tipo === 'total') {
         await sb.from('cobros').update({
             estado: 'ABONADA',
             saldo_pendiente: 0,
             monto_abonado: Number(cobro.monto_final),
             fecha_aprobacion: new Date().toISOString().split('T')[0],
-            recibo_url: reciboUrl
+            recibo_url: reciboUrl,
+            aprobado_por: aprobadoPor
         }).eq('cobro_id', cobroId);
     } else {
         // El monto ingresado es el INCREMENTO de este pago: acumular sobre lo
@@ -726,8 +732,7 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
             saldo_pendiente: Math.max(0, nuevoSaldo),
             monto_abonado: abonadoTotal,
             recibo_url: reciboUrl,
-            // Resetear la base de mora para que el próximo recálculo parta del
-            // nuevo saldo remanente (no de la base de una mora anterior).
+            aprobado_por: aprobadoPor,
             saldo_mora_base: null
         };
         if (estadoNuevo === 'ABONADA') {
@@ -787,6 +792,37 @@ async function rechazarPago(cobroId, forzar) {
         comprobante_url: null,
         comprobante_fecha: null
     }).eq('cobro_id', cobroId);
+
+    // Notificar al estudiante por email
+    try {
+        const { data: est } = await sb.from('estudiantes')
+            .select('nombre, apellido, email')
+            .eq('dni', cobro.dni)
+            .single();
+        const { data: prog } = await sb.from('programas')
+            .select('nombre, programa_id')
+            .eq('programa_id', cobro.programa_id)
+            .single();
+        if (est && est.email && prog) {
+            const concepto = cobro.concepto || 'cuota';
+            const periodo  = cobro.periodo  || '';
+            await sb.from('reclamos_pendientes').insert({
+                programa_id: prog.programa_id,
+                to_email:    est.email,
+                subject:     'Tu comprobante de pago fue rechazado — ' + prog.nombre,
+                body:        'Estimado/a ' + est.nombre + ' ' + est.apellido + ',\n\n'
+                           + 'Tu comprobante de pago para "' + concepto + (periodo ? ' - ' + periodo : '') + '" del programa "' + prog.nombre + '" fue revisado y NO pudo ser aprobado.\n\n'
+                           + 'Por favor, volvé a ingresar al portal, verificá los datos y subí el comprobante correcto.\n\n'
+                           + 'Portal de estudiantes: https://anneris1983.github.io/SiGPo/portal_login.html\n\n'
+                           + 'Ante cualquier consulta, respondé este correo.\n\n'
+                           + 'Secretaría de Posgrado — FCE UNCUYO',
+                reply_to:    null,
+                estado:      'pendiente'
+            });
+        }
+    } catch (e) {
+        console.warn('No se pudo encolar email de rechazo:', e.message || e);
+    }
 
     return { ok: true, nuevoEstado: nuevoEstado };
 }
