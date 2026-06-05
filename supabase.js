@@ -667,7 +667,7 @@ async function obtenerCobros(filtros) {
     return data || [];
 }
 
-async function subirComprobante(cobroId, file, fechaTransferencia, montoTransferido) {
+async function subirComprobante(cobroId, file, montoTransferido) {
     const sb = await getSupabase();
     const sesion = getSesion();
     if (!sesion) return { ok: false };
@@ -685,12 +685,13 @@ async function subirComprobante(cobroId, file, fechaTransferencia, montoTransfer
     const { data: urlData, error: urlErr } = sb.storage.from('comprobantes').getPublicUrl(fileName);
     if (urlErr || !urlData || !urlData.publicUrl) return { ok: false, mensaje: 'Error al obtener URL del archivo' };
 
+    const ahora = new Date().toISOString();
     const updateData = {
         estado: 'PENDIENTE',
         comprobante_url: urlData.publicUrl,
-        comprobante_fecha: new Date().toISOString()
+        comprobante_fecha: ahora,
+        fecha_pago: ahora.split('T')[0]
     };
-    if (fechaTransferencia) updateData.fecha_pago = fechaTransferencia;
     if (montoTransferido && Number(montoTransferido) > 0) updateData.monto_transferido = Number(montoTransferido);
 
     const { error: updateErr } = await sb.from('cobros').update(updateData).eq('cobro_id', cobroId);

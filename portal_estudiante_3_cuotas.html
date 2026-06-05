@@ -291,11 +291,6 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="inputFechaTransf">Fecha de la transferencia <span class="req">*</span></label>
-            <input type="date" class="form-input" id="inputFechaTransf" aria-label="Fecha de la transferencia">
-        </div>
-
-        <div class="form-group">
             <label class="form-label" for="inputNroOp">N° de operación / referencia <span class="req">*</span></label>
             <input type="text" class="form-input" id="inputNroOp" placeholder="Ej: 123456789" aria-label="Número de operación o referencia">
         </div>
@@ -784,7 +779,6 @@ function abrirModal(cobroId) {
         + (prog ? esc(prog.nombre) : '') + (cohorte ? ' · ' + esc(cohorte.nombre) : '') + '<br>'
         + 'Período: ' + esc(c.periodo) + ' · Saldo a pagar: <strong style="color:var(--danger);">' + fmt(saldoModal) + '</strong>';
 
-    document.getElementById('inputFechaTransf').value = '';
     document.getElementById('inputMonto').value        = saldoModal || '';
     document.getElementById('inputNroOp').value        = '';
     document.getElementById('inputObs').value          = '';
@@ -833,13 +827,11 @@ async function enviarComprobante() {
     if (!_cobroActual) return;
     var fmt = function(n) { return fMonto(n, _cobroActual.moneda); };
 
-    var fechaTransf = document.getElementById('inputFechaTransf').value;
     var nroOp       = document.getElementById('inputNroOp').value.trim();
     var monto       = document.getElementById('inputMonto').value.trim();
     var obs         = document.getElementById('inputObs').value.trim();
 
     if (!_fileActual)          { toast('⚠️ Adjuntá el comprobante de transferencia', 'err'); return; }
-    if (!fechaTransf)          { toast('⚠️ Ingresá la fecha de la transferencia', 'err'); return; }
     if (!nroOp)                { toast('⚠️ Ingresá el número de operación', 'err'); return; }
     if (!monto || +monto <= 0) { toast('⚠️ Ingresá el monto transferido', 'err'); return; }
 
@@ -875,7 +867,7 @@ async function enviarComprobante() {
 
         // ── Paso 1: subir archivo usando subirComprobante de supabase.js ──
         lblEl.textContent = 'Subiendo archivo…';
-        var resultado = await subirComprobante(cobroId, _fileActual, fechaTransf, monto);
+        var resultado = await subirComprobante(cobroId, _fileActual, monto);
         clearInterval(timer);
 
         if (!resultado.ok) {
