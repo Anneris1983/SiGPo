@@ -341,20 +341,22 @@ async function cargarDatos() {
         var dnisEnMora = new Set(enMora.map(function(c){ return c.dni + '|' + (c.programa_id != null ? c.programa_id : ''); }));
         var totalEnMora = dnisEnMora.size;
 
-        // Total monto mora (saldo_pendiente sum)
-        var montoTotalMora = enMora.reduce(function(s,c){ return s + Number(c.saldo_pendiente||0); }, 0);
+        // Total monto mora (saldo_pendiente sum) — separado por moneda (NUNCA sumar ARS y USD juntos)
+        var montoTotalMoraARS = enMora.reduce(function(s,c){ return s + ((c.moneda||'ARS')==='ARS' ? Number(c.saldo_pendiente||0) : 0); }, 0);
+        var montoTotalMoraUSD = enMora.reduce(function(s,c){ return s + (c.moneda==='USD' ? Number(c.saldo_pendiente||0) : 0); }, 0);
 
         // Total unique enrollments across all cobros (enrollment-based)
         var todosLosDnis = new Set(cobros.map(function(c){ return c.dni + '|' + (c.programa_id != null ? c.programa_id : ''); }));
         var pctMoraGeneral = todosLosDnis.size > 0 ? (dnisEnMora.size / todosLosDnis.size * 100) : 0;
 
-        // Mora promedio por estudiante moroso
-        var moraPromedio = totalEnMora > 0 ? (montoTotalMora / totalEnMora) : 0;
+        // Mora promedio por estudiante moroso — separado por moneda
+        var moraPromedioARS = totalEnMora > 0 ? (montoTotalMoraARS / totalEnMora) : 0;
+        var moraPromedioUSD = totalEnMora > 0 ? (montoTotalMoraUSD / totalEnMora) : 0;
 
         // Update summary cards
         var cards = document.querySelectorAll('.summary-card');
         if (cards[0]) {
-            cards[0].querySelector('.summary-value').textContent = fM(montoTotalMora);
+            cards[0].querySelector('.summary-value').textContent = fMontoDual(montoTotalMoraARS, montoTotalMoraUSD);
             cards[0].querySelector('.summary-change').textContent = pctMoraGeneral.toFixed(1) + '% del total a cobrar';
         }
         if (cards[1]) {
@@ -362,7 +364,7 @@ async function cargarDatos() {
             cards[1].querySelector('.summary-change').textContent = pctMoraGeneral.toFixed(1) + '% del total activos';
         }
         if (cards[2]) {
-            cards[2].querySelector('.summary-value').textContent = fM(moraPromedio);
+            cards[2].querySelector('.summary-value').textContent = fMontoDual(moraPromedioARS, moraPromedioUSD);
             cards[2].querySelector('.summary-change').textContent = 'Por estudiante moroso';
         }
         if (cards[3]) {
@@ -380,24 +382,26 @@ async function cargarDatos() {
         var byProg = {};
         cobros.forEach(function(c) {
             var pid = c.programa_id || 'SIN_PROGRAMA';
-            if (!byProg[pid]) byProg[pid] = { nombre: progMap[pid] || pid, dnisTotal: new Set(), dnisMora: new Set(), montoMora: 0 };
+            if (!byProg[pid]) byProg[pid] = { nombre: progMap[pid] || pid, dnisTotal: new Set(), dnisMora: new Set(), montoMoraARS: 0, montoMoraUSD: 0 };
             byProg[pid].dnisTotal.add(c.dni);
             if (c.estado === 'EN_MORA') {
                 byProg[pid].dnisMora.add(c.dni);
-                byProg[pid].montoMora += Number(c.saldo_pendiente||0);
+                if (c.moneda==='USD') byProg[pid].montoMoraUSD += Number(c.saldo_pendiente||0);
+                else byProg[pid].montoMoraARS += Number(c.saldo_pendiente||0);
             }
         });
 
         // Only programs with mora
         var progConMora = Object.entries(byProg).filter(function(e){ return e[1].dnisMora.size > 0; });
-        progConMora.sort(function(a,b){ return b[1].montoMora - a[1].montoMora; });
+        progConMora.sort(function(a,b){ return b[1].montoMoraARS - a[1].montoMoraARS; });
 
-        // Build tfoot totals
-        var totalEstFoot = 0, totalMoraCountFoot = 0, totalMontoPFoot = 0;
+        // Build tfoot totals (separado por moneda)
+        var totalEstFoot = 0, totalMoraCountFoot = 0, totalMontoPFootARS = 0, totalMontoPFootUSD = 0;
         progConMora.forEach(function(e){
             totalEstFoot += e[1].dnisTotal.size;
             totalMoraCountFoot += e[1].dnisMora.size;
-            totalMontoPFoot += e[1].montoMora;
+            totalMontoPFootARS += e[1].montoMoraARS;
+            totalMontoPFootUSD += e[1].montoMoraUSD;
         });
         var pctFoot = totalEstFoot > 0 ? (totalMoraCountFoot/totalEstFoot*100) : 0;
 
@@ -428,7 +432,7 @@ async function cargarDatos() {
                         + '<td>' + totalEst + '</td>'
                         + '<td>' + moraCount + '</td>'
                         + '<td>' + pct.toFixed(1) + '%</td>'
-                        + '<td>' + fM(d.montoMora) + '</td>'
+                        + '<td>' + fMontoDual(d.montoMoraARS, d.montoMoraUSD) + '</td>'
                         + '<td>—</td>'
                         + '<td>' + badge + '</td>'
                         + '</tr>';
@@ -443,7 +447,7 @@ async function cargarDatos() {
                 + '<td><strong>' + totalEstFoot + '</strong></td>'
                 + '<td><strong>' + totalMoraCountFoot + '</strong></td>'
                 + '<td><strong>' + pctFoot.toFixed(1) + '%</strong></td>'
-                + '<td><strong>' + fM(totalMontoPFoot) + '</strong></td>'
+                + '<td><strong>' + fMontoDual(totalMontoPFootARS, totalMontoPFootUSD) + '</strong></td>'
                 + '<td><strong>—</strong></td>'
                 + '<td></td>';
         }

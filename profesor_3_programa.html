@@ -141,7 +141,7 @@ async function cargar(sesion) {
     var [rProg, rCoh, rCob, rEgr] = await Promise.all([
         sb.from('programas').select('programa_id,nombre,tipo').eq('programa_id', PROGRAMA_ID).single(),
         sb.from('cohortes').select('cohorte_id,nombre,estado,fecha_inicio,fecha_fin').eq('programa_id', PROGRAMA_ID),
-        sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente').eq('programa_id', PROGRAMA_ID),
+        sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente,moneda').eq('programa_id', PROGRAMA_ID),
         sb.from('egresos').select('cohorte_id,tipo,monto_pagado,monto_original').eq('programa_id', PROGRAMA_ID)
         // inscripciones se omite: no tiene columna programa_id (se llega vía cohortes)
         // y el conteo de estudiantes ya se deriva de cobros (dnis).
@@ -178,8 +178,12 @@ async function cargar(sesion) {
         var alDia = new Set(cobs.filter(function(x){return x.estado==='ABONADA';}).map(function(x){return x.dni;})).size;
         var mora  = new Set(cobs.filter(function(x){return x.estado==='EN_MORA';}).map(function(x){return x.dni;})).size;
         var parcial = new Set(cobs.filter(function(x){return x.estado==='PAGO_PARCIAL';}).map(function(x){return x.dni;})).size;
-        var rec = cobs.filter(function(x){return x.estado==='ABONADA'||x.estado==='PAGO_PARCIAL';})
+        var recCob = cobs.filter(function(x){return x.estado==='ABONADA'||x.estado==='PAGO_PARCIAL';});
+        var recArs = recCob.filter(function(x){return (x.moneda||'ARS')==='ARS';})
                       .reduce(function(s,x){return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));},0);
+        var recUsd = recCob.filter(function(x){return x.moneda==='USD';})
+                      .reduce(function(s,x){return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));},0);
+        var rec = recArs;
         var egr = egrs.reduce(function(s,x){return s+Number(x.monto_pagado||x.monto_original||0);},0);
         var sal = rec - egr;
         var isActiva = c.estado==='ACTIVO';
@@ -196,7 +200,7 @@ async function cargar(sesion) {
             + '<div class="stat-box"><div class="stat-label">Al día</div><div class="stat-value success">'+alDia+'</div></div>'
             + '<div class="stat-box"><div class="stat-label">En mora</div><div class="stat-value danger">'+mora+'</div></div>'
             + '<div class="stat-box"><div class="stat-label">Pago parcial</div><div class="stat-value warning">'+parcial+'</div></div>'
-            + '<div class="stat-box"><div class="stat-label">Recaudado</div><div class="stat-value">'+fM(rec)+'</div></div>'
+            + '<div class="stat-box"><div class="stat-label">Recaudado</div><div class="stat-value">'+fMontoDual(recArs, recUsd)+'</div></div>'
             + '<div class="stat-box"><div class="stat-label">Egresos</div><div class="stat-value">'+fM(egr)+'</div></div>'
             + '<div class="stat-box"><div class="stat-label">Saldo</div><div class="stat-value '+(sal>=0?'saldo-pos':'saldo-neg')+'">'+fM(sal)+'</div></div>'
             + '</div></div>'

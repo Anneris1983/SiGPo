@@ -422,13 +422,15 @@ async function cargarDatos() {
         var progMap = {};
         programas.forEach(function(p) { progMap[p.programa_id] = p.nombre || ('Programa ' + p.programa_id); });
 
-        // Group by mes (fecha_vencimiento), sum monto_final
+        // Group by mes (fecha_vencimiento), sum monto_final — split por moneda (NUNCA mezclar ARS/USD)
         var byMes = {};
         cobros.forEach(function(c) {
             var ml = mesLabel(c.fecha_vencimiento);
             if (!ml) return;
-            if (!byMes[ml]) byMes[ml] = 0;
-            byMes[ml] += Number(c.monto_final||0);
+            if (!byMes[ml]) byMes[ml] = { ars: 0, usd: 0 };
+            var _m = Number(c.monto_final||0);
+            if (c.moneda === 'USD') byMes[ml].usd += _m;
+            else byMes[ml].ars += _m;
         });
 
         // Sort months chronologically
@@ -451,34 +453,44 @@ async function cargarDatos() {
         }
 
         // Use intersection: months that exist in data within the future window, or fallback to sorted
+        // chartBase = serie ARS (la que se grafica); chartBaseUsd = serie USD (solo para totales/resumen)
         var chartLabels = [];
-        var chartBase = [];
+        var chartBase = [];     // ARS por mes
+        var chartBaseUsd = [];  // USD por mes
         // Check if any future months have data
         var hasFuture = futureLabels.some(function(m){ return byMes[m]; });
         if (hasFuture) {
             futureLabels.forEach(function(m) {
                 chartLabels.push(m);
-                chartBase.push(byMes[m] || 0);
+                chartBase.push((byMes[m] && byMes[m].ars) || 0);
+                chartBaseUsd.push((byMes[m] && byMes[m].usd) || 0);
             });
         } else {
             // Fall back to all months found in data
             var useLabels = sortedMeses.slice(-12);
             useLabels.forEach(function(m) {
                 chartLabels.push(m);
-                chartBase.push(byMes[m] || 0);
+                chartBase.push((byMes[m] && byMes[m].ars) || 0);
+                chartBaseUsd.push((byMes[m] && byMes[m].usd) || 0);
             });
         }
 
-        // Calculate 3 scenarios
+        // Calculate 3 scenarios (sobre la serie ARS que se grafica)
         var optData = chartBase.map(function(v){ return Math.round(v * 1.0); });
         var realData = chartBase.map(function(v){ return Math.round(v * 0.87); });
         var stressData = chartBase.map(function(v){ return Math.round(v * 0.70); });
 
-        // Totals
+        // Totals ARS
         var totalOpt = optData.reduce(function(s,v){ return s+v; }, 0);
         var totalReal = realData.reduce(function(s,v){ return s+v; }, 0);
         var totalStress = stressData.reduce(function(s,v){ return s+v; }, 0);
         var totalBase = chartBase.reduce(function(s,v){ return s+v; }, 0);
+
+        // Totals USD (NUNCA sumados con ARS)
+        var totalBaseUsd = chartBaseUsd.reduce(function(s,v){ return s+v; }, 0);
+        var totalOptUsd = totalBaseUsd;
+        var totalRealUsd = Math.round(totalBaseUsd * 0.87);
+        var totalStressUsd = Math.round(totalBaseUsd * 0.70);
 
         // Count unique students and cuotas
         var uniqueDnis = new Set(cobros.map(function(c){ return c.dni; }));
@@ -487,7 +499,7 @@ async function cargarDatos() {
         // Update summary cards
         var cards = document.querySelectorAll('.summary-card');
         if (cards[0]) {
-            cards[0].querySelector('.summary-value').textContent = fM(totalBase);
+            cards[0].querySelector('.summary-value').textContent = fMontoDual(totalBase, totalBaseUsd);
             cards[0].querySelector('.summary-change').textContent = 'Cuotas pendientes proyectadas';
         }
         if (cards[1]) {
@@ -499,7 +511,7 @@ async function cargarDatos() {
             cards[2].querySelector('.summary-change').textContent = 'Escenario realista';
         }
         if (cards[3]) {
-            cards[3].querySelector('.summary-value').textContent = fM(totalReal);
+            cards[3].querySelector('.summary-value').textContent = fMontoDual(totalReal, totalRealUsd);
             cards[3].querySelector('.summary-change').textContent = 'Con 87% de cobranza';
         }
 
@@ -508,17 +520,17 @@ async function cargarDatos() {
         if (scenarioBoxes[0]) {
             scenarioBoxes[0].querySelector('.scenario-title').textContent = '🟢 Escenario Optimista (100% cobranza)';
             var valEl0 = scenarioBoxes[0].querySelector('div[style*="font-size: 24px"]');
-            if (valEl0) valEl0.textContent = fM(totalOpt);
+            if (valEl0) valEl0.textContent = fMontoDual(totalOpt, totalOptUsd);
         }
         if (scenarioBoxes[1]) {
             scenarioBoxes[1].querySelector('.scenario-title').textContent = '🟡 Escenario Base (87% cobranza)';
             var valEl1 = scenarioBoxes[1].querySelector('div[style*="font-size: 24px"]');
-            if (valEl1) valEl1.textContent = fM(totalReal);
+            if (valEl1) valEl1.textContent = fMontoDual(totalReal, totalRealUsd);
         }
         if (scenarioBoxes[2]) {
             scenarioBoxes[2].querySelector('.scenario-title').textContent = '🔴 Escenario Estrés (70% cobranza)';
             var valEl2 = scenarioBoxes[2].querySelector('div[style*="font-size: 24px"]');
-            if (valEl2) valEl2.textContent = fM(totalStress);
+            if (valEl2) valEl2.textContent = fMontoDual(totalStress, totalStressUsd);
         }
 
         // Update chart
@@ -545,16 +557,36 @@ async function cargarDatos() {
             }
         });
 
-        // Group by programa for table
+        // Resumen USD junto al gráfico (la serie USD NO se grafica con ARS)
+        (function() {
+            var section = document.querySelector('.chart-section');
+            if (!section) return;
+            var box = document.getElementById('proy-usd-resumen');
+            if (totalBaseUsd > 0) {
+                if (!box) {
+                    box = document.createElement('div');
+                    box.id = 'proy-usd-resumen';
+                    box.style.cssText = 'margin-top:14px;padding:10px 14px;background:#ecfdf5;border-left:4px solid #059669;border-radius:8px;font-size:14px;font-weight:600;color:#065f46;';
+                    section.appendChild(box);
+                }
+                box.textContent = 'Proyección USD (no incluida en el gráfico): ' + fMonto(totalBaseUsd, 'USD');
+            } else if (box) {
+                box.remove();
+            }
+        })();
+
+        // Group by programa for table — split por moneda (NUNCA mezclar ARS/USD)
         var byProg = {};
         cobros.forEach(function(c) {
             var pid = c.programa_id || 'SIN_PROGRAMA';
-            if (!byProg[pid]) byProg[pid] = { nombre: progMap[pid] || pid, count: 0, montoTotal: 0 };
+            if (!byProg[pid]) byProg[pid] = { nombre: progMap[pid] || pid, count: 0, montoArs: 0, montoUsd: 0 };
             byProg[pid].count++;
-            byProg[pid].montoTotal += Number(c.monto_final||0);
+            var _mp = Number(c.monto_final||0);
+            if (c.moneda === 'USD') byProg[pid].montoUsd += _mp;
+            else byProg[pid].montoArs += _mp;
         });
 
-        var progList = Object.entries(byProg).sort(function(a,b){ return b[1].montoTotal - a[1].montoTotal; });
+        var progList = Object.entries(byProg).sort(function(a,b){ return (b[1].montoArs + b[1].montoUsd) - (a[1].montoArs + a[1].montoUsd); });
 
         // Build tbody
         var tbody = document.getElementById('tbody-reporte');
@@ -564,13 +596,14 @@ async function cargarDatos() {
             } else {
                 tbody.innerHTML = progList.map(function(entry) {
                     var d = entry[1];
-                    var realista = Math.round(d.montoTotal * 0.87);
+                    var realistaArs = Math.round(d.montoArs * 0.87);
+                    var realistaUsd = Math.round(d.montoUsd * 0.87);
                     return '<tr>'
                         + '<td><strong>' + esc(d.nombre) + '</strong></td>'
                         + '<td>—</td>'
                         + '<td>' + d.count + '</td>'
-                        + '<td>' + fM(d.montoTotal) + '</td>'
-                        + '<td>' + fM(realista) + '</td>'
+                        + '<td>' + fMontoDual(d.montoArs, d.montoUsd) + '</td>'
+                        + '<td>' + fMontoDual(realistaArs, realistaUsd) + '</td>'
                         + '<td>'
                         + '<div class="progress-bar"><div class="progress-fill" style="width:87%">87%</div></div>'
                         + '</td>'
@@ -584,8 +617,8 @@ async function cargarDatos() {
         if (tfoot) {
             tfoot.innerHTML = '<td colspan="2"><strong>TOTAL</strong></td>'
                 + '<td><strong>' + cuotasCount.toLocaleString('es-AR') + '</strong></td>'
-                + '<td><strong>' + fM(totalBase) + '</strong></td>'
-                + '<td><strong>' + fM(totalReal) + '</strong></td>'
+                + '<td><strong>' + fMontoDual(totalBase, totalBaseUsd) + '</strong></td>'
+                + '<td><strong>' + fMontoDual(totalReal, totalRealUsd) + '</strong></td>'
                 + '<td></td>';
         }
 
@@ -594,13 +627,15 @@ async function cargarDatos() {
         if (timeline && chartLabels.length > 0) {
             timeline.innerHTML = chartLabels.map(function(ml, i) {
                 var base = chartBase[i] || 0;
+                var baseUsd = chartBaseUsd[i] || 0;
                 var real = realData[i] || 0;
+                var realUsd = Math.round(baseUsd * 0.87);
                 return '<div class="timeline-item">'
                     + '<div class="timeline-dot"></div>'
                     + '<div class="timeline-content">'
                     + '<div class="timeline-month">' + esc(ml) + '</div>'
-                    + '<div class="timeline-amount">' + fM(base) + '</div>'
-                    + '<div class="timeline-detail">Proyección realista: ' + fM(real) + ' (87% cobranza)</div>'
+                    + '<div class="timeline-amount">' + fMontoDual(base, baseUsd) + '</div>'
+                    + '<div class="timeline-detail">Proyección realista: ' + fMontoDual(real, realUsd) + ' (87% cobranza)</div>'
                     + '</div></div>';
             }).join('');
         }

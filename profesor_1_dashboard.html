@@ -182,7 +182,7 @@ async function cargar(sesion) {
     // Round 2: cobros, egresos e inscripciones filtrados por las cohortes del profesor
     var [cobRes, egrRes, inscRes] = await Promise.all([
         cohIds.length
-            ? sb.from('cobros').select('dni,cohorte_id,programa_id,estado,monto_final,saldo_pendiente').in('cohorte_id', cohIds)
+            ? sb.from('cobros').select('dni,cohorte_id,programa_id,estado,monto_final,saldo_pendiente,moneda').in('cohorte_id', cohIds)
             : Promise.resolve({data:[]}),
         cohIds.length
             ? sb.from('egresos').select('cohorte_id,programa_id,tipo,monto_pagado,monto_original').in('cohorte_id', cohIds)
@@ -208,9 +208,12 @@ async function cargar(sesion) {
                   return c.dni + '|' + pid;
               })
     );
-    var recaudado  = cobros
-        .filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
+    var recCob = cobros.filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; });
+    var recaudadoArs = recCob.filter(function(c){ return (c.moneda||'ARS')==='ARS'; })
         .reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
+    var recaudadoUsd = recCob.filter(function(c){ return c.moneda==='USD'; })
+        .reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
+    var recaudado  = recaudadoArs;
     var egrExec    = egresos
         .filter(function(e){ return e.tipo === 'EJECUTADO'; })
         .reduce(function(s,e){ return s + Number(e.monto_pagado||e.monto_original||0); }, 0);
@@ -222,7 +225,7 @@ async function cargar(sesion) {
     document.getElementById('s-estudiantes').textContent = totalEst;
     document.getElementById('s-aldia').textContent       = totalEst - dnisConMora.size;
     document.getElementById('s-mora').textContent        = dnisConMora.size;
-    document.getElementById('s-recaudado').textContent   = fM(recaudado);
+    document.getElementById('s-recaudado').textContent   = fMontoDual(recaudadoArs, recaudadoUsd);
     document.getElementById('s-egresos').textContent     = fM(egrExec);
     var sEl = document.getElementById('s-saldo');
     sEl.textContent   = fM(saldo);
@@ -244,8 +247,12 @@ function renderCohortes(cobros, egresos, insc) {
         var inscCoh = insc.filter(function(i){ return i.cohorte_id === c.cohorte_id; });
         var est     = new Set(inscCoh.map(function(i){ return i.estudiante_id; })).size;
         var mora    = new Set(cobsCoh.filter(function(x){ return x.estado==='EN_MORA'; }).map(function(x){ return x.dni; })).size;
-        var rec     = cobsCoh.filter(function(x){ return x.estado==='ABONADA'||x.estado==='PAGO_PARCIAL'; })
+        var recCobC = cobsCoh.filter(function(x){ return x.estado==='ABONADA'||x.estado==='PAGO_PARCIAL'; });
+        var recArs  = recCobC.filter(function(x){ return (x.moneda||'ARS')==='ARS'; })
                               .reduce(function(s,x){ return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0)); },0);
+        var recUsd  = recCobC.filter(function(x){ return x.moneda==='USD'; })
+                              .reduce(function(s,x){ return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0)); },0);
+        var rec     = recArs;
         var egr     = egresos.filter(function(e){ return e.cohorte_id===c.cohorte_id&&e.tipo==='EJECUTADO'; })
                               .reduce(function(s,e){ return s+Number(e.monto_pagado||e.monto_original||0); },0);
         var saldo   = rec - egr;
@@ -257,7 +264,7 @@ function renderCohortes(cobros, egresos, insc) {
             '<div class="item-stats">' +
             '<span>👥 ' + est + ' est.</span>' +
             '<span style="color:var(--danger)">⚠️ ' + mora + ' mora</span>' +
-            '<span style="color:var(--success)">💰 ' + fM(rec) + '</span>' +
+            '<span style="color:var(--success)">💰 ' + fMontoDual(recArs, recUsd) + '</span>' +
             '<span style="color:var(--warning)">📤 ' + fM(egr) + '</span>' +
             '<span style="color:' + (saldo<0?'var(--danger)':'var(--success)') + '">⚖️ ' + fM(saldo) + '</span>' +
             '</div></div>';
@@ -275,8 +282,12 @@ function renderProgramas(cobros, egresos, insc) {
         var est   = new Set(inscProg.map(function(i){ return i.estudiante_id; })).size;
         var cobProg = cobros.filter(function(c){ return String(c.programa_id)===String(p.programa_id); });
         var mora  = new Set(cobProg.filter(function(c){ return c.estado==='EN_MORA'; }).map(function(c){ return c.dni; })).size;
-        var rec   = cobProg.filter(function(c){ return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL'; })
+        var recCobP = cobProg.filter(function(c){ return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL'; });
+        var recArs = recCobP.filter(function(c){ return (c.moneda||'ARS')==='ARS'; })
                            .reduce(function(s,c){ return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0)); },0);
+        var recUsd = recCobP.filter(function(c){ return c.moneda==='USD'; })
+                           .reduce(function(s,c){ return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0)); },0);
+        var rec   = recArs;
         var egr   = egresos.filter(function(e){ return String(e.programa_id)===String(p.programa_id)&&e.tipo==='EJECUTADO'; })
                            .reduce(function(s,e){ return s+Number(e.monto_pagado||e.monto_original||0); },0);
         var saldo = rec - egr;
@@ -287,7 +298,7 @@ function renderProgramas(cobros, egresos, insc) {
             '<div class="item-stats">' +
             '<span>👥 ' + est + ' est.</span>' +
             '<span style="color:var(--danger)">⚠️ ' + mora + ' mora</span>' +
-            '<span style="color:var(--success)">💰 ' + fM(rec) + '</span>' +
+            '<span style="color:var(--success)">💰 ' + fMontoDual(recArs, recUsd) + '</span>' +
             '<span style="color:var(--warning)">📤 ' + fM(egr) + '</span>' +
             '<span style="color:' + (saldo<0?'var(--danger)':'var(--success)') + '">⚖️ ' + fM(saldo) + '</span>' +
             '</div></div>';
