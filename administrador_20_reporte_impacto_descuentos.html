@@ -319,7 +319,7 @@ function exportarPDF() { window.print(); }
 async function cargarDatos() {
     try {
         var sb = await getSupabase();
-        var rC = await sb.from('cobros').select('programa_id,cohorte_id,dni,descuento_porcentaje,monto_final,monto_original,estado');
+        var rC = await sb.from('cobros').select('programa_id,cohorte_id,dni,descuento_porcentaje,monto_final,monto_original,estado,moneda');
         var rP = await sb.from('programas').select('programa_id,nombre');
         var cobros = rC.data || [];
         // ── Aplicar filtros desde Cashflow ──
@@ -337,6 +337,9 @@ async function cargarDatos() {
         var progMap = {};
         programas.forEach(function(p) { progMap[p.programa_id] = p.nombre; });
 
+        // ARS y USD nunca se suman entre sí
+        var esArs = function(c){ return (c.moneda||'ARS')==='ARS'; };
+        var esUsd = function(c){ return c.moneda==='USD'; };
         var conDesc = cobros.filter(function(c){ return Number(c.descuento_porcentaje||0) > 0; });
         var sinDesc = cobros.filter(function(c){ return Number(c.descuento_porcentaje||0) <= 0; });
 
@@ -346,8 +349,13 @@ async function cargarDatos() {
             { label:'21-30%', min:20.01, max:30 }, { label:'31-50%', min:30.01, max:50 },
             { label:'>50%', min:50.01, max:100 }
         ];
+        // Monto de descuento por rango — ARS (lo que grafica) y USD por separado
+        var _descMonto = function(c){ return Number(c.monto_final||0) * Number(c.descuento_porcentaje||0) / 100; };
         var rangoMontos = rangos.map(function(r) {
-            return conDesc.filter(function(c){ var d=Number(c.descuento_porcentaje||0); return d>=r.min && d<=r.max; }).reduce(function(s,c){return s + (Number(c.monto_final||0) * Number(c.descuento_porcentaje||0) / 100);},0);
+            return conDesc.filter(function(c){ var d=Number(c.descuento_porcentaje||0); return d>=r.min && d<=r.max && esArs(c); }).reduce(function(s,c){return s + _descMonto(c);},0);
+        });
+        var rangoMontosUsd = rangos.map(function(r) {
+            return conDesc.filter(function(c){ var d=Number(c.descuento_porcentaje||0); return d>=r.min && d<=r.max && esUsd(c); }).reduce(function(s,c){return s + _descMonto(c);},0);
         });
         var rangoCounts = rangos.map(function(r) {
             var dnis = new Set(conDesc.filter(function(c){ var d=Number(c.descuento_porcentaje||0); return d>=r.min && d<=r.max; }).map(function(c){return c.dni;}));
@@ -357,7 +365,9 @@ async function cargarDatos() {
         // By programa: real vs potential
         var pidList = programas.map(function(p){return p.programa_id;});
         var recaudadoReal = {}, potencial = {};
+        // El gráfico real-vs-potencial es en ARS (no se mezclan monedas)
         cobros.forEach(function(c) {
+            if (!esArs(c)) return;
             var pid = c.programa_id;
             if (!recaudadoReal[pid]) { recaudadoReal[pid] = 0; potencial[pid] = 0; }
             var monto = Number(c.monto_final||0);
@@ -368,11 +378,12 @@ async function cargarDatos() {
             }
         });
 
-        var totalDescuento = conDesc.reduce(function(s,c){return s + (Number(c.monto_final||0) * Number(c.descuento_porcentaje||0) / 100);},0);
+        var totalDescuentoArs = conDesc.filter(esArs).reduce(function(s,c){return s + _descMonto(c);},0);
+        var totalDescuentoUsd = conDesc.filter(esUsd).reduce(function(s,c){return s + _descMonto(c);},0);
         var dnisConDesc = new Set(conDesc.map(function(c){return c.dni;})).size;
         var cards = document.querySelectorAll('.summary-card');
         if (cards[0]) { var sv=cards[0].querySelector('.summary-value'); if(sv) sv.textContent=String(dnisConDesc); }
-        if (cards[1]) { var sv=cards[1].querySelector('.summary-value'); if(sv) sv.textContent=fM(totalDescuento); }
+        if (cards[1]) { var sv=cards[1].querySelector('.summary-value'); if(sv) sv.textContent=fMontoDual(totalDescuentoArs, totalDescuentoUsd); }
         if (cards[2]) { var sv=cards[2].querySelector('.summary-value'); if(sv) { var pct=cobros.length>0?((dnisConDesc/new Set(cobros.map(function(c){return c.dni;})).size)*100).toFixed(1):'0.0'; sv.textContent=pct+'%'; } }
 
         // Chart 1: horizontal bar by discount range
@@ -416,13 +427,13 @@ async function cargarDatos() {
         // Populate table by discount range
         var tbody = document.getElementById('tbody-descuentos');
         if (tbody) {
-            var totalMonto = rangos.reduce(function(s,r,i){return s+rangoMontos[i];},0);
+            var totalMonto = rangos.reduce(function(s,r,i){return s+rangoMontos[i];},0); // % relativo en ARS
             if (rangoCounts.reduce(function(s,v){return s+v;},0) === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#999;">Sin datos</td></tr>';
             } else {
                 tbody.innerHTML = rangos.map(function(r,i) {
                     var pct = totalMonto > 0 ? (rangoMontos[i]/totalMonto*100).toFixed(1) : '0.0';
-                    return '<tr><td>'+r.label+'</td><td>'+rangoCounts[i]+'</td><td>'+fM(rangoMontos[i])+'</td><td>'+pct+'%</td></tr>';
+                    return '<tr><td>'+r.label+'</td><td>'+rangoCounts[i]+'</td><td>'+fMontoDual(rangoMontos[i], rangoMontosUsd[i])+'</td><td>'+pct+'%</td></tr>';
                 }).filter(function(_,i){return rangoCounts[i]>0;}).join('');
             }
         }

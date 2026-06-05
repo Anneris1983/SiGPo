@@ -334,7 +334,7 @@ async function cargarVista() {
 
         var [rP, rCob, rEgr] = await Promise.all([
             allProgIds.length ? sb.from('programas').select('programa_id,nombre').in('programa_id', allProgIds) : Promise.resolve({data:[]}),
-            cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento,fecha_pago').in('cohorte_id', cohIds) : Promise.resolve({data:[]}),
+            cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento,fecha_pago,moneda').in('cohorte_id', cohIds) : Promise.resolve({data:[]}),
             cohIds.length ? sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
         ]);
 
@@ -387,17 +387,22 @@ async function cargarVista() {
         var dnisEnMora  = new Set(cobF.filter(function(c){ return c.estado === 'EN_MORA'; }).map(eKey));
         var dnisParcial = new Set(cobF.filter(function(c){ return c.estado === 'PAGO_PARCIAL'; }).map(eKey));
         var dnisTotal   = new Set(cobF.map(eKey));
-        var recaudado   = cobF.filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; })
+        // Recaudado separado por moneda — ARS y USD nunca se suman
+        var _recCob = cobF.filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; });
+        var recaudadoArs = _recCob.filter(function(c){ return (c.moneda||'ARS')==='ARS'; })
                               .reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
+        var recaudadoUsd = _recCob.filter(function(c){ return c.moneda==='USD'; })
+                              .reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
+        var recaudado = recaudadoArs;
         var tasaPago = dnisTotal.size > 0 ? Math.round(dnisAlDia.size / dnisTotal.size * 100) : 0;
         var egresos  = egrF.filter(function(e){ return e.tipo === 'EJECUTADO'; })
                            .reduce(function(s,e){ return s + Number(e.monto_pagado||0); }, 0);
-        var saldo    = recaudado - egresos;
+        var saldo    = recaudadoArs - egresos;
 
         document.getElementById('summaryGrid').innerHTML =
-            '<div class="summary-item"><div class="summary-label">Total Recaudado ' + filtAnio + '</div><div class="summary-value">' + fM(recaudado) + '</div></div>' +
+            '<div class="summary-item"><div class="summary-label">Total Recaudado ' + filtAnio + '</div><div class="summary-value">' + fMontoDual(recaudadoArs, recaudadoUsd) + '</div></div>' +
             '<div class="summary-item rojo"><div class="summary-label">Egresos Ejecutados ' + filtAnio + '</div><div class="summary-value rojo">' + fM(egresos) + '</div></div>' +
-            '<div class="summary-item ' + (saldo >= 0 ? 'verde' : 'rojo') + '"><div class="summary-label">Saldo ' + filtAnio + '</div><div class="summary-value ' + (saldo >= 0 ? 'verde' : 'rojo') + '">' + fM(saldo) + '</div></div>' +
+            '<div class="summary-item ' + (saldo >= 0 ? 'verde' : 'rojo') + '"><div class="summary-label">Saldo ' + filtAnio + (recaudadoUsd>0?' (ARS)':'') + '</div><div class="summary-value ' + (saldo >= 0 ? 'verde' : 'rojo') + '">' + fM(saldo) + '</div></div>' +
             '<div class="summary-item verde"><div class="summary-label">Estudiantes al Día</div><div class="summary-value verde">' + dnisAlDia.size + '</div></div>' +
             '<div class="summary-item rojo"><div class="summary-label">En Mora</div><div class="summary-value rojo">' + dnisEnMora.size + '</div></div>' +
             '<div class="summary-item naranja"><div class="summary-label">Tasa de Pago</div><div class="summary-value">' + tasaPago + '%</div></div>';
@@ -414,13 +419,16 @@ async function cargarVista() {
         var mesesLabels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
         function mesLabel(k){ var p = k.split('-'); return mesesLabels[parseInt(p[1])-1] + ' ' + p[0]; }
         var cfLabels   = meses.map(mesLabel);
+        // El gráfico de cashflow es solo en ARS (una barra no puede ser dos monedas)
         var cfIngresos = meses.map(function(k){ return cobF.filter(function(c){
             if (c.estado!=='ABONADA'&&c.estado!=='PAGO_PARCIAL') return false;
+            if ((c.moneda||'ARS')==='USD') return false;
             var fecha = c.fecha_pago || c.fecha_vencimiento;
             return fecha && fecha.startsWith(k);
         }).reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0); });
         var cfIngresosProyec = meses.map(function(k){ return cobF.filter(function(c){
             if (c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL') return false;
+            if ((c.moneda||'ARS')==='USD') return false;
             return c.fecha_vencimiento && c.fecha_vencimiento.startsWith(k);
         }).reduce(function(s,c){ return s + Number(c.saldo_pendiente||c.monto_final||0); }, 0); });
         var cfEgresos  = meses.map(function(k){ return egrF.filter(function(e){ var d = e.fecha_pago||e.fecha_estimada||''; return e.tipo==='EJECUTADO' && d.startsWith(k); }).reduce(function(s,e){ return s + Number(e.monto_pagado||0); }, 0); });

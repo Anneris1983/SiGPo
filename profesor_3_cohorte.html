@@ -246,7 +246,7 @@ async function cargar(sesion) {
         var sb = await getSupabase();
         var [rCoh, rCob, rInsc, rEst, rEgr] = await Promise.all([
             sb.from('cohortes').select('*, programas(nombre)').eq('cohorte_id', COHORTE_ID).single(),
-            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,monto_abonado,monto_transferido,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
+            sb.from('cobros').select('cobro_id,dni,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,monto_abonado,monto_transferido,saldo_pendiente,estado,moneda,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).order('fecha_vencimiento'),
             obtenerInscripcionesPorCohorte(COHORTE_ID, 'estudiante_id, descuento_porcentaje, estado_academico'),
             sb.from('estudiantes').select('id,dni,nombre,apellido,email'),
             obtenerEgresosResumenPorCohorte(COHORTE_ID)
@@ -278,7 +278,7 @@ async function cargar(sesion) {
                 dniMap[dk] = { id:est.id||null, dni:c.dni, apellido:est.apellido||dk, nombre:est.nombre||'', email:est.email||'', descuento_porcentaje:insc.descuento_porcentaje||0, estado_academico:insc.estado_academico||'ACTIVO', cobros:[] };
             }
             var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
-            dniMap[dk].cobros.push(normalizarCobro({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final!=null?Number(c.monto_final):null, monto_abonado:abonado, saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'NO_APLICA':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null }));
+            dniMap[dk].cobros.push(normalizarCobro({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final!=null?Number(c.monto_final):null, monto_abonado:abonado, saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'NO_APLICA':(c.estado||'NO_ABONADA'), moneda:c.moneda||'ARS', comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null }));
         });
 
         inscripciones.forEach(function(insc){
@@ -332,7 +332,7 @@ function normalizarCobro(c) {
         comprobante_url: c.comprobante_url || null,
         recibo_url: c.recibo_url || null
     });
-    return { cobro_id:c.cobro_id||'', concepto:concepto, concepto_base:concepto, periodo:c.periodo||'', fecha_vencimiento:fechaVto, fecha_pago:c.fecha_pago||'', monto_original:montoOriginal, descuento_porcentaje:descuento, monto_final:montoFinal, monto_abonado:montoAbonado, saldo_pendiente:saldo, estado:estado, no_aplica:estado==='NO_APLICA', comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null };
+    return { cobro_id:c.cobro_id||'', concepto:concepto, concepto_base:concepto, periodo:c.periodo||'', fecha_vencimiento:fechaVto, fecha_pago:c.fecha_pago||'', monto_original:montoOriginal, descuento_porcentaje:descuento, monto_final:montoFinal, monto_abonado:montoAbonado, saldo_pendiente:saldo, estado:estado, moneda:c.moneda||'ARS', no_aplica:estado==='NO_APLICA', comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null };
 }
 
 /* ── DERIVAR COLUMNAS ── */
@@ -368,9 +368,14 @@ var CT_VIEW = {
         + '<th class="col-email">Correo electrónico</th>',
 
     totales: function(est) {
-        var totP = 0, totA = 0, totS = 0;
-        est.cobros.forEach(function(c){ if(c){ totP += Number(c.monto_final||0); totA += Number(c.monto_abonado||0); totS += Number(c.saldo_pendiente||0); }});
-        return { p: totP, a: totA, s: totS };
+        // ARS y USD nunca se suman; los totales USD se guardan aparte (est._totUsd)
+        var pA=0,aA=0,sA=0,pU=0,aU=0,sU=0;
+        est.cobros.forEach(function(c){ if(c){
+            var mf=Number(c.monto_final||0), ma=Number(c.monto_abonado||0), sp=Number(c.saldo_pendiente||0);
+            if (c.moneda==='USD') { pU+=mf; aU+=ma; sU+=sp; } else { pA+=mf; aA+=ma; sA+=sp; }
+        }});
+        est._totUsd = { p:pU, a:aU, s:sU };
+        return { p: pA, a: aA, s: sA };
     },
 
     celdaVacia: function(est, col) {
@@ -381,18 +386,18 @@ var CT_VIEW = {
         var txt = '';
         if      (estado === 'NO_APLICA')      txt = '— no aplica';
         else if (estado === 'A_DEFINIR')      txt = 'A definir';
-        else if (estado === 'PAGO_PARCIAL')   txt = fMonto(montoAbonado)+'<br><small style="font-size:9px;opacity:.8;">de '+fMonto(c.monto_final)+'</small>';
+        else if (estado === 'PAGO_PARCIAL')   txt = fMonto(montoAbonado, c.moneda)+'<br><small style="font-size:9px;opacity:.8;">de '+fMonto(c.monto_final, c.moneda)+'</small>';
         else if (estado === 'PENDIENTE') {
             var mt = c.monto_transferido && Number(c.monto_transferido) > 0 ? Number(c.monto_transferido) : null;
             if (mt && mt < Number(c.monto_final||0)) {
                 var faltaP = Math.max(0, Number(c.monto_final||0) - mt);
-                txt = fMonto(mt)+'<br><small style="font-size:9px;opacity:.8;">de '+fMonto(c.monto_final)+' · falta '+fMonto(faltaP)+'</small><br><small style="font-size:9px;opacity:.7;">🕓 parcial en revisión</small>';
+                txt = fMonto(mt, c.moneda)+'<br><small style="font-size:9px;opacity:.8;">de '+fMonto(c.monto_final, c.moneda)+' · falta '+fMonto(faltaP, c.moneda)+'</small><br><small style="font-size:9px;opacity:.7;">🕓 parcial en revisión</small>';
             } else {
                 txt = '🕓 En revisión';
             }
         }
-        else txt = fMonto(c.monto_final);
-        var title = escHtml(c.concepto+' · '+(c.periodo||'')+' | Estado: '+estado+' | Abonado: '+fMonto(montoAbonado)+' | Saldo: '+fMonto(c.saldo_pendiente)+(c.fecha_vencimiento?' | Vence: '+c.fecha_vencimiento:''));
+        else txt = fMonto(c.monto_final, c.moneda);
+        var title = escHtml(c.concepto+' · '+(c.periodo||'')+' | Estado: '+estado+' | Abonado: '+fMonto(montoAbonado, c.moneda)+' | Saldo: '+fMonto(c.saldo_pendiente, c.moneda)+(c.fecha_vencimiento?' | Vence: '+c.fecha_vencimiento:''));
         var btnComp   = c.comprobante_url ? '<button class="clink clink-comp" onclick="verArchivo(\''+escJs(c.comprobante_url)+'\')" title="Ver comprobante">📎 Comp.</button>' : '';
         var btnRecibo = c.recibo_url      ? '<button class="clink clink-recibo" onclick="verArchivo(\''+escJs(c.recibo_url)+'\')" title="Ver recibo">🧾 Recibo</button>' : '';
         var links = (btnComp||btnRecibo) ? '<div class="cell-links">'+btnComp+btnRecibo+'</div>' : '';
@@ -414,9 +419,9 @@ var CT_VIEW = {
             + '<td class="cell-desc" style="color:'+( est.descuento_porcentaje>0 ? 'var(--success)':'#aaa')+'">'+est.descuento_porcentaje+'%</td>'
             + '<td class="cell-email">'+escHtml(est.email)+'</td>'
             + celdas
-            + '<td class="cell-tot-pagar">'+fMonto(totP)+'</td>'
-            + '<td class="cell-tot-abonado">'+fMonto(totA)+'</td>'
-            + '<td class="'+(totS===0?'cell-saldo-cero':'cell-saldo-pos')+'">'+fMonto(totS)+'</td>';
+            + '<td class="cell-tot-pagar">'+fMontoDual(totP, (est._totUsd||{}).p)+'</td>'
+            + '<td class="cell-tot-abonado">'+fMontoDual(totA, (est._totUsd||{}).a)+'</td>'
+            + '<td class="'+(totS===0 && !((est._totUsd||{}).s)?'cell-saldo-cero':'cell-saldo-pos')+'">'+fMontoDual(totS, (est._totUsd||{}).s)+'</td>';
         return tr;
     }
 };
@@ -438,12 +443,17 @@ function exportarExcel() {
     if (!V.data) return;
     var d = V.data;
     var cols = d.columnas;
-    var header = ['Apellido', 'Nombre', 'Desc%', 'Email'].concat(cols.map(function(c){ return c.concepto_base + (c.periodo?' '+c.periodo:''); })).concat(['Total a Pagar','Total Abonado','Saldo Pendiente']);
+    var header = ['Apellido', 'Nombre', 'Desc%', 'Email', 'Moneda'].concat(cols.map(function(c){ return c.concepto_base + (c.periodo?' '+c.periodo:''); })).concat(['Total a Pagar','Total Abonado','Saldo Pendiente']);
     var rows = [header];
     d.estudiantes.forEach(function(est) {
         var cobrosMap = {};
         est.cobros.forEach(function(c){ if(c) cobrosMap[(c.concepto_base||c.concepto)+'||'+(c.periodo||'')] = c; });
-        var row = [est.apellido, est.nombre, est.descuento_porcentaje+'%', est.email];
+        // ARS y USD no se suman: si el estudiante mezcla, se marca y los totales no se computan juntos
+        var monedasEst = {};
+        est.cobros.forEach(function(c){ if(c) monedasEst[c.moneda||'ARS']=true; });
+        var monedaList = Object.keys(monedasEst);
+        var monedaLabel = monedaList.length > 1 ? '⚠ MIXTA' : (monedaList[0] || 'ARS');
+        var row = [est.apellido, est.nombre, est.descuento_porcentaje+'%', est.email, monedaLabel];
         var totP=0, totA=0, totS=0;
         cols.forEach(function(col) {
             var c = cobrosMap[col.concepto_base+'||'+(col.periodo||'')];

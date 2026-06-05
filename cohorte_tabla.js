@@ -205,12 +205,17 @@ function mostrarMas() {
 function actualizarStats() {
     var ests = (typeof V !== 'undefined' && V.data && V.data.estudiantes) || [];
     var egresos = (typeof V !== 'undefined' && V.data && V.data.egresos) || [];
-    var recaud = ests.reduce(function(s, e) {
-        return s + (e.cobros || []).reduce(function(ss, c) { return ss + calcMontoAbonado(c); }, 0);
-    }, 0);
+    // Recaudado separado por moneda — ARS y USD NUNCA se suman entre sí
+    var recaudArs = 0, recaudUsd = 0;
+    ests.forEach(function(e) {
+        (e.cobros || []).forEach(function(c) {
+            var ab = calcMontoAbonado(c);
+            if (c && c.moneda === 'USD') recaudUsd += ab; else recaudArs += ab;
+        });
+    });
     var egrExec = egresos.filter(function(e){ return e.tipo === 'EJECUTADO'; })
                          .reduce(function(s, e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
-    var saldo = recaud - egrExec;
+    var saldo = recaudArs - egrExec; // egresos son ARS; el neto es ARS
 
     function setTxt(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
     function contarGeneral(estado) { return ests.filter(function(e){ return calcEstadoGeneral(e.cobros) === estado; }).length; }
@@ -222,12 +227,12 @@ function actualizarStats() {
     var cuotasMora = 0;
     ests.forEach(function(e){ (e.cobros || []).forEach(function(c){ if (c && resolverEstadoCobro(c) === 'EN_MORA') cuotasMora++; }); });
     setTxt('s-mora-cuotas', cuotasMora);
-    setTxt('s-recaudado', fMonto(recaud));
+    setTxt('s-recaudado', fMontoDual(recaudArs, recaudUsd));
     setTxt('s-egresos',   fMonto(egrExec));
 
     var sEl = document.getElementById('s-saldo');
     if (sEl) {
-        sEl.textContent = fMonto(saldo);
+        sEl.textContent = fMonto(saldo) + (recaudUsd > 0 ? ' (ARS)' : '');
         sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
     }
 }
