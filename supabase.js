@@ -809,9 +809,12 @@ async function rechazarPago(cobroId, forzar) {
             await sb.from('reclamos_pendientes').insert({
                 programa_id: prog.programa_id,
                 to_email:    est.email,
-                subject:     'Tu comprobante de pago fue rechazado — ' + prog.nombre,
+                subject:     'Comprobante rechazado: ' + concepto + (periodo ? ' (' + periodo + ')' : '') + ' — ' + prog.nombre,
                 body:        'Estimado/a ' + est.nombre + ' ' + est.apellido + ',\n\n'
-                           + 'Tu comprobante de pago para "' + concepto + (periodo ? ' - ' + periodo : '') + '" del programa "' + prog.nombre + '" fue revisado y NO pudo ser aprobado.\n\n'
+                           + 'Tu comprobante de pago para la siguiente cuota fue revisado y NO pudo ser aprobado:\n\n'
+                           + '  • Concepto: ' + concepto + '\n'
+                           + (periodo ? '  • Período: ' + periodo + '\n' : '')
+                           + '  • Programa: ' + prog.nombre + '\n\n'
                            + 'Por favor, volvé a ingresar al portal, verificá los datos y subí el comprobante correcto.\n\n'
                            + 'Portal de estudiantes: https://anneris1983.github.io/SiGPo/portal_login.html\n\n'
                            + 'Ante cualquier consulta, respondé este correo.\n\n'
