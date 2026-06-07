@@ -1497,6 +1497,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js?v=20250529"></script>
+<script src="cohorte_tabla.js?v=20250603"></script>
 <script>
         let programaId = '';
         let cohorteId = '';
@@ -1571,20 +1572,7 @@
                     var abonado = (c.monto_abonado != null && Number(c.monto_abonado) > 0)
                         ? Number(c.monto_abonado)
                         : Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
-                    var saldoC = Number(c.saldo_pendiente||0);
-                    var _hoyStr = new Date().toISOString().split('T')[0];
-                    var _esPagada = c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL';
-                    var _tieneRecibo = !!c.recibo_url;
-                    var _tieneComp   = !!c.comprobante_url;
-                    var estadoRaw = c.no_aplica ? 'NODEBE'
-                        : (c.monto_final == null || Number(c.monto_final) === 0) ? 'A_DEFINIR'
-                        : (saldoC <= 0 && ((_tieneRecibo && abonado >= Number(c.monto_final||0)) || c.estado === 'ABONADA')) ? 'ABONADA'
-                        : (abonado > 0 && saldoC > 0 && (_tieneRecibo || c.estado === 'PAGO_PARCIAL')) ? 'PAGO_PARCIAL'
-                        : (_tieneComp && !_tieneRecibo && abonado <= 0) ? 'PENDIENTE'
-                        : (c.estado === 'PENDIENTE') ? 'PENDIENTE'
-                        : (abonado > 0 && saldoC > 0) ? 'PAGO_PARCIAL'
-                        : (!_esPagada && c.fecha_vencimiento && c.fecha_vencimiento < _hoyStr && Number(c.monto_final||0) > 0) ? 'EN_MORA'
-                        : (c.estado||'NO_ABONADA');
+                    var estadoRaw = resolverEstadoCobro(c);
                     dniMap[dk].cuotas.push({ cobroId:c.cobro_id, numeroCuota:c.nro_cuota||0, nombre:c.concepto||'', mes:c.periodo||'', fechaVencimiento:c.fecha_vencimiento||'', montoBase:Number(c.monto_original||c.monto_final||0), montoFinal:Number(c.monto_final||0), saldoPendiente:Number(c.saldo_pendiente||0), intereses:0, montoAbonado:abonado, montoTransferido:(c.monto_transferido ? Number(c.monto_transferido) : null), texto:'', estado:estadoRaw, aDefinir:estadoRaw==='A_DEFINIR', comprobante_url:c.comprobante_url||'', recibo_url:c.recibo_url||'' });
                 });
 
