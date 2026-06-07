@@ -235,6 +235,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.1/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script src="supabase.js?v=20250529"></script>
+    <script src="cohorte_tabla.js?v=20250603"></script>
 
     <script>
     var _sesion = null;
@@ -245,27 +246,6 @@
     // inyecta del lado del servidor; la gas_url se resuelve en la BD por programa.
 
     var fM = fMonto;
-
-    function estadoCobro(c) {
-        if (c.no_aplica) return 'NO_APLICA';
-
-        var e = (c.estado || '').toUpperCase();
-
-        if (e === 'NO_APLICA') return 'NO_APLICA';
-        if (e === 'A_DEFINIR') return 'A_DEFINIR';
-
-        if (c.monto_final === null || c.monto_final === undefined || c.monto_final === '') {
-            return 'A_DEFINIR';
-        }
-
-        if (e === 'ABONADA') return 'ABONADA';
-        if (e === 'PAGO_PARCIAL') return 'PAGO_PARCIAL';
-        if (e === 'PENDIENTE') return 'PENDIENTE';
-        if (e === 'EN_MORA') return 'EN_MORA';
-        if (e === 'NO_ABONADA') return 'NO_ABONADA';
-
-        return 'NO_ABONADA';
-    }
 
     function badgeCuota(estado, esHoy) {
         if (esHoy) {
@@ -356,7 +336,7 @@
                     .eq('estudiante_id', estId),
 
                 sb.from('cobros')
-                    .select('cobro_id, concepto, periodo, fecha_vencimiento, fecha_pago, monto_final, saldo_pendiente, estado, moneda, no_aplica, cohorte_id, programa_id')
+                    .select('cobro_id, concepto, periodo, fecha_vencimiento, fecha_pago, monto_final, saldo_pendiente, estado, moneda, no_aplica, recibo_url, comprobante_url, cohorte_id, programa_id')
                     .eq('dni', String(dni))
                     .order('fecha_vencimiento'),
 
@@ -373,17 +353,17 @@
             }).length;
 
             var abonadas = cobros.filter(function(c) {
-                return estadoCobro(c) === 'ABONADA';
+                return resolverEstadoCobro(c) === 'ABONADA';
             }).length;
 
             var enMora = cobros.filter(function(c) {
-                return estadoCobro(c) === 'EN_MORA';
+                return resolverEstadoCobro(c) === 'EN_MORA';
             }).length;
 
             var hoyStr = new Date().toISOString().split('T')[0];
 
             var proximas = cobros.filter(function(c) {
-                var estado = estadoCobro(c);
+                var estado = resolverEstadoCobro(c);
 
                 return ['NO_ABONADA', 'A_DEFINIR'].includes(estado)
                     && c.fecha_vencimiento
@@ -410,7 +390,7 @@
             if (enMora > 0) {
                 // Los montos NO se suman entre monedas distintas: agrupamos la mora por moneda.
                 var moraPorMoneda = {};
-                cobros.filter(function(c) { return estadoCobro(c) === 'EN_MORA'; })
+                cobros.filter(function(c) { return resolverEstadoCobro(c) === 'EN_MORA'; })
                     .forEach(function(c) {
                         var m = c.moneda || 'ARS';
                         moraPorMoneda[m] = (moraPorMoneda[m] || 0) + (Number(c.saldo_pendiente) || 0);
@@ -428,7 +408,7 @@
                 document.getElementById('alerta-mora').style.display = 'flex';
                 document.getElementById('alerta-aldia').style.display = 'none';
             } else if (cobros.length > 0) {
-                var hayPendiente = cobros.some(function(c) { return estadoCobro(c) === 'PENDIENTE'; });
+                var hayPendiente = cobros.some(function(c) { return resolverEstadoCobro(c) === 'PENDIENTE'; });
                 document.getElementById('alerta-mora').style.display = 'none';
                 document.getElementById('alerta-aldia').style.display = hayPendiente ? 'none' : 'flex';
             }
@@ -455,23 +435,23 @@
                     // Todas las cuotas reales: excluye no_aplica y NO_APLICA, pero incluye A_DEFINIR sin monto
                     var conMonto = cobrosCoh.filter(function(c) {
                         if (c.no_aplica) return false;
-                        return estadoCobro(c) !== 'NO_APLICA';
+                        return resolverEstadoCobro(c) !== 'NO_APLICA';
                     });
 
                     var abonadasCoh = conMonto.filter(function(c) {
-                        return estadoCobro(c) === 'ABONADA';
+                        return resolverEstadoCobro(c) === 'ABONADA';
                     }).length;
 
                     // EN_MORA from DB + auto-detect: NO_ABONADA or PAGO_PARCIAL with past due date
                     var moraCoh = conMonto.filter(function(c) {
-                        var est = estadoCobro(c);
+                        var est = resolverEstadoCobro(c);
                         if (est === 'EN_MORA') return true;
                         if ((est === 'NO_ABONADA' || est === 'PAGO_PARCIAL') && c.fecha_vencimiento && c.fecha_vencimiento < hoyStr) return true;
                         return false;
                     }).length;
 
                     var pendienteAprobCoh = moraCoh === 0 && conMonto.some(function(c) {
-                        return estadoCobro(c) === 'PENDIENTE';
+                        return resolverEstadoCobro(c) === 'PENDIENTE';
                     });
 
                     var totalCoh = conMonto.length;
@@ -480,7 +460,7 @@
                     // Exclude PENDIENTE (proof submitted, awaiting approval) and already-paid cuotas
                     var deudaCoh = cobrosCoh.reduce(function(s, c) {
                         if (c.no_aplica) return s;
-                        var est = estadoCobro(c);
+                        var est = resolverEstadoCobro(c);
                         if (est === 'PENDIENTE' || est === 'ABONADA' || est === 'NO_APLICA') return s;
                         return s + (Number(c.saldo_pendiente) || 0);
                     }, 0);
@@ -490,7 +470,7 @@
                     // Libre deuda: todas las cuotas abonadas Y ninguna pendiente/a_definir sin resolver
                     var sinCuotasPendientes = cobrosCoh.every(function(c) {
                         if (c.no_aplica) return true;
-                        var est = estadoCobro(c);
+                        var est = resolverEstadoCobro(c);
                         return est === 'ABONADA' || est === 'NO_APLICA';
                     });
                     var todoAbonado = !esBaja && totalCoh > 0 && abonadasCoh === totalCoh && deudaCoh === 0 && sinCuotasPendientes;
@@ -561,7 +541,7 @@
                 proxHtml = '<div class="empty-msg">No hay cuotas próximas a vencer.</div>';
             } else {
                 proximas.slice(0, 5).forEach(function(c) {
-                    var estado = estadoCobro(c);
+                    var estado = resolverEstadoCobro(c);
                     var esHoy = c.fecha_vencimiento === hoyStr;
                     var esBadge = badgeCuota(estado, esHoy);
 
@@ -592,7 +572,7 @@
             var morasHtml = '';
 
             cobros.filter(function(c) {
-                return estadoCobro(c) === 'EN_MORA';
+                return resolverEstadoCobro(c) === 'EN_MORA';
             }).forEach(function(c) {
                 var inscCoh = inscripciones.find(function(i) {
                     return i.cohorte_id === c.cohorte_id;
