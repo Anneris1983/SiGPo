@@ -119,6 +119,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js?v=20250529"></script>
+<script src="cohorte_tabla.js?v=20250603"></script>
 <script>
 var _programas = [], _cohortes = [], _cohProgMap = {};
 
@@ -182,7 +183,7 @@ async function cargar(sesion) {
     // Round 2: cobros, egresos e inscripciones filtrados por las cohortes del profesor
     var [cobRes, egrRes, inscRes] = await Promise.all([
         cohIds.length
-            ? sb.from('cobros').select('dni,cohorte_id,programa_id,estado,monto_final,saldo_pendiente,moneda').in('cohorte_id', cohIds)
+            ? sb.from('cobros').select('dni,cohorte_id,programa_id,estado,monto_final,saldo_pendiente,moneda,no_aplica,fecha_vencimiento,recibo_url,comprobante_url').in('cohorte_id', cohIds)
             : Promise.resolve({data:[]}),
         cohIds.length
             ? sb.from('egresos').select('cohorte_id,programa_id,tipo,monto_pagado,monto_original').in('cohorte_id', cohIds)
@@ -193,6 +194,7 @@ async function cargar(sesion) {
     ]);
 
     var cobros  = cobRes.data  || [];
+    cobros.forEach(function(c){ c._re = resolverEstadoCobro(c); });
     var egresos = egrRes.data  || [];
     var inscFilt = inscRes.data || [];
 
@@ -202,13 +204,13 @@ async function cargar(sesion) {
         inscFilt.map(function(i){ return i.estudiante_id + '|' + _cohProgMap[i.cohorte_id]; })
     ).size;
     var dnisConMora = new Set(
-        cobros.filter(function(c){ return c.estado === 'EN_MORA'; })
+        cobros.filter(function(c){ return c._re === 'EN_MORA'; })
               .map(function(c){
                   var pid = c.programa_id != null ? c.programa_id : _cohProgMap[c.cohorte_id];
                   return c.dni + '|' + pid;
               })
     );
-    var recCob = cobros.filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; });
+    var recCob = cobros.filter(function(c){ return c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL'; });
     var recaudadoArs = recCob.filter(function(c){ return (c.moneda||'ARS')==='ARS'; })
         .reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
     var recaudadoUsd = recCob.filter(function(c){ return c.moneda==='USD'; })
@@ -281,8 +283,8 @@ function renderProgramas(cobros, egresos, insc) {
         var inscProg = insc.filter(function(i){ return cohIdsProg.indexOf(i.cohorte_id)>=0; });
         var est   = new Set(inscProg.map(function(i){ return i.estudiante_id; })).size;
         var cobProg = cobros.filter(function(c){ return String(c.programa_id)===String(p.programa_id); });
-        var mora  = new Set(cobProg.filter(function(c){ return c.estado==='EN_MORA'; }).map(function(c){ return c.dni; })).size;
-        var recCobP = cobProg.filter(function(c){ return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL'; });
+        var mora  = new Set(cobProg.filter(function(c){ return c._re==='EN_MORA'; }).map(function(c){ return c.dni; })).size;
+        var recCobP = cobProg.filter(function(c){ return c._re==='ABONADA'||c._re==='PAGO_PARCIAL'; });
         var recArs = recCobP.filter(function(c){ return (c.moneda||'ARS')==='ARS'; })
                            .reduce(function(s,c){ return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0)); },0);
         var recUsd = recCobP.filter(function(c){ return c.moneda==='USD'; })
