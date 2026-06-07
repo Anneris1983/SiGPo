@@ -130,6 +130,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js?v=20250529"></script>
+<script src="cohorte_tabla.js?v=20250603"></script>
 <script>
 var _estudiantes = [];  // [{dni, nombre, apellido, estadoGlobal, cobros:[...]}]
 var _filtroEstado = 'TODOS';
@@ -161,13 +162,14 @@ async function cargar(sesion, cohorteId) {
     // Round 1: todo lo que no depende de otros resultados — en paralelo
     var [cohRes, cobRes, egrRes, inscRes] = await Promise.all([
         sb.from('cohortes').select('cohorte_id,nombre,programa_id,estado,fecha_inicio,fecha_fin').eq('cohorte_id', cohorteId).single(),
-        sb.from('cobros').select('dni,concepto,periodo,fecha_vencimiento,monto_final,saldo_pendiente,estado,no_aplica').eq('cohorte_id', cohorteId).order('fecha_vencimiento'),
+        sb.from('cobros').select('dni,concepto,periodo,fecha_vencimiento,monto_final,saldo_pendiente,estado,no_aplica,recibo_url,comprobante_url').eq('cohorte_id', cohorteId).order('fecha_vencimiento'),
         obtenerEgresosResumenPorCohorte(cohorteId),
         obtenerInscripcionesPorCohorte(cohorteId, 'estudiante_id, cohorte_id, estado_academico')
     ]);
 
     var coh    = cohRes.data;
     var cobros = cobRes.data || [];
+    cobros.forEach(function(c){ c._re = resolverEstadoCobro(c); });
     var egres  = egrRes;
     var insc   = inscRes;
 
@@ -203,14 +205,14 @@ async function cargar(sesion, cohorteId) {
 
     // Stats
     var totalEst = new Set(insc.map(function(i){ return i.estudiante_id; })).size;
-    var dnisConMora = new Set(cobros.filter(function(c){ return c.estado==='EN_MORA'; }).map(function(c){ return c.dni; }));
+    var dnisConMora = new Set(cobros.filter(function(c){ return c._re==='EN_MORA'; }).map(function(c){ return c.dni; }));
     var alDiaCount = dnis.filter(function(dni) {
         var cobs = porDni[dni] || [];
-        if (cobs.some(function(c){ return c.estado==='EN_MORA'; })) return false;
-        var deuda = cobs.reduce(function(s,c){ if(c.estado==='ABONADA') return s; return s+Number(c.saldo_pendiente||c.monto_final||0); }, 0);
+        if (cobs.some(function(c){ return c._re==='EN_MORA'; })) return false;
+        var deuda = cobs.reduce(function(s,c){ if(c._re==='ABONADA') return s; return s+Number(c.saldo_pendiente||c.monto_final||0); }, 0);
         return deuda === 0;
     }).length;
-    var recaudado   = cobros.filter(function(c){ return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL'; })
+    var recaudado   = cobros.filter(function(c){ return c._re==='ABONADA'||c._re==='PAGO_PARCIAL'; })
                             .reduce(function(s,c){ return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0)); },0);
     var egrExec     = egres.filter(function(e){ return e.tipo==='EJECUTADO'; })
                            .reduce(function(s,e){ return s+Number(e.monto_pagado||e.monto_original||0); },0);
@@ -229,12 +231,12 @@ async function cargar(sesion, cohorteId) {
     _estudiantes = dnis.map(function(dni) {
         var usu   = usuMap[dni] || {};
         var cobs  = porDni[dni] || [];
-        var tieneMora = cobs.some(function(c){ return c.estado==='EN_MORA'; });
+        var tieneMora = cobs.some(function(c){ return c._re==='EN_MORA'; });
         var deuda = cobs.reduce(function(s,c){
-            if (c.estado==='ABONADA') return s;
+            if (c._re==='ABONADA') return s;
             return s + Number(c.saldo_pendiente||c.monto_final||0);
         }, 0);
-        var pagado = cobs.filter(function(c){ return c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL'; })
+        var pagado = cobs.filter(function(c){ return c._re==='ABONADA'||c._re==='PAGO_PARCIAL'; })
                         .reduce(function(s,c){ return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0)); },0);
         var estadoGlobal = tieneMora ? 'EN_MORA' : (deuda > 0 ? 'PENDIENTE' : 'AL_DIA');
         return { dni: dni, nombre: usu.nombre||'—', apellido: usu.apellido||'—', estadoGlobal: estadoGlobal, deuda: deuda, pagado: pagado, cobros: cobs };
@@ -315,9 +317,9 @@ function renderCuotas(cobros) {
         var k = porCuota[key];
         k.count++;
         k.total    += Number(c.monto_final||0);
-        k.abonado  += c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL' ? Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0)) : 0;
-        k.pendiente += (c.estado==='PENDIENTE'||c.estado==='PAGO_PARCIAL') ? Number(c.saldo_pendiente||0) : 0;
-        k.mora      += c.estado==='EN_MORA' ? Number(c.saldo_pendiente||c.monto_final||0) : 0;
+        k.abonado  += c._re==='ABONADA'||c._re==='PAGO_PARCIAL' ? Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0)) : 0;
+        k.pendiente += (c._re==='PENDIENTE'||c._re==='PAGO_PARCIAL') ? Number(c.saldo_pendiente||0) : 0;
+        k.mora      += c._re==='EN_MORA' ? Number(c.saldo_pendiente||c.monto_final||0) : 0;
     });
 
     var claves = Object.keys(porCuota);
