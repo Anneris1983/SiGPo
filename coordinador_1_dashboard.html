@@ -160,6 +160,8 @@
         </div>
         <div class="hstats-bar">
             <div class="hstat"><div class="hstat-lbl">Estudiantes</div><div class="hstat-val" id="statEstudiantes">—</div></div>
+            <div class="hstat"><div class="hstat-lbl">Activos</div><div class="hstat-val" id="statActivos">—</div></div>
+            <div class="hstat"><div class="hstat-lbl">Bajas</div><div class="hstat-val" style="color:#9ca3af" id="statBajas">—</div></div>
             <div class="hstat"><div class="hstat-lbl">Al día</div><div class="hstat-val" style="color:#86efac" id="statAlDia">—</div></div>
             <div class="hstat"><div class="hstat-lbl">En mora</div><div class="hstat-val" style="color:#fca5a5" id="statMora">—</div></div>
             <div class="hstat hstat-sep"><div class="hstat-lbl">Recaudado</div><div class="hstat-val" id="statRecaudado">—</div></div>
@@ -271,6 +273,8 @@
             if (!progIds.length && !cohIdsAsignadas.length) {
                 document.getElementById('headerSub').textContent = 'Sin programas asignados';
                 document.getElementById('statEstudiantes').textContent = '0';
+                document.getElementById('statActivos').textContent = '0';
+                document.getElementById('statBajas').textContent = '0';
                 document.getElementById('statAlDia').textContent = '0';
                 document.getElementById('statMora').textContent = '0';
                 document.getElementById('statRecaudado').textContent = '$0';
@@ -300,17 +304,37 @@
             var cobros = rCob.data || [];
             cobros.forEach(function(c){ c._re = resolverEstadoCobro(c); });
 
+            // Inscripciones (con estado_academico) para separar activos de bajas.
+            var rInsc = cohIds.length
+                ? await sb.from('inscripciones').select('cohorte_id, estado_academico, estudiante_id').in('cohorte_id', cohIds)
+                : { data: [] };
+            var inscripciones = rInsc.data || [];
+            var _estIds = [...new Set(inscripciones.map(function(i){ return i.estudiante_id; }).filter(Boolean))];
+            var rEstDni = _estIds.length ? await sb.from('estudiantes').select('id, dni').in('id', _estIds) : { data: [] };
+            var dniById = {};
+            (rEstDni.data || []).forEach(function(e){ dniById[e.id] = String(e.dni); });
+            function _activeDnisDe(inscList) {
+                return new Set(inscList.filter(function(i){ return (i.estado_academico || 'ACTIVO') === 'ACTIVO'; })
+                                       .map(function(i){ return dniById[i.estudiante_id]; }).filter(Boolean));
+            }
+            function _totalDnisDe(inscList) {
+                return new Set(inscList.map(function(i){ return dniById[i.estudiante_id]; }).filter(Boolean));
+            }
+
             var cohProgMap = {};
             cohortes.forEach(function(c) { cohProgMap[c.cohorte_id] = c.programa_id; });
             var progNomMap = {};
             programas.forEach(function(p) { progNomMap[p.programa_id] = p.nombre; });
 
-            var dnisTotal = new Set(cobros.map(function(c) { return c.dni; }));
-            // Un estudiante está "en mora" si tiene AL MENOS UNA cuota EN_MORA.
-            // Un estudiante está "al día" si NO tiene ninguna cuota EN_MORA.
-            // La misma cuota no puede contar en ambos grupos.
-            var dnisEnMora = new Set(cobros.filter(function(c) { return c._re === 'EN_MORA'; }).map(function(c) { return c.dni; }));
-            var dnisAlDia  = new Set([...dnisTotal].filter(function(dni) { return !dnisEnMora.has(dni); }));
+            // Total = inscriptos; Activos = sin baja; Bajas excluidas de al día / mora.
+            var dnisActivos = _activeDnisDe(inscripciones);
+            var dnisTotal   = _totalDnisDe(inscripciones);
+            var totalEst    = dnisTotal.size;
+            var activosEst  = dnisActivos.size;
+            var bajasEst    = totalEst - activosEst;
+            // "En mora" = activo con al menos una cuota EN_MORA (en vivo). "Al día" = activo sin EN_MORA.
+            var dnisEnMora = new Set(cobros.filter(function(c) { return dnisActivos.has(String(c.dni)) && c._re === 'EN_MORA'; }).map(function(c) { return String(c.dni); }));
+            var dnisAlDia  = new Set([...dnisActivos].filter(function(dni) { return !dnisEnMora.has(dni); }));
             var recaudadoARS = cobros.filter(function(c) { return (c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL') && (c.moneda||'ARS') === 'ARS'; })
                                      .reduce(function(s,c) { return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
             var recaudadoUSD = cobros.filter(function(c) { return (c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL') && c.moneda === 'USD'; })
@@ -318,17 +342,19 @@
             var recaudado = recaudadoARS;
 
             document.getElementById('headerSub').textContent = programas.map(function(p) { return p.nombre; }).join(' · ');
-            document.getElementById('statEstudiantes').textContent = dnisTotal.size;
+            document.getElementById('statEstudiantes').textContent = totalEst;
+            document.getElementById('statActivos').textContent = activosEst;
+            document.getElementById('statBajas').textContent = bajasEst;
             document.getElementById('statAlDia').textContent = dnisAlDia.size;
             document.getElementById('statMora').textContent = dnisEnMora.size;
             document.getElementById('statRecaudado').textContent = fMontoDual(recaudadoARS, recaudadoUSD);
 
             var programasStats = programas.map(function(p) {
                 var cohsProg = cohortes.filter(function(c) { return c.programa_id === p.programa_id; });
-                var cobsProg = cobros.filter(function(c) { return c.programa_id === p.programa_id; });
+                var inscProg = inscripciones.filter(function(i) { return cohProgMap[i.cohorte_id] === p.programa_id; });
                 return {
                     programaId: p.programa_id, nombre: p.nombre, tipo: p.tipo || 'Programa',
-                    estudiantes: new Set(cobsProg.map(function(c) { return c.dni; })).size,
+                    estudiantes: _totalDnisDe(inscProg).size,
                     cohortes: cohsProg.length, estado: p.estado === 'ACTIVO' ? 'Activo' : 'Cerrado',
                     destino: 'Coordinador_3_Programas_de_posgrado.html?programa=' + p.programa_id
                 };
@@ -336,10 +362,14 @@
 
             var cohortesStats = cohortes.map(function(c) {
                 var cobs = cobros.filter(function(x) { return x.cohorte_id === c.cohorte_id; });
-                var morSet = new Set(cobs.filter(function(x) { return x._re === 'EN_MORA'; }).map(function(x) { return x.dni; }));
-                var dnisCoh = new Set(cobs.map(function(x) { return x.dni; }));
+                var inscCoh = inscripciones.filter(function(i) { return i.cohorte_id === c.cohorte_id; });
+                var activeDnisCoh = _activeDnisDe(inscCoh);
+                var totalCoh = _totalDnisDe(inscCoh).size;
+                var activosCoh = activeDnisCoh.size;
+                // En mora = activo con EN_MORA; al día = activo sin EN_MORA. Bajas excluidas.
+                var morSet = new Set(cobs.filter(function(x) { return activeDnisCoh.has(String(x.dni)) && x._re === 'EN_MORA'; }).map(function(x) { return String(x.dni); }));
                 var mor = morSet.size;
-                var alD = [...dnisCoh].filter(function(dni) { return !morSet.has(dni); }).length;
+                var alD = activosCoh - mor;
                 var recARS = cobs.filter(function(x) { return (x._re === 'ABONADA' || x._re === 'PAGO_PARCIAL') && (x.moneda||'ARS') === 'ARS'; })
                                  .reduce(function(s,x) { return s + Math.max(0, Number(x.monto_final||0) - Number(x.saldo_pendiente||0)); }, 0);
                 var recUSD = cobs.filter(function(x) { return (x._re === 'ABONADA' || x._re === 'PAGO_PARCIAL') && x.moneda === 'USD'; })
@@ -348,7 +378,7 @@
                     cohorteId: c.cohorte_id, nombre: c.nombre || 'Cohorte',
                     programa: progNomMap[c.programa_id] || '',
                     estado: c.estado === 'ACTIVO' ? 'Activa' : 'Cerrada',
-                    estudiantes: dnisCoh.size, alDia: alD, mora: mor,
+                    estudiantes: totalCoh, activos: activosCoh, bajas: totalCoh - activosCoh, alDia: alD, mora: mor,
                     recaudado: fMontoDual(recARS, recUSD),
                     fechaInicio: c.fecha_inicio || '', fechaFin: c.fecha_fin || '',
                     destino: 'coordinador_3_cohorte.html?cohorte_id=' + c.cohorte_id
@@ -385,6 +415,8 @@
                 (c.programa ? '<div class="ci-program">' + escapeHtml(c.programa) + '</div>' : '') + '</div>' +
                 '<span class="ci-badge ' + (c.estado === 'Activa' ? 'activa' : 'cerrada') + '">' + escapeHtml(c.estado) + '</span></div>' +
                 '<div class="ci-stats"><span>👥 ' + c.estudiantes + ' estudiantes</span>' +
+                '<span>🟢 ' + (c.activos != null ? c.activos : c.estudiantes) + ' activos</span>' +
+                '<span>⚪ ' + (c.bajas || 0) + ' bajas</span>' +
                 '<span>✓ ' + c.alDia + ' al día</span><span>⚠ ' + c.mora + ' en mora</span>' +
                 '<span>💰 ' + escapeHtml(c.recaudado) + '</span></div>' +
                 (fechas ? '<div class="ci-dates">' + escapeHtml(fechas) + '</div>' : '') +
