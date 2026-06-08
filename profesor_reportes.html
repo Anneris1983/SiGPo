@@ -248,6 +248,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js?v=20250529"></script>
+<script src="cohorte_tabla.js?v=20250603"></script>
 <script>
 'use strict';
 
@@ -334,12 +335,13 @@ async function cargarVista() {
 
         var [rP, rCob, rEgr] = await Promise.all([
             allProgIds.length ? sb.from('programas').select('programa_id,nombre').in('programa_id', allProgIds) : Promise.resolve({data:[]}),
-            cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento,fecha_pago,moneda').in('cohorte_id', cohIds) : Promise.resolve({data:[]}),
+            cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento,fecha_pago,moneda,no_aplica,recibo_url,comprobante_url').in('cohorte_id', cohIds) : Promise.resolve({data:[]}),
             cohIds.length ? sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
         ]);
 
         _programas = rP.data || [];
         _cobrosExport  = rCob.data || [];
+        _cobrosExport.forEach(function(c){ c._re = resolverEstadoCobro(c); });
         _egresosExport = rEgr.data || [];
 
         // Rellenar selector de programas solo la primera vez
@@ -367,7 +369,7 @@ async function cargarVista() {
             if (filtPrograma && String(c.programa_id) !== String(filtPrograma)) return false;
             if (filtCohorte  && String(c.cohorte_id)  !== String(filtCohorte))  return false;
             if (filtAnio) {
-                var isPaid = c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL';
+                var isPaid = c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL';
                 var fechaFiltro = isPaid ? (c.fecha_pago || c.fecha_vencimiento) : c.fecha_vencimiento;
                 if (fechaFiltro && !fechaFiltro.startsWith(filtAnio)) return false;
             }
@@ -383,12 +385,12 @@ async function cargarVista() {
 
         // Resumen
         function eKey(c){ return c.dni + '|' + c.programa_id; }
-        var dnisAlDia   = new Set(cobF.filter(function(c){ return c.estado === 'ABONADA'; }).map(eKey));
-        var dnisEnMora  = new Set(cobF.filter(function(c){ return c.estado === 'EN_MORA'; }).map(eKey));
-        var dnisParcial = new Set(cobF.filter(function(c){ return c.estado === 'PAGO_PARCIAL'; }).map(eKey));
+        var dnisAlDia   = new Set(cobF.filter(function(c){ return c._re === 'ABONADA'; }).map(eKey));
+        var dnisEnMora  = new Set(cobF.filter(function(c){ return c._re === 'EN_MORA'; }).map(eKey));
+        var dnisParcial = new Set(cobF.filter(function(c){ return c._re === 'PAGO_PARCIAL'; }).map(eKey));
         var dnisTotal   = new Set(cobF.map(eKey));
         // Recaudado separado por moneda — ARS y USD nunca se suman
-        var _recCob = cobF.filter(function(c){ return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL'; });
+        var _recCob = cobF.filter(function(c){ return c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL'; });
         var recaudadoArs = _recCob.filter(function(c){ return (c.moneda||'ARS')==='ARS'; })
                               .reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
         var recaudadoUsd = _recCob.filter(function(c){ return c.moneda==='USD'; })
@@ -410,7 +412,7 @@ async function cargarVista() {
         // Cashflow mensual
         var mesKeys = {};
         cobF.forEach(function(c){
-            var isPaid = c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL';
+            var isPaid = c._re==='ABONADA'||c._re==='PAGO_PARCIAL';
             var fecha = isPaid ? (c.fecha_pago||c.fecha_vencimiento) : c.fecha_vencimiento;
             if (fecha) { mesKeys[fecha.substring(0,7)] = 1; }
         });
@@ -421,13 +423,13 @@ async function cargarVista() {
         var cfLabels   = meses.map(mesLabel);
         // El gráfico de cashflow es solo en ARS (una barra no puede ser dos monedas)
         var cfIngresos = meses.map(function(k){ return cobF.filter(function(c){
-            if (c.estado!=='ABONADA'&&c.estado!=='PAGO_PARCIAL') return false;
+            if (c._re!=='ABONADA'&&c._re!=='PAGO_PARCIAL') return false;
             if ((c.moneda||'ARS')==='USD') return false;
             var fecha = c.fecha_pago || c.fecha_vencimiento;
             return fecha && fecha.startsWith(k);
         }).reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0); });
         var cfIngresosProyec = meses.map(function(k){ return cobF.filter(function(c){
-            if (c.estado==='ABONADA'||c.estado==='PAGO_PARCIAL') return false;
+            if (c._re==='ABONADA'||c._re==='PAGO_PARCIAL') return false;
             if ((c.moneda||'ARS')==='USD') return false;
             return c.fecha_vencimiento && c.fecha_vencimiento.startsWith(k);
         }).reduce(function(s,c){ return s + Number(c.saldo_pendiente||c.monto_final||0); }, 0); });
@@ -446,13 +448,13 @@ async function cargarVista() {
         var ecParcial = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x.estado==='PAGO_PARCIAL'; }).map(function(x){ return x.dni; })).size; });
 
         // Evolución mora mensual
-        var emMora = meses.map(function(k){ return new Set(cobF.filter(function(c){ return c.estado==='EN_MORA' && c.fecha_vencimiento && c.fecha_vencimiento.startsWith(k); }).map(function(c){ return c.dni; })).size; });
+        var emMora = meses.map(function(k){ return new Set(cobF.filter(function(c){ return c._re==='EN_MORA' && c.fecha_vencimiento && c.fecha_vencimiento.startsWith(k); }).map(function(c){ return c.dni; })).size; });
 
         // Donut estudiantes por estado
         var epLabels  = ['Al Día','En Mora','Pago Parcial','Pendiente'];
         var epValores = [
             dnisAlDia.size, dnisEnMora.size, dnisParcial.size,
-            new Set(cobF.filter(function(c){ return c.estado==='PENDIENTE'||c.estado==='NO_ABONADA'; }).map(eKey)).size
+            new Set(cobF.filter(function(c){ return c._re==='PENDIENTE'||c._re==='NO_ABONADA'; }).map(eKey)).size
         ];
 
         // Encabezado subtitle
@@ -641,12 +643,12 @@ function exportar(tipo) {
             });
             if (!cobF.length) { toast('Sin datos para exportar.', 'err'); return; }
             var filas = cobF.map(function(c){
-                return { 'DNI': c.dni||'', 'Estado': c.estado||'', 'Monto ($)': Number(c.monto_final||0), 'Saldo Pendiente': Number(c.saldo_pendiente||0), 'Vencimiento': c.fecha_vencimiento||'' };
+                return { 'DNI': c.dni||'', 'Estado': c._re||'', 'Monto ($)': Number(c.monto_final||0), 'Saldo Pendiente': Number(c.saldo_pendiente||0), 'Vencimiento': c.fecha_vencimiento||'' };
             });
             var ws = XLSX.utils.json_to_sheet(filas);
             XLSX.utils.book_append_sheet(wb, ws, 'Estados');
         } else if (tipo === 'mora') {
-            var cobF = _cobrosExport.filter(function(c){ return c.estado === 'EN_MORA'; });
+            var cobF = _cobrosExport.filter(function(c){ return c._re === 'EN_MORA'; });
             if (!cobF.length) { toast('Sin datos de mora para exportar.', 'err'); return; }
             var filas = cobF.map(function(c){
                 return { 'DNI': c.dni||'', 'Monto ($)': Number(c.monto_final||0), 'Vencimiento': c.fecha_vencimiento||'' };
@@ -661,7 +663,7 @@ function exportar(tipo) {
             });
             if (!cobF.length) { toast('Sin datos de estudiantes para exportar.', 'err'); return; }
             var filas = cobF.map(function(c){
-                return { 'DNI': c.dni||'', 'Estado': c.estado||'', 'Monto ($)': Number(c.monto_final||0), 'Saldo': Number(c.saldo_pendiente||0) };
+                return { 'DNI': c.dni||'', 'Estado': c._re||'', 'Monto ($)': Number(c.monto_final||0), 'Saldo': Number(c.saldo_pendiente||0) };
             });
             var ws = XLSX.utils.json_to_sheet(filas);
             XLSX.utils.book_append_sheet(wb, ws, 'Estudiantes');
