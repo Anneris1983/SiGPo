@@ -950,7 +950,7 @@ async function obtenerInscripcionesPorCohorte(cohorteId, campos) {
 async function obtenerCobrosParaDesercion() {
     const sb = await getSupabase();
     const { data, error } = await sb.from('cobros')
-        .select('programa_id, cohorte_id, dni, estado, fecha_vencimiento, monto_final, saldo_pendiente');
+        .select('programa_id, cohorte_id, dni, estado, fecha_vencimiento, monto_final, saldo_pendiente, no_aplica, recibo_url, comprobante_url');
     if (error) throw error;
     return data || [];
 }
