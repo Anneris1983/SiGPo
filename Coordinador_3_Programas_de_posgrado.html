@@ -436,6 +436,15 @@ async function cargarCohortes(cohIdsPermitidas) {
         cobros.forEach(function(c){ c._re = resolverEstadoCobro(c); });
         var egresos = rE.data || [];
 
+        // Inscripciones (estado_academico) + dni por estudiante: las bajas no cuentan en KPIs.
+        var _cohIds = cohortes.map(function(c){ return c.cohorte_id; });
+        var rInsc = _cohIds.length ? await sb.from('inscripciones').select('cohorte_id, estado_academico, estudiante_id').in('cohorte_id', _cohIds) : { data: [] };
+        var inscripciones = rInsc.data || [];
+        var _estIds = [...new Set(inscripciones.map(function(i){ return i.estudiante_id; }).filter(Boolean))];
+        var rEstDni = _estIds.length ? await sb.from('estudiantes').select('id, dni').in('id', _estIds) : { data: [] };
+        var dniById = {};
+        (rEstDni.data || []).forEach(function(e){ dniById[e.id] = String(e.dni); });
+
         if (_programaId) {
             var rP = await sb.from('programas').select('nombre').eq('programa_id', _programaId).single();
             var pNombre = rP.data ? rP.data.nombre : 'Cohortes';
@@ -444,7 +453,7 @@ async function cargarCohortes(cohIdsPermitidas) {
             if (h1 && rP.data) h1.textContent = pNombre;
         }
         var cohActivas = cohortes.filter(function(c){return c.estado==='ACTIVO';}).length;
-        var dnisTotal = new Set(cobros.filter(function(c){return !_programaId||cohortes.some(function(co){return co.cohorte_id===c.cohorte_id;})}).map(function(c){return c.dni;}));
+        var dnisTotal = new Set(inscripciones.map(function(i){ return dniById[i.estudiante_id]; }).filter(Boolean));
         document.getElementById('page-subtitle').textContent = cohortes.length + ' cohortes • ' + dnisTotal.size + ' estudiantes totales';
 
         var lista = document.getElementById('cohortes-list');
@@ -452,17 +461,23 @@ async function cargarCohortes(cohIdsPermitidas) {
         lista.innerHTML = cohortes.map(function(c) {
             var cobs = cobros.filter(function(x){return x.cohorte_id===c.cohorte_id;});
             var egrs = egresos.filter(function(x){return x.cohorte_id===c.cohorte_id && x.tipo==='EJECUTADO';});
-            var dnis = new Set(cobs.map(function(x){return x.dni;}));
-            var alDia = new Set(cobs.filter(function(x){return x._re==='ABONADA';}).map(function(x){return x.dni;})).size;
-            var mora = new Set(cobs.filter(function(x){return x._re==='EN_MORA';}).map(function(x){return x.dni;})).size;
-            var parcial = new Set(cobs.filter(function(x){return x._re==='PAGO_PARCIAL';}).map(function(x){return x.dni;})).size;
+            // Bajas excluidas de los KPIs. Pagados/mora/parcial = estado general (peor cuota) por estudiante activo.
+            var inscCoh = inscripciones.filter(function(i){return i.cohorte_id===c.cohorte_id;});
+            var activeDnisCoh = new Set(inscCoh.filter(function(i){return (i.estado_academico||'ACTIVO')==='ACTIVO';}).map(function(i){return dniById[i.estudiante_id];}).filter(Boolean));
+            var totalCoh = new Set(inscCoh.map(function(i){return dniById[i.estudiante_id];}).filter(Boolean)).size;
+            var activosCoh = activeDnisCoh.size;
+            var bajasCoh = totalCoh - activosCoh;
+            var _porDni = {};
+            cobs.forEach(function(x){ if(activeDnisCoh.has(String(x.dni))){ (_porDni[x.dni]=_porDni[x.dni]||[]).push(x); } });
+            var alDia=0, mora=0, parcial=0;
+            Object.keys(_porDni).forEach(function(dni){ var eg=calcEstadoGeneral(_porDni[dni]); if(eg==='ABONADA')alDia++; else if(eg==='EN_MORA')mora++; else if(eg==='PAGO_PARCIAL')parcial++; });
             var rec = cobs.filter(function(x){return x._re==='ABONADA'||x._re==='PAGO_PARCIAL';}).reduce(function(s,x){return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));},0);
             var egr = egrs.reduce(function(s,x){return s+Number(x.monto_pagado||0);},0);
             var sal = rec - egr;
             var isActiva = c.estado==='ACTIVO';
             var maxCuota = cobs.reduce(function(m,x){return Math.max(m,Number(x.nro_cuota||0));},0);
             var fechas = (c.fecha_inicio||'') + (c.fecha_fin?' - '+c.fecha_fin:'') + (maxCuota>0?' • '+maxCuota+' cuotas':'');
-            return '<div class="cohorte-card'+(isActiva?' active':'')+'" onclick="navegar(\'coordinador_3_cohorte.html?cohorte_id='+c.cohorte_id+'\')">'+ '<div class="cohorte-left"><div class="cohorte-title">'+esc(c.nombre||'Cohorte')+'</div><div class="cohorte-dates">'+esc(fechas)+'</div><div class="cohorte-stats"><div class="stat-box"><div class="stat-label">Estudiantes</div><div class="stat-value">'+dnis.size+'</div></div><div class="stat-box"><div class="stat-label">Al d\xeda</div><div class="stat-value success">'+alDia+'</div></div><div class="stat-box"><div class="stat-label">En mora</div><div class="stat-value danger">'+mora+'</div></div><div class="stat-box"><div class="stat-label">Pago parcial</div><div class="stat-value warning">'+parcial+'</div></div><div class="stat-box"><div class="stat-label">Recaudado</div><div class="stat-value">'+fM(rec)+'</div></div><div class="stat-box"><div class="stat-label">Egresos</div><div class="stat-value">'+fM(egr)+'</div></div><div class="stat-box"><div class="stat-label">Saldo</div><div class="stat-value'+(sal>=0?' saldo-positivo':' saldo-negativo')+'">' +fM(sal)+'</div></div></div></div><div class="cohorte-right"><span class="badge '+(isActiva?'active':'closed')+'">'+(isActiva?'Activa':'Cerrada')+'</span><span class="arrow">→</span></div></div>';
+            return '<div class="cohorte-card'+(isActiva?' active':'')+'" onclick="navegar(\'coordinador_3_cohorte.html?cohorte_id='+c.cohorte_id+'\')">'+ '<div class="cohorte-left"><div class="cohorte-title">'+esc(c.nombre||'Cohorte')+'</div><div class="cohorte-dates">'+esc(fechas)+'</div><div class="cohorte-stats"><div class="stat-box"><div class="stat-label">Estudiantes</div><div class="stat-value">'+totalCoh+'</div></div><div class="stat-box"><div class="stat-label">Activos</div><div class="stat-value">'+activosCoh+'</div></div><div class="stat-box"><div class="stat-label">Bajas</div><div class="stat-value" style="color:#9ca3af;">'+bajasCoh+'</div></div><div class="stat-box"><div class="stat-label">Pagados</div><div class="stat-value success">'+alDia+'</div></div><div class="stat-box"><div class="stat-label">En mora</div><div class="stat-value danger">'+mora+'</div></div><div class="stat-box"><div class="stat-label">Pago parcial</div><div class="stat-value warning">'+parcial+'</div></div><div class="stat-box"><div class="stat-label">Recaudado</div><div class="stat-value">'+fM(rec)+'</div></div><div class="stat-box"><div class="stat-label">Egresos</div><div class="stat-value">'+fM(egr)+'</div></div><div class="stat-box"><div class="stat-label">Saldo</div><div class="stat-value'+(sal>=0?' saldo-positivo':' saldo-negativo')+'">' +fM(sal)+'</div></div></div></div><div class="cohorte-right"><span class="badge '+(isActiva?'active':'closed')+'">'+(isActiva?'Activa':'Cerrada')+'</span><span class="arrow">→</span></div></div>';
         }).join('');
     } catch(e) { console.error('Error cargando cohortes:', e); }
 }
