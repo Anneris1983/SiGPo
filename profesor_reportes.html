@@ -443,9 +443,9 @@ async function cargarVista() {
             return true;
         });
         var ecLabels  = cohortesF.map(function(c){ return c.nombre || 'Cohorte'; });
-        var ecAlDia   = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x.estado==='ABONADA'; }).map(function(x){ return x.dni; })).size; });
-        var ecMora    = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x.estado==='EN_MORA'; }).map(function(x){ return x.dni; })).size; });
-        var ecParcial = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x.estado==='PAGO_PARCIAL'; }).map(function(x){ return x.dni; })).size; });
+        var ecAlDia   = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x._re==='ABONADA'; }).map(function(x){ return x.dni; })).size; });
+        var ecMora    = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x._re==='EN_MORA'; }).map(function(x){ return x.dni; })).size; });
+        var ecParcial = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x._re==='PAGO_PARCIAL'; }).map(function(x){ return x.dni; })).size; });
 
         // Evolución mora mensual
         var emMora = meses.map(function(k){ return new Set(cobF.filter(function(c){ return c._re==='EN_MORA' && c.fecha_vencimiento && c.fecha_vencimiento.startsWith(k); }).map(function(c){ return c.dni; })).size; });
