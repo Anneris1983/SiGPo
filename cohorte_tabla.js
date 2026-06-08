@@ -134,7 +134,7 @@ var CT_PAGE_SIZE = 30;
 function actualizarFiltros() {
     var ests = (typeof V !== 'undefined' && V.data && V.data.estudiantes) || [];
     var labels = {
-        todos: 'Todos', ABONADA: 'Al día', EN_MORA: 'En mora',
+        todos: 'Todos', ABONADA: 'Pagados', EN_MORA: 'En mora',
         PAGO_PARCIAL: 'Pago parcial', PENDIENTE: 'Pendiente',
         NO_ABONADA: 'No abonada', A_DEFINIR: 'A definir', READMISION: 'Readmisión'
     };
@@ -218,14 +218,20 @@ function actualizarStats() {
     var saldo = recaudArs - egrExec; // egresos son ARS; el neto es ARS
 
     function setTxt(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
-    function contarGeneral(estado) { return ests.filter(function(e){ return calcEstadoGeneral(e.cobros) === estado; }).length; }
+    // Las bajas (estado_academico != 'ACTIVO') NO cuentan para los KPIs de estado.
+    var activos = ests.filter(function(e){ return (e.estado_academico || 'ACTIVO') === 'ACTIVO'; });
+    function contarGeneral(estado) { return activos.filter(function(e){ return calcEstadoGeneral(e.cobros) === estado; }).length; }
 
+    setTxt('s-total',   ests.length);
+    setTxt('s-activos', activos.length);
+    setTxt('s-bajas',   ests.length - activos.length);
+    // 's-aldia' se rotula "Pagados" en la vista: estudiantes con TODAS las cuotas abonadas
     setTxt('s-aldia',   contarGeneral('ABONADA'));
     setTxt('s-mora',    contarGeneral('EN_MORA'));
     setTxt('s-parcial', contarGeneral('PAGO_PARCIAL'));
-    setTxt('s-readmision', ests.filter(function(e){ return (e.cobros || []).some(function(c){ return c && c.es_readmision; }); }).length);
+    setTxt('s-readmision', activos.filter(function(e){ return (e.cobros || []).some(function(c){ return c && c.es_readmision; }); }).length);
     var cuotasMora = 0;
-    ests.forEach(function(e){ (e.cobros || []).forEach(function(c){ if (c && resolverEstadoCobro(c) === 'EN_MORA') cuotasMora++; }); });
+    activos.forEach(function(e){ (e.cobros || []).forEach(function(c){ if (c && resolverEstadoCobro(c) === 'EN_MORA') cuotasMora++; }); });
     setTxt('s-mora-cuotas', cuotasMora);
     setTxt('s-recaudado', fMontoDual(recaudArs, recaudUsd));
     setTxt('s-egresos',   fMonto(egrExec));
