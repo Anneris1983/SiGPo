@@ -336,13 +336,13 @@
 
             var cohortesStats = cohortes.map(function(c) {
                 var cobs = cobros.filter(function(x) { return x.cohorte_id === c.cohorte_id; });
-                var morSet = new Set(cobs.filter(function(x) { return x.estado === 'EN_MORA'; }).map(function(x) { return x.dni; }));
+                var morSet = new Set(cobs.filter(function(x) { return x._re === 'EN_MORA'; }).map(function(x) { return x.dni; }));
                 var dnisCoh = new Set(cobs.map(function(x) { return x.dni; }));
                 var mor = morSet.size;
                 var alD = [...dnisCoh].filter(function(dni) { return !morSet.has(dni); }).length;
-                var recARS = cobs.filter(function(x) { return (x.estado === 'ABONADA' || x.estado === 'PAGO_PARCIAL') && (x.moneda||'ARS') === 'ARS'; })
+                var recARS = cobs.filter(function(x) { return (x._re === 'ABONADA' || x._re === 'PAGO_PARCIAL') && (x.moneda||'ARS') === 'ARS'; })
                                  .reduce(function(s,x) { return s + Math.max(0, Number(x.monto_final||0) - Number(x.saldo_pendiente||0)); }, 0);
-                var recUSD = cobs.filter(function(x) { return (x.estado === 'ABONADA' || x.estado === 'PAGO_PARCIAL') && x.moneda === 'USD'; })
+                var recUSD = cobs.filter(function(x) { return (x._re === 'ABONADA' || x._re === 'PAGO_PARCIAL') && x.moneda === 'USD'; })
                                  .reduce(function(s,x) { return s + Math.max(0, Number(x.monto_final||0) - Number(x.saldo_pendiente||0)); }, 0);
                 return {
                     cohorteId: c.cohorte_id, nombre: c.nombre || 'Cohorte',
