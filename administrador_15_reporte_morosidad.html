@@ -240,6 +240,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js?v=20250529"></script>
+<script src="cohorte_tabla.js?v=20250603"></script>
 <script>
         function exportarExcel() {
         var loadXLSX = window.XLSX
@@ -316,6 +317,7 @@ async function cargarDatos() {
             obtenerCobros(),
             obtenerProgramasCatalogo()
         ]);
+        cobros.forEach(function(c){ c._re = resolverEstadoCobro(c); });
         // ── Aplicar filtros desde Cashflow ──
         try {
             var _fRaw = sessionStorage.getItem('sigpo_filtros_cashflow');
@@ -334,7 +336,7 @@ async function cargarDatos() {
         programas.forEach(function(p) { progMap[p.programa_id] = p.nombre || ('Programa ' + p.programa_id); });
 
         // Filter EN_MORA cobros
-        var enMora = cobros.filter(function(c) { return c.estado === 'EN_MORA'; });
+        var enMora = cobros.filter(function(c) { return c._re === 'EN_MORA'; });
 
         // Enrollment-based counting (dni × programa): estudiante en 2 programas = 2 unidades
         // Unique enrollments in mora (across programs)
@@ -384,7 +386,7 @@ async function cargarDatos() {
             var pid = c.programa_id || 'SIN_PROGRAMA';
             if (!byProg[pid]) byProg[pid] = { nombre: progMap[pid] || pid, dnisTotal: new Set(), dnisMora: new Set(), montoMoraARS: 0, montoMoraUSD: 0 };
             byProg[pid].dnisTotal.add(c.dni);
-            if (c.estado === 'EN_MORA') {
+            if (c._re === 'EN_MORA') {
                 byProg[pid].dnisMora.add(c.dni);
                 if (c.moneda==='USD') byProg[pid].montoMoraUSD += Number(c.saldo_pendiente||0);
                 else byProg[pid].montoMoraARS += Number(c.saldo_pendiente||0);
