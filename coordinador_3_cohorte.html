@@ -535,7 +535,7 @@ async function cargar() {
             var abonado = (c.monto_abonado != null && Number(c.monto_abonado) > 0)
                 ? Number(c.monto_abonado)
                 : Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
-            dniMap[dk].cobros.push({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final != null ? Number(c.monto_final) : null, monto_abonado:abonado, monto_transferido:(c.monto_transferido ? Number(c.monto_transferido) : null), saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'NO_APLICA':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null });
+            dniMap[dk].cobros.push({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final != null ? Number(c.monto_final) : null, monto_abonado:abonado, monto_transferido:(c.monto_transferido ? Number(c.monto_transferido) : null), saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'NO_APLICA':(c.estado||'NO_ABONADA'), comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null, _re:resolverEstadoCobro(c) });
         });
 
         // Agregar estudiantes inscriptos que aún no tienen cobros
@@ -839,8 +839,8 @@ async function reclamarSel() {
         sel.forEach(function(dni) {
             var est = V.data.estudiantes.find(function(e){ return String(e.dni) === String(dni); });
             if (!est || !est.email) return;
-            var cobrosVenc = (est.cobros || []).filter(function(c){ return c.estado === 'EN_MORA' || c.estado === 'PAGO_PARCIAL'; });
-            if (!cobrosVenc.length) cobrosVenc = (est.cobros || []).filter(function(c){ return c.estado !== 'ABONADA' && c.estado !== 'A_DEFINIR'; });
+            var cobrosVenc = (est.cobros || []).filter(function(c){ return c._re === 'EN_MORA' || c._re === 'PAGO_PARCIAL'; });
+            if (!cobrosVenc.length) cobrosVenc = (est.cobros || []).filter(function(c){ return c._re !== 'ABONADA' && c._re !== 'A_DEFINIR' && c._re !== 'NO_APLICA'; });
             var primer = cobrosVenc[0] || {};
             var nVenc   = cobrosVenc.length;
             var totalSaldo = cobrosVenc.reduce(function(s,c){ return s + Number(c.saldo_pendiente||0); }, 0);
@@ -955,10 +955,10 @@ async function exportarExcel() {
                 const c = cobrosMap[col.concepto_base+'||'+(col.periodo||'')];
                 if (!c) { fila.push(''); return; }
                 // Valor numérico de la cuota según estado
-                if (c.estado === 'NO_APLICA')    fila.push('No aplica');
-                else if (c.estado === 'ABONADA') fila.push(Number(c.monto_final||0));
-                else if (c.estado === 'PAGO_PARCIAL') fila.push(Number(c.monto_abonado||0));
-                else if (c.estado === 'A_DEFINIR' || c.monto_final == null) fila.push('A definir');
+                if (c._re === 'NO_APLICA')    fila.push('No aplica');
+                else if (c._re === 'ABONADA') fila.push(Number(c.monto_final||0));
+                else if (c._re === 'PAGO_PARCIAL') fila.push(Number(c.monto_abonado||0));
+                else if (c._re === 'A_DEFINIR' || c.monto_final == null) fila.push('A definir');
                 else fila.push(Number(c.monto_final||0));
             });
             fila.push(totP, totA, totS);
