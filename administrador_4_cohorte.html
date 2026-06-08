@@ -1712,13 +1712,10 @@ function confirmarDesvincular(dni, nombre) {
     _dvEstId = est ? est.id : null;
 
     var cobros = est ? (est.cobros || []) : [];
-    var tienePagos = cobros.some(function(c) {
-        return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL';
-    });
+    function _esPago(c) { var e = resolverEstadoCobro(c); return e === 'ABONADA' || e === 'PAGO_PARCIAL'; }
+    var tienePagos = cobros.some(_esPago);
     var nCobros = cobros.length;
-    var nPagos = cobros.filter(function(c) {
-        return c.estado === 'ABONADA' || c.estado === 'PAGO_PARCIAL';
-    }).length;
+    var nPagos = cobros.filter(_esPago).length;
 
     document.getElementById('mdv-sub').textContent =
         (V.data ? V.data.programa.nombre + ' · ' + V.data.cohorte.nombre : '');
