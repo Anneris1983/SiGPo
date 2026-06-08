@@ -96,6 +96,8 @@
         <div class="stat-card"><div class="stat-label">Programas/Cursos</div><div class="stat-value" id="s-programas">—</div></div>
         <div class="stat-card"><div class="stat-label">Cohortes/Ediciones</div><div class="stat-value" id="s-cohortes">—</div></div>
         <div class="stat-card"><div class="stat-label">Estudiantes</div><div class="stat-value" id="s-estudiantes">—</div></div>
+        <div class="stat-card"><div class="stat-label">Activos</div><div class="stat-value" id="s-activos">—</div></div>
+        <div class="stat-card"><div class="stat-label">Bajas</div><div class="stat-value" id="s-bajas" style="color:#9ca3af;">—</div></div>
         <div class="stat-card success"><div class="stat-label">Al Día</div><div class="stat-value success" id="s-aldia">—</div></div>
         <div class="stat-card danger"><div class="stat-label">En Mora</div><div class="stat-value danger" id="s-mora">—</div></div>
         <div class="stat-card info"><div class="stat-label">Recaudado</div><div class="stat-value info" id="s-recaudado">—</div></div>
@@ -121,7 +123,7 @@
 <script src="supabase.js?v=20250529"></script>
 <script src="cohorte_tabla.js?v=20250603"></script>
 <script>
-var _programas = [], _cohortes = [], _cohProgMap = {};
+var _programas = [], _cohortes = [], _cohProgMap = {}, _dniById = {};
 
 document.addEventListener('DOMContentLoaded', async function() {
     var _sb = await getSupabase();
@@ -189,7 +191,7 @@ async function cargar(sesion) {
             ? sb.from('egresos').select('cohorte_id,programa_id,tipo,monto_pagado,monto_original').in('cohorte_id', cohIds)
             : Promise.resolve({data:[]}),
         cohIds.length
-            ? sb.from('inscripciones').select('estudiante_id,cohorte_id').in('cohorte_id', cohIds)
+            ? sb.from('inscripciones').select('estudiante_id,cohorte_id,estado_academico').in('cohorte_id', cohIds)
             : Promise.resolve({data:[]})
     ]);
 
@@ -198,17 +200,29 @@ async function cargar(sesion) {
     var egresos = egrRes.data  || [];
     var inscFilt = inscRes.data || [];
 
+    // DNI por estudiante, para excluir bajas de al día / mora.
+    var _estIds = [...new Set(inscFilt.map(function(i){ return i.estudiante_id; }).filter(Boolean))];
+    var rEstDni = _estIds.length ? await sb.from('estudiantes').select('id, dni').in('id', _estIds) : { data: [] };
+    var dniById = {};
+    (rEstDni.data || []).forEach(function(e){ dniById[e.id] = String(e.dni); });
+    _dniById = dniById;
+
     // Totales globales — enrollment-based counting (estudiante × programa):
-    // un estudiante en 2 programas cuenta como 2 unidades
-    var totalEst = new Set(
-        inscFilt.map(function(i){ return i.estudiante_id + '|' + _cohProgMap[i.cohorte_id]; })
-    ).size;
+    // un estudiante en 2 programas cuenta como 2 unidades. Las bajas no cuentan en activos/al día/mora.
+    function _keyInsc(i){ return i.estudiante_id + '|' + _cohProgMap[i.cohorte_id]; }
+    var inscActivas = inscFilt.filter(function(i){ return (i.estado_academico || 'ACTIVO') === 'ACTIVO'; });
+    var totalEst   = new Set(inscFilt.map(_keyInsc)).size;
+    var activosEst = new Set(inscActivas.map(_keyInsc)).size;
+    var bajasEst   = totalEst - activosEst;
+    // Claves dni|programa de estudiantes ACTIVOS (para restringir la mora a activos)
+    var activeDniProg = new Set(inscActivas.map(function(i){ return dniById[i.estudiante_id] + '|' + _cohProgMap[i.cohorte_id]; }));
     var dnisConMora = new Set(
         cobros.filter(function(c){ return c._re === 'EN_MORA'; })
               .map(function(c){
                   var pid = c.programa_id != null ? c.programa_id : _cohProgMap[c.cohorte_id];
                   return c.dni + '|' + pid;
               })
+              .filter(function(k){ return activeDniProg.has(k); })
     );
     var recCob = cobros.filter(function(c){ return c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL'; });
     var recaudadoArs = recCob.filter(function(c){ return (c.moneda||'ARS')==='ARS'; })
@@ -225,7 +239,9 @@ async function cargar(sesion) {
     document.getElementById('s-programas').textContent   = _programas.length;
     document.getElementById('s-cohortes').textContent    = _cohortes.length;
     document.getElementById('s-estudiantes').textContent = totalEst;
-    document.getElementById('s-aldia').textContent       = totalEst - dnisConMora.size;
+    var _sAct = document.getElementById('s-activos'); if (_sAct) _sAct.textContent = activosEst;
+    var _sBaj = document.getElementById('s-bajas');   if (_sBaj) _sBaj.textContent = bajasEst;
+    document.getElementById('s-aldia').textContent       = activosEst - dnisConMora.size;
     document.getElementById('s-mora').textContent        = dnisConMora.size;
     document.getElementById('s-recaudado').textContent   = fMontoDual(recaudadoArs, recaudadoUsd);
     document.getElementById('s-egresos').textContent     = fM(egrExec);
@@ -247,8 +263,10 @@ function renderCohortes(cobros, egresos, insc) {
     var html = '<div class="grid-list">' + _cohortes.map(function(c) {
         var cobsCoh = cobros.filter(function(x){ return x.cohorte_id === c.cohorte_id; });
         var inscCoh = insc.filter(function(i){ return i.cohorte_id === c.cohorte_id; });
-        var est     = new Set(inscCoh.map(function(i){ return i.estudiante_id; })).size;
-        var mora    = new Set(cobsCoh.filter(function(x){ return x._re==='EN_MORA'; }).map(function(x){ return x.dni; })).size;
+        var inscCohAct = inscCoh.filter(function(i){ return (i.estado_academico || 'ACTIVO') === 'ACTIVO'; });
+        var est     = new Set(inscCohAct.map(function(i){ return i.estudiante_id; })).size;
+        var _activDnisC = new Set(inscCohAct.map(function(i){ return _dniById[i.estudiante_id]; }).filter(Boolean));
+        var mora    = new Set(cobsCoh.filter(function(x){ return x._re==='EN_MORA' && _activDnisC.has(String(x.dni)); }).map(function(x){ return String(x.dni); })).size;
         var recCobC = cobsCoh.filter(function(x){ return x._re==='ABONADA'||x._re==='PAGO_PARCIAL'; });
         var recArs  = recCobC.filter(function(x){ return (x.moneda||'ARS')==='ARS'; })
                               .reduce(function(s,x){ return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0)); },0);
@@ -280,10 +298,11 @@ function renderProgramas(cobros, egresos, insc) {
     var html = '<div class="grid-list">' + _programas.map(function(p) {
         var cohsProg = _cohortes.filter(function(c){ return String(c.programa_id)===String(p.programa_id); });
         var cohIdsProg = cohsProg.map(function(c){ return c.cohorte_id; });
-        var inscProg = insc.filter(function(i){ return cohIdsProg.indexOf(i.cohorte_id)>=0; });
+        var inscProg = insc.filter(function(i){ return cohIdsProg.indexOf(i.cohorte_id)>=0 && (i.estado_academico || 'ACTIVO') === 'ACTIVO'; });
         var est   = new Set(inscProg.map(function(i){ return i.estudiante_id; })).size;
+        var _activDnisP = new Set(inscProg.map(function(i){ return _dniById[i.estudiante_id]; }).filter(Boolean));
         var cobProg = cobros.filter(function(c){ return String(c.programa_id)===String(p.programa_id); });
-        var mora  = new Set(cobProg.filter(function(c){ return c._re==='EN_MORA'; }).map(function(c){ return c.dni; })).size;
+        var mora  = new Set(cobProg.filter(function(c){ return c._re==='EN_MORA' && _activDnisP.has(String(c.dni)); }).map(function(c){ return String(c.dni); })).size;
         var recCobP = cobProg.filter(function(c){ return c._re==='ABONADA'||c._re==='PAGO_PARCIAL'; });
         var recArs = recCobP.filter(function(c){ return (c.moneda||'ARS')==='ARS'; })
                            .reduce(function(s,c){ return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0)); },0);
