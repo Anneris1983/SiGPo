@@ -747,11 +747,15 @@
             var vencimiento = fFecha(c.fecha_vencimiento);
             var tiempo = tiempoRelativo(c.comprobante_fecha || c.updated_at || c.created_at);
             var esReciente = (new Date() - new Date(c.updated_at || c.created_at)) < 3600000;
-            var enMora = c.estado === 'EN_MORA';
+            // Un comprobante en esta cola está esperando revisión → PENDIENTE para todos los roles
+            // (no es mora). resolverEstadoCobro lo refleja; si cooperadora rechaza, vuelve a mora/no abonada.
+            var _re = resolverEstadoCobro(c);
+            var _estadoLabels = { PENDIENTE:'Pendiente de revisión', EN_MORA:'En Mora', NO_ABONADA:'No abonada', PAGO_PARCIAL:'Pago parcial', ABONADA:'Abonada', A_DEFINIR:'A definir', NO_APLICA:'No aplica' };
+            var _estadoColor = _re === 'EN_MORA' ? 'var(--danger)' : (_re === 'PENDIENTE' ? 'var(--warning)' : 'var(--success)');
             var archivoUrl = c.comprobante_url || '';
             var archivoNombre = archivoUrl ? archivoUrl.split('/').pop() : 'comprobante';
             var cuotaLabel = c.nro_cuota ? 'Cuota ' + c.nro_cuota : (c.concepto || '—');
-            var estadoLabel = enMora ? 'En Mora' : 'Al dia';
+            var estadoLabel = _estadoLabels[_re] || _re || '—';
             var nombreEsc = nombre.replace(/'/g, "\\'")
             var programaEsc = programa.replace(/'/g, "\\'")
             var modalCall = "abrirModal({nombre:'" + nombreEsc + "',info:'DNI: " + dni + " - " + programaEsc + "',cuota:'" + cuotaLabel + "',monto:'" + monto + "',vencimiento:'" + vencimiento + "',estado:'" + estadoLabel + "',archivo:'" + archivoNombre + "',url:'" + archivoUrl + "'})";
@@ -768,7 +772,7 @@
                 +   '<div class="cuota-item"><div class="cuota-label">Cuota</div><div class="cuota-value">' + esc(cuotaLabel) + '</div></div>'
                 +   '<div class="cuota-item"><div class="cuota-label">Monto</div><div class="cuota-value highlight">' + esc(monto) + '</div></div>'
                 +   '<div class="cuota-item"><div class="cuota-label">Vencimiento</div><div class="cuota-value">' + esc(vencimiento) + '</div></div>'
-                +   '<div class="cuota-item"><div class="cuota-label">Estado</div><div class="cuota-value" style="color:' + (enMora ? 'var(--danger)' : 'var(--success)') + ';">' + esc(estadoLabel) + '</div></div>'
+                +   '<div class="cuota-item"><div class="cuota-label">Estado</div><div class="cuota-value" style="color:' + _estadoColor + ';">' + esc(estadoLabel) + '</div></div>'
                 + '</div></div>'
                 + '<div class="files-section">'
                 +   '<div class="file-preview" onclick="' + modalCall + '">'
