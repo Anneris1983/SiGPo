@@ -673,8 +673,9 @@
                 A_DEFINIR: 'A definir', NO_APLICA: 'No aplica'
             };
             var filasCuotas = cobros.filter(function(c) { return !c.no_aplica; }).map(function(c) {
-                var est = _ESTADOS[c.estado] || c.estado || '—';
-                var color = c.estado === 'EN_MORA' ? '#fee2e2' : c.estado === 'ABONADA' ? '#d1fae5' : c.estado === 'PAGO_PARCIAL' ? '#fff8e1' : c.estado === 'PENDIENTE' ? '#dbeafe' : '#fff';
+                var _er = resolverEstadoCobro(c);
+                var est = _ESTADOS[_er] || _er || '—';
+                var color = _er === 'EN_MORA' ? '#fee2e2' : _er === 'ABONADA' ? '#d1fae5' : _er === 'PAGO_PARCIAL' ? '#fff8e1' : _er === 'PENDIENTE' ? '#dbeafe' : '#fff';
                 return '<tr style="background:' + color + ';">' +
                     '<td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;">' + (c.concepto || '—') + '</td>' +
                     '<td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;">' + (c.periodo || '—') + '</td>' +
