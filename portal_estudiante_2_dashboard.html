@@ -868,7 +868,7 @@
                     fv,
                     fp,
                     simbPdf + Number(c.monto_final || 0).toLocaleString('es-AR', {minimumFractionDigits:2}),
-                    ESTADOS[c.estado] || c.estado || '—'
+                    (function(){ var _e = resolverEstadoCobro(c); return ESTADOS[_e] || _e || '—'; })()
                 ];
             });
 
