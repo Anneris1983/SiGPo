@@ -248,8 +248,8 @@ function renderCohortes(cobros, egresos, insc) {
         var cobsCoh = cobros.filter(function(x){ return x.cohorte_id === c.cohorte_id; });
         var inscCoh = insc.filter(function(i){ return i.cohorte_id === c.cohorte_id; });
         var est     = new Set(inscCoh.map(function(i){ return i.estudiante_id; })).size;
-        var mora    = new Set(cobsCoh.filter(function(x){ return x.estado==='EN_MORA'; }).map(function(x){ return x.dni; })).size;
-        var recCobC = cobsCoh.filter(function(x){ return x.estado==='ABONADA'||x.estado==='PAGO_PARCIAL'; });
+        var mora    = new Set(cobsCoh.filter(function(x){ return x._re==='EN_MORA'; }).map(function(x){ return x.dni; })).size;
+        var recCobC = cobsCoh.filter(function(x){ return x._re==='ABONADA'||x._re==='PAGO_PARCIAL'; });
         var recArs  = recCobC.filter(function(x){ return (x.moneda||'ARS')==='ARS'; })
                               .reduce(function(s,x){ return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0)); },0);
         var recUsd  = recCobC.filter(function(x){ return x.moneda==='USD'; })
