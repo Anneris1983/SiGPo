@@ -223,7 +223,9 @@
         <div class="rpills-grid" id="stats-grid">
             <div class="rpill-adm c-prog">  <div class="rpill-adm-label">Programas Posgrado</div><div class="rpill-adm-value" id="stat-programas">—</div></div>
             <div class="rpill-adm c-cursos"><div class="rpill-adm-label">Cursos</div>            <div class="rpill-adm-value" id="stat-cursos">—</div></div>
+            <div class="rpill-adm c-est">   <div class="rpill-adm-label">Total Estudiantes</div><div class="rpill-adm-value" id="stat-total">—</div></div>
             <div class="rpill-adm c-est">   <div class="rpill-adm-label">Estudiantes Activos</div><div class="rpill-adm-value" id="stat-estudiantes">—</div></div>
+            <div class="rpill-adm" style="border-left-color:#9ca3af;"><div class="rpill-adm-label">Bajas</div><div class="rpill-adm-value" id="stat-bajas" style="color:#6b7280;">—</div></div>
             <div class="rpill-adm c-aldia"> <div class="rpill-adm-label">Estudiantes al Día</div><div class="rpill-adm-value" id="stat-aldia">—</div></div>
             <div class="rpill-adm c-mora">  <div class="rpill-adm-label">Estudiantes en Mora</div><div class="rpill-adm-value" id="stat-mora">—</div><div id="stat-mora-cuotas" style="font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.3;"></div></div>
             <div class="rpill-adm c-recaud"><div class="rpill-adm-label">Recaudado</div>        <div class="rpill-adm-value" id="stat-recaudado">—</div></div>
@@ -344,7 +346,11 @@ function renderDashboard(data) {
 
     document.getElementById('stat-programas').textContent   = data.totalProgramasPosgrado || 0;
     document.getElementById('stat-cursos').textContent      = data.totalCursos || 0;
+    var totalEl = document.getElementById('stat-total');
+    if (totalEl) totalEl.textContent = data.totalEstudiantes || 0;
     document.getElementById('stat-estudiantes').textContent = data.estudiantesActivos || 0;
+    var bajasEl = document.getElementById('stat-bajas');
+    if (bajasEl) bajasEl.textContent = data.bajas || 0;
     document.getElementById('stat-aldia').textContent       = data.alDia || 0;
     document.getElementById('stat-mora').textContent        = data.enMora || 0;
     var cuotasEl = document.getElementById('stat-mora-cuotas');
@@ -394,7 +400,9 @@ function renderTarjeta(p) {
         + '<div class="program-icon">' + icono + '</div>'
         + '<div class="program-name">' + esc(p.nombre) + '</div>'
         + '<div class="program-stats">'
-        + '<div class="program-stat"><span>Estudiantes:</span><strong>' + (p.estudiantes || 0) + '</strong></div>'
+        + '<div class="program-stat"><span>Estudiantes:</span><strong>' + (p.totalEstudiantes || p.estudiantes || 0) + '</strong></div>'
+        + '<div class="program-stat"><span>Activos:</span><strong>' + (p.estudiantes || 0) + '</strong></div>'
+        + '<div class="program-stat"><span>Bajas:</span><strong style="color:#6b7280;">' + (p.bajas || 0) + '</strong></div>'
         + '<div class="program-stat"><span>' + label + ':</span><strong>' + (p.cohortes || 0) + '</strong></div>'
         + '<div class="program-stat"><span>Al día:</span><strong style="color:' + colorAlDia + ';">' + (p.alDia || 0) + '</strong></div>'
         + '<div class="program-stat"><span>En mora:</span><strong style="color:var(--clr-danger);">' + (p.enMora || 0) + (p.cuotasEnMora ? ' est. (' + p.cuotasEnMora + ' cuotas)' : '') + '</strong></div>'
