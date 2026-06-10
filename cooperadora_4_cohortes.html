@@ -374,8 +374,8 @@ function renderCohortes(data) {
             + '<div class="stat-box"><div class="stat-label">SALDO</div><div class="stat-value" style="color:' + (saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)') + '">' + fM(saldo) + '</div></div>'
             + '</div></div>'
             + '<div class="cohorte-right">'
+            // Cooperadora no gestiona cohortes (abrir/cerrar es del administrador): solo lectura.
             + '<span class="badge ' + (esActiva ? 'active' : 'closed') + '">' + (esActiva ? 'Activa' : 'Cerrada') + '</span>'
-            + '<button class="btn-toggle ' + (esActiva ? 'cerrar' : 'activar') + '" onclick="toggleEstado(' + c.id + ',\'' + (esActiva ? 'CERRADO' : 'ACTIVO') + '\',event)">' + (esActiva ? '🔒 Cerrar' : '✅ Activar') + '</button>'
             + '<span class="arrow">→</span>'
             + '</div></div>';
     }).join('');
