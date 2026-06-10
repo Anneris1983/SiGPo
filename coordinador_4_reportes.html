@@ -425,7 +425,7 @@ async function cargarVista() {
 
         var [rP, rCob, rEgr] = await Promise.all([
             allProgIds.length ? sb.from('programas').select('programa_id,nombre').in('programa_id', allProgIds) : Promise.resolve({data:[]}),
-            cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,moneda,fecha_vencimiento,fecha_pago,no_aplica,recibo_url,comprobante_url').in('cohorte_id', cohIds) : Promise.resolve({data:[]}),
+            cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,monto_abonado,moneda,fecha_vencimiento,fecha_pago,no_aplica,recibo_url,comprobante_url').in('cohorte_id', cohIds) : Promise.resolve({data:[]}),
             cohIds.length ? sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada,moneda').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
         ]);
         var programas = rP.data || [];
@@ -464,7 +464,8 @@ async function cargarVista() {
         var dnisTotal   = new Set(cobF.map(enrollKey));
         var dnisAlDia   = new Set([...dnisTotal].filter(function(k){ return !dnisEnMora.has(k); }));
         var dnisParcial = new Set(cobF.filter(function(c){return c._re==='PAGO_PARCIAL';}).map(enrollKey).filter(function(k){ return !dnisEnMora.has(k); }));
-        var recaudado = cobF.filter(function(c){return (c._re==='ABONADA'||c._re==='PAGO_PARCIAL')&&(c.moneda||'ARS')==='ARS';}).reduce(function(s,c){return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0));},0);
+        var recaudado    = cobF.filter(function(c){return (c._re==='ABONADA'||c._re==='PAGO_PARCIAL')&&(c.moneda||'ARS')==='ARS';}).reduce(function(s,c){return s+calcMontoAbonado(c);},0);
+        var recaudadoUsd = cobF.filter(function(c){return (c._re==='ABONADA'||c._re==='PAGO_PARCIAL')&&c.moneda==='USD';}).reduce(function(s,c){return s+calcMontoAbonado(c);},0);
         var tasaPago = dnisTotal.size > 0 ? Math.round(dnisAlDia.size / dnisTotal.size * 100) : 0;
 
         // Monthly cashflow
@@ -514,7 +515,7 @@ async function cargarVista() {
             cohortes: cohortesF.map(function(c){return {cohorteId:c.cohorte_id,nombre:c.nombre};}),
             anios: aniosList.length ? aniosList : [filtAnio],
             filtros: { programaId:filtPrograma, cohorteId:filtCohorte, anio:filtAnio },
-            resumen: { totalRecaudado:recaudado, estudiantesAlDia:dnisAlDia.size, enMora:dnisEnMora.size, tasaPago:tasaPago, pagoParcial:dnisParcial.size },
+            resumen: { totalRecaudado:recaudado, totalRecaudadoUsd:recaudadoUsd, estudiantesAlDia:dnisAlDia.size, enMora:dnisEnMora.size, tasaPago:tasaPago, pagoParcial:dnisParcial.size },
             charts: {
                 cashflow: { labels:cfLabels, ingresos:cfIngresos, egresos:cfEgresos },
                 estadosPorCohorte: { labels:ecLabels, alDia:ecAlDia, enMora:ecMora, pagoParcial:ecParcial },
@@ -554,7 +555,7 @@ function renderResumen() {
     document.getElementById('summaryGrid').innerHTML = `
         <div class="summary-item">
             <div class="summary-label">Total Recaudado ${escapeHtml(reportesData.filtros.anio)}</div>
-            <div class="summary-value">${escapeHtml(formatCurrency(r.totalRecaudado))}</div>
+            <div class="summary-value">${escapeHtml(formatCurrency(r.totalRecaudado))}${r.totalRecaudadoUsd > 0 ? ' + U$S ' + Math.round(r.totalRecaudadoUsd).toLocaleString('es-AR') : ''}</div>
         </div>
         <div class="summary-item verde">
             <div class="summary-label">Estudiantes al Día</div>
