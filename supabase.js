@@ -568,7 +568,7 @@ async function obtenerDetallePrograma(programaId) {
         sb.from('programas').select('*').eq('programa_id', programaId).single(),
         sb.from('cohortes').select('*').eq('programa_id', programaId).order('fecha_inicio', { ascending: false }),
         sb.from('cobros').select('cobro_id,dni,cohorte_id,estado,monto_final,saldo_pendiente,moneda,fecha_vencimiento,comprobante_url,recibo_url,no_aplica').eq('programa_id', programaId),
-        sb.from('egresos').select('egreso_id,cohorte_id,tipo,monto_pagado,monto_original').eq('programa_id', programaId)
+        sb.from('egresos').select('egreso_id,cohorte_id,tipo,monto_pagado,monto_original,moneda').eq('programa_id', programaId)
     ]);
 
     var prog = progRes.data;
@@ -637,9 +637,11 @@ async function obtenerDetallePrograma(programaId) {
                 if (c.moneda !== 'USD') return s;
                 return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
             }, 0);
-            var egresosMonto = egresosCoh.filter(function(e){ return e.tipo === 'EJECUTADO'; }).reduce(function(s, e) {
-                return s + Number(e.monto_pagado || e.monto_original || 0);
-            }, 0);
+            var egresosExec  = egresosCoh.filter(function(e){ return e.tipo === 'EJECUTADO'; });
+            var egresosARS   = egresosExec.filter(function(e){ return (e.moneda||'ARS') === 'ARS'; })
+                                           .reduce(function(s, e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
+            var egresosUSD   = egresosExec.filter(function(e){ return e.moneda === 'USD'; })
+                                           .reduce(function(s, e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
 
             return {
                 id: coh.cohorte_id, nombre: coh.nombre, estado: coh.estado,
@@ -647,7 +649,8 @@ async function obtenerDetallePrograma(programaId) {
                 estudiantes: totalEst, totalEstudiantes: totalEst, activos: activos, bajas: bajas,
                 alDia: alDia, enMora: enMora,
                 recaudado: recaudadoARS, recaudadoARS: recaudadoARS, recaudadoUSD: recaudadoUSD,
-                egresos: egresosMonto, saldo: recaudadoARS - egresosMonto
+                egresos: egresosARS, egresosARS: egresosARS, egresosUSD: egresosUSD,
+                saldo: recaudadoARS - egresosARS
             };
         })
     };
