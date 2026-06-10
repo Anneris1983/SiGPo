@@ -439,7 +439,7 @@ function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
 async function cargarDatos() {
     try {
         var sb = await getSupabase();
-        var rCobros  = await sb.from('cobros').select('programa_id,cohorte_id,fecha_vencimiento,estado,monto_final,saldo_pendiente,moneda');
+        var rCobros  = await sb.from('cobros').select('programa_id,cohorte_id,fecha_vencimiento,estado,monto_final,saldo_pendiente,monto_abonado,moneda');
         var rEgresos = await sb.from('egresos').select('programa_id,cohorte_id,fecha_pago,fecha_estimada,tipo,estado,monto_pagado,moneda');
         var cobros   = rCobros.data  || [];
         var egresos  = rEgresos.data || [];
@@ -459,49 +459,54 @@ async function cargarDatos() {
             }
         } catch(_e) {}
 
-        // ── Agrupar cobros por mes (ingresos) ──
-        var ingMap = {};
+        // ── Agrupar cobros por mes (ingresos ARS y USD por separado) ──
+        var ingMap = {}, ingMapUsd = {};
         cobros.forEach(function(c) {
             if (c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL') return;
-            if ((c.moneda||'ARS') !== 'ARS') return;
             var k = mesKey(c.fecha_vencimiento);
             if (!k) return;
-            if (!ingMap[k]) ingMap[k] = 0;
-            ingMap[k] += Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0));
+            var _ma = (c.monto_abonado && Number(c.monto_abonado) > 0) ? Number(c.monto_abonado) : Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
+            if ((c.moneda||'ARS') === 'ARS') { ingMap[k] = (ingMap[k]||0) + _ma; }
+            else if (c.moneda === 'USD')      { ingMapUsd[k] = (ingMapUsd[k]||0) + _ma; }
         });
 
-        // ── Agrupar egresos por mes ──
-        var egMap = {};
+        // ── Agrupar egresos por mes (ARS y USD por separado) ──
+        var egMap = {}, egMapUsd = {};
         egresos.forEach(function(e) {
             if (e.tipo !== 'EJECUTADO') return;
-            if ((e.moneda||'ARS') !== 'ARS') return;
             var k = mesKey(e.fecha_pago);
             if (!k) return;
-            if (!egMap[k]) egMap[k] = 0;
-            egMap[k] += Number(e.monto_pagado || 0);
+            var mp = Number(e.monto_pagado || 0);
+            if ((e.moneda||'ARS') === 'ARS') { egMap[k] = (egMap[k]||0) + mp; }
+            else if (e.moneda === 'USD')      { egMapUsd[k] = (egMapUsd[k]||0) + mp; }
         });
 
         // ── Unión de meses ordenados ──
         var allKeys = {};
         Object.keys(ingMap).forEach(function(k) { allKeys[k] = true; });
+        Object.keys(ingMapUsd).forEach(function(k) { allKeys[k] = true; });
         Object.keys(egMap).forEach(function(k) { allKeys[k] = true; });
+        Object.keys(egMapUsd).forEach(function(k) { allKeys[k] = true; });
         var meses = Object.keys(allKeys).sort();
 
         // ── Calcular totales ──
-        var totalIng = 0, totalEg = 0;
+        var totalIng = 0, totalIngUsd = 0, totalEg = 0, totalEgUsd = 0;
         meses.forEach(function(k) {
-            totalIng += ingMap[k] || 0;
-            totalEg  += egMap[k]  || 0;
+            totalIng    += ingMap[k]    || 0;
+            totalIngUsd += ingMapUsd[k] || 0;
+            totalEg     += egMap[k]     || 0;
+            totalEgUsd  += egMapUsd[k]  || 0;
         });
         var totalBal = totalIng - totalEg;
 
         // ── Actualizar summary cards ──
+        function fUsd18(v){ return v > 0 ? ' + U$S ' + Math.round(v).toLocaleString('es-AR') : ''; }
         var scI = document.getElementById('sc-ingresos');
         var scE = document.getElementById('sc-egresos');
         var scB = document.getElementById('sc-balance');
-        if (scI) scI.textContent = fM(totalIng);
-        if (scE) scE.textContent = fM(totalEg);
-        if (scB) scB.textContent = fM(totalBal);
+        if (scI) scI.textContent = fM(totalIng) + fUsd18(totalIngUsd);
+        if (scE) scE.textContent = fM(totalEg)  + fUsd18(totalEgUsd);
+        if (scB) scB.textContent = fM(totalBal) + (totalIngUsd>0||totalEgUsd>0?' (ARS)':'');
 
         // ── Construir filas de tabla ──
         var tbody = document.getElementById('tbody-egresos-ingresos');
