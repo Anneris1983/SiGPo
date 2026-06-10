@@ -745,75 +745,31 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
 
     if (!reciboUrl) return { ok: false, mensaje: 'Sin recibo, no se puede aprobar (Regla 1)' };
 
-    const { data: cobro } = await sb.from('cobros').select('*').eq('cobro_id', cobroId).single();
-    if (!cobro) return { ok: false, mensaje: 'Cobro no encontrado' };
-
-    // Una cuota ya abonada no puede volver a aprobarse: evita doble conteo de
-    // monto_abonado e ingresos inflados.
-    if (cobro.estado === 'ABONADA') {
-        return { ok: false, mensaje: 'Esta cuota ya está abonada' };
-    }
-
-    const aprobadoPor = sesion ? sesion.dni : null;
-
-    // Fecha efectiva del pago = cuando el estudiante subió el comprobante (no hoy).
-    const fechaPagoEfectivo = cobro.comprobante_fecha
-        ? String(cobro.comprobante_fecha).split('T')[0]
-        : new Date().toISOString().split('T')[0];
-
-    if (tipo === 'COMPLETO' || tipo === 'total') {
-        await sb.from('cobros').update({
-            estado: 'ABONADA',
-            saldo_pendiente: 0,
-            monto_abonado: Number(cobro.monto_final),
-            fecha_aprobacion: new Date().toISOString().split('T')[0],
-            recibo_url: reciboUrl,
-            aprobado_por: aprobadoPor
-        }).eq('cobro_id', cobroId);
-        await sb.from('pagos').insert({
-            cobro_id: cobroId,
-            monto: Number(cobro.monto_final),
-            fecha_pago: fechaPagoEfectivo,
-            recibo_url: reciboUrl
-        });
-    } else {
-        // El monto ingresado es el INCREMENTO de este pago: acumular sobre lo
-        // ya abonado en pagos parciales previos (no sobrescribir).
+    // Validación rápida de saldo en cliente para mejor UX en pago parcial
+    if (tipo !== 'COMPLETO' && tipo !== 'total') {
         var montoInc = Number(montoAprobado);
-        if (!(montoInc > 0)) {
-            return { ok: false, mensaje: 'El monto del pago debe ser mayor a cero' };
+        if (!(montoInc > 0)) return { ok: false, mensaje: 'El monto del pago debe ser mayor a cero' };
+        const { data: cobroCheck } = await sb.from('cobros')
+            .select('saldo_pendiente').eq('cobro_id', cobroId).single();
+        if (cobroCheck) {
+            var saldoActual = Number(cobroCheck.saldo_pendiente);
+            if (!isNaN(saldoActual) && saldoActual > 0 && montoInc > saldoActual + 0.01) {
+                return { ok: false, mensaje: 'El monto (' + fMonto(montoInc) + ') supera el saldo pendiente (' + fMonto(saldoActual) + ')' };
+            }
         }
-        // El incremento no puede superar el saldo pendiente (tolerancia 1 centavo
-        // por redondeo): evita que monto_abonado supere monto_final.
-        var saldoActual = Number(cobro.saldo_pendiente);
-        if (!isNaN(saldoActual) && saldoActual > 0 && montoInc > saldoActual + 0.01) {
-            return { ok: false, mensaje: 'El monto (' + fMonto(montoInc) + ') supera el saldo pendiente (' + fMonto(saldoActual) + ')' };
-        }
-        var abonadoPrevio = Number(cobro.monto_abonado) || 0;
-        var abonadoTotal  = redondear2(abonadoPrevio + montoInc);
-        var nuevoSaldo    = redondear2(Number(cobro.monto_final) - abonadoTotal);
-        var estadoNuevo   = nuevoSaldo <= 0 ? 'ABONADA' : 'PAGO_PARCIAL';
-        var updateParcial = {
-            estado: estadoNuevo,
-            saldo_pendiente: Math.max(0, nuevoSaldo),
-            monto_abonado: abonadoTotal,
-            recibo_url: reciboUrl,
-            aprobado_por: aprobadoPor,
-            saldo_mora_base: null
-        };
-        if (estadoNuevo === 'ABONADA') {
-            updateParcial.fecha_aprobacion = new Date().toISOString().split('T')[0];
-        }
-        await sb.from('cobros').update(updateParcial).eq('cobro_id', cobroId);
-        await sb.from('pagos').insert({
-            cobro_id: cobroId,
-            monto: montoInc,
-            fecha_pago: fechaPagoEfectivo,
-            recibo_url: reciboUrl
-        });
     }
 
-    return { ok: true };
+    // La lógica de aprobación (update cobros + insert pagos) corre en el servidor
+    // vía RPC con SECURITY DEFINER para no requerir RLS de escritura en cobros/pagos.
+    const { data: rpcRes, error: rpcErr } = await sb.rpc('aprobar_cobro', {
+        p_cobro_id:   cobroId,
+        p_tipo:       tipo,
+        p_monto:      Number(montoAprobado) || null,
+        p_recibo_url: reciboUrl
+    });
+    if (rpcErr) return { ok: false, mensaje: rpcErr.message || 'Error al aprobar' };
+    if (rpcRes && !rpcRes.ok) return { ok: false, mensaje: rpcRes.mensaje || 'Error al aprobar' };
+    return { ok: true, url: reciboUrl };
 }
 
 async function obtenerUrlFirmadaComprobante(comprobanteUrl) {
@@ -830,36 +786,23 @@ async function obtenerUrlFirmadaComprobante(comprobanteUrl) {
 async function rechazarPago(cobroId, forzar, motivoRechazo) {
     const sb = await getSupabase();
 
+    // Se pre-fetcha el cobro solo para los datos que necesita el email de notificación.
     const { data: cobro } = await sb.from('cobros').select('*').eq('cobro_id', cobroId).single();
     if (!cobro) return { ok: false };
 
-    // Protege cuotas ya abonadas para evitar revertir pagos confirmados por
-    // error. El admin puede forzar el rechazo (forzar=true) para corregir
-    // una aprobación errónea de cooperadora.
-    if (cobro.estado === 'ABONADA' && !forzar) {
-        return { ok: false, mensaje: 'Esta cuota ya está abonada. Solo el administrador puede revertirla.' };
-    }
-
-    var nuevoEstado = 'NO_ABONADA';
-
-    if (!cobro.monto_final || cobro.monto_final === 0) {
-        nuevoEstado = 'A_DEFINIR';
-    } else if (vencioCuota(cobro)) {
-        nuevoEstado = 'EN_MORA';
-    } else {
-        const { data: pagos } = await sb.from('pagos').select('monto').eq('cobro_id', cobroId);
-        var totalPagado = (pagos || []).reduce(function (s, p) { return s + Number(p.monto); }, 0);
-        nuevoEstado = totalPagado > 0 ? 'PAGO_PARCIAL' : 'NO_ABONADA';
-    }
-
     const motivo = (motivoRechazo || '').trim();
 
-    await sb.from('cobros').update({
-        estado: nuevoEstado,
-        comprobante_url: null,
-        comprobante_fecha: null,
-        motivo_rechazo: motivo || null
-    }).eq('cobro_id', cobroId);
+    // La lógica de rechazo (validación, update cobros) corre en el servidor
+    // vía RPC con SECURITY DEFINER.
+    const { data: rpcRes, error: rpcErr } = await sb.rpc('rechazar_cobro', {
+        p_cobro_id: cobroId,
+        p_motivo:   motivo || null,
+        p_forzar:   forzar || false
+    });
+    if (rpcErr) return { ok: false, mensaje: rpcErr.message || 'Error al rechazar' };
+    if (rpcRes && !rpcRes.ok) return { ok: false, mensaje: rpcRes.mensaje };
+
+    var nuevoEstado = (rpcRes && rpcRes.nuevo_estado) || 'NO_ABONADA';
 
     // Notificar al estudiante por email
     try {
