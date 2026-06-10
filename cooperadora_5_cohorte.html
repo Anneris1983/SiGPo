@@ -1209,10 +1209,8 @@
         <section class="toolbar">
             <div class="toolbar-top">
                 <div class="actions">
+                    <!-- Cooperadora solo aprueba/rechaza pagos. Crear/editar/eliminar cuotas: solo administrador. -->
                     <button class="btn success" type="button" onclick="irAAprobarPagos()">✅ Aprobar pagos</button>
-                    <button class="btn warning" type="button" onclick="abrirCrearCuotaCoop()">➕ Crear cuotas</button>
-                    <button class="btn btn-editar-cuotas-coop" type="button" onclick="abrirEditarCuotasCoop()">✏️ Editar cuotas</button>
-                    <button class="btn btn-eliminar-global-coop" type="button" onclick="abrirEliminarCuotasGlobalCoop()">🗑 Eliminar cuota</button>
                     <button class="btn primary" type="button" onclick="exportarExcel()">📤 Exportar Excel</button>
                 </div>
             </div>
@@ -1813,7 +1811,6 @@
                     <td class="email-cell">${escapeHtml(est.email || 'Sin email')}</td>
                     <td class="discount-cell">
                         ${renderTextoDescuento(est)}
-                        <button class="edit-desc-btn" type="button" title="Editar descuento" onclick="abrirModalDescuento('${escapeJs(String(est.estudianteId))}', event)">✏️</button>
                     </td>
                     ${cuotaDefs.map(function (def) {
                         const cuota = obtenerCuotaEstudiante(est, def.key);
@@ -1900,7 +1897,8 @@
                 pendiente: 'Revisión', noabonada: 'No abonada', adefinir: 'A definir'
             };
             const badgeLabel = badgeLabels[cuota.estado] || cuota.estado;
-            const esEditable = !['abonada', 'parcial', 'pendiente', 'nodebe'].includes(cuota.estado);
+            // Cooperadora no edita cuotas (solo administrador): celdas siempre de solo lectura.
+            const esEditable = false;
             const editAttr = esEditable
                 ? ' onclick="event.stopPropagation();abrirCeldaPopupCoop(event,' + escapeHtml(JSON.stringify({
                     cobro_id: cuota.cobroId,
