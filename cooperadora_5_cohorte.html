@@ -1769,7 +1769,8 @@
                                 <th class="email-col">Email</th>
                                 <th class="discount-col">Descuento</th>
                                 ${cuotaDefs.map(function (def) {
-                                    return `<th class="cuota-header" title="${escapeHtml(def.tooltip)}">${escapeHtml(def.label)}</th>`;
+                                    var sub = def.sub ? '<br><span style="font-weight:400;font-size:9px;color:#999;letter-spacing:0.04em;">' + escapeHtml(def.sub) + '</span>' : '';
+                                    return `<th class="cuota-header" title="${escapeHtml(def.tooltip)}">${escapeHtml(def.label)}${sub}</th>`;
                                 }).join('')}
                                 <th class="tot-pagar">Total a pagar</th>
                                 <th class="tot-abonado">Abonado</th>
@@ -1932,6 +1933,17 @@
             return escapeHtml(texto);
         }
 
+        function mesDeCuota(cuota) {
+            // Mes a mostrar bajo el nombre de la cuota: usa el período si existe;
+            // si no, lo deriva de la fecha de vencimiento.
+            if (cuota.mes) return cuota.mes;
+            if (cuota.fechaVencimiento) {
+                var d = new Date(String(cuota.fechaVencimiento).split('T')[0] + 'T12:00:00');
+                if (!isNaN(d)) return d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+            }
+            return '';
+        }
+
         function obtenerCuotaDefs() {
             const mapa = new Map();
 
@@ -1959,8 +1971,12 @@
                             numero: numero,
                             fechaRef: cuota.fechaVencimiento || '',
                             label: label,
+                            sub: mesDeCuota(cuota),
                             tooltip: label + mes
                         });
+                    } else if (!mapa.get(key).sub) {
+                        // Otra fila de la misma columna puede tener el mes/fecha que faltaba
+                        mapa.get(key).sub = mesDeCuota(cuota);
                     }
                 });
             });
