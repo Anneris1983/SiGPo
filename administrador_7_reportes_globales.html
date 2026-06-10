@@ -571,7 +571,7 @@ async function aplicarFiltros() {
 
     // ── Cobros agrupados ──────────────────────────────────
     var qCobros = sb.from('cobros')
-        .select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento,fecha_pago');
+        .select('cobro_id,dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,monto_abonado,moneda,fecha_vencimiento,fecha_pago');
     if (progId) qCobros = qCobros.eq('programa_id', progId);
     if (cohId)  qCobros = qCobros.eq('cohorte_id',  cohId);
     // Date filter applied client-side to handle PAGO_PARCIAL split correctly
@@ -580,7 +580,7 @@ async function aplicarFiltros() {
 
     // ── Egresos ──────────────────────────────────────────
     var qEgr = sb.from('egresos')
-        .select('egreso_id,programa_id,cohorte_id,categoria,tipo,estado,concepto,proveedor,monto_original,monto_pagado,monto_pendiente,fecha_estimada,fecha_pago');
+        .select('egreso_id,programa_id,cohorte_id,categoria,tipo,estado,concepto,proveedor,monto_original,monto_pagado,monto_pendiente,moneda,fecha_estimada,fecha_pago');
     if (progId) qEgr = qEgr.eq('programa_id', progId);
     if (cohId)  qEgr = qEgr.eq('cohorte_id',  cohId);
     if (desde)  qEgr = qEgr.gte('fecha_estimada', desde);
@@ -653,9 +653,10 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
             ingresoProy += mf;
         }
 
-        // Ejecutado: dinero recibido en este período (por fecha real de transferencia)
-        if ((est === 'ABONADA' || est === 'PAGO_PARCIAL') && enRangoPago(c.fecha_pago)) {
-            ingresoEjec += Math.max(0, mf - sp);
+        // Ejecutado: dinero recibido en este período (por fecha real de transferencia, solo ARS)
+        if ((est === 'ABONADA' || est === 'PAGO_PARCIAL') && (c.moneda||'ARS')==='ARS' && enRangoPago(c.fecha_pago)) {
+            var _ma = (c.monto_abonado && Number(c.monto_abonado) > 0) ? Number(c.monto_abonado) : Math.max(0, mf - sp);
+            ingresoEjec += _ma;
         }
 
         // Mora: por fecha de vencimiento
@@ -677,6 +678,7 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
     var categoriasCriticas   = _catGastos.filter(function(c){return c.tipo==='CRITICO';}).map(function(c){return c.nombre;});
 
     _egresosData.forEach(function(e) {
+        if ((e.moneda||'ARS') !== 'ARS') return;
         var mo = Number(e.monto_original || 0);
         var mp = Number(e.monto_pagado   || 0);
         egresoProy  += mo;
