@@ -560,97 +560,52 @@ async function obtenerEstudiantes(programaId, cohorteId) {
 
 /**
  * Detalle de programa con sus cohortes y estadísticas.
- * CAMBIO: cuenta estudiantes por cohorte via inscripciones
+ * Usa el RPC stats_programa — una sola llamada al servidor
+ * en lugar de las 6 queries encadenadas anteriores.
  */
 async function obtenerDetallePrograma(programaId) {
     const sb = await getSupabase();
-    const [progRes, cohRes, cobRes, egrRes] = await Promise.all([
-        sb.from('programas').select('*').eq('programa_id', programaId).single(),
-        sb.from('cohortes').select('*').eq('programa_id', programaId).order('fecha_inicio', { ascending: false }),
-        sb.from('cobros').select('cobro_id,dni,cohorte_id,estado,monto_final,saldo_pendiente,moneda,fecha_vencimiento,comprobante_url,recibo_url,no_aplica').eq('programa_id', programaId),
-        sb.from('egresos').select('egreso_id,cohorte_id,tipo,monto_pagado,monto_original,moneda').eq('programa_id', programaId)
-    ]);
-
-    var prog = progRes.data;
-    if (!prog) return null;
-
-    var cohortes = cohRes.data || [];
-    var cobros   = cobRes.data || [];
-    var egresos  = egrRes.data || [];
-
-    // Contar estudiantes por cohorte via inscripciones
-    var cohIds = cohortes.map(function(c) { return c.cohorte_id; });
-    var inscRes = cohIds.length
-        ? await sb.from('inscripciones').select('cohorte_id, estado_academico, estudiante_id').in('cohorte_id', cohIds)
-        : { data: [] };
-    var inscripciones = inscRes.data || [];
-
-    // DNI por estudiante_id, para poder excluir bajas de los KPIs (al día / mora)
-    var estIds = inscripciones.map(function(i) { return i.estudiante_id; }).filter(Boolean);
-    var dniById = {};
-    if (estIds.length) {
-        var estRes2 = await sb.from('estudiantes').select('id, dni').in('id', estIds);
-        (estRes2.data || []).forEach(function(e) { dniById[e.id] = String(e.dni); });
+    const { data, error } = await sb.rpc('stats_programa', { p_programa_id: Number(programaId) });
+    if (error || !data) {
+        console.error('stats_programa error:', error);
+        return null;
     }
-    // "En mora" para KPIs = cuota vencida impaga (misma regla que los RPC de dashboard):
-    // EN_MORA, o NO_ABONADA ya vencida, sin comprobante y con saldo > 0.
-    function _esEnMoraKPI(c) {
-        if (c.estado === 'EN_MORA') return true;
-        var saldo = (c.saldo_pendiente != null ? Number(c.saldo_pendiente) : Number(c.monto_final || 0));
-        return c.estado === 'NO_ABONADA'
-            && c.fecha_vencimiento && new Date(c.fecha_vencimiento) < new Date()
-            && !c.comprobante_url
-            && saldo > 0;
-    }
+
+    var prog     = data.programa;
+    var cohortes = data.cohortes || [];
 
     return {
-        id:     prog.programa_id,
+        id:     prog.id,
         nombre: prog.nombre,
         tipo:   prog.tipo,
         cohortes: cohortes.map(function(coh) {
-            var inscCoh    = inscripciones.filter(function(i) { return i.cohorte_id === coh.cohorte_id; });
-            var cobrosCoh  = cobros.filter(function(c) { return c.cohorte_id === coh.cohorte_id; });
-            var egresosCoh = egresos.filter(function(e) { return e.cohorte_id === coh.cohorte_id; });
-
-            // Activos vs bajas (estado_academico). Las bajas se excluyen de al día / mora.
-            var dnisActivos = new Set(
-                inscCoh.filter(function(i) { return (i.estado_academico || 'ACTIVO') === 'ACTIVO'; })
-                       .map(function(i) { return dniById[i.estudiante_id]; })
-                       .filter(Boolean)
-            );
-            var totalEst = inscCoh.length;
-            var activos  = dnisActivos.size;
-            var bajas    = totalEst - activos;
-            // DNIs activos con al menos una cuota vencida impaga
-            var dnisConMora = new Set(
-                cobrosCoh.filter(function(c) { return dnisActivos.has(String(c.dni)) && _esEnMoraKPI(c); })
-                         .map(function(c) { return String(c.dni); })
-            );
-            var enMora   = dnisConMora.size;
-            var alDia    = Math.max(0, activos - enMora);
-
-            var recaudadoARS = cobrosCoh.reduce(function(s, c) {
-                if ((c.moneda || 'ARS') !== 'ARS') return s;
-                return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
-            }, 0);
-            var recaudadoUSD = cobrosCoh.reduce(function(s, c) {
-                if (c.moneda !== 'USD') return s;
-                return s + Math.max(0, (Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0)));
-            }, 0);
-            var egresosExec  = egresosCoh.filter(function(e){ return e.tipo === 'EJECUTADO'; });
-            var egresosARS   = egresosExec.filter(function(e){ return (e.moneda||'ARS') === 'ARS'; })
-                                           .reduce(function(s, e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
-            var egresosUSD   = egresosExec.filter(function(e){ return e.moneda === 'USD'; })
-                                           .reduce(function(s, e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
-
+            var alDia          = Math.max(0, Number(coh.activos) - Number(coh.en_mora));
+            var recaudadoARS   = Number(coh.ingresos_ars || 0);
+            var recaudadoUSD   = Number(coh.ingresos_usd || 0);
+            var egresosARS     = Number(coh.egresos_ars  || 0);
+            var egresosUSD     = Number(coh.egresos_usd  || 0);
             return {
-                id: coh.cohorte_id, nombre: coh.nombre, estado: coh.estado,
-                fechaInicio: coh.fecha_inicio, fechaFin: coh.fecha_fin,
-                estudiantes: totalEst, totalEstudiantes: totalEst, activos: activos, bajas: bajas,
-                alDia: alDia, enMora: enMora,
-                recaudado: recaudadoARS, recaudadoARS: recaudadoARS, recaudadoUSD: recaudadoUSD,
-                egresos: egresosARS, egresosARS: egresosARS, egresosUSD: egresosUSD,
-                saldo: recaudadoARS - egresosARS
+                id:               coh.id,
+                nombre:           coh.nombre,
+                estado:           coh.estado,
+                fechaInicio:      coh.fecha_inicio,
+                fechaFin:         coh.fecha_fin,
+                estudiantes:      Number(coh.total),
+                totalEstudiantes: Number(coh.total),
+                activos:          Number(coh.activos),
+                bajas:            Number(coh.bajas),
+                alDia:            alDia,
+                enMora:           Number(coh.en_mora),
+                pagoParcial:      Number(coh.pago_parcial),
+                readmision:       Number(coh.readmision),
+                cuotasEnMora:     Number(coh.cuotas_en_mora),
+                recaudado:        recaudadoARS,
+                recaudadoARS:     recaudadoARS,
+                recaudadoUSD:     recaudadoUSD,
+                egresos:          egresosARS,
+                egresosARS:       egresosARS,
+                egresosUSD:       egresosUSD,
+                saldo:            recaudadoARS - egresosARS
             };
         })
     };
