@@ -375,9 +375,16 @@
                         <input type="number" class="form-input" id="monto" placeholder="$" min="0" step="0.01">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Proveedor</label>
-                        <input type="text" class="form-input" id="proveedor">
+                        <label class="form-label">Moneda</label>
+                        <select class="form-select" id="moneda">
+                            <option value="ARS">ARS — Pesos argentinos</option>
+                            <option value="USD">USD — Dólares</option>
+                        </select>
                     </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Proveedor</label>
+                    <input type="text" class="form-input" id="proveedor">
                 </div>
                 <div class="form-group">
                     <label class="form-label">N° comprobante</label>
@@ -577,7 +584,7 @@
 
                 var rE = todosLosCohIds.length
                     ? await sb.from('egresos')
-                        .select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,monto_pendiente,fecha_pago,fecha_estimada,proveedor,concepto,categoria,nro_comprobante')
+                        .select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,monto_pendiente,moneda,fecha_pago,fecha_estimada,proveedor,concepto,categoria,nro_comprobante')
                         .in('cohorte_id', todosLosCohIds)
                     : { data: [] };
 
@@ -613,6 +620,7 @@
                         montoPagado:   Number(e.monto_pagado||0),
                         montoPendiente:Number(e.monto_pendiente||0),
                         montoOriginal: Number(e.monto_original||0),
+                        moneda:        e.moneda||'ARS',
                         proveedor:     e.proveedor||'',
                         comprobante:   e.nro_comprobante||'',
                         estadoDB:      e.estado||'',
@@ -660,6 +668,7 @@
                 monto: Number(g.monto || 0),
                 montoPagado:    Number(g.montoPagado || 0),
                 montoPendiente: Number(g.montoPendiente || 0),
+                moneda: g.moneda || 'ARS',
                 proveedor: g.proveedor || '',
                 comprobante: g.comprobante || g.numeroComprobante || g.nro_comprobante || '',
                 estadoDB: estadoDB,
@@ -679,9 +688,12 @@
         }
 
         function renderStats() {
+            // Totales en ARS y USD por separado (nunca se suman entre sí)
             let proyectados = 0;
             let ejecutadosParc = 0;
+            let totalUsd = 0;
             state.gastos.proyectados.forEach(function(g) {
+                if ((g.moneda || 'ARS') === 'USD') { totalUsd += Number(g.monto || 0); return; }
                 if (g.estadoDB === 'PARCIAL') {
                     proyectados  += Number(g.montoPendiente || 0);
                     ejecutadosParc += Number(g.montoPagado  || 0);
@@ -689,7 +701,10 @@
                     proyectados += Number(g.monto || 0);
                 }
             });
-            const ejecutados = ejecutadosParc + state.gastos.ejecutados.reduce((acc, g) => acc + Number(g.monto || 0), 0);
+            const ejecutados = ejecutadosParc + state.gastos.ejecutados.reduce(function(acc, g) {
+                if ((g.moneda || 'ARS') === 'USD') { totalUsd += Number(g.monto || 0); return acc; }
+                return acc + Number(g.monto || 0);
+            }, 0);
             const total = proyectados + ejecutados;
 
             document.getElementById('statsGrid').innerHTML = `
@@ -704,6 +719,10 @@
                 <div class="stat-box">
                     <div class="stat-value">${formatearMonto(total)}</div>
                     <div class="stat-label">Total Gastos</div>
+                </div>
+                <div class="stat-box" style="border-color:#1d4ed8;">
+                    <div class="stat-value" style="color:#1d4ed8;">U$S ${totalUsd.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                    <div class="stat-label">Gastos en USD</div>
                 </div>
             `;
         }
@@ -777,10 +796,13 @@
             empty.style.display = 'none';
             tbody.innerHTML = slice.map(g => {
                 const esPagoParc = g.estadoDB === 'PARCIAL';
+                const esUsd = (g.moneda || 'ARS') === 'USD';
+                const fMg = esUsd ? function(v){ return 'U$S ' + (Number(v)||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); } : formatearMonto;
+                const usdTag = esUsd ? ' <span style="display:inline-block;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">USD</span>' : '';
                 const badgeClass = esPagoParc ? 'badge-parcial' : tipo === 'ejecutados' ? 'badge-ejecutado' : 'badge-proyectado';
                 const montoHtml  = esPagoParc
-                    ? `<strong>${escapeHtml(formatearMonto(g.montoPagado))}</strong> pagado<br><span style="font-size:11px;color:#92400e;font-weight:600">Pendiente: ${escapeHtml(formatearMonto(g.montoPendiente))}</span>`
-                    : escapeHtml(formatearMonto(g.monto));
+                    ? `<strong>${escapeHtml(fMg(g.montoPagado))}</strong> pagado${usdTag}<br><span style="font-size:11px;color:#92400e;font-weight:600">Pendiente: ${escapeHtml(fMg(g.montoPendiente))}</span>`
+                    : escapeHtml(fMg(g.monto)) + usdTag;
                 return `
                     <tr>
                         <td>${escapeHtml(formatearFecha(g.fechaEstimada))}</td>
@@ -861,6 +883,7 @@
             poblarCohortesPorPrograma(gasto.programaId || '');
             document.getElementById('cohorte').value = gasto.cohorteId || '';
             document.getElementById('monto').value = gasto.monto || '';
+            document.getElementById('moneda').value = gasto.moneda || 'ARS';
             document.getElementById('proveedor').value = gasto.proveedor || '';
             document.getElementById('comprobante').value = gasto.comprobante || '';
             abrirModal('modalGasto');
@@ -961,6 +984,7 @@
                 cohorte_id:      cohorteId  || null,
                 monto_original:  monto,
                 monto_pagado:    tipo === 'ejecutados' ? monto : null,
+                moneda:          document.getElementById('moneda').value || 'ARS',
                 proveedor:       proveedor || null,
                 nro_comprobante: comprobante || null
             };
@@ -1138,6 +1162,7 @@
             document.getElementById('programa').value = state.programas[0] || '';
             document.getElementById('cohorte').value = state.cohortes[0] || '';
             document.getElementById('monto').value = '';
+            document.getElementById('moneda').value = 'ARS';
             document.getElementById('proveedor').value = '';
             document.getElementById('comprobante').value = '';
         }
