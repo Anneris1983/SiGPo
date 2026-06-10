@@ -68,6 +68,8 @@
         .badge-pendiente { background: #fee2e2; color: #991b1b; }
         .badge-parcial { background: #fef3c7; color: #92400e; font-weight: 700; }
         .badge-cancelado { background: #f3f4f6; color: #6b7280; }
+        .badge-usd { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .tag-usd { display:inline-block; padding:2px 7px; border-radius:6px; font-size:11px; font-weight:700; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; margin-left:4px; vertical-align:middle; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
         .modal-content { background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25); animation: mIn 0.22s ease; }
@@ -125,10 +127,11 @@
 </div>
 
 <div class="container">
-    <div class="stats-grid">
-        <div class="stat-box" style="border-color:var(--clr-danger);"><div class="stat-value" style="color:var(--clr-danger);" id="stat-ejecutado">—</div><div class="stat-label">Gastos Ejecutados</div></div>
-        <div class="stat-box" style="border-color:var(--clr-warning);"><div class="stat-value" style="color:var(--clr-warning);" id="stat-proyectado">—</div><div class="stat-label">Gastos Proyectados</div></div>
-        <div class="stat-box" style="border-color:var(--clr-success);"><div class="stat-value" style="color:var(--clr-success);" id="stat-total">—</div><div class="stat-label">Total Gastos</div></div>
+    <div class="stats-grid" style="grid-template-columns:repeat(5,1fr);">
+        <div class="stat-box" style="border-color:var(--clr-danger);"><div class="stat-value" style="color:var(--clr-danger);" id="stat-ejecutado">—</div><div class="stat-label">Gastos Ejecutados (ARS)</div></div>
+        <div class="stat-box" style="border-color:var(--clr-warning);"><div class="stat-value" style="color:var(--clr-warning);" id="stat-proyectado">—</div><div class="stat-label">Gastos Proyectados (ARS)</div></div>
+        <div class="stat-box" style="border-color:var(--clr-success);"><div class="stat-value" style="color:var(--clr-success);" id="stat-total">—</div><div class="stat-label">Total Gastos (ARS)</div></div>
+        <div class="stat-box" style="border-color:#1d4ed8;"><div class="stat-value" style="color:#1d4ed8;" id="stat-usd">—</div><div class="stat-label">Gastos en USD</div></div>
         <div class="stat-box" style="border-color:#6f42c1;"><div class="stat-value" style="color:#6f42c1;" id="stat-cantidad">—</div><div class="stat-label">Registros</div></div>
     </div>
 
@@ -194,7 +197,11 @@
             </div>
             <div class="grid-2">
                 <div class="form-group"><label class="form-label">Monto Original *</label><input type="number" class="form-input" id="g-monto-original" placeholder="0" min="0" step="100"></div>
+                <div class="form-group"><label class="form-label">Moneda *</label><select class="form-select" id="g-moneda" onchange="toggleTipoCambio()"><option value="ARS">ARS — Pesos argentinos</option><option value="USD">USD — Dólares</option></select></div>
+            </div>
+            <div class="grid-2">
                 <div class="form-group"><label class="form-label">Monto Pagado</label><input type="number" class="form-input" id="g-monto-pagado" placeholder="0" min="0" step="100"><div class="form-hint">Solo si hay pago total o parcial</div></div>
+                <div class="form-group" id="grp-tipo-cambio" style="display:none;"><label class="form-label">Tipo de cambio (ARS/USD)</label><input type="number" class="form-input" id="g-tipo-cambio" placeholder="ej: 1200" min="0" step="1"><div class="form-hint">Referencia al momento del pago</div></div>
             </div>
             <div class="grid-2">
                 <div class="form-group"><label class="form-label">Proveedor</label><input type="text" class="form-input" id="g-proveedor" placeholder="Nombre o razón social"></div>
@@ -214,7 +221,8 @@
             <div id="ejec-resumen" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:#166534;"></div>
             <div class="form-group"><label class="form-label">Fecha de Ejecución *</label><input type="date" class="form-input" id="ejec-fecha"></div>
             <div class="form-group"><label class="form-label">N° de Comprobante *</label><input type="text" class="form-input" id="ejec-comprobante" placeholder="ej: FC-2026-0234"></div>
-            <div class="form-group"><label class="form-label">Monto Pagado *</label><input type="number" class="form-input" id="ejec-monto" placeholder="0" min="0" step="100"><div class="form-hint">Si es pago parcial, ingresá el monto abonado</div></div>
+            <div class="form-group"><label class="form-label">Monto Pagado *</label><input type="number" class="form-input" id="ejec-monto" placeholder="0" min="0" step="100"><div class="form-hint" id="ejec-monto-hint">Si es pago parcial, ingresá el monto abonado</div></div>
+            <div class="form-group" id="ejec-grp-tipo-cambio" style="display:none;"><label class="form-label">Tipo de cambio (ARS/USD)</label><input type="number" class="form-input" id="ejec-tipo-cambio" placeholder="ej: 1200" min="0" step="1"><div class="form-hint">Referencia al momento del pago</div></div>
             <div class="form-group"><label class="form-label">Observaciones</label><textarea class="form-textarea" id="ejec-obs" style="min-height:60px;"></textarea></div>
         </div>
         <div class="modal-footer"><button class="btn btn-outline" onclick="cerrarModal('modalEjecutar')">Cancelar</button><button class="btn btn-success" onclick="confirmarEjecucion()">✓ Confirmar</button></div>
@@ -313,16 +321,25 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 
 /* ── STATS ── */
 function renderStats() {
-    var ejec   = G.egresos.filter(esEjecutadoFn);
-    var parc   = G.egresos.filter(esParcialFn);
-    var proy   = G.egresos.filter(function(e){ return !esEjecutadoFn(e) && !esParcialFn(e); });
-    var totalEjec = ejec.reduce(function(s,e){ return s+(Number(e.monto_pagado)||0); },0)
-                  + parc.reduce(function(s,e){ return s+(Number(e.monto_pagado)||0); },0);
-    var totalProy = proy.reduce(function(s,e){ return s+(Number(e.monto_original)||0); },0)
-                  + parc.reduce(function(s,e){ return s+(Number(e.monto_pendiente)||0); },0);
+    var arsEgresos = G.egresos.filter(function(e){ return (e.moneda||'ARS') === 'ARS'; });
+    var usdEgresos = G.egresos.filter(function(e){ return (e.moneda||'ARS') === 'USD'; });
+
+    var ejecArs = arsEgresos.filter(esEjecutadoFn);
+    var parcArs = arsEgresos.filter(esParcialFn);
+    var proyArs = arsEgresos.filter(function(e){ return !esEjecutadoFn(e) && !esParcialFn(e); });
+    var totalEjec = ejecArs.reduce(function(s,e){ return s+(Number(e.monto_pagado)||0); },0)
+                  + parcArs.reduce(function(s,e){ return s+(Number(e.monto_pagado)||0); },0);
+    var totalProy = proyArs.reduce(function(s,e){ return s+(Number(e.monto_original)||0); },0)
+                  + parcArs.reduce(function(s,e){ return s+(Number(e.monto_pendiente)||0); },0);
+
+    var totalUsd  = usdEgresos.reduce(function(s,e){
+        return s + (esEjecutadoFn(e)||esParcialFn(e) ? (Number(e.monto_pagado)||0) : (Number(e.monto_original)||0));
+    }, 0);
+
     document.getElementById('stat-ejecutado').textContent  = fMonto(totalEjec);
     document.getElementById('stat-proyectado').textContent = fMonto(totalProy);
     document.getElementById('stat-total').textContent      = fMonto(totalEjec + totalProy);
+    document.getElementById('stat-usd').textContent        = 'U$S ' + totalUsd.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
     document.getElementById('stat-cantidad').textContent   = G.egresos.length;
 }
 
@@ -392,12 +409,14 @@ function renderTabla(tipo) {
         var esEjec = esEjecutadoFn(e);
         var parc   = esParcialFn(e);
         var fecha  = (esEjec || parc) ? fFecha(e.fecha_pago||e.fecha_estimada) : fFecha(e.fecha_estimada);
+        var esUsd = (e.moneda||'ARS') === 'USD';
+        var fM    = esUsd ? function(v){ return 'U$S '+(Number(v)||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); } : fMonto;
         var montoCell;
         if (parc) {
-            montoCell = '<td style="font-weight:700;color:#5C1018;">'+fMonto(e.monto_pagado)+' pagado<br>'
-                +'<span style="font-size:11px;color:#92400e;font-weight:600;">Pendiente: '+fMonto(e.monto_pendiente)+'</span></td>';
+            montoCell = '<td style="font-weight:700;color:#5C1018;">'+fM(e.monto_pagado)+' pagado'+(esUsd?' <span class="tag-usd">USD</span>':'')+' <br>'
+                +'<span style="font-size:11px;color:#92400e;font-weight:600;">Pendiente: '+fM(e.monto_pendiente)+'</span></td>';
         } else {
-            montoCell = '<td style="font-weight:700;color:#5C1018;">'+(esEjec ? fMonto(e.monto_pagado||e.monto_original) : fMonto(e.monto_original))+'</td>';
+            montoCell = '<td style="font-weight:700;color:#5C1018;">'+(esEjec ? fM(e.monto_pagado||e.monto_original) : fM(e.monto_original))+(esUsd?' <span class="tag-usd">USD</span>':'')+'</td>';
         }
         var acciones = '<div style="display:flex;gap:4px;">'
             + (!esEjec ? '<button class="btn btn-success btn-sm" onclick="abrirEjecutar('+e.egreso_id+')" title="'+(parc?'Completar pago':'Ejecutar')+'">'+(parc?'💰':'✓')+'</button>' : '')
@@ -432,9 +451,16 @@ function aplicarFiltros(tipo) { _pag[tipo] = 1; renderTabla(tipo); }
 
 /* ── MODAL NUEVO/EDITAR ── */
 function limpiarModal() {
-    ['g-id','g-tipo','g-concepto','g-proveedor','g-comprobante','g-observaciones','g-monto-original','g-monto-pagado','g-fecha-estimada','g-fecha-pago'].forEach(function(id){ document.getElementById(id).value=''; });
+    ['g-id','g-tipo','g-concepto','g-proveedor','g-comprobante','g-observaciones','g-monto-original','g-monto-pagado','g-tipo-cambio','g-fecha-estimada','g-fecha-pago'].forEach(function(id){ document.getElementById(id).value=''; });
     document.getElementById('g-programa').value='';
+    document.getElementById('g-moneda').value='ARS';
+    document.getElementById('grp-tipo-cambio').style.display='none';
     document.getElementById('g-cohorte').innerHTML='<option value="">— Seleccionar programa —</option>';
+}
+
+function toggleTipoCambio() {
+    var moneda = document.getElementById('g-moneda').value;
+    document.getElementById('grp-tipo-cambio').style.display = moneda==='USD' ? 'block' : 'none';
 }
 
 function abrirModalGasto(tipo, egresoId) {
@@ -460,11 +486,13 @@ function abrirModalGasto(tipo, egresoId) {
             document.getElementById('g-fecha-estimada').value   = e.fecha_estimada||'';
             document.getElementById('g-fecha-pago').value       = e.fecha_pago||'';
             document.getElementById('g-estado').value           = e.estado||'PROYECTADO';
+            document.getElementById('g-moneda').value           = e.moneda||'ARS';
             document.getElementById('g-programa').value         = e.programa_id||'';
             if (e.programa_id) {
                 cargarCohortes(e.programa_id);
                 setTimeout(function(){ document.getElementById('g-cohorte').value = e.cohorte_id||''; }, 60);
             }
+            toggleTipoCambio();
         }
     } else {
         document.getElementById('modalTitulo').textContent = tipo==='proyectados' ? '➕ Nuevo Gasto Proyectado' : '➕ Nuevo Gasto Ejecutado';
@@ -483,6 +511,8 @@ async function guardarGasto() {
 
     var montoOrig = parseFloat(document.getElementById('g-monto-original').value)||null;
     var montoPag  = parseFloat(document.getElementById('g-monto-pagado').value)||null;
+    var moneda     = document.getElementById('g-moneda').value || 'ARS';
+    var tipoCambio = parseFloat(document.getElementById('g-tipo-cambio').value)||null;
     var datos = {
         tipo:            document.getElementById('g-tipo').value,
         estado:          document.getElementById('g-estado').value || 'PENDIENTE',
@@ -493,9 +523,12 @@ async function guardarGasto() {
         monto_original:  montoOrig,
         monto_pagado:    montoPag,
         monto_pendiente: montoOrig&&montoPag ? montoOrig-montoPag : montoOrig,
+        moneda:          moneda,
         proveedor:       document.getElementById('g-proveedor').value.trim()||null,
         nro_comprobante: document.getElementById('g-comprobante').value.trim()||null,
-        observaciones:   document.getElementById('g-observaciones').value.trim()||null,
+        observaciones:   moneda==='USD' && tipoCambio
+                         ? ('TC: '+tipoCambio + (document.getElementById('g-observaciones').value.trim() ? ' — '+document.getElementById('g-observaciones').value.trim() : ''))
+                         : (document.getElementById('g-observaciones').value.trim()||null),
         fecha_estimada:  document.getElementById('g-fecha-estimada').value||null,
         fecha_pago:      document.getElementById('g-fecha-pago').value||null
     };
@@ -524,14 +557,17 @@ function abrirEjecutar(egresoId) {
         resumen = '<strong>'+esc(e.concepto||'')+'</strong><br>'+esc(e.categoria||'')+' · '+esc(getNomProg(e.programa_id))+'<br>Monto original: <strong>'+fMonto(e.monto_original)+'</strong>';
         if (parc) resumen += '<br>Ya pagado: <strong>'+fMonto(e.monto_pagado)+'</strong> · Pendiente: <strong>'+fMonto(e.monto_pendiente)+'</strong>';
     }
-    document.getElementById('ejec-resumen').innerHTML = resumen;
+    var esUsd = e && (e.moneda||'ARS') === 'USD';
+    document.getElementById('ejec-resumen').innerHTML = resumen + (esUsd ? '<br><span class="tag-usd">💵 USD</span>' : '');
     document.getElementById('ejec-monto').value       = pendiente || '';
     document.getElementById('ejec-fecha').value       = new Date().toISOString().split('T')[0];
     document.getElementById('ejec-comprobante').value = '';
     document.getElementById('ejec-obs').value         = '';
-    var hint = document.querySelector('#ejec-monto + .form-hint');
+    document.getElementById('ejec-tipo-cambio').value = '';
+    document.getElementById('ejec-grp-tipo-cambio').style.display = esUsd ? 'block' : 'none';
+    var hint = document.getElementById('ejec-monto-hint');
     if (hint) hint.textContent = parc
-        ? 'Pendiente: '+fMonto(pendiente)+'. Podés pagar menos si es otro pago parcial.'
+        ? 'Pendiente: '+(esUsd ? 'U$S '+pendiente : fMonto(pendiente))+'. Podés pagar menos si es otro pago parcial.'
         : 'Si es pago parcial, ingresá el monto abonado';
     document.getElementById('modalEjecutar').classList.add('active');
 }
@@ -553,6 +589,13 @@ async function confirmarEjecucion() {
     var nuevoPendiente = Math.max(0, pendiente - monto);
     var estaCompleto  = monto >= pendiente;
 
+    var esUsd     = e && (e.moneda||'ARS') === 'USD';
+    var tipoCamb  = parseFloat(document.getElementById('ejec-tipo-cambio').value)||null;
+    var obsEjec   = obs || null;
+    if (esUsd && tipoCamb) {
+        obsEjec = 'TC: '+tipoCamb + (obs ? ' — '+obs : '');
+    }
+
     spin(true);
     try {
         var sb = await getSupabase();
@@ -565,7 +608,7 @@ async function confirmarEjecucion() {
             es_pago_parcial: !estaCompleto || esParcialFn(e),
             numero_pago:     nroPago,
             nro_comprobante: comp,
-            observaciones:   obs||null
+            observaciones:   obsEjec
         }).eq('egreso_id', G.gastoPendEjec);
         if (res.error) throw res.error;
         toast(estaCompleto ? 'Gasto ejecutado ✓' : 'Pago parcial registrado ✓', 'ok');
