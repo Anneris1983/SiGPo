@@ -1710,43 +1710,38 @@
                 badgeEstado.className = 'badge closed';
             }
 
-            // Mismo criterio que cohorte_tabla.js (vista admin/coordinador/secretaría):
-            // bajas excluidas de los contadores de estado; cada activo se clasifica
-            // por el PEOR estado de sus cuotas. "Pagados" = todas las cuotas abonadas.
-            var activosL = vistaData.estudiantes.filter(function(e){ return (e.estadoAcademico||'ACTIVO')==='ACTIVO'; });
-            function peorEstadoCoop(est) {
-                var peso = { mora:6, pendiente:5, parcial:4, noabonada:3, adefinir:2, abonada:1, nodebe:0 };
-                var cuotas = (est.cuotas||[]).filter(function(c){ return c.estado !== 'nodebe'; });
-                if (!cuotas.length) return 'adefinir';
-                var peor = 'abonada';
-                cuotas.forEach(function(c){ if ((peso[c.estado]||0) > (peso[peor]||0)) peor = c.estado; });
-                return peor;
-            }
-            function contarPeor(estado) { return activosL.filter(function(e){ return peorEstadoCoop(e) === estado; }).length; }
-            document.getElementById('statEstudiantes').textContent = vistaData.estudiantes.length;
-            document.getElementById('statActivos').textContent = activosL.length;
-            document.getElementById('statBajas').textContent = vistaData.estudiantes.length - activosL.length;
-            document.getElementById('statAlDia').textContent = contarPeor('abonada');
-            document.getElementById('statMora').textContent = contarPeor('mora');
-            document.getElementById('statParcial').textContent = contarPeor('parcial');
+            // Fuente única de verdad: los stats se calculan en el servidor con el
+            // RPC stats_cohorte (la misma función que usan admin/coordinador/
+            // secretaría/profesor), así todos los roles ven los mismos números.
+            cargarStatsCohorte();
+        }
 
-            // Financial stats
-            var estudiantes = vistaData.estudiantes;
-            // Mismo criterio que cohorte_tabla.js (vista admin/coordinador/secretaría):
-            // sumar lo abonado de TODAS las cuotas, sin filtrar por estado. Una cuota
-            // PENDIENTE o EN_MORA puede tener pagos parciales ya aprobados que son
-            // ingresos reales.
-            var ingresos = estudiantes.reduce(function(s, est) {
-                return s + est.cuotas.reduce(function(ss,c){ return ss + (Number(c.montoAbonado)||0); }, 0);
-            }, 0);
-            var egrExec = (vistaData.egresos || []).filter(function(e){ return e.tipo==='EJECUTADO'; })
-                                                   .reduce(function(s,e){ return s + Number(e.monto_pagado||e.monto_original||0); }, 0);
-            var saldo = ingresos - egrExec;
-            document.getElementById('statIngresos').textContent = formatearMoneda(ingresos);
-            document.getElementById('statEgresos').textContent  = formatearMoneda(egrExec);
-            var sEl = document.getElementById('statSaldo');
-            sEl.textContent = formatearMoneda(saldo);
-            sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
+        async function cargarStatsCohorte() {
+            try {
+                var sb = await getSupabase();
+                var r = await sb.rpc('stats_cohorte', { p_cohorte_id: Number(cohorteId) });
+                if (r.error || !r.data) { console.error('stats_cohorte:', r.error); return; }
+                var st = r.data;
+                document.getElementById('statEstudiantes').textContent = st.total;
+                document.getElementById('statActivos').textContent = st.activos;
+                document.getElementById('statBajas').textContent = st.bajas;
+                document.getElementById('statAlDia').textContent = st.pagados;
+                document.getElementById('statMora').textContent = st.en_mora;
+                document.getElementById('statParcial').textContent = st.pago_parcial;
+
+                function fUsd(v) { return 'U$D ' + Number(v).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+                var ingresosTxt = formatearMoneda(st.ingresos_ars);
+                if (Number(st.ingresos_usd) > 0) ingresosTxt += ' · ' + fUsd(st.ingresos_usd);
+                var egresosTxt = formatearMoneda(st.egresos_ars);
+                if (Number(st.egresos_usd) > 0) egresosTxt += ' · ' + fUsd(st.egresos_usd);
+                document.getElementById('statIngresos').textContent = ingresosTxt;
+                document.getElementById('statEgresos').textContent  = egresosTxt;
+
+                var saldo = Number(st.ingresos_ars || 0) - Number(st.egresos_ars || 0); // el neto es ARS
+                var sEl = document.getElementById('statSaldo');
+                sEl.textContent = formatearMoneda(saldo);
+                sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
+            } catch(e) { console.error('cargarStatsCohorte:', e); }
         }
 
         function renderTabla() {

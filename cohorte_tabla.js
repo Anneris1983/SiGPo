@@ -202,43 +202,40 @@ function mostrarMas() {
      admin    → s-readmision (estudiantes con readmisión)
      profesor → s-mora-cuotas (cantidad de CUOTAS en mora, no estudiantes)
 ══════════════════════════════════════════════════ */
-function actualizarStats() {
-    var ests = (typeof V !== 'undefined' && V.data && V.data.estudiantes) || [];
-    var egresos = (typeof V !== 'undefined' && V.data && V.data.egresos) || [];
-    // Recaudado separado por moneda — ARS y USD NUNCA se suman entre sí
-    var recaudArs = 0, recaudUsd = 0;
-    ests.forEach(function(e) {
-        (e.cobros || []).forEach(function(c) {
-            var ab = calcMontoAbonado(c);
-            if (c && c.moneda === 'USD') recaudUsd += ab; else recaudArs += ab;
-        });
-    });
-    var egrExec = egresos.filter(function(e){ return e.tipo === 'EJECUTADO'; })
-                         .reduce(function(s, e){ return s + Number(e.monto_pagado || e.monto_original || 0); }, 0);
-    var saldo = recaudArs - egrExec; // egresos son ARS; el neto es ARS
+async function actualizarStats() {
+    // Fuente única de verdad: el RPC stats_cohorte calcula TODO en el servidor
+    // (misma máquina de 7 reglas + peor estado) para que cada rol vea
+    // exactamente los mismos números. Acá solo se muestran.
+    var cohorteId = (typeof COHORTE_ID !== 'undefined' && COHORTE_ID)
+        ? COHORTE_ID
+        : (new URLSearchParams(location.search).get('cohorte_id')
+            || new URLSearchParams(location.search).get('cohorte') || null);
+    if (!cohorteId) return;
+
+    var sb = await getSupabase();
+    var r = await sb.rpc('stats_cohorte', { p_cohorte_id: Number(cohorteId) });
+    if (r.error || !r.data) { console.error('stats_cohorte:', r.error); return; }
+    var st = r.data;
 
     function setTxt(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
-    // Las bajas (estado_academico != 'ACTIVO') NO cuentan para los KPIs de estado.
-    var activos = ests.filter(function(e){ return (e.estado_academico || 'ACTIVO') === 'ACTIVO'; });
-    function contarGeneral(estado) { return activos.filter(function(e){ return calcEstadoGeneral(e.cobros) === estado; }).length; }
 
-    setTxt('s-total',   ests.length);
-    setTxt('s-activos', activos.length);
-    setTxt('s-bajas',   ests.length - activos.length);
+    setTxt('s-total',   st.total);
+    setTxt('s-activos', st.activos);
+    setTxt('s-bajas',   st.bajas);
     // 's-aldia' se rotula "Pagados" en la vista: estudiantes con TODAS las cuotas abonadas
-    setTxt('s-aldia',   contarGeneral('ABONADA'));
-    setTxt('s-mora',    contarGeneral('EN_MORA'));
-    setTxt('s-parcial', contarGeneral('PAGO_PARCIAL'));
-    setTxt('s-readmision', activos.filter(function(e){ return (e.cobros || []).some(function(c){ return c && c.es_readmision; }); }).length);
-    var cuotasMora = 0;
-    activos.forEach(function(e){ (e.cobros || []).forEach(function(c){ if (c && resolverEstadoCobro(c) === 'EN_MORA') cuotasMora++; }); });
-    setTxt('s-mora-cuotas', cuotasMora);
-    setTxt('s-recaudado', fMontoDual(recaudArs, recaudUsd));
-    setTxt('s-egresos',   fMonto(egrExec));
+    setTxt('s-aldia',   st.pagados);
+    setTxt('s-mora',    st.en_mora);
+    setTxt('s-parcial', st.pago_parcial);
+    setTxt('s-readmision', st.readmision);
+    setTxt('s-mora-cuotas', st.cuotas_en_mora);
+    // ARS y USD NUNCA se suman entre sí
+    setTxt('s-recaudado', fMontoDual(st.ingresos_ars, st.ingresos_usd));
+    setTxt('s-egresos',   fMontoDual(st.egresos_ars, st.egresos_usd));
 
+    var saldo = Number(st.ingresos_ars || 0) - Number(st.egresos_ars || 0); // el neto es ARS
     var sEl = document.getElementById('s-saldo');
     if (sEl) {
-        sEl.textContent = fMonto(saldo) + (recaudUsd > 0 ? ' (ARS)' : '');
+        sEl.textContent = fMonto(saldo) + ((Number(st.ingresos_usd) > 0 || Number(st.egresos_usd) > 0) ? ' (ARS)' : '');
         sEl.style.color = saldo >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
     }
 }
