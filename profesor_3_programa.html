@@ -131,48 +131,28 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 async function cargar(sesion) {
-    var sb = await getSupabase();
-
+    var sb      = await getSupabase();
     var asig    = await obtenerAsignacionesCoordinador(sesion.dni);
     var pidNum  = parseInt(PROGRAMA_ID, 10);
     var esProgramaCompleto = asig.progIds.indexOf(pidNum) >= 0 || asig.progIds.indexOf(PROGRAMA_ID) >= 0;
-    // Cohortes específicas asignadas que pertenecen a este programa (se resuelve más abajo)
-    var cohIdsAsignadas = asig.cohIds || [];
+    var cohIdsAsignadas    = asig.cohIds || [];
 
-    var [rProg, rCoh, rCob, rEgr] = await Promise.all([
-        sb.from('programas').select('programa_id,nombre,tipo').eq('programa_id', PROGRAMA_ID).single(),
-        sb.from('cohortes').select('cohorte_id,nombre,estado,fecha_inicio,fecha_fin').eq('programa_id', PROGRAMA_ID),
-        sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente,monto_abonado,moneda,no_aplica,fecha_vencimiento,recibo_url,comprobante_url').eq('programa_id', PROGRAMA_ID),
-        sb.from('egresos').select('cohorte_id,tipo,monto_pagado,monto_original,moneda').eq('programa_id', PROGRAMA_ID)
-        // inscripciones se trae más abajo (por cohorte_id) para separar activos de bajas.
-    ]);
+    var rpc = await sb.rpc('stats_programa', { p_programa_id: pidNum });
+    if (rpc.error || !rpc.data) { mostrarError('Error al cargar datos: ' + ((rpc.error && rpc.error.message) || 'Sin datos')); return; }
 
-    var prog = rProg.data || {};
-    var cohortes = rCoh.data || [];
+    var prog     = rpc.data.programa;
+    var cohortes = rpc.data.cohortes || [];
 
-    // Control de acceso: programa completo, o al menos una cohorte específica de este programa
-    var cohIdsDeEstePrograma = cohortes.map(function(c){ return c.cohorte_id; });
+    // Control de acceso: igual que antes — programa completo o cohortes específicas
+    var cohIdsDeEstePrograma = cohortes.map(function(c){ return c.id; });
     var cohAsignadasAqui = cohIdsAsignadas.filter(function(id){ return cohIdsDeEstePrograma.indexOf(id) >= 0; });
     if (!esProgramaCompleto && !cohAsignadasAqui.length) {
         mostrarError('No tenés acceso a este programa.');
         return;
     }
-    // Si el acceso es por cohortes específicas, mostrar SOLO esas cohortes
     if (!esProgramaCompleto) {
-        cohortes = cohortes.filter(function(c){ return cohAsignadasAqui.indexOf(c.cohorte_id) >= 0; });
+        cohortes = cohortes.filter(function(c){ return cohAsignadasAqui.indexOf(c.id) >= 0; });
     }
-    var cobros = rCob.data || [];
-    cobros.forEach(function(c){ c._re = resolverEstadoCobro(c); });
-    var egresos = rEgr.data || [];
-
-    // Inscripciones (estado_academico) + dni por estudiante: las bajas no cuentan en KPIs.
-    var _cohIds = cohortes.map(function(c){ return c.cohorte_id; });
-    var rInsc = _cohIds.length ? await sb.from('inscripciones').select('cohorte_id, estado_academico, estudiante_id').in('cohorte_id', _cohIds) : { data: [] };
-    var inscripciones = rInsc.data || [];
-    var _estIds = [...new Set(inscripciones.map(function(i){ return i.estudiante_id; }).filter(Boolean))];
-    var rEstDni = _estIds.length ? await sb.from('estudiantes').select('id, dni').in('id', _estIds) : { data: [] };
-    var dniById = {};
-    (rEstDni.data || []).forEach(function(e){ dniById[e.id] = String(e.dni); });
 
     document.getElementById('hdr-programa').textContent = prog.nombre || 'Programa';
     var activas = cohortes.filter(function(c){return c.estado==='ACTIVO';}).length;
@@ -182,33 +162,22 @@ async function cargar(sesion) {
     if (!cohortes.length) { lista.innerHTML = '<div class="empty">No hay cohortes para este programa.</div>'; return; }
 
     lista.innerHTML = cohortes.map(function(c) {
-        var cobs = cobros.filter(function(x){return x.cohorte_id===c.cohorte_id;});
-        var egrs = egresos.filter(function(x){return x.cohorte_id===c.cohorte_id&&x.tipo==='EJECUTADO';});
-        // Bajas excluidas de los KPIs. Pagados/mora/parcial = estado general (peor cuota) por estudiante activo.
-        var inscCoh = inscripciones.filter(function(i){return i.cohorte_id===c.cohorte_id;});
-        var activeDnisCoh = new Set(inscCoh.filter(function(i){return (i.estado_academico||'ACTIVO')==='ACTIVO';}).map(function(i){return dniById[i.estudiante_id];}).filter(Boolean));
-        var totalCoh = new Set(inscCoh.map(function(i){return dniById[i.estudiante_id];}).filter(Boolean)).size;
-        var activosCoh = activeDnisCoh.size;
-        var bajasCoh = totalCoh - activosCoh;
-        var _porDni = {};
-        cobs.forEach(function(x){ if(activeDnisCoh.has(String(x.dni))){ (_porDni[x.dni]=_porDni[x.dni]||[]).push(x); } });
-        var mora=0, parcial=0;
-        Object.keys(_porDni).forEach(function(dni){ var dd=_porDni[dni]; var esM=dd.some(function(x){ if(x.estado==='EN_MORA')return true; var sal=x.saldo_pendiente!=null?Number(x.saldo_pendiente):Number(x.monto_final||0); return x.estado==='NO_ABONADA'&&x.fecha_vencimiento&&new Date(x.fecha_vencimiento)<new Date()&&!x.comprobante_url&&sal>0; }); if(esM)mora++; if(calcEstadoGeneral(dd)==='PAGO_PARCIAL')parcial++; });
-        var alDia = Math.max(0, activosCoh - mora);
-        var recCob = cobs.filter(function(x){return x._re==='ABONADA'||x._re==='PAGO_PARCIAL';});
-        var recArs = recCob.filter(function(x){return (x.moneda||'ARS')==='ARS';})
-                      .reduce(function(s,x){var ma=x.monto_abonado&&Number(x.monto_abonado)>0?Number(x.monto_abonado):Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));return s+ma;},0);
-        var recUsd = recCob.filter(function(x){return x.moneda==='USD';})
-                      .reduce(function(s,x){var ma=x.monto_abonado&&Number(x.monto_abonado)>0?Number(x.monto_abonado):Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));return s+ma;},0);
-        var rec = recArs;
-        var egr = egrs.filter(function(x){return (x.moneda||'ARS')==='ARS';}).reduce(function(s,x){return s+Number(x.monto_pagado||x.monto_original||0);},0);
-        var sal = rec - egr;
-        var isActiva = c.estado==='ACTIVO';
-        var fechas = [c.fecha_inicio, c.fecha_fin].filter(Boolean).join(' → ');
-        var badgeHtml = isActiva
+        var totalCoh   = Number(c.total);
+        var activosCoh = Number(c.activos);
+        var bajasCoh   = Number(c.bajas);
+        var mora       = Number(c.en_mora);
+        var parcial    = Number(c.pago_parcial);
+        var alDia      = Math.max(0, activosCoh - mora);
+        var recArs     = Number(c.ingresos_ars);
+        var recUsd     = Number(c.ingresos_usd);
+        var egr        = Number(c.egresos_ars);
+        var sal        = recArs - egr;
+        var isActiva   = c.estado === 'ACTIVO';
+        var fechas     = [c.fecha_inicio, c.fecha_fin].filter(Boolean).join(' → ');
+        var badgeHtml  = isActiva
             ? '<span class="badge badge-activa">Activa</span>'
             : '<span class="badge badge-cerrada">Cerrada</span>';
-        return '<div class="cohorte-card'+(isActiva?' active':'')+'" onclick="navegar(\'profesor_3_cohorte.html?cohorte_id='+c.cohorte_id+'\')">'
+        return '<div class="cohorte-card'+(isActiva?' active':'')+'" onclick="navegar(\'profesor_3_cohorte.html?cohorte_id='+c.id+'\')">'
             + '<div class="cohorte-left">'
             + '<div class="cohorte-title">'+esc(c.nombre||'Cohorte')+'</div>'
             + '<div class="cohorte-dates">'+esc(fechas)+'</div>'
