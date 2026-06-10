@@ -440,7 +440,7 @@ async function cargarDatos() {
     try {
         var sb = await getSupabase();
         var rCobros  = await sb.from('cobros').select('programa_id,cohorte_id,fecha_vencimiento,estado,monto_final,saldo_pendiente');
-        var rEgresos = await sb.from('egresos').select('programa_id,cohorte_id,fecha_pago,fecha_estimada,tipo,estado,monto_pagado');
+        var rEgresos = await sb.from('egresos').select('programa_id,cohorte_id,fecha_pago,fecha_estimada,tipo,estado,monto_pagado,moneda');
         var cobros   = rCobros.data  || [];
         var egresos  = rEgresos.data || [];
         // ── Aplicar filtros desde Cashflow ──
@@ -473,6 +473,7 @@ async function cargarDatos() {
         var egMap = {};
         egresos.forEach(function(e) {
             if (e.tipo !== 'EJECUTADO') return;
+            if ((e.moneda||'ARS') !== 'ARS') return;
             var k = mesKey(e.fecha_pago);
             if (!k) return;
             if (!egMap[k]) egMap[k] = 0;

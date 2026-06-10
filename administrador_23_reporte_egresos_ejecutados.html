@@ -332,6 +332,7 @@ async function cargarDatos() {
             }
         } catch(_e) {}
 
+        egresos = egresos.filter(function(e){ return (e.moneda||'ARS')==='ARS'; });
         var catTotals = {};
         egresos.forEach(function(e) {
             var cat = e.categoria || 'Otros';

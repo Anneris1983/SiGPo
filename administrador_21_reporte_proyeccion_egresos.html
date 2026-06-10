@@ -331,6 +331,7 @@ async function cargarDatos() {
             }
         } catch(_e) {}
 
+        proyectados = proyectados.filter(function(e){ return (e.moneda||'ARS')==='ARS'; });
         var catTotals = {};
         var monthKeys = [];
         proyectados.forEach(function(e) {
