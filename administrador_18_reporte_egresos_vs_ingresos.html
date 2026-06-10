@@ -439,7 +439,7 @@ function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
 async function cargarDatos() {
     try {
         var sb = await getSupabase();
-        var rCobros  = await sb.from('cobros').select('programa_id,cohorte_id,fecha_vencimiento,estado,monto_final,saldo_pendiente');
+        var rCobros  = await sb.from('cobros').select('programa_id,cohorte_id,fecha_vencimiento,estado,monto_final,saldo_pendiente,moneda');
         var rEgresos = await sb.from('egresos').select('programa_id,cohorte_id,fecha_pago,fecha_estimada,tipo,estado,monto_pagado,moneda');
         var cobros   = rCobros.data  || [];
         var egresos  = rEgresos.data || [];
@@ -463,10 +463,11 @@ async function cargarDatos() {
         var ingMap = {};
         cobros.forEach(function(c) {
             if (c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL') return;
+            if ((c.moneda||'ARS') !== 'ARS') return;
             var k = mesKey(c.fecha_vencimiento);
             if (!k) return;
             if (!ingMap[k]) ingMap[k] = 0;
-            ingMap[k] += Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0);
+            ingMap[k] += Math.max(0, Number(c.monto_final || 0) - Number(c.saldo_pendiente || 0));
         });
 
         // ── Agrupar egresos por mes ──

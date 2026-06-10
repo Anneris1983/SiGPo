@@ -429,7 +429,7 @@ async function cargarCohortes(cohIdsPermitidas) {
         if (_programaId) q = q.eq('programa_id', _programaId);
         if (cohIdsPermitidas && cohIdsPermitidas.length) q = q.in('cohorte_id', cohIdsPermitidas);
         var rC = await q;
-        var rCob = await sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente,nro_cuota,no_aplica,moneda,fecha_vencimiento,recibo_url,comprobante_url').eq('programa_id', _programaId);
+        var rCob = await sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente,monto_abonado,nro_cuota,no_aplica,moneda,fecha_vencimiento,recibo_url,comprobante_url').eq('programa_id', _programaId);
         var rE = await sb.from('egresos').select('cohorte_id,monto_pagado,tipo,moneda').eq('programa_id', _programaId);
         var cohortes = rC.data || [];
         var cobros = rCob.data || [];
@@ -472,7 +472,7 @@ async function cargarCohortes(cohIdsPermitidas) {
             var mora=0, parcial=0;
             Object.keys(_porDni).forEach(function(dni){ var dd=_porDni[dni]; var esM=dd.some(function(x){ if(x.estado==='EN_MORA')return true; var sal=x.saldo_pendiente!=null?Number(x.saldo_pendiente):Number(x.monto_final||0); return x.estado==='NO_ABONADA'&&x.fecha_vencimiento&&new Date(x.fecha_vencimiento)<new Date()&&!x.comprobante_url&&sal>0; }); if(esM)mora++; if(calcEstadoGeneral(dd)==='PAGO_PARCIAL')parcial++; });
             var alDia = Math.max(0, activosCoh - mora);
-            var rec = cobs.filter(function(x){return (x._re==='ABONADA'||x._re==='PAGO_PARCIAL')&&(x.moneda||'ARS')==='ARS';}).reduce(function(s,x){return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));},0);
+            var rec = cobs.filter(function(x){return (x._re==='ABONADA'||x._re==='PAGO_PARCIAL')&&(x.moneda||'ARS')==='ARS';}).reduce(function(s,x){var ma=x.monto_abonado&&Number(x.monto_abonado)>0?Number(x.monto_abonado):Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));return s+ma;},0);
             var egr = egrs.filter(function(x){return (x.moneda||'ARS')==='ARS';}).reduce(function(s,x){return s+Number(x.monto_pagado||0);},0);
             var sal = rec - egr;
             var isActiva = c.estado==='ACTIVO';

@@ -142,7 +142,7 @@ async function cargar(sesion) {
     var [rProg, rCoh, rCob, rEgr] = await Promise.all([
         sb.from('programas').select('programa_id,nombre,tipo').eq('programa_id', PROGRAMA_ID).single(),
         sb.from('cohortes').select('cohorte_id,nombre,estado,fecha_inicio,fecha_fin').eq('programa_id', PROGRAMA_ID),
-        sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente,moneda,no_aplica,fecha_vencimiento,recibo_url,comprobante_url').eq('programa_id', PROGRAMA_ID),
+        sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente,monto_abonado,moneda,no_aplica,fecha_vencimiento,recibo_url,comprobante_url').eq('programa_id', PROGRAMA_ID),
         sb.from('egresos').select('cohorte_id,tipo,monto_pagado,monto_original,moneda').eq('programa_id', PROGRAMA_ID)
         // inscripciones se trae más abajo (por cohorte_id) para separar activos de bajas.
     ]);
@@ -197,9 +197,9 @@ async function cargar(sesion) {
         var alDia = Math.max(0, activosCoh - mora);
         var recCob = cobs.filter(function(x){return x._re==='ABONADA'||x._re==='PAGO_PARCIAL';});
         var recArs = recCob.filter(function(x){return (x.moneda||'ARS')==='ARS';})
-                      .reduce(function(s,x){return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));},0);
+                      .reduce(function(s,x){var ma=x.monto_abonado&&Number(x.monto_abonado)>0?Number(x.monto_abonado):Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));return s+ma;},0);
         var recUsd = recCob.filter(function(x){return x.moneda==='USD';})
-                      .reduce(function(s,x){return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));},0);
+                      .reduce(function(s,x){var ma=x.monto_abonado&&Number(x.monto_abonado)>0?Number(x.monto_abonado):Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));return s+ma;},0);
         var rec = recArs;
         var egr = egrs.filter(function(x){return (x.moneda||'ARS')==='ARS';}).reduce(function(s,x){return s+Number(x.monto_pagado||x.monto_original||0);},0);
         var sal = rec - egr;

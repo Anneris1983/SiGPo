@@ -432,7 +432,7 @@ async function cargarDatos() {
     try {
         var sb = await getSupabase();
         var rCobros  = await sb.from('cobros').select('programa_id,cohorte_id,fecha_vencimiento,estado,monto_final,saldo_pendiente,monto_abonado,moneda,estudiante_id,no_aplica,recibo_url,comprobante_url');
-        var rEgresos = await sb.from('egresos').select('programa_id,cohorte_id,fecha_pago,fecha_estimada,tipo,estado,monto_pagado');
+        var rEgresos = await sb.from('egresos').select('programa_id,cohorte_id,fecha_pago,fecha_estimada,tipo,estado,monto_pagado,moneda');
         _cobros  = rCobros.data  || [];
         _cobros.forEach(function(c){ c._re = resolverEstadoCobro(c); });
         _egresos = rEgresos.data || [];
@@ -585,7 +585,7 @@ function getDato(label) {
         var mm = fe.substring(5, 7);
         var yy = fe.substring(0, 4);
         if (yy !== year || meses.indexOf(mm) < 0) return;
-        if (e.tipo === 'EJECUTADO' || e.estado === 'CANCELADO') {
+        if ((e.tipo === 'EJECUTADO' || e.estado === 'CANCELADO') && (e.moneda||'ARS')==='ARS') {
             egresos += Number(e.monto_pagado || 0);
         }
     });
