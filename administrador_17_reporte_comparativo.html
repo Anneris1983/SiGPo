@@ -559,40 +559,44 @@ function qToMeses(label) {
 
 function getDato(label) {
     var parsed = qToMeses(label);
-    if (!parsed) return { ingresos:0, egresos:0, balance:0, estudiantes:0, morosidad:0 };
+    if (!parsed) return { ingresos:0, ingresosUsd:0, egresos:0, egresosUsd:0, balance:0, estudiantes:0, morosidad:0, morosidadUsd:0 };
     var year = parsed.year;
     var meses = parsed.meses;
 
-    var ingresos = 0, morosidad = 0;
+    var ingresos = 0, ingresosUsd = 0, morosidad = 0, morosidadUsd = 0;
     var estudiantesSet = new Set();
     _cobros.forEach(function(c) {
         var fv = (c.fecha_vencimiento || '').substring(0, 7);
         var mm = fv.substring(5, 7);
         var yy = fv.substring(0, 4);
         if (yy !== year || meses.indexOf(mm) < 0) return;
-        if ((c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL') && (c.moneda||'ARS')==='ARS') {
-            ingresos += calcMontoAbonado(c);
+        if (c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL') {
+            if (c.moneda === 'USD') ingresosUsd += calcMontoAbonado(c);
+            else ingresos += calcMontoAbonado(c);
         }
         if (c._re === 'EN_MORA') {
-            morosidad += Number(c.saldo_pendiente || 0);
+            if (c.moneda === 'USD') morosidadUsd += Number(c.saldo_pendiente || 0);
+            else morosidad += Number(c.saldo_pendiente || 0);
         }
         if (c.estudiante_id) estudiantesSet.add(c.estudiante_id);
     });
 
-    var egresos = 0;
+    var egresos = 0, egresosUsd = 0;
     _egresos.forEach(function(e) {
         var fe = (e.fecha_pago || '').substring(0, 7);
         var mm = fe.substring(5, 7);
         var yy = fe.substring(0, 4);
         if (yy !== year || meses.indexOf(mm) < 0) return;
-        if ((e.tipo === 'EJECUTADO' || e.estado === 'CANCELADO') && (e.moneda||'ARS')==='ARS') {
-            egresos += Number(e.monto_pagado || 0);
+        if (e.tipo === 'EJECUTADO' || e.estado === 'CANCELADO') {
+            if (e.moneda === 'USD') egresosUsd += Number(e.monto_pagado || 0);
+            else egresos += Number(e.monto_pagado || 0);
         }
     });
 
     var balance = ingresos - egresos;
-    return { ingresos: ingresos, egresos: egresos, balance: balance,
-             estudiantes: estudiantesSet.size, morosidad: morosidad };
+    return { ingresos: ingresos, ingresosUsd: ingresosUsd,
+             egresos: egresos, egresosUsd: egresosUsd, balance: balance,
+             estudiantes: estudiantesSet.size, morosidad: morosidad, morosidadUsd: morosidadUsd };
 }
 
 // ──────────────────────────────────────────────────────────
@@ -613,14 +617,15 @@ function diffHtml(a, b, invertido = false) {
 // SUMMARY CARDS
 // ──────────────────────────────────────────────────────────
 function renderSummaryCards(d1, d2) {
-    const set = (vid, vval, did, a, b, inv = false) => {
-        document.getElementById(vid).textContent  = fm(vval);
+    const fUsd = v => v > 0 ? ' + U$S ' + Math.round(v).toLocaleString('es-AR') : '';
+    const set = (vid, vval, vUsd, did, a, b, inv = false) => {
+        document.getElementById(vid).textContent  = fm(vval) + fUsd(vUsd);
         document.getElementById(did).innerHTML    = diffHtml(a, b, inv);
     };
-    set('sc-i1',  d1.ingresos,    'sc-idiff',   d1.ingresos,    d2.ingresos);
-    set('sc-e1',  d1.egresos,     'sc-ediff',   d1.egresos,     d2.egresos,  true);
-    set('sc-b1',  d1.balance,     'sc-bdiff',   d1.balance,     d2.balance);
-    set('sc-m1',  d1.morosidad,   'sc-mdiff',   d1.morosidad,   d2.morosidad, true);
+    set('sc-i1',  d1.ingresos,  d1.ingresosUsd,  'sc-idiff',   d1.ingresos,    d2.ingresos);
+    set('sc-e1',  d1.egresos,   d1.egresosUsd,   'sc-ediff',   d1.egresos,     d2.egresos,  true);
+    set('sc-b1',  d1.balance,   0,               'sc-bdiff',   d1.balance,     d2.balance);
+    set('sc-m1',  d1.morosidad, d1.morosidadUsd, 'sc-mdiff',   d1.morosidad,   d2.morosidad, true);
     document.getElementById('sc-est1').textContent   = d1.estudiantes;
     document.getElementById('sc-estdiff').innerHTML  = diffHtml(d1.estudiantes, d2.estudiantes);
 }
