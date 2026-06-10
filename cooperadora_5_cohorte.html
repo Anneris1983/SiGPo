@@ -1193,10 +1193,12 @@
                     <button class="btn-logout" type="button" onclick="cerrarSesion()">Cerrar sesión</button>
                 </div>
                 <div class="hstats-bar">
-                    <div class="hstat"><div class="hstat-lbl">Estudiantes</div><div class="hstat-val" id="statEstudiantes">0</div></div>
-                    <div class="hstat"><div class="hstat-lbl">Al día</div><div class="hstat-val" style="color:#86efac" id="statAlDia">0</div></div>
-                    <div class="hstat"><div class="hstat-lbl">Mora</div><div class="hstat-val" style="color:#fca5a5" id="statMora">0</div></div>
-                    <div class="hstat"><div class="hstat-lbl">Parcial</div><div class="hstat-val" style="color:#fde68a" id="statParcial">0</div></div>
+                    <div class="hstat"><div class="hstat-lbl">Total</div><div class="hstat-val" id="statEstudiantes">0</div></div>
+                    <div class="hstat"><div class="hstat-lbl">Activos</div><div class="hstat-val" id="statActivos">0</div></div>
+                    <div class="hstat"><div class="hstat-lbl">Bajas</div><div class="hstat-val" style="color:#fca5a5" id="statBajas">0</div></div>
+                    <div class="hstat"><div class="hstat-lbl">Pagados</div><div class="hstat-val" style="color:#86efac" id="statAlDia">0</div></div>
+                    <div class="hstat"><div class="hstat-lbl">En mora</div><div class="hstat-val" style="color:#fca5a5" id="statMora">0</div></div>
+                    <div class="hstat"><div class="hstat-lbl">Pago parcial</div><div class="hstat-val" style="color:#fde68a" id="statParcial">0</div></div>
                     <div class="hstat hstat-sep"><div class="hstat-lbl">Ingresos</div><div class="hstat-val" id="statIngresos">—</div></div>
                     <div class="hstat"><div class="hstat-lbl">Egresos</div><div class="hstat-val" style="color:#fbbf24" id="statEgresos">—</div></div>
                     <div class="hstat"><div class="hstat-lbl">Saldo</div><div class="hstat-val" id="statSaldo">—</div></div>
@@ -1708,17 +1710,34 @@
                 badgeEstado.className = 'badge closed';
             }
 
-            const resumen = obtenerResumenEstudiantes(vistaData.estudiantes);
+            // Mismo criterio que cohorte_tabla.js (vista admin/coordinador/secretaría):
+            // bajas excluidas de los contadores de estado; cada activo se clasifica
+            // por el PEOR estado de sus cuotas. "Pagados" = todas las cuotas abonadas.
+            var activosL = vistaData.estudiantes.filter(function(e){ return (e.estadoAcademico||'ACTIVO')==='ACTIVO'; });
+            function peorEstadoCoop(est) {
+                var peso = { mora:6, pendiente:5, parcial:4, noabonada:3, adefinir:2, abonada:1, nodebe:0 };
+                var cuotas = (est.cuotas||[]).filter(function(c){ return c.estado !== 'nodebe'; });
+                if (!cuotas.length) return 'adefinir';
+                var peor = 'abonada';
+                cuotas.forEach(function(c){ if ((peso[c.estado]||0) > (peso[peor]||0)) peor = c.estado; });
+                return peor;
+            }
+            function contarPeor(estado) { return activosL.filter(function(e){ return peorEstadoCoop(e) === estado; }).length; }
             document.getElementById('statEstudiantes').textContent = vistaData.estudiantes.length;
-            document.getElementById('statAlDia').textContent = resumen.alDia;
-            document.getElementById('statMora').textContent = resumen.mora;
-            document.getElementById('statParcial').textContent = resumen.parcial;
+            document.getElementById('statActivos').textContent = activosL.length;
+            document.getElementById('statBajas').textContent = vistaData.estudiantes.length - activosL.length;
+            document.getElementById('statAlDia').textContent = contarPeor('abonada');
+            document.getElementById('statMora').textContent = contarPeor('mora');
+            document.getElementById('statParcial').textContent = contarPeor('parcial');
 
             // Financial stats
             var estudiantes = vistaData.estudiantes;
+            // Mismo criterio que cohorte_tabla.js (vista admin/coordinador/secretaría):
+            // sumar lo abonado de TODAS las cuotas, sin filtrar por estado. Una cuota
+            // PENDIENTE o EN_MORA puede tener pagos parciales ya aprobados que son
+            // ingresos reales.
             var ingresos = estudiantes.reduce(function(s, est) {
-                return s + est.cuotas.filter(function(c){ return c.estado==='abonada'||c.estado==='parcial'; })
-                                     .reduce(function(ss,c){ return ss + c.montoAbonado; }, 0);
+                return s + est.cuotas.reduce(function(ss,c){ return ss + (Number(c.montoAbonado)||0); }, 0);
             }, 0);
             var egrExec = (vistaData.egresos || []).filter(function(e){ return e.tipo==='EJECUTADO'; })
                                                    .reduce(function(s,e){ return s + Number(e.monto_pagado||e.monto_original||0); }, 0);
@@ -2026,17 +2045,6 @@
             const totales = calcularTotalesEstudiante(est);
             if (totales.saldo <= 0) return 'aldia';
             return 'aldia';
-        }
-
-        function obtenerResumenEstudiantes(lista) {
-            const resumen = { alDia: 0, mora: 0, parcial: 0 };
-            lista.forEach(function (est) {
-                const estado = obtenerEstadoGeneralEstudiante(est);
-                if (estado === 'aldia') resumen.alDia += 1;
-                else if (estado === 'mora') resumen.mora += 1;
-                else if (estado === 'parcial') resumen.parcial += 1;
-            });
-            return resumen;
         }
 
         function coincideFiltro(est, filtro) {
