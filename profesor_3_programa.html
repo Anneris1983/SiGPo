@@ -143,7 +143,7 @@ async function cargar(sesion) {
         sb.from('programas').select('programa_id,nombre,tipo').eq('programa_id', PROGRAMA_ID).single(),
         sb.from('cohortes').select('cohorte_id,nombre,estado,fecha_inicio,fecha_fin').eq('programa_id', PROGRAMA_ID),
         sb.from('cobros').select('dni,cohorte_id,estado,monto_final,saldo_pendiente,moneda,no_aplica,fecha_vencimiento,recibo_url,comprobante_url').eq('programa_id', PROGRAMA_ID),
-        sb.from('egresos').select('cohorte_id,tipo,monto_pagado,monto_original').eq('programa_id', PROGRAMA_ID)
+        sb.from('egresos').select('cohorte_id,tipo,monto_pagado,monto_original,moneda').eq('programa_id', PROGRAMA_ID)
         // inscripciones se trae más abajo (por cohorte_id) para separar activos de bajas.
     ]);
 
@@ -192,15 +192,16 @@ async function cargar(sesion) {
         var bajasCoh = totalCoh - activosCoh;
         var _porDni = {};
         cobs.forEach(function(x){ if(activeDnisCoh.has(String(x.dni))){ (_porDni[x.dni]=_porDni[x.dni]||[]).push(x); } });
-        var alDia=0, mora=0, parcial=0;
-        Object.keys(_porDni).forEach(function(dni){ var eg=calcEstadoGeneral(_porDni[dni]); if(eg==='ABONADA')alDia++; else if(eg==='EN_MORA')mora++; else if(eg==='PAGO_PARCIAL')parcial++; });
+        var mora=0, parcial=0;
+        Object.keys(_porDni).forEach(function(dni){ var dd=_porDni[dni]; var esM=dd.some(function(x){ if(x.estado==='EN_MORA')return true; var sal=x.saldo_pendiente!=null?Number(x.saldo_pendiente):Number(x.monto_final||0); return x.estado==='NO_ABONADA'&&x.fecha_vencimiento&&new Date(x.fecha_vencimiento)<new Date()&&!x.comprobante_url&&sal>0; }); if(esM)mora++; if(calcEstadoGeneral(dd)==='PAGO_PARCIAL')parcial++; });
+        var alDia = Math.max(0, activosCoh - mora);
         var recCob = cobs.filter(function(x){return x._re==='ABONADA'||x._re==='PAGO_PARCIAL';});
         var recArs = recCob.filter(function(x){return (x.moneda||'ARS')==='ARS';})
                       .reduce(function(s,x){return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));},0);
         var recUsd = recCob.filter(function(x){return x.moneda==='USD';})
                       .reduce(function(s,x){return s+Math.max(0,Number(x.monto_final||0)-Number(x.saldo_pendiente||0));},0);
         var rec = recArs;
-        var egr = egrs.reduce(function(s,x){return s+Number(x.monto_pagado||x.monto_original||0);},0);
+        var egr = egrs.filter(function(x){return (x.moneda||'ARS')==='ARS';}).reduce(function(s,x){return s+Number(x.monto_pagado||x.monto_original||0);},0);
         var sal = rec - egr;
         var isActiva = c.estado==='ACTIVO';
         var fechas = [c.fecha_inicio, c.fecha_fin].filter(Boolean).join(' → ');
@@ -215,7 +216,7 @@ async function cargar(sesion) {
             + '<div class="stat-box"><div class="stat-label">Estudiantes</div><div class="stat-value">'+totalCoh+'</div></div>'
             + '<div class="stat-box"><div class="stat-label">Activos</div><div class="stat-value">'+activosCoh+'</div></div>'
             + '<div class="stat-box"><div class="stat-label">Bajas</div><div class="stat-value" style="color:#9ca3af;">'+bajasCoh+'</div></div>'
-            + '<div class="stat-box"><div class="stat-label">Pagados</div><div class="stat-value success">'+alDia+'</div></div>'
+            + '<div class="stat-box"><div class="stat-label">Al día</div><div class="stat-value success">'+alDia+'</div></div>'
             + '<div class="stat-box"><div class="stat-label">En mora</div><div class="stat-value danger">'+mora+'</div></div>'
             + '<div class="stat-box"><div class="stat-label">Pago parcial</div><div class="stat-value warning">'+parcial+'</div></div>'
             + '<div class="stat-box"><div class="stat-label">Recaudado</div><div class="stat-value">'+fMontoDual(recArs, recUsd)+'</div></div>'
