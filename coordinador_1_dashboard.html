@@ -298,7 +298,7 @@
             // Round 2: programas y cobros filtrados por las cohortes del coordinador
             var [rP, rCob] = await Promise.all([
                 allProgIds.length ? sb.from('programas').select('*').in('programa_id', allProgIds) : Promise.resolve({data:[]}),
-                cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,moneda,no_aplica,fecha_vencimiento,recibo_url,comprobante_url').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
+                cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_abonado,monto_final,saldo_pendiente,moneda,no_aplica,fecha_vencimiento,recibo_url,comprobante_url').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
             ]);
             var programas = rP.data || [];
             var cobros = rCob.data || [];
@@ -335,10 +335,10 @@
             // "En mora" = activo con al menos una cuota EN_MORA (en vivo). "Al día" = activo sin EN_MORA.
             var dnisEnMora = new Set(cobros.filter(function(c) { return dnisActivos.has(String(c.dni)) && c._re === 'EN_MORA'; }).map(function(c) { return String(c.dni); }));
             var dnisAlDia  = new Set([...dnisActivos].filter(function(dni) { return !dnisEnMora.has(dni); }));
-            var recaudadoARS = cobros.filter(function(c) { return (c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL') && (c.moneda||'ARS') === 'ARS'; })
-                                     .reduce(function(s,c) { return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
-            var recaudadoUSD = cobros.filter(function(c) { return (c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL') && c.moneda === 'USD'; })
-                                     .reduce(function(s,c) { return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
+            var recaudadoARS = cobros.filter(function(c) { return (c.moneda||'ARS') === 'ARS'; })
+                                     .reduce(function(s,c) { return s + calcMontoAbonado(c); }, 0);
+            var recaudadoUSD = cobros.filter(function(c) { return c.moneda === 'USD'; })
+                                     .reduce(function(s,c) { return s + calcMontoAbonado(c); }, 0);
             var recaudado = recaudadoARS;
 
             document.getElementById('headerSub').textContent = programas.map(function(p) { return p.nombre; }).join(' · ');
@@ -370,10 +370,10 @@
                 var morSet = new Set(cobs.filter(function(x) { return activeDnisCoh.has(String(x.dni)) && x._re === 'EN_MORA'; }).map(function(x) { return String(x.dni); }));
                 var mor = morSet.size;
                 var alD = activosCoh - mor;
-                var recARS = cobs.filter(function(x) { return (x._re === 'ABONADA' || x._re === 'PAGO_PARCIAL') && (x.moneda||'ARS') === 'ARS'; })
-                                 .reduce(function(s,x) { return s + Math.max(0, Number(x.monto_final||0) - Number(x.saldo_pendiente||0)); }, 0);
-                var recUSD = cobs.filter(function(x) { return (x._re === 'ABONADA' || x._re === 'PAGO_PARCIAL') && x.moneda === 'USD'; })
-                                 .reduce(function(s,x) { return s + Math.max(0, Number(x.monto_final||0) - Number(x.saldo_pendiente||0)); }, 0);
+                var recARS = cobs.filter(function(x) { return (x.moneda||'ARS') === 'ARS'; })
+                                 .reduce(function(s,x) { return s + calcMontoAbonado(x); }, 0);
+                var recUSD = cobs.filter(function(x) { return x.moneda === 'USD'; })
+                                 .reduce(function(s,x) { return s + calcMontoAbonado(x); }, 0);
                 return {
                     cohorteId: c.cohorte_id, nombre: c.nombre || 'Cohorte',
                     programa: progNomMap[c.programa_id] || '',
