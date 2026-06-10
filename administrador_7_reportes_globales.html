@@ -636,9 +636,12 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
     // ingresoProy → fecha_vencimiento (cuándo estaba programado el cobro)
     // ingresoEjec → fecha_pago (cuándo ingresó el dinero efectivamente)
     // PAGO_PARCIAL: parte ejecutada por fecha_pago, parte proyectada por fecha_vencimiento
-    var ingresoProy   = 0;
-    var ingresoEjec   = 0;
-    var montoMora     = 0;
+    var ingresoProy   = 0;  // ARS
+    var ingresoProyUsd= 0;  // USD
+    var ingresoEjec   = 0;  // ARS
+    var ingresoEjecUsd= 0;  // USD
+    var montoMora     = 0;  // ARS
+    var montoMoraUsd  = 0;  // USD
     var cuotasEnMora  = 0;
     var dnisEnMora    = {};
 
@@ -646,22 +649,23 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
         var mf  = Number(c.monto_final || 0);
         var sp  = Number(c.saldo_pendiente || 0);
         var est = c.estado;
+        var esUsd = c.moneda === 'USD';
         if (est === 'NO_APLICA' || est === 'A_DEFINIR') return;
 
         // Proyectado: cuota programada para este período (por fecha de vencimiento)
         if (enRangoVenc(c.fecha_vencimiento)) {
-            ingresoProy += mf;
+            if (esUsd) ingresoProyUsd += mf; else ingresoProy += mf;
         }
 
-        // Ejecutado: dinero recibido en este período (por fecha real de transferencia, solo ARS)
-        if ((est === 'ABONADA' || est === 'PAGO_PARCIAL') && (c.moneda||'ARS')==='ARS' && enRangoPago(c.fecha_pago)) {
+        // Ejecutado: dinero recibido en este período (por fecha real de transferencia)
+        if ((est === 'ABONADA' || est === 'PAGO_PARCIAL') && enRangoPago(c.fecha_pago)) {
             var _ma = (c.monto_abonado && Number(c.monto_abonado) > 0) ? Number(c.monto_abonado) : Math.max(0, mf - sp);
-            ingresoEjec += _ma;
+            if (esUsd) ingresoEjecUsd += _ma; else ingresoEjec += _ma;
         }
 
         // Mora: por fecha de vencimiento
         if (est === 'EN_MORA' && enRangoVenc(c.fecha_vencimiento)) {
-            montoMora += sp;
+            if (esUsd) montoMoraUsd += sp; else montoMora += sp;
             cuotasEnMora++;
             var pid = c.programa_id != null ? c.programa_id : cohProgMap[c.cohorte_id];
             dnisEnMora[c.dni + '|' + pid] = true;
@@ -737,7 +741,7 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
     };
 
     // ── RENDER ──
-    renderMetricasLiquidez(ingresoProy, ingresoEjec, montoMora, estudiantesEnMora, metricaA, metricaB, metricaC, metricaD, metricaE);
+    renderMetricasLiquidez(ingresoProy, ingresoEjec, montoMora, estudiantesEnMora, metricaA, metricaB, metricaC, metricaD, metricaE, ingresoProyUsd, ingresoEjecUsd, montoMoraUsd);
     renderIndices(coberturaCrit, pctAjust, pctMora, cobrabilidad, ingresoProy);
     renderChurn(churnPct, bajas, totalInsc, activos, ingresoProy, ingresoRealista, cobrPct);
     renderGastosAjustables();
@@ -746,7 +750,9 @@ function calcularYRenderizar(cobros, inscripciones, desde, hasta, progId, cohId,
 }
 
 /* ── RENDER: MÉTRICAS LIQUIDEZ ── */
-function renderMetricasLiquidez(ingProy, ingEjec, mora, estMora, mA, mB, mC, mD, mE) {
+function renderMetricasLiquidez(ingProy, ingEjec, mora, estMora, mA, mB, mC, mD, mE, ingProyUsd, ingEjecUsd, moraUsd) {
+    ingProyUsd = ingProyUsd || 0; ingEjecUsd = ingEjecUsd || 0; moraUsd = moraUsd || 0;
+    function fUsd(v){ return v > 0 ? ' + U$S ' + Math.round(v).toLocaleString('es-AR') : ''; }
     var elA = document.getElementById('m-metricaA');
     elA.textContent = fPeso(mA);
     elA.style.color = mA >= 0 ? 'var(--primary)' : 'var(--danger)';
@@ -760,9 +766,9 @@ function renderMetricasLiquidez(ingProy, ingEjec, mora, estMora, mA, mB, mC, mD,
     var elE = document.getElementById('m-margen');
     elE.textContent = fPeso(mE);
     elE.style.color = mE >= 0 ? 'var(--success)' : 'var(--danger)';
-    document.getElementById('m-ingreso-proy').textContent = fPeso(ingProy);
-    document.getElementById('m-ingreso-ejec').textContent = fPeso(ingEjec);
-    document.getElementById('m-mora-monto').textContent   = fPeso(mora);
+    document.getElementById('m-ingreso-proy').textContent = fPeso(ingProy) + fUsd(ingProyUsd);
+    document.getElementById('m-ingreso-ejec').textContent = fPeso(ingEjec) + fUsd(ingEjecUsd);
+    document.getElementById('m-mora-monto').textContent   = fPeso(mora) + fUsd(moraUsd);
     document.getElementById('m-est-mora').textContent     = estMora;
 }
 
