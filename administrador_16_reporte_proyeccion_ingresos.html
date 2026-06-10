@@ -408,7 +408,7 @@ async function cargarDatos() {
 
         var cobros = (rCobros.data || []);
         cobros.forEach(function(c){ c._re = resolverEstadoCobro(c); });
-        cobros = cobros.filter(function(c){ return ['NO_ABONADA','PENDIENTE','EN_MORA'].indexOf(c._re) >= 0; });
+        cobros = cobros.filter(function(c){ return ['NO_ABONADA','PENDIENTE','EN_MORA','PAGO_PARCIAL'].indexOf(c._re) >= 0; });
         // ── Aplicar filtros desde Cashflow ──
         try {
             var _fRaw = sessionStorage.getItem('sigpo_filtros_cashflow');
