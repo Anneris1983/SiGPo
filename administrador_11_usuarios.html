@@ -588,6 +588,9 @@ async function ejErase(){
             var re=await sb.from('estudiantes').select('id').eq('dni',ru.data[0].dni).limit(1);
             if(!re.error&&re.data&&re.data.length){await sb.from('inscripciones').delete().eq('estudiante_id',re.data[0].id);}
         }
+        // Eliminar el usuario de auth.users vía RPC con SECURITY DEFINER
+        var ra=await sb.rpc('delete_auth_user',{p_usuario_id:_aid});
+        if(ra.error)throw ra.error;
         var r=await sb.from('usuarios').delete().eq('usuario_id',_aid);if(r.error)throw r.error;toast('Registro eliminado ✓','ok');cerM('m-erase');await cargar();}
     catch(e){toast('Error: '+(e.message||e)+(e.details?' — '+e.details:''),'err');}finally{spin(false);}
 }
