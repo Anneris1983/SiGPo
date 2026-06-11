@@ -5,6 +5,14 @@
  * ══════════════════════════════════════════════════════════════
  */
 
+// La rueda del mouse sobre un <input type="number"> enfocado cambia el valor
+// en un step (p.ej. 50000 → 49999.99 con step=0.01) sin que el usuario lo note.
+// Quitamos el foco antes de que el navegador aplique el cambio.
+document.addEventListener('wheel', function () {
+    var el = document.activeElement;
+    if (el && el.tagName === 'INPUT' && el.type === 'number') el.blur();
+}, { passive: true });
+
 function escapeHtml(str) {
     if (str == null) return '';
     return String(str)
