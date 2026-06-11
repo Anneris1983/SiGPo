@@ -464,8 +464,8 @@ async function cargarVista() {
         var dnisTotal   = new Set(cobF.map(enrollKey));
         var dnisAlDia   = new Set([...dnisTotal].filter(function(k){ return !dnisEnMora.has(k); }));
         var dnisParcial = new Set(cobF.filter(function(c){return c._re==='PAGO_PARCIAL';}).map(enrollKey).filter(function(k){ return !dnisEnMora.has(k); }));
-        var recaudado    = cobF.filter(function(c){return (c._re==='ABONADA'||c._re==='PAGO_PARCIAL')&&(c.moneda||'ARS')==='ARS';}).reduce(function(s,c){return s+calcMontoAbonado(c);},0);
-        var recaudadoUsd = cobF.filter(function(c){return (c._re==='ABONADA'||c._re==='PAGO_PARCIAL')&&c.moneda==='USD';}).reduce(function(s,c){return s+calcMontoAbonado(c);},0);
+        var recaudado    = cobF.filter(function(c){return calcMontoAbonado(c)>0&&(c.moneda||'ARS')==='ARS';}).reduce(function(s,c){return s+calcMontoAbonado(c);},0);
+        var recaudadoUsd = cobF.filter(function(c){return calcMontoAbonado(c)>0&&c.moneda==='USD';}).reduce(function(s,c){return s+calcMontoAbonado(c);},0);
         var tasaPago = dnisTotal.size > 0 ? Math.round(dnisAlDia.size / dnisTotal.size * 100) : 0;
 
         // Monthly cashflow
@@ -481,11 +481,11 @@ async function cargarVista() {
         function mesLabel(k){ var p=k.split('-'); return mesesLabels[parseInt(p[1])-1]+' '+(p[0]||''); }
         var cfLabels = meses.map(mesLabel);
         var cfIngresos = meses.map(function(k){ return cobF.filter(function(c){
-            if (c._re!=='ABONADA'&&c._re!=='PAGO_PARCIAL') return false;
+            if (calcMontoAbonado(c) <= 0) return false;
             if ((c.moneda||'ARS')==='USD') return false;
             var fecha = c.fecha_pago || c.fecha_vencimiento;
             return fecha && fecha.startsWith(k);
-        }).reduce(function(s,c){return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0));},0); });
+        }).reduce(function(s,c){return s+calcMontoAbonado(c);},0); });
         var cfEgresos = meses.map(function(k){ return egrF.filter(function(e){var d=e.fecha_pago||e.fecha_estimada||'';return e.tipo==='EJECUTADO'&&(e.moneda||'ARS')==='ARS'&&d.startsWith(k);}).reduce(function(s,e){return s+Number(e.monto_pagado||0);},0); });
 
         // Estados por cohorte
