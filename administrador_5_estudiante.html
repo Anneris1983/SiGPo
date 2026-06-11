@@ -213,7 +213,7 @@ async function cargar() {
     var [rEst, rCob, rCoh] = await Promise.all([
         sb.from('estudiantes').select('*').eq('dni', DNI).single(),
         COHORTE_ID
-            ? sb.from('cobros').select('cobro_id,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).eq('dni', DNI).order('fecha_vencimiento')
+            ? sb.from('cobros').select('cobro_id,concepto,periodo,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,estado,no_aplica,comprobante_url,recibo_url,fecha_pago').eq('cohorte_id', COHORTE_ID).eq('dni', DNI).order('fecha_vencimiento')
             : Promise.resolve({data:[]}),
         COHORTE_ID
             ? sb.from('cohortes').select('nombre,programas(nombre)').eq('cohorte_id', COHORTE_ID).single()
@@ -264,7 +264,7 @@ function renderCobros(cobros) {
 
     tbody.innerHTML = cobros.map(function(c) {
         var estado  = resolverEstadoCobro(c);
-        var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
+        var abonado = calcMontoAbonado(c);
         var saldo   = Number(c.saldo_pendiente||0);
         var monto   = Number(c.monto_final||0);
         if (estado !== 'NO_APLICA' && c.monto_final != null) { totP += monto; totA += abonado; totS += saldo; }
