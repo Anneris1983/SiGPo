@@ -448,9 +448,9 @@ function _ejecutarFiltros() {
         return true;
     });
 
-    var cobrados = cobros.filter(function(c){return c._re==='ABONADA'||c._re==='PAGO_PARCIAL';});
-    var ingARS = cobrados.filter(function(c){return (c.moneda||'ARS')!=='USD';}).reduce(function(s,c){return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0));},0);
-    var ingUSD = cobrados.filter(function(c){return (c.moneda||'ARS')==='USD';}).reduce(function(s,c){return s+Math.max(0,Number(c.monto_final||0)-Number(c.saldo_pendiente||0));},0);
+    var cobrados = cobros.filter(function(c){return calcMontoAbonado(c)>0;});
+    var ingARS = cobrados.filter(function(c){return (c.moneda||'ARS')!=='USD';}).reduce(function(s,c){return s+calcMontoAbonado(c);},0);
+    var ingUSD = cobrados.filter(function(c){return (c.moneda||'ARS')==='USD';}).reduce(function(s,c){return s+calcMontoAbonado(c);},0);
     // El neto/saldo se calcula solo en ARS (los egresos son siempre ARS).
     var ing = ingARS;
     var egr = egresos.filter(function(e){return e.tipo==='EJECUTADO';}).reduce(function(s,e){return s+Number(e.monto_pagado||e.monto_original||0);},0);
@@ -629,7 +629,7 @@ async function cargarInicial() {
         var [rP, rC, rCob, rE, rPag] = await Promise.all([
             sb.from('programas').select('programa_id,nombre'),
             sb.from('cohortes').select('cohorte_id,nombre,programa_id'),
-            sb.from('cobros').select('cobro_id,programa_id,cohorte_id,dni,monto_final,saldo_pendiente,estado,fecha_vencimiento,fecha_pago,fecha_aprobacion,moneda,no_aplica,recibo_url,comprobante_url'),
+            sb.from('cobros').select('cobro_id,programa_id,cohorte_id,dni,monto_final,saldo_pendiente,monto_abonado,estado,fecha_vencimiento,fecha_pago,fecha_aprobacion,moneda,no_aplica,recibo_url,comprobante_url'),
             sb.from('egresos').select('programa_id,monto_pagado,monto_original,tipo,estado,fecha_pago,fecha_estimada'),
             sb.from('pagos').select('cobro_id,monto,fecha_pago')
         ]);
