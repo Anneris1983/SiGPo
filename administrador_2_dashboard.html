@@ -231,6 +231,7 @@
             <div class="rpill-adm c-recaud"><div class="rpill-adm-label">Recaudado</div>        <div class="rpill-adm-value" id="stat-recaudado">—</div></div>
             <div class="rpill-adm c-egres"> <div class="rpill-adm-label">Egresos</div>          <div class="rpill-adm-value" id="stat-egresos">—</div></div>
             <div class="rpill-adm c-saldo"> <div class="rpill-adm-label">Saldo</div>            <div class="rpill-adm-value" id="stat-saldo">—</div></div>
+            <div class="rpill-adm" style="border-left-color:#C49A2A;"><div class="rpill-adm-label">Cuotas Pendientes</div><div class="rpill-adm-value" id="stat-pendientes" style="color:#C49A2A;">—</div></div>
             <div class="rpill-adm" style="border-left-color:#6f42c1;"><div class="rpill-adm-label">Readmisiones</div><div class="rpill-adm-value" id="stat-readmisiones" style="color:#6f42c1;">—</div><div id="stat-readmisiones-pend" style="font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.3;"></div></div>
         </div>
     </div>
@@ -360,6 +361,13 @@ function renderDashboard(data) {
     var saldoEl = document.getElementById('stat-saldo');
     saldoEl.textContent = fMontoDual(data.saldo, data.saldoUSD);
     saldoEl.style.color = (data.saldo || 0) < 0 ? 'var(--danger)' : '';
+    var totalPendientes = (data.programas || []).reduce(function(s, p) { return s + (p.pendCooperadora || 0); }, 0);
+    var pendEl = document.getElementById('stat-pendientes');
+    if (pendEl) {
+        pendEl.textContent = totalPendientes;
+        pendEl.style.color = totalPendientes > 0 ? 'var(--clr-warning)' : 'var(--clr-success)';
+    }
+
     var rEl = document.getElementById('stat-readmisiones');
     if (rEl) {
         rEl.textContent = data.totalReadmisiones || 0;
