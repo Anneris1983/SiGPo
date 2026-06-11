@@ -333,16 +333,24 @@ async function cargarVista() {
         var cohIds = _cohortes.map(function(c){ return c.cohorte_id; });
         var allProgIds = [...new Set(_cohortes.map(function(c){ return c.programa_id; }).concat(progIds))];
 
-        var [rP, rCob, rEgr] = await Promise.all([
+        var [rP, rCob, rEgr, rInsc] = await Promise.all([
             allProgIds.length ? sb.from('programas').select('programa_id,nombre').in('programa_id', allProgIds) : Promise.resolve({data:[]}),
             cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,monto_abonado,fecha_vencimiento,fecha_pago,moneda,no_aplica,recibo_url,comprobante_url').in('cohorte_id', cohIds) : Promise.resolve({data:[]}),
-            cohIds.length ? sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada,moneda').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
+            cohIds.length ? sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada,moneda').in('cohorte_id', cohIds) : Promise.resolve({data:[]}),
+            cohIds.length ? sb.from('inscripciones').select('cohorte_id,estudiante_id,estado_academico').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
         ]);
 
         _programas = rP.data || [];
         _cobrosExport  = rCob.data || [];
         _cobrosExport.forEach(function(c){ c._re = resolverEstadoCobro(c); });
         _egresosExport = rEgr.data || [];
+        // Estudiantes activos (excluye bajas de los KPIs, igual que secretaría)
+        var _inscData = rInsc.data || [];
+        var _estIds = [...new Set(_inscData.map(function(i){ return i.estudiante_id; }).filter(Boolean))];
+        var _rEst = _estIds.length ? await sb.from('estudiantes').select('id,dni').in('id', _estIds) : { data: [] };
+        var _dniById = {};
+        (_rEst.data||[]).forEach(function(e){ _dniById[e.id] = String(e.dni); });
+        var activoDnis = new Set(_inscData.filter(function(i){ return (i.estado_academico||'ACTIVO')==='ACTIVO'; }).map(function(i){ return _dniById[i.estudiante_id]; }).filter(Boolean));
 
         // Rellenar selector de programas solo la primera vez
         var selProg = document.getElementById('selPrograma');
@@ -383,11 +391,12 @@ async function cargarVista() {
             return true;
         });
 
-        // Resumen
+        // Resumen — solo estudiantes activos: las bajas no cuentan en los KPIs (igual que secretaría)
         function eKey(c){ return c.dni + '|' + c.programa_id; }
-        var dnisEnMora  = new Set(cobF.filter(function(c){ return c._re === 'EN_MORA'; }).map(eKey));
-        var dnisParcial = new Set(cobF.filter(function(c){ return c._re === 'PAGO_PARCIAL'; }).map(eKey));
-        var dnisTotal   = new Set(cobF.map(eKey));
+        var cobAct = cobF.filter(function(c){ return activoDnis.has(String(c.dni)); });
+        var dnisEnMora  = new Set(cobAct.filter(function(c){ return c._re === 'EN_MORA'; }).map(eKey));
+        var dnisParcial = new Set(cobAct.filter(function(c){ return c._re === 'PAGO_PARCIAL'; }).map(eKey));
+        var dnisTotal   = new Set(cobAct.map(eKey));
         var dnisAlDia   = new Set([...dnisTotal].filter(function(k){ return !dnisEnMora.has(k); }));
         // Recaudado separado por moneda — ARS y USD nunca se suman
         var _recCob = cobF.filter(function(c){ return calcMontoAbonado(c) > 0; });
@@ -443,18 +452,18 @@ async function cargarVista() {
             return true;
         });
         var ecLabels  = cohortesF.map(function(c){ return c.nombre || 'Cohorte'; });
-        var ecAlDia   = cohortesF.map(function(c){ var cc=cobF.filter(function(x){return x.cohorte_id===c.cohorte_id;}); var em=new Set(cc.filter(function(x){return x._re==='EN_MORA';}).map(function(x){return x.dni;})); return Math.max(0,new Set(cc.map(function(x){return x.dni;})).size-em.size); });
-        var ecMora    = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x._re==='EN_MORA'; }).map(function(x){ return x.dni; })).size; });
-        var ecParcial = cohortesF.map(function(c){ return new Set(cobF.filter(function(x){ return x.cohorte_id===c.cohorte_id && x._re==='PAGO_PARCIAL'; }).map(function(x){ return x.dni; })).size; });
+        var ecAlDia   = cohortesF.map(function(c){ var cc=cobAct.filter(function(x){return x.cohorte_id===c.cohorte_id;}); var em=new Set(cc.filter(function(x){return x._re==='EN_MORA';}).map(function(x){return x.dni;})); return Math.max(0,new Set(cc.map(function(x){return x.dni;})).size-em.size); });
+        var ecMora    = cohortesF.map(function(c){ return new Set(cobAct.filter(function(x){ return x.cohorte_id===c.cohorte_id && x._re==='EN_MORA'; }).map(function(x){ return x.dni; })).size; });
+        var ecParcial = cohortesF.map(function(c){ return new Set(cobAct.filter(function(x){ return x.cohorte_id===c.cohorte_id && x._re==='PAGO_PARCIAL'; }).map(function(x){ return x.dni; })).size; });
 
         // Evolución mora mensual
-        var emMora = meses.map(function(k){ return new Set(cobF.filter(function(c){ return c._re==='EN_MORA' && c.fecha_vencimiento && c.fecha_vencimiento.startsWith(k); }).map(function(c){ return c.dni; })).size; });
+        var emMora = meses.map(function(k){ return new Set(cobAct.filter(function(c){ return c._re==='EN_MORA' && c.fecha_vencimiento && c.fecha_vencimiento.startsWith(k); }).map(function(c){ return c.dni; })).size; });
 
         // Donut estudiantes por estado
         var epLabels  = ['Al Día','En Mora','Pago Parcial','Pendiente'];
         var epValores = [
             dnisAlDia.size, dnisEnMora.size, dnisParcial.size,
-            new Set(cobF.filter(function(c){ return c._re==='PENDIENTE'||c._re==='NO_ABONADA'; }).map(eKey)).size
+            new Set(cobAct.filter(function(c){ return c._re==='PENDIENTE'||c._re==='NO_ABONADA'; }).map(eKey)).size
         ];
 
         // Encabezado subtitle
