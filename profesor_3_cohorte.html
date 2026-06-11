@@ -280,7 +280,7 @@ async function cargar(sesion) {
                 var insc = est.id ? (inscById[est.id] || {}) : {};
                 dniMap[dk] = { id:est.id||null, dni:c.dni, apellido:est.apellido||dk, nombre:est.nombre||'', email:est.email||'', descuento_porcentaje:insc.descuento_porcentaje||0, estado_academico:insc.estado_academico||'ACTIVO', cobros:[] };
             }
-            var abonado = Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
+            var abonado = calcMontoAbonado(c);
             dniMap[dk].cobros.push(normalizarCobro({ cobro_id:c.cobro_id, concepto:c.concepto||'', periodo:c.periodo||'', fecha_vencimiento:c.fecha_vencimiento||'', monto_original:Number(c.monto_original||c.monto_final||0), descuento_porcentaje:Number(c.descuento_porcentaje||0), monto_final:c.monto_final!=null?Number(c.monto_final):null, monto_abonado:abonado, saldo_pendiente:Number(c.saldo_pendiente||0), estado:c.no_aplica?'NO_APLICA':(c.estado||'NO_ABONADA'), moneda:c.moneda||'ARS', comprobante_url:c.comprobante_url||null, recibo_url:c.recibo_url||null, fecha_pago:c.fecha_pago||null }));
         });
 
