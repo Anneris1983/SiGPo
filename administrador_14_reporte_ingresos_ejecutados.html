@@ -323,7 +323,7 @@ async function cargarDatos() {
         // El gráfico grafica SOLO ARS (no se mezclan monedas). recPorProg = ARS.
         var recPorProg = {};
         cobros.forEach(function(c) {
-            if (c._re !== 'ABONADA' && c._re !== 'PAGO_PARCIAL') return;
+            if (calcMontoAbonado(c) <= 0) return;
             if (c.moneda === 'USD') return;
             var pid = c.programa_id;
             if (!recPorProg[pid]) recPorProg[pid] = 0;
