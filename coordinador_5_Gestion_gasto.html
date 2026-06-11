@@ -582,10 +582,14 @@
                     ? await sb.from('programas').select('programa_id,nombre').in('programa_id', todosProgIds)
                     : { data: [] };
 
-                var rE = todosLosCohIds.length
+                // Incluir también gastos a nivel programa (cohorte_id null), que antes quedaban invisibles
+                var filtrosEgr = [];
+                if (todosLosCohIds.length) filtrosEgr.push('cohorte_id.in.(' + todosLosCohIds.join(',') + ')');
+                if (todosProgIds.length)   filtrosEgr.push('and(programa_id.in.(' + todosProgIds.join(',') + '),cohorte_id.is.null)');
+                var rE = filtrosEgr.length
                     ? await sb.from('egresos')
                         .select('egreso_id,programa_id,cohorte_id,tipo,estado,monto_pagado,monto_original,monto_pendiente,moneda,fecha_pago,fecha_estimada,proveedor,concepto,categoria,nro_comprobante')
-                        .in('cohorte_id', todosLosCohIds)
+                        .or(filtrosEgr.join(','))
                     : { data: [] };
 
                 // Alias para compatibilidad con el resto del código
