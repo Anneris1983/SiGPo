@@ -358,7 +358,7 @@ function renderDashboard(data) {
     document.getElementById('stat-recaudado').textContent   = fMontoDual(data.recaudado, data.recaudadoUSD);
     document.getElementById('stat-egresos').textContent     = fMontoDual(data.egresos, data.egresosUSD);
     var saldoEl = document.getElementById('stat-saldo');
-    saldoEl.textContent = fMonto(data.saldo) + (data.recaudadoUSD > 0 ? ' (ARS)' : '');
+    saldoEl.textContent = fMontoDual(data.saldo, data.saldoUSD);
     saldoEl.style.color = (data.saldo || 0) < 0 ? 'var(--danger)' : '';
     var rEl = document.getElementById('stat-readmisiones');
     if (rEl) {

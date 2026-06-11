@@ -1108,6 +1108,7 @@ async function obtenerDashboardAdmin() {
         egresos:                Number(r.totalEgresos       || 0),
         egresosUSD:             Number(r.totalEgresosUSD    || 0),
         saldo:                  Number(r.saldoNeto          || 0),
+        saldoUSD:               Number(r.saldoNetoUSD       || 0),
         programas: (r.programas || []).map(function(p) {
             var inscriptos = Number(p.inscriptos || 0);
             var enMora     = Number(p.enMora     || 0);
@@ -1131,7 +1132,8 @@ async function obtenerDashboardAdmin() {
                 recaudadoUSD:      Number(p.ingresosUSD      || 0),
                 egresos:           Number(p.egresosTotales   || 0),
                 egresosUSD:        Number(p.egresosUSD       || 0),
-                saldo:             Number(p.saldoNeto        || 0)
+                saldo:             Number(p.saldoNeto        || 0),
+                saldoUSD:          Number(p.saldoNetoUSD     || 0)
             };
         })
     };
@@ -1231,6 +1233,7 @@ var _gasFunctions = {
             egresos:               Number(r.totalEgresos      || 0),
             egresosUSD:            Number(r.totalEgresosUSD   || 0),
             saldo:                 Number(r.saldoNeto         || 0),
+            saldoUSD:              Number(r.saldoNetoUSD      || 0),
             programas: (r.programas || []).map(function(p) {
                 var inscriptos = Number(p.inscriptos || 0);
                 var enMora     = Number(p.enMora     || 0);
@@ -1254,7 +1257,8 @@ var _gasFunctions = {
                     recaudadoUSD:      Number(p.ingresosUSD      || 0),
                     egresos:           Number(p.egresosTotales   || 0),
                     egresosUSD:        Number(p.egresosUSD       || 0),
-                    saldo:             Number(p.saldoNeto        || 0)
+                    saldo:             Number(p.saldoNeto        || 0),
+                    saldoUSD:          Number(p.saldoNetoUSD     || 0)
                 };
             })
         };
