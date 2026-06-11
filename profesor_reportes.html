@@ -335,7 +335,7 @@ async function cargarVista() {
 
         var [rP, rCob, rEgr] = await Promise.all([
             allProgIds.length ? sb.from('programas').select('programa_id,nombre').in('programa_id', allProgIds) : Promise.resolve({data:[]}),
-            cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,fecha_vencimiento,fecha_pago,moneda,no_aplica,recibo_url,comprobante_url').in('cohorte_id', cohIds) : Promise.resolve({data:[]}),
+            cohIds.length ? sb.from('cobros').select('dni,programa_id,cohorte_id,estado,monto_final,saldo_pendiente,monto_abonado,fecha_vencimiento,fecha_pago,moneda,no_aplica,recibo_url,comprobante_url').in('cohorte_id', cohIds) : Promise.resolve({data:[]}),
             cohIds.length ? sb.from('egresos').select('programa_id,cohorte_id,monto_pagado,tipo,fecha_pago,fecha_estimada,moneda').in('cohorte_id', cohIds) : Promise.resolve({data:[]})
         ]);
 
@@ -390,11 +390,11 @@ async function cargarVista() {
         var dnisTotal   = new Set(cobF.map(eKey));
         var dnisAlDia   = new Set([...dnisTotal].filter(function(k){ return !dnisEnMora.has(k); }));
         // Recaudado separado por moneda — ARS y USD nunca se suman
-        var _recCob = cobF.filter(function(c){ return c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL'; });
+        var _recCob = cobF.filter(function(c){ return calcMontoAbonado(c) > 0; });
         var recaudadoArs = _recCob.filter(function(c){ return (c.moneda||'ARS')==='ARS'; })
-                              .reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
+                              .reduce(function(s,c){ return s + calcMontoAbonado(c); }, 0);
         var recaudadoUsd = _recCob.filter(function(c){ return c.moneda==='USD'; })
-                              .reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0);
+                              .reduce(function(s,c){ return s + calcMontoAbonado(c); }, 0);
         var recaudado = recaudadoArs;
         var tasaPago = dnisTotal.size > 0 ? Math.round(dnisAlDia.size / dnisTotal.size * 100) : 0;
         var egresos  = egrF.filter(function(e){ return e.tipo === 'EJECUTADO' && (e.moneda||'ARS')==='ARS'; })
@@ -423,11 +423,11 @@ async function cargarVista() {
         var cfLabels   = meses.map(mesLabel);
         // El gráfico de cashflow es solo en ARS (una barra no puede ser dos monedas)
         var cfIngresos = meses.map(function(k){ return cobF.filter(function(c){
-            if (c._re!=='ABONADA'&&c._re!=='PAGO_PARCIAL') return false;
+            if (calcMontoAbonado(c) <= 0) return false;
             if ((c.moneda||'ARS')==='USD') return false;
             var fecha = c.fecha_pago || c.fecha_vencimiento;
             return fecha && fecha.startsWith(k);
-        }).reduce(function(s,c){ return s + Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0)); }, 0); });
+        }).reduce(function(s,c){ return s + calcMontoAbonado(c); }, 0); });
         var cfIngresosProyec = meses.map(function(k){ return cobF.filter(function(c){
             if (c._re==='ABONADA'||c._re==='PAGO_PARCIAL') return false;
             if ((c.moneda||'ARS')==='USD') return false;
