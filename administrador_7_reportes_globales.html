@@ -848,11 +848,13 @@ function renderGastosAjustables() {
 
     var ajustables = _catGastos.filter(function(c){return c.tipo==='AJUSTABLE';}).map(function(c){return c.nombre;});
     var criticos   = _catGastos.filter(function(c){return c.tipo==='CRITICO';}).map(function(c){return c.nombre;});
-    var totalEgr   = _egresosData.reduce(function(s,e){return s+Number(e.monto_original||0);},0);
+    // Análisis solo en ARS: los egresos USD no se mezclan con los montos en pesos
+    var egresosArs = _egresosData.filter(function(e){return (e.moneda||'ARS')==='ARS';});
+    var totalEgr   = egresosArs.reduce(function(s,e){return s+Number(e.monto_original||0);},0);
 
     // Agrupar por categoría
     var porCat = {};
-    _egresosData.forEach(function(e) {
+    egresosArs.forEach(function(e) {
         var cat = e.categoria || 'Sin categoría';
         if (!porCat[cat]) porCat[cat] = 0;
         porCat[cat] += Number(e.monto_original || 0);

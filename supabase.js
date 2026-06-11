@@ -388,10 +388,11 @@ function fFechaCorta(str) {
     return p[2]+' '+meses[parseInt(p[1],10)-1];
 }
 
-/** Muestra ARS y USD separados: "$X · U$D Y". Si USD=0 o no existe, solo muestra ARS. */
+/** Muestra ARS y USD separados: "$X · U$D Y". Si USD=0 o no existe, solo muestra ARS.
+    USD negativo también se muestra (p.ej. saldo USD deficitario). */
 function fMontoDual(ars, usd) {
     var txt = fMonto(ars);
-    if (Number(usd || 0) > 0) txt += ' · ' + fMonto(usd, 'USD');
+    if (Number(usd || 0) !== 0) txt += ' · ' + fMonto(usd, 'USD');
     return txt;
 }
 /** Versión abreviada para dashboards: "$1,5M · U$D 900k". Si USD=0, solo ARS. */

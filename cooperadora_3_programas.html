@@ -213,9 +213,9 @@
                 +     '<div style="color:' + pendColor + ';">Pend. cooperadora: <strong>' + (p.pendCooperadora || 0) + '</strong></div>'
                 +   '</div>'
                 +   '<div style="border-top:1px solid #f0f0f0;padding-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:12px;">'
-                +     '<div><div style="color:#888;margin-bottom:2px;">Recaudado</div><div style="font-weight:700;color:#5C1018;">' + fM(p.recaudado) + '</div></div>'
-                +     '<div><div style="color:#888;margin-bottom:2px;">Egresos</div><div style="font-weight:700;color:var(--clr-warning);">' + fM(p.egresos) + '</div></div>'
-                +     '<div><div style="color:#888;margin-bottom:2px;">Saldo</div><div style="font-weight:700;color:' + saldoColor + ';">' + fM(p.saldo) + '</div></div>'
+                +     '<div><div style="color:#888;margin-bottom:2px;">Recaudado</div><div style="font-weight:700;color:#5C1018;">' + fMontoDual(p.recaudadoARS, p.recaudadoUSD) + '</div></div>'
+                +     '<div><div style="color:#888;margin-bottom:2px;">Egresos</div><div style="font-weight:700;color:var(--clr-warning);">' + fMontoDual(p.egresos, p.egresosUSD) + '</div></div>'
+                +     '<div><div style="color:#888;margin-bottom:2px;">Saldo</div><div style="font-weight:700;color:' + saldoColor + ';">' + fMontoDual(p.saldo, p.saldoUSD) + '</div></div>'
                 +   '</div>'
                 + '</div>';
         }).join('');
