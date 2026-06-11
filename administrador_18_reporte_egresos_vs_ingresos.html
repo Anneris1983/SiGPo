@@ -462,10 +462,10 @@ async function cargarDatos() {
         // ── Agrupar cobros por mes (ingresos ARS y USD por separado) ──
         var ingMap = {}, ingMapUsd = {};
         cobros.forEach(function(c) {
-            if (c.estado !== 'ABONADA' && c.estado !== 'PAGO_PARCIAL') return;
+            var _ma = (c.monto_abonado && Number(c.monto_abonado) > 0) ? Number(c.monto_abonado) : Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
+            if (_ma <= 0) return;
             var k = mesKey(c.fecha_vencimiento);
             if (!k) return;
-            var _ma = (c.monto_abonado && Number(c.monto_abonado) > 0) ? Number(c.monto_abonado) : Math.max(0, Number(c.monto_final||0) - Number(c.saldo_pendiente||0));
             if ((c.moneda||'ARS') === 'ARS') { ingMap[k] = (ingMap[k]||0) + _ma; }
             else if (c.moneda === 'USD')      { ingMapUsd[k] = (ingMapUsd[k]||0) + _ma; }
         });
