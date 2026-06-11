@@ -473,7 +473,7 @@
                         var est = resolverEstadoCobro(c);
                         return est === 'ABONADA' || est === 'NO_APLICA';
                     });
-                    var todoAbonado = !esBaja && totalCoh > 0 && abonadasCoh === totalCoh && deudaCoh === 0 && sinCuotasPendientes;
+                    var todoAbonado = totalCoh > 0 && abonadasCoh === totalCoh && deudaCoh === 0 && sinCuotasPendientes;
 
                     var badge = esBaja
                         ? '<span class="carrera-badge badge-baja">Baja</span>'
@@ -526,7 +526,7 @@
                             '<div style="margin-top:12px;">' +
                                 (todoAbonado
                                     ? '<button class="btn-libre-deuda" id="btn-ld-' + cohorteId + '" onclick="event.stopPropagation(); descargarLibreDeuda(\'' + programaId + '\', \'' + cohorteId + '\', this)">📄 Libre deuda</button>'
-                                    : '<button class="btn-baja" id="btn-baja-' + cohorteId + '" onclick="event.stopPropagation(); solicitarBaja(\'' + programaId + '\', \'' + cohorteId + '\', this)">Solicitar baja</button>'
+                                    : (!esBaja ? '<button class="btn-baja" id="btn-baja-' + cohorteId + '" onclick="event.stopPropagation(); solicitarBaja(\'' + programaId + '\', \'' + cohorteId + '\', this)">Solicitar baja</button>' : '')
                                 ) +
                             '</div>' +
                         '</div>';
