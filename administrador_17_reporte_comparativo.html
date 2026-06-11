@@ -570,7 +570,7 @@ function getDato(label) {
         var mm = fv.substring(5, 7);
         var yy = fv.substring(0, 4);
         if (yy !== year || meses.indexOf(mm) < 0) return;
-        if (c._re === 'ABONADA' || c._re === 'PAGO_PARCIAL') {
+        if (calcMontoAbonado(c) > 0) {
             if (c.moneda === 'USD') ingresosUsd += calcMontoAbonado(c);
             else ingresos += calcMontoAbonado(c);
         }
