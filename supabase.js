@@ -1106,6 +1106,7 @@ async function obtenerDashboardAdmin() {
         recaudadoARS:           Number(r.totalIngresosARS   || 0),
         recaudadoUSD:           Number(r.totalIngresosUSD   || 0),
         egresos:                Number(r.totalEgresos       || 0),
+        egresosUSD:             Number(r.totalEgresosUSD    || 0),
         saldo:                  Number(r.saldoNeto          || 0),
         programas: (r.programas || []).map(function(p) {
             var inscriptos = Number(p.inscriptos || 0);
@@ -1129,6 +1130,7 @@ async function obtenerDashboardAdmin() {
                 recaudadoARS:      Number(p.ingresosARS      || 0),
                 recaudadoUSD:      Number(p.ingresosUSD      || 0),
                 egresos:           Number(p.egresosTotales   || 0),
+                egresosUSD:        Number(p.egresosUSD       || 0),
                 saldo:             Number(p.saldoNeto        || 0)
             };
         })
@@ -1227,6 +1229,7 @@ var _gasFunctions = {
             recaudadoARS:          Number(r.totalIngresosARS  || 0),
             recaudadoUSD:          Number(r.totalIngresosUSD  || 0),
             egresos:               Number(r.totalEgresos      || 0),
+            egresosUSD:            Number(r.totalEgresosUSD   || 0),
             saldo:                 Number(r.saldoNeto         || 0),
             programas: (r.programas || []).map(function(p) {
                 var inscriptos = Number(p.inscriptos || 0);
@@ -1250,6 +1253,7 @@ var _gasFunctions = {
                     recaudadoARS:      Number(p.ingresosARS      || 0),
                     recaudadoUSD:      Number(p.ingresosUSD      || 0),
                     egresos:           Number(p.egresosTotales   || 0),
+                    egresosUSD:        Number(p.egresosUSD       || 0),
                     saldo:             Number(p.saldoNeto        || 0)
                 };
             })

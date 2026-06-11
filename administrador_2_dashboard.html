@@ -356,7 +356,7 @@ function renderDashboard(data) {
     var cuotasEl = document.getElementById('stat-mora-cuotas');
     if (cuotasEl) cuotasEl.textContent = data.cuotasEnMora ? data.cuotasEnMora + ' cuotas en mora' : '';
     document.getElementById('stat-recaudado').textContent   = fMontoDual(data.recaudado, data.recaudadoUSD);
-    document.getElementById('stat-egresos').textContent     = fMonto(data.egresos);
+    document.getElementById('stat-egresos').textContent     = fMontoDual(data.egresos, data.egresosUSD);
     var saldoEl = document.getElementById('stat-saldo');
     saldoEl.textContent = fMonto(data.saldo) + (data.recaudadoUSD > 0 ? ' (ARS)' : '');
     saldoEl.style.color = (data.saldo || 0) < 0 ? 'var(--danger)' : '';
