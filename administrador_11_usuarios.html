@@ -265,7 +265,7 @@
             <div class="abox ad">🚨 IRREVERSIBLE. Se borran todos los datos del usuario.</div>
             <div class="mf"><label>Escribí <strong>ELIMINAR</strong> para confirmar</label><input type="text" id="er-conf" placeholder="ELIMINAR" oninput="chkErase()" autocomplete="off"></div>
         </div>
-        <div class="mfoot"><button class="btn bg" onclick="cerM('m-erase')">Cancelar</button><button class="btn bw" id="btn-erase" disabled onclick="ejErase()">💣 Eliminar Todo</button></div>
+        <div class="mfoot"><button class="btn bg" onclick="cerM('m-erase')">Cancelar</button><button class="btn bw" id="btn-erase" onclick="ejErase()">💣 Eliminar Todo</button></div>
     </div>
 </div>
 
@@ -574,9 +574,12 @@ async function ejDel(){
     try{var sb=await getSupabase();var r=await sb.from('usuarios').update({activo:false,estado_usuario:'BLOQUEADO',auth_user_id:null}).eq('usuario_id',_aid);if(r.error)throw r.error;toast(_anm+' eliminado ✓','ok');cerM('m-del');await cargar();}
     catch(e){toast('Error: '+e.message,'err');}finally{spin(false);}
 }
-function confErase(id,nm){_aid=id;_anm=nm;document.getElementById('er-t').textContent=nm;document.getElementById('er-conf').value='';document.getElementById('btn-erase').disabled=true;abrM('m-erase');}
-function chkErase(){document.getElementById('btn-erase').disabled=document.getElementById('er-conf').value.trim().toUpperCase()!=='ELIMINAR';}
+function confErase(id,nm){_aid=id;_anm=nm;document.getElementById('er-t').textContent=nm;document.getElementById('er-conf').value='';abrM('m-erase');}
+function chkErase(){/* la validación se hace al hacer click en ejErase() */}
 async function ejErase(){
+    // Validar la confirmación acá (no con botón deshabilitado, que fallaba en silencio)
+    var _conf=(document.getElementById('er-conf').value||'').trim().toUpperCase();
+    if(_conf!=='ELIMINAR'){toast('⚠️ Escribí ELIMINAR en el campo para confirmar','err');document.getElementById('er-conf').focus();return;}
     spin(true);
     try{var sb=await getSupabase();await sb.from('coordinadores_programas').delete().eq('coordinador_id',_aid);
         // Si es estudiante, borrar inscripciones huérfanas (inscripciones → estudiantes.id vía dni)
@@ -586,7 +589,7 @@ async function ejErase(){
             if(!re.error&&re.data&&re.data.length){await sb.from('inscripciones').delete().eq('estudiante_id',re.data[0].id);}
         }
         var r=await sb.from('usuarios').delete().eq('usuario_id',_aid);if(r.error)throw r.error;toast('Registro eliminado ✓','ok');cerM('m-erase');await cargar();}
-    catch(e){toast('Error: '+e.message,'err');}finally{spin(false);}
+    catch(e){toast('Error: '+(e.message||e)+(e.details?' — '+e.details:''),'err');}finally{spin(false);}
 }
 
 async function dlPlantillaUsuarios(){
