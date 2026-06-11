@@ -326,6 +326,19 @@ async function cargarDatos() {
             obtenerProgramasCatalogo('programa_id, nombre')
         ]);
         cobros.forEach(function(c){ c._re = resolverEstadoCobro(c); });
+
+        // Bajas reales: inscripciones con estado_academico = 'BAJA'
+        var _sb = await getSupabase();
+        var _cohIds = [...new Set(cobros.map(function(c){ return c.cohorte_id; }))];
+        var _rInsc = _cohIds.length ? await _sb.from('inscripciones').select('cohorte_id,estudiante_id').eq('estado_academico','BAJA').in('cohorte_id', _cohIds) : { data: [] };
+        var _inscBajas = _rInsc.data || [];
+        var _estIds = [...new Set(_inscBajas.map(function(i){ return i.estudiante_id; }).filter(Boolean))];
+        var _rEst = _estIds.length ? await _sb.from('estudiantes').select('id,dni').in('id', _estIds) : { data: [] };
+        var _dniById = {};
+        (_rEst.data || []).forEach(function(e){ _dniById[e.id] = String(e.dni); });
+        var bajaDnisPorCohorte = {};
+        _inscBajas.forEach(function(i){ var d=_dniById[i.estudiante_id]; if(!d)return; if(!bajaDnisPorCohorte[i.cohorte_id])bajaDnisPorCohorte[i.cohorte_id]=new Set(); bajaDnisPorCohorte[i.cohorte_id].add(d); });
+
         // ── Aplicar filtros desde Cashflow ──
         try {
             var _fRaw = sessionStorage.getItem('sigpo_filtros_cashflow');
@@ -340,14 +353,15 @@ async function cargarDatos() {
         var progMap = {};
         programas.forEach(function(p) { progMap[p.programa_id] = p.nombre; });
 
-        // Desertores: cobros con estado A_DEFINIR (estudiantes que salieron del sistema)
+        // Desertores: inscripciones con estado_academico = 'BAJA'
         var desercionPorProg = {};
         var totalPorProg = {};
         cobros.forEach(function(c) {
             var pid = c.programa_id;
             if (!totalPorProg[pid]) totalPorProg[pid] = new Set();
             totalPorProg[pid].add(c.dni);
-            if (c._re === 'A_DEFINIR') {
+            var esBaja = bajaDnisPorCohorte[c.cohorte_id] && bajaDnisPorCohorte[c.cohorte_id].has(String(c.dni));
+            if (esBaja) {
                 if (!desercionPorProg[pid]) desercionPorProg[pid] = new Set();
                 desercionPorProg[pid].add(c.dni);
             }
@@ -363,7 +377,7 @@ async function cargarDatos() {
         var totalDesercion = pids.reduce(function(s,pid){ return s+(desercionPorProg[pid]?desercionPorProg[pid].size:0); }, 0);
         var totalEstudiantes = pids.reduce(function(s,pid){ return s+totalPorProg[pid].size; }, 0);
         var tasaGlobal = totalEstudiantes > 0 ? (totalDesercion/totalEstudiantes*100).toFixed(1) : '0.0';
-        var impacto = cobros.filter(function(c){return c._re==='A_DEFINIR';}).reduce(function(s,c){return s+Number(c.monto_final||0);},0);
+        var impacto = cobros.filter(function(c){ return bajaDnisPorCohorte[c.cohorte_id]&&bajaDnisPorCohorte[c.cohorte_id].has(String(c.dni))&&(c.moneda||'ARS')==='ARS'; }).reduce(function(s,c){ return s+Math.max(0,Number(c.saldo_pendiente||0)); },0);
 
         // Update summary cards
         var svs = document.querySelectorAll('.summary-value');
