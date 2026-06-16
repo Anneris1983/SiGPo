@@ -503,9 +503,9 @@
                 + '</div>';
         }
 
-        /* Recibo upload (requerido para aprobar) */
+        /* Recibo upload (opcional) */
         var reciboHtml = '<div style="margin-top:14px;padding:12px 14px;background:#fffbea;border-radius:8px;border:1px solid #f0d060;">'
-            +'<div style="font-size:12px;font-weight:700;color:#7a5c00;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">📎 Recibo oficial (obligatorio para aprobar)</div>'
+            +'<div style="font-size:12px;font-weight:700;color:#7a5c00;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">📎 Recibo oficial (opcional)</div>'
             +'<input type="file" id="recibo-file" accept=".pdf,.jpg,.jpeg,.png" style="width:100%;padding:6px;border:1.5px dashed #C49A2A;border-radius:6px;cursor:pointer;font-size:12px;background:white;">'
             +'</div>';
 
@@ -559,7 +559,6 @@
     async function accionAprobar() {
         if (!_cobroActivo) return;
         var reciboFile = getReciboFile();
-        if (!reciboFile) { alert('Debés adjuntar el recibo oficial antes de aprobar.'); return; }
         if (!confirm('¿Aprobar el pago completo de '+fMillones(_cobroActivo.monto_final)+'?')) return;
         try {
             var res = await aprobarPago(_cobroActivo.cobro_id, 'total', _cobroActivo.monto_final, reciboFile);
@@ -577,7 +576,6 @@
         var monto = parseFloat(montoInput.value);
         if (!monto || monto <= 0) { alert('Ingresá un monto válido'); return; }
         var reciboFile = getReciboFile();
-        if (!reciboFile) { alert('Debés adjuntar el recibo oficial antes de aprobar.'); return; }
         if (!confirm('¿Aprobar pago parcial de '+fMillones(monto)+'?')) return;
         try {
             var res = await aprobarPago(_cobroActivo.cobro_id, 'parcial', monto, reciboFile);

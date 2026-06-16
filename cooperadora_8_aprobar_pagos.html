@@ -470,9 +470,7 @@
         document.getElementById('recibo-file').value = '';
         document.getElementById('upload-box').style.display = 'block';
         document.getElementById('file-uploaded').style.display = 'none';
-        document.getElementById('warning-no-file').style.display = 'block';
-        var btn = document.getElementById('btn-aprobar');
-        btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
+        document.getElementById('warning-no-file').style.display = 'none';
     }
 
     function poblarInfo(cobro) {
@@ -536,7 +534,6 @@
         if (!_cobroData) return;
         var esFull = document.getElementById('full-payment').checked;
         var file = document.getElementById('recibo-file').files[0];
-        if (!file) { alert('Debes subir el recibo oficial antes de aprobar.'); return; }
         var tipo = esFull ? 'COMPLETO' : 'parcial';
         var monto = esFull ? (_cobroData.monto_final || _cobroData.monto) : (parseFloat(document.getElementById('monto-abonado').value) || 0);
         if (!esFull && (!monto || monto <= 0)) { alert('Ingresá el monto abonado.'); return; }
@@ -727,15 +724,15 @@
                     <button class="btn-remove" onclick="removeFile()">❌ Cambiar</button>
                 </div>
 
-                <div class="warning-box" id="warning-no-file">
-                    <strong>⚠️ No podrás aprobar sin subir el recibo oficial</strong>
+                <div class="warning-box" id="warning-no-file" style="display:none;">
+                    <strong>ℹ️ Podés aprobar sin recibo. El recibo es opcional.</strong>
                 </div>
             </div>
         </div>
 
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="history.back()">Cancelar</button>
-            <button class="btn btn-success" id="btn-aprobar" disabled style="opacity: 0.5; cursor: not-allowed;">
+            <button class="btn btn-success" id="btn-aprobar">
                 <span>✓</span>
                 <span>Aprobar y Registrar Pago</span>
             </button>

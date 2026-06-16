@@ -710,8 +710,6 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
         reciboUrl = urlData.publicUrl;
     }
 
-    if (!reciboUrl) return { ok: false, mensaje: 'Sin recibo, no se puede aprobar (Regla 1)' };
-
     // Validación rápida de saldo en cliente para mejor UX en pago parcial
     if (tipo !== 'COMPLETO' && tipo !== 'total') {
         var montoInc = Number(montoAprobado);
