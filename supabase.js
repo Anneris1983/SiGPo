@@ -674,19 +674,18 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
         reciboUrl = urlData.publicUrl;
     }
 
-    if (!reciboUrl) return { ok: false, mensaje: 'Sin recibo, no se puede aprobar (Regla 1)' };
-
     const { data: cobro } = await sb.from('cobros').select('*').eq('cobro_id', cobroId).single();
     if (!cobro) return { ok: false, mensaje: 'Cobro no encontrado' };
 
     if (tipo === 'COMPLETO' || tipo === 'total') {
-        await sb.from('cobros').update({
+        const updateCompleto = {
             estado: 'ABONADA',
             saldo_pendiente: 0,
             monto_abonado: Number(cobro.monto_final),
-            fecha_aprobacion: new Date().toISOString().split('T')[0],
-            recibo_url: reciboUrl
-        }).eq('cobro_id', cobroId);
+            fecha_aprobacion: new Date().toISOString().split('T')[0]
+        };
+        if (reciboUrl) updateCompleto.recibo_url = reciboUrl;
+        await sb.from('cobros').update(updateCompleto).eq('cobro_id', cobroId);
     } else {
         // El monto ingresado es el INCREMENTO de este pago: acumular sobre lo
         // ya abonado en pagos parciales previos (no sobrescribir).
@@ -697,20 +696,21 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
         var updateParcial = {
             estado: estadoNuevo,
             saldo_pendiente: Math.max(0, nuevoSaldo),
-            monto_abonado: abonadoTotal,
-            recibo_url: reciboUrl
+            monto_abonado: abonadoTotal
         };
+        if (reciboUrl) updateParcial.recibo_url = reciboUrl;
         if (estadoNuevo === 'ABONADA') {
             updateParcial.fecha_aprobacion = new Date().toISOString().split('T')[0];
         }
         await sb.from('cobros').update(updateParcial).eq('cobro_id', cobroId);
 
-        await sb.from('pagos').insert({
+        const insertPago = {
             cobro_id: cobroId,
             monto: montoAprobado,
-            fecha_pago: new Date().toISOString().split('T')[0],
-            recibo_url: reciboUrl
-        });
+            fecha_pago: new Date().toISOString().split('T')[0]
+        };
+        if (reciboUrl) insertPago.recibo_url = reciboUrl;
+        await sb.from('pagos').insert(insertPago);
     }
 
     return { ok: true };
