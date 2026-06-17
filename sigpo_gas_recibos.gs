@@ -6,7 +6,7 @@
  * DESPLIEGUE (una sola vez):
  *  1. script.google.com desde la cuenta crm.posgrado@gmail.com → Nuevo proyecto
  *  2. Pegar este código
- *  3. Servicios avanzados → habilitar "Drive API" (v2)
+ *  3. Servicios avanzados → habilitar "Drive API" (v3)
  *  4. Reemplazar los valores REEMPLAZAR_* de abajo
  *  5. Ejecutar configurarTriggers() una vez → autorizar permisos
  *  6. Para TEST: cambiar la hora del trigger en configurarTriggers() a la hora actual + 1
@@ -14,7 +14,7 @@
  * LO QUE HACE EL SCRIPT:
  *  · Busca en Gmail emails no procesados del remitente configurado con PDF adjunto
  *  · Lee el texto del PDF (convierte a Google Doc temporario)
- *  · Extrae: Nro. Recibo / CUIT o DNI / Concepto (cuota + cohorte + periodo)
+ *  · Extrae: Nro. Recibo / CUIT o DNI / Concepto (programa_id + cohorte + periodo)
  *  · Normaliza el DNI: maneja CUIT (XX-XXXXXXXX-X) y ceros a la izquierda
  *  · Busca la cuota exacta en Supabase
  *  · Si la encuentra → sube el PDF a Storage y registra en recibos_tango
@@ -98,7 +98,7 @@ function _procesarUnPDF(att, msg) {
     _registrarPendiente(datos, 'No se pudo extraer DNI/CUIT del PDF.');
     return;
   }
-  if (!datos.cohorte_nombre || !datos.concepto_bd || !datos.periodo_bd) {
+  if (!datos.programa_id || !datos.periodo_bd) {
     _registrarPendiente(datos,
       'No se pudo parsear el Concepto del PDF. Texto extraído: "' + (datos.concepto_raw || '') + '"');
     return;
@@ -111,7 +111,7 @@ function _procesarUnPDF(att, msg) {
   }
 
   // 5. Buscar la cuota en Supabase
-  var cobro = _buscarCobro(datos.dni_normalizado, datos.cohorte_nombre, datos.concepto_bd, datos.periodo_bd);
+  var cobro = _buscarCobro(datos.dni_normalizado, datos.programa_id, datos.periodo_bd);
   if (cobro === 'MULTIPLE') {
     _registrarPendiente(datos, 'Se encontraron múltiples cuotas para los mismos datos. Revisión manual requerida.');
     return;
@@ -119,8 +119,7 @@ function _procesarUnPDF(att, msg) {
   if (!cobro) {
     _registrarPendiente(datos,
       'No se encontró cuota para: DNI=' + datos.dni_normalizado +
-      ', Cohorte=' + datos.cohorte_nombre +
-      ', Concepto=' + datos.concepto_bd +
+      ', Programa=' + datos.programa_id +
       ', Periodo=' + datos.periodo_bd);
     return;
   }
@@ -160,10 +159,13 @@ function _extraerTextoPDF(attachment) {
 
 // ══════════════════════════════════════════════════════════════
 // PARSEAR CAMPOS DEL RECIBO TANGO
-// Formato esperado en el PDF:
-//   Concepto : 11 - Cohorte 2025-2026 - marzo 2025
-//   C.U.I.T. : 20-24207661-3   (o solo el DNI: 24207661)
-//   Nro. Recibo: X00004-00009901
+// Formato real en el PDF (cooperadora carga el Nº de programa en el concepto):
+//   Concepto : 11  cohorte 2025-2026 septiembre 2026
+//     · 11               → programa_id
+//     · cohorte 2025-2026 → nombre de cohorte ("Cohorte 2025-2026")
+//     · septiembre 2026   → periodo ("Septiembre de 2026")
+//   C.U.I.T. : 36190484   (DNI directo, o CUIT 20-24207661-3)
+//   NºRecibo : X00004-00009901
 // ══════════════════════════════════════════════════════════════
 
 function _parsearRecibo(texto) {
@@ -172,31 +174,30 @@ function _parsearRecibo(texto) {
     cuit_raw:        null,
     dni_normalizado: null,
     concepto_raw:    null,
-    cohorte_nombre:  null,
-    concepto_bd:     null,  // ej: "Cuota 11"
-    periodo_bd:      null   // ej: "Marzo de 2025"
+    programa_id:     null,  // ej: 11
+    cohorte_nombre:  null,  // ej: "Cohorte 2025-2026"
+    periodo_bd:      null   // ej: "Septiembre de 2026"
   };
 
   // Nro. Recibo — ej: X00004-00009901 (letra + dígitos, guion, dígitos)
   var mRec = texto.match(/([A-Z]\d{3,6}[-]\d{5,10})/);
   if (mRec) datos.nro_recibo = mRec[1];
 
-  // CUIT / DNI — busca dígitos (con o sin guiones) después de "CUIT" o "C.U.I.T."
-  var mCuit = texto.match(/C\.?U\.?I\.?T\.?\s*[:\s.]+\s*([\d\-]{7,14})/i);
+  // CUIT / DNI del CLIENTE — formato con puntos "C.U.I.T. :" (el encabezado
+  // de la cooperadora usa "CUIT:" sin puntos, así no lo confundimos)
+  var mCuit = texto.match(/C\.U\.I\.T\.\s*:?\s*([\d.\-]{7,14})/);
   if (mCuit) {
     datos.cuit_raw        = mCuit[1];
     datos.dni_normalizado = _normalizarDni(mCuit[1]);
   }
 
-  // Concepto — ej: "11 - Cohorte 2025-2026 - marzo 2025"
-  // También acepta guion largo (–) y variaciones de espaciado
-  var mConc = texto.match(/(\d{1,2})\s*[-–]\s*(Cohorte\s+\d{4}[-]\d{4})\s*[-–]\s*([a-záéíóúñ]+)\s+(\d{4})/i);
+  // Concepto — ej: "11  cohorte 2025-2026 septiembre 2026"
+  var mConc = texto.match(/Concepto\s*:?\s*(\d{1,3})\s+cohorte\s+(\d{4}-\d{4})\s+([a-záéíóúñ]+)\s+(\d{4})/i);
   if (mConc) {
-    datos.concepto_raw  = mConc[0].trim();
-    var nro             = parseInt(mConc[1], 10);
-    datos.cohorte_nombre = mConc[2].replace(/\s+/g, ' ').trim();
-    datos.concepto_bd   = 'Cuota ' + (nro < 10 ? '0' : '') + nro;
-    datos.periodo_bd    = _normalizarMes(mConc[3]) + ' de ' + mConc[4];
+    datos.concepto_raw   = mConc[0].replace(/\s+/g, ' ').trim();
+    datos.programa_id    = parseInt(mConc[1], 10);
+    datos.cohorte_nombre = 'Cohorte ' + mConc[2];
+    datos.periodo_bd     = _normalizarMes(mConc[3]) + ' de ' + mConc[4];
   } else {
     // Captura parcial para incluir en el aviso de pendiente
     var mConc2 = texto.match(/Concepto\s*[:\s]+(.{5,80})/i);
@@ -239,32 +240,23 @@ function _normalizarMes(mes) {
 
 // ══════════════════════════════════════════════════════════════
 // BUSCAR COBRO EN SUPABASE
+// Identifica la cuota por: programa_id + periodo + DNI (recibo sin asignar).
+// El periodo (mes + año) ya determina la cuota exacta del programa.
 // Retorna: objeto cobro | null (no encontrado) | 'MULTIPLE'
 // ══════════════════════════════════════════════════════════════
 
-function _buscarCobro(dniNorm, cohorteNombre, conceptoBD, periodoBD) {
-  // Paso 1: obtener cohorte_id desde el nombre
-  var cohortes = _sbGet(
-    'cohortes?select=cohorte_id&nombre=eq.' + encodeURIComponent(cohorteNombre)
-  );
-  if (!cohortes.length) {
-    Logger.log('Cohorte no encontrada: "' + cohorteNombre + '"');
-    return null;
-  }
-  var cohorteId = cohortes[0].cohorte_id;
-
-  // Paso 2: buscar cobros que coincidan (sin recibo asignado)
+function _buscarCobro(dniNorm, programaId, periodoBD) {
+  // Buscar cobros del programa, en ese periodo, sin recibo asignado
   var cobros = _sbGet(
     'cobros?select=cobro_id,dni' +
-    '&cohorte_id=eq.' + cohorteId +
-    '&concepto=eq.' + encodeURIComponent(conceptoBD) +
+    '&programa_id=eq.' + programaId +
     '&periodo=ilike.' + encodeURIComponent(periodoBD) +
     '&recibo_url=is.null'
   );
 
-  // Paso 3: filtrar por DNI normalizado (maneja ceros a la izquierda en la BD)
+  // Filtrar por DNI normalizado (maneja ceros a la izquierda en la BD)
   var coincidencias = cobros.filter(function(c) {
-    return (c.dni.replace(/^0+/, '') || '0') === dniNorm;
+    return (String(c.dni).replace(/^0+/, '') || '0') === dniNorm;
   });
 
   if (coincidencias.length === 0) return null;
