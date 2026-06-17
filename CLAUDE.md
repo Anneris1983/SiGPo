@@ -7,4 +7,4 @@
 - Un cambio por commit.
 
 ## Infraestructura (NO volver a preguntar)
-- **GitHub Pages publica desde la rama `desarrollo-34`.** Es la rama de trabajo y de producción. NO es `main`. Pushear a `desarrollo-34` pone los cambios en vivo.
+- **GitHub Pages publica desde la rama `desarrollo-36`.** Es la rama de trabajo y de producción. NO es `main`. Pushear a `desarrollo-36` pone los cambios en vivo.
