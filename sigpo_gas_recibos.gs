@@ -144,15 +144,14 @@ function _procesarUnPDF(att, msg) {
 
 // ══════════════════════════════════════════════════════════════
 // EXTRAER TEXTO DEL PDF
-// Requiere: Servicios avanzados → Drive API (v2) habilitado
+// Requiere: Servicios avanzados → Drive API (v3) habilitado
 // ══════════════════════════════════════════════════════════════
 
 function _extraerTextoPDF(attachment) {
   var blob = attachment.copyBlob().setContentType('application/pdf');
-  var file = Drive.Files.insert(
-    { title: 'sigpo_tmp_' + Date.now(), mimeType: 'application/vnd.google-apps.document' },
-    blob,
-    { convert: true }
+  var file = Drive.Files.create(
+    { name: 'sigpo_tmp_' + Date.now(), mimeType: 'application/vnd.google-apps.document' },
+    blob
   );
   var texto = DocumentApp.openById(file.id).getBody().getText();
   DriveApp.getFileById(file.id).setTrashed(true);
