@@ -743,8 +743,6 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
         reciboUrl = urlData.publicUrl;
     }
 
-    if (!reciboUrl) return { ok: false, mensaje: 'Sin recibo, no se puede aprobar (Regla 1)' };
-
     const { data: cobro } = await sb.from('cobros').select('*').eq('cobro_id', cobroId).single();
     if (!cobro) return { ok: false, mensaje: 'Cobro no encontrado' };
 
@@ -762,20 +760,22 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
         : new Date().toISOString().split('T')[0];
 
     if (tipo === 'COMPLETO' || tipo === 'total') {
-        await sb.from('cobros').update({
+        const updCompleto = {
             estado: 'ABONADA',
             saldo_pendiente: 0,
             monto_abonado: Number(cobro.monto_final),
             fecha_aprobacion: new Date().toISOString().split('T')[0],
-            recibo_url: reciboUrl,
             aprobado_por: aprobadoPor
-        }).eq('cobro_id', cobroId);
-        await sb.from('pagos').insert({
+        };
+        if (reciboUrl) updCompleto.recibo_url = reciboUrl;
+        await sb.from('cobros').update(updCompleto).eq('cobro_id', cobroId);
+        const insCompleto = {
             cobro_id: cobroId,
             monto: Number(cobro.monto_final),
-            fecha_pago: fechaPagoEfectivo,
-            recibo_url: reciboUrl
-        });
+            fecha_pago: fechaPagoEfectivo
+        };
+        if (reciboUrl) insCompleto.recibo_url = reciboUrl;
+        await sb.from('pagos').insert(insCompleto);
     } else {
         // El monto ingresado es el INCREMENTO de este pago: acumular sobre lo
         // ya abonado en pagos parciales previos (no sobrescribir).
@@ -797,20 +797,21 @@ async function aprobarPago(cobroId, tipo, montoAprobado, reciboFile) {
             estado: estadoNuevo,
             saldo_pendiente: Math.max(0, nuevoSaldo),
             monto_abonado: abonadoTotal,
-            recibo_url: reciboUrl,
             aprobado_por: aprobadoPor,
             saldo_mora_base: null
         };
+        if (reciboUrl) updateParcial.recibo_url = reciboUrl;
         if (estadoNuevo === 'ABONADA') {
             updateParcial.fecha_aprobacion = new Date().toISOString().split('T')[0];
         }
         await sb.from('cobros').update(updateParcial).eq('cobro_id', cobroId);
-        await sb.from('pagos').insert({
+        const insParcial = {
             cobro_id: cobroId,
             monto: montoInc,
-            fecha_pago: fechaPagoEfectivo,
-            recibo_url: reciboUrl
-        });
+            fecha_pago: fechaPagoEfectivo
+        };
+        if (reciboUrl) insParcial.recibo_url = reciboUrl;
+        await sb.from('pagos').insert(insParcial);
     }
 
     return { ok: true };
