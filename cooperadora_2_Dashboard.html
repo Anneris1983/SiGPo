@@ -418,9 +418,9 @@
                     </div>
                 </div>
 
-                <!-- Subir recibo -->
-                <div class="ap-section-title" style="margin-top:22px;">&#x1F4C4; Subir Recibo Oficial (OBLIGATORIO)</div>
-                <div class="upload-box-ap" id="ap-upload-box-wrapper">
+                <!-- Subir recibo — oculto: el recibo oficial lo sube automáticamente el script de Tango -->
+                <div class="ap-section-title" style="display:none;">&#x1F4C4; Subir Recibo Oficial (OBLIGATORIO)</div>
+                <div class="upload-box-ap" id="ap-upload-box-wrapper" style="display:none;">
                     <input type="file" id="ap-recibo-file" accept=".pdf" style="display:none;" onchange="handleFileUpload(event)">
                     <label for="ap-recibo-file" class="upload-label-ap">
                         <div class="upload-icon-lg">&#x1F4CE;</div>
@@ -438,7 +438,7 @@
                     </div>
                     <button class="btn-remove-file" onclick="removeFile()">&#x274C; Cambiar</button>
                 </div>
-                <div class="warning-no-file" id="ap-warning-no-file">&#x26A0;&#xFE0F; No podr&#225;s aprobar sin subir el recibo oficial</div>
+                <div class="warning-no-file" id="ap-warning-no-file" style="display:none;"></div>
 
                 <!-- Secci&#243;n de rechazo -->
                 <div class="rechazo-section" id="ap-rechazo-section">
@@ -637,15 +637,13 @@
     async function aprobarCobro() {
         if (!_cobroData) return;
         var esFull = document.getElementById('ap-full-payment').checked;
-        var file = document.getElementById('ap-recibo-file').files[0];
-        if (!file) { alert('Debes subir el recibo oficial antes de aprobar.'); return; }
         var tipo = esFull ? 'COMPLETO' : 'PARCIAL';
         var monto = esFull ? (_cobroData.monto_final || _cobroData.monto) : (parseFloat(document.getElementById('ap-monto-abonado').value) || 0);
         if (!esFull && (!monto || monto <= 0)) { alert('Ingresá el monto abonado.'); return; }
         var btn = document.getElementById('ap-btn-aprobar');
         btn.disabled = true; btn.textContent = 'Procesando…';
         try {
-            await aprobarPago(_cobroId, tipo, monto, file);
+            await aprobarPago(_cobroId, tipo, monto, null);
             cerrarModalAprobar();
             recargarComprobantes();
         } catch(e) {
