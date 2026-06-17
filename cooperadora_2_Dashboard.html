@@ -626,7 +626,7 @@
         try {
             var sb = await getSupabase();
             var res = await sb.from('cobros')
-                .select('*, estudiantes!cobros_dni_fkey(nombre,apellido,dni), programas(nombre), cohortes(nombre)')
+                .select('*, estudiantes!cobros_dni_fkey(nombre,apellido,dni), programas(programa_id,nombre), cohortes(nombre)')
                 .eq('cobro_id', _cobroId).single();
             if (res.error) throw res.error;
             _cobroData = res.data;
@@ -696,7 +696,7 @@
     function recargarComprobantes() {
         getSupabase().then(function(sb) {
             return sb.from('cobros')
-                .select('*, estudiantes!cobros_dni_fkey(nombre, apellido, dni), programas(nombre)')
+                .select('*, estudiantes!cobros_dni_fkey(nombre, apellido, dni), programas(programa_id,nombre)')
                 .not('comprobante_url', 'is', null)
                 .not('estado', 'in', '("ABONADA","PAGO_PARCIAL","NO_APLICA","A_DEFINIR")')
                 .order('updated_at', { ascending: false });
@@ -742,6 +742,7 @@
             if (!nombre || nombre === ', ') nombre = c.dni || '—';
             var dni = estudiante.dni || c.dni || '—';
             var programa = c.programas ? c.programas.nombre : (c.programa_nombre || '—');
+            var programaId = c.programas ? c.programas.programa_id : (c.programa_id || '');
             var monto = fMillones(c.monto_final || c.monto_cuota || 0);
             var vencimiento = fFecha(c.fecha_vencimiento);
             var tiempo = tiempoRelativo(c.comprobante_fecha || c.updated_at || c.created_at);
@@ -759,7 +760,7 @@
                 + '<div class="comprobante-header">'
                 +   '<div class="student-info">'
                 +     '<h3>' + nombre + (esReciente ? ' <span class="new-badge">NUEVO</span>' : '') + '</h3>'
-                +     '<p>DNI: ' + dni + ' - ' + programa + '</p>'
+                +     '<p>DNI: ' + dni + (programaId ? ' · Prog. <strong>' + programaId + '</strong>' : '') + ' — ' + programa + '</p>'
                 +   '</div>'
                 +   '<div class="time-badge' + (esReciente ? ' recent' : '') + '">&#x23F1;&#xFE0F; ' + tiempo + '</div>'
                 + '</div>'
@@ -841,7 +842,7 @@
             obtenerDashboardAdmin(),
             getSupabase().then(function(sb) {
                 return sb.from('cobros')
-                    .select('*, estudiantes!cobros_dni_fkey(nombre, apellido, dni), programas(nombre)')
+                    .select('*, estudiantes!cobros_dni_fkey(nombre, apellido, dni), programas(programa_id,nombre)')
                     .not('comprobante_url', 'is', null)
                     .not('estado', 'in', '("ABONADA","PAGO_PARCIAL","NO_APLICA","A_DEFINIR")')
                     .order('updated_at', { ascending: false })
