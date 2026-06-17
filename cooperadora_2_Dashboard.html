@@ -418,7 +418,7 @@
                 </div>
 
                 <!-- Subir recibo -->
-                <div class="ap-section-title" style="margin-top:22px;">&#x1F4C4; Subir Recibo Oficial (OBLIGATORIO)</div>
+                <div class="ap-section-title" style="margin-top:22px;">&#x1F4C4; Subir Recibo Oficial (opcional)</div>
                 <div class="upload-box-ap" id="ap-upload-box-wrapper">
                     <input type="file" id="ap-recibo-file" accept=".pdf" style="display:none;" onchange="handleFileUpload(event)">
                     <label for="ap-recibo-file" class="upload-label-ap">
@@ -437,7 +437,7 @@
                     </div>
                     <button class="btn-remove-file" onclick="removeFile()">&#x274C; Cambiar</button>
                 </div>
-                <div class="warning-no-file" id="ap-warning-no-file">&#x26A0;&#xFE0F; No podr&#225;s aprobar sin subir el recibo oficial</div>
+                <div class="warning-no-file" id="ap-warning-no-file">&#x2139;&#xFE0F; El recibo es opcional: el comprobante de Tango se adjunta autom&#225;ticamente.</div>
 
                 <!-- Secci&#243;n de rechazo -->
                 <div class="rechazo-section" id="ap-rechazo-section">
@@ -641,7 +641,6 @@
         if (!_cobroData) return;
         var esFull = document.getElementById('ap-full-payment').checked;
         var file = document.getElementById('ap-recibo-file').files[0];
-        if (!file) { alert('Debes subir el recibo oficial antes de aprobar.'); return; }
         var tipo = esFull ? 'COMPLETO' : 'PARCIAL';
         var monto = esFull ? (_cobroData.monto_final || _cobroData.monto) : (parseFloat(document.getElementById('ap-monto-abonado').value) || 0);
         if (!esFull && (!monto || monto <= 0)) { alert('Ingresá el monto abonado.'); return; }

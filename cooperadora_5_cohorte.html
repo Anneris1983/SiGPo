@@ -1368,7 +1368,7 @@
                 </div>
 
                 <!-- Subir recibo -->
-                <div class="ap-sec-title">📄 Subir Recibo Oficial (OBLIGATORIO)</div>
+                <div class="ap-sec-title">📄 Subir Recibo Oficial (opcional)</div>
                 <div class="ap-upload-box" id="apUploadBox">
                     <input type="file" id="aprobReciboFile" accept=".pdf,image/*" style="display:none;" onchange="apHandleFile(event)">
                     <label for="aprobReciboFile" style="cursor:pointer;display:block;">
@@ -1385,7 +1385,7 @@
                     </div>
                     <button class="btn light" style="padding:4px 10px;font-size:12px;" onclick="apRemoveFile()">✕ Cambiar</button>
                 </div>
-                <div class="ap-warn-nofile" id="apWarnNoFile">⚠️ No podrás aprobar sin subir el recibo oficial</div>
+                <div class="ap-warn-nofile" id="apWarnNoFile">ℹ️ El recibo es opcional: el comprobante de Tango se adjunta automáticamente.</div>
 
                 <!-- Sección de rechazo -->
                 <div class="ap-rechazo-sec" id="apRechazoSec">
@@ -3114,10 +3114,6 @@
         async function aprobarCuotaDesdeModal() {
             if (!_aprobacionCobroId) return;
             var file = document.getElementById('aprobReciboFile').files[0];
-            if (!file) {
-                document.getElementById('aprobMsgBox').textContent = '⚠️ Debés adjuntar el recibo oficial antes de aprobar.';
-                return;
-            }
             var esFull = document.getElementById('apFullRadio').checked;
             var tipo = esFull ? 'COMPLETO' : 'PARCIAL';
             var monto = esFull
