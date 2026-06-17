@@ -1367,25 +1367,13 @@
                     </div>
                 </div>
 
-                <!-- Subir recibo -->
-                <div class="ap-sec-title">📄 Subir Recibo Oficial (opcional)</div>
-                <div class="ap-upload-box" id="apUploadBox">
-                    <input type="file" id="aprobReciboFile" accept=".pdf,image/*" style="display:none;" onchange="apHandleFile(event)">
-                    <label for="aprobReciboFile" style="cursor:pointer;display:block;">
-                        <div style="font-size:32px;margin-bottom:6px;">📎</div>
-                        <strong>Click para seleccionar archivo</strong>
-                        <p style="font-size:12px;color:#767676;margin-top:4px;">PDF o imagen · Máximo 10 MB</p>
-                    </label>
+                <!-- Subir recibo — OCULTO: el recibo lo adjunta automáticamente el script de Tango -->
+                <div class="ap-sec-title" style="display:none;"></div>
+                <div class="ap-upload-box" id="apUploadBox" style="display:none;">
+                    <input type="file" id="aprobReciboFile" accept=".pdf,image/*" style="display:none;">
                 </div>
-                <div class="ap-file-uploaded" id="apFileUploaded" style="display:none;">
-                    <div style="font-size:24px;">✅</div>
-                    <div style="flex:1;">
-                        <div style="font-weight:700;font-size:13px;" id="apFileName"></div>
-                        <div style="font-size:12px;color:#555;" id="apFileSize"></div>
-                    </div>
-                    <button class="btn light" style="padding:4px 10px;font-size:12px;" onclick="apRemoveFile()">✕ Cambiar</button>
-                </div>
-                <div class="ap-warn-nofile" id="apWarnNoFile">ℹ️ El recibo es opcional: el comprobante de Tango se adjunta automáticamente.</div>
+                <div class="ap-file-uploaded" id="apFileUploaded" style="display:none;"></div>
+                <div class="ap-warn-nofile" id="apWarnNoFile" style="display:none;"></div>
 
                 <!-- Sección de rechazo -->
                 <div class="ap-rechazo-sec" id="apRechazoSec">

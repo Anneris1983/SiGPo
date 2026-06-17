@@ -503,11 +503,8 @@
                 + '</div>';
         }
 
-        /* Recibo upload (opcional) */
-        var reciboHtml = '<div style="margin-top:14px;padding:12px 14px;background:#fffbea;border-radius:8px;border:1px solid #f0d060;">'
-            +'<div style="font-size:12px;font-weight:700;color:#7a5c00;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">📎 Recibo oficial (opcional)</div>'
-            +'<input type="file" id="recibo-file" accept=".pdf,.jpg,.jpeg,.png" style="width:100%;padding:6px;border:1.5px dashed #C49A2A;border-radius:6px;cursor:pointer;font-size:12px;background:white;">'
-            +'</div>';
+        /* Recibo upload — OCULTO: el recibo lo adjunta automáticamente el script de Tango */
+        var reciboHtml = '<input type="file" id="recibo-file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">';
 
         /* Pago parcial input
            - Se pre-carga con el monto que el estudiante declaró en ESTA
