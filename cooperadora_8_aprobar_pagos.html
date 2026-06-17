@@ -482,7 +482,7 @@
         var nombreCompleto = (estudiante.apellido ? estudiante.apellido + ', ' : '') + (estudiante.nombre || '');
         if (vals[0]) vals[0].textContent = nombreCompleto || '—';
         if (vals[1]) vals[1].textContent = estudiante.dni || '—';
-        if (vals[2]) vals[2].textContent = (programa.nombre||'')+( cohorte.nombre ? ' – '+cohorte.nombre : '');
+        if (vals[2]) vals[2].textContent = (programa.programa_id ? 'Prog. '+programa.programa_id+' · ' : '')+(programa.nombre||'')+( cohorte.nombre ? ' – '+cohorte.nombre : '');
         if (vals[3]) vals[3].textContent = cobro.concepto || ('Cuota '+(cobro.nro_cuota||''));
         if (vals[4]) { vals[4].textContent = fmt(cobro.monto_final || cobro.monto); vals[4].classList.add('highlight'); }
         if (vals[5]) { var _reEstado = resolverEstadoCobro(cobro); vals[5].textContent = estadoLabel[_reEstado] || _reEstado || '—'; if (_reEstado==='EN_MORA') vals[5].style.color='var(--danger)'; }
@@ -522,7 +522,7 @@
         try {
             var sb = await getSupabase();
             var res = await sb.from('cobros')
-                .select('*, estudiantes!cobros_dni_fkey(nombre,apellido,dni), programas(nombre), cohortes(nombre)')
+                .select('*, estudiantes!cobros_dni_fkey(nombre,apellido,dni), programas(programa_id,nombre), cohortes(nombre)')
                 .eq('cobro_id', _cobroId).single();
             if (res.error) throw res.error;
             _cobroData = res.data;

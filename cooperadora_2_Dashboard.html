@@ -605,7 +605,7 @@
         var nombreCompleto = (estudiante.apellido ? estudiante.apellido + ', ' : '') + (estudiante.nombre || '');
         document.getElementById('ap-nombre').textContent = nombreCompleto || '—';
         document.getElementById('ap-dni').textContent = estudiante.dni || '—';
-        document.getElementById('ap-programa').textContent = (programa.nombre || '') + (cohorte.nombre ? ' – ' + cohorte.nombre : '');
+        document.getElementById('ap-programa').textContent = (programa.programa_id ? 'Prog. ' + programa.programa_id + ' · ' : '') + (programa.nombre || '') + (cohorte.nombre ? ' – ' + cohorte.nombre : '');
         document.getElementById('ap-cuota').textContent = cobro.concepto || ('Cuota ' + (cobro.nro_cuota || ''));
         var total = cobro.monto_final || cobro.monto || 0;
         document.getElementById('ap-monto').textContent = fmt(total);
@@ -621,7 +621,7 @@
         document.getElementById('ap-file-name').textContent = fname;
         document.getElementById('ap-file-meta').textContent = cobro.comprobante_fecha ? 'Subido: ' + fFecha(cobro.comprobante_fecha) : (cobro.updated_at ? 'Subido: ' + fFecha(cobro.updated_at) : '');
         document.getElementById('ap-ver-btn').onclick = function() { if (url) window.open(url, '_blank'); };
-        document.getElementById('ap-header-info').textContent = nombreCompleto + (programa.nombre ? ' · ' + programa.nombre : '');
+        document.getElementById('ap-header-info').textContent = nombreCompleto + (programa.programa_id ? ' · Prog. ' + programa.programa_id : '') + (programa.nombre ? ' · ' + programa.nombre : '');
     }
 
     async function cargarCobro() {
@@ -629,7 +629,7 @@
         try {
             var sb = await getSupabase();
             var res = await sb.from('cobros')
-                .select('*, estudiantes!cobros_dni_fkey(nombre,apellido,dni), programas(nombre), cohortes(nombre)')
+                .select('*, estudiantes!cobros_dni_fkey(nombre,apellido,dni), programas(programa_id,nombre), cohortes(nombre)')
                 .eq('cobro_id', _cobroId).single();
             if (res.error) throw res.error;
             _cobroData = res.data;
@@ -696,7 +696,7 @@
     function recargarComprobantes() {
         getSupabase().then(function(sb) {
             return sb.from('cobros')
-                .select('*, estudiantes!cobros_dni_fkey(nombre, apellido, dni), programas(nombre), cohortes(nombre)')
+                .select('*, estudiantes!cobros_dni_fkey(nombre, apellido, dni), programas(programa_id,nombre), cohortes(nombre)')
                 .not('comprobante_url', 'is', null)
                 .not('estado', 'in', '("ABONADA","PAGO_PARCIAL","NO_APLICA","A_DEFINIR")')
                 .order('updated_at', { ascending: false });
@@ -742,6 +742,7 @@
             if (!nombre || nombre === ', ') nombre = c.dni || '—';
             var dni = estudiante.dni || c.dni || '—';
             var programa = c.programas ? c.programas.nombre : (c.programa_nombre || '—');
+            var programaId = c.programas ? c.programas.programa_id : (c.programa_id || '');
             var cohorte = c.cohortes ? c.cohortes.nombre : '';
             var programaCohorte = programa + (cohorte ? ' – ' + cohorte : '');
             var monto = fMillones(c.monto_final || c.monto_cuota || 0, c.moneda);
@@ -759,13 +760,14 @@
             var estadoLabel = _estadoLabels[_re] || _re || '—';
             var nombreEsc = nombre.replace(/'/g, "\\'")
             var programaEsc = programaCohorte.replace(/'/g, "\\'")
-            var modalCall = "abrirModal({nombre:'" + nombreEsc + "',info:'DNI: " + dni + " - " + programaEsc + "',cuota:'" + cuotaLabel + "',monto:'" + monto + "',vencimiento:'" + vencimiento + "',estado:'" + estadoLabel + "',archivo:'" + archivoNombre + "',url:'" + archivoUrl + "'})";
+            var infoLinea = 'DNI: ' + dni + (programaId ? ' · Prog. ' + programaId : '') + ' - ' + programaEsc;
+            var modalCall = "abrirModal({nombre:'" + nombreEsc + "',info:'" + infoLinea + "',cuota:'" + cuotaLabel + "',monto:'" + monto + "',vencimiento:'" + vencimiento + "',estado:'" + estadoLabel + "',archivo:'" + archivoNombre + "',url:'" + archivoUrl + "'})";
 
             return '<div class="comprobante-card' + (esReciente ? ' new' : '') + '">'
                 + '<div class="comprobante-header">'
                 +   '<div class="student-info">'
                 +     '<h3>' + esc(nombre) + (esReciente ? ' <span class="new-badge">NUEVO</span>' : '') + '</h3>'
-                +     '<p>DNI: ' + esc(dni) + ' - ' + esc(programaCohorte) + '</p>'
+                +     '<p>DNI: ' + esc(dni) + (programaId ? ' · Prog. <strong>' + esc(programaId) + '</strong>' : '') + ' — ' + esc(programaCohorte) + '</p>'
                 +   '</div>'
                 +   '<div class="time-badge' + (esReciente ? ' recent' : '') + '">&#x23F1;&#xFE0F; ' + tiempo + '</div>'
                 + '</div>'
@@ -844,7 +846,7 @@
             obtenerDashboardAdmin(),
             getSupabase().then(function(sb) {
                 return sb.from('cobros')
-                    .select('*, estudiantes!cobros_dni_fkey(nombre, apellido, dni), programas(nombre), cohortes(nombre)')
+                    .select('*, estudiantes!cobros_dni_fkey(nombre, apellido, dni), programas(programa_id,nombre), cohortes(nombre)')
                     .not('comprobante_url', 'is', null)
                     .not('estado', 'in', '("ABONADA","PAGO_PARCIAL","NO_APLICA","A_DEFINIR")')
                     .order('updated_at', { ascending: false })

@@ -2251,7 +2251,7 @@
         function abrirCrearCuotaCoop() {
             var ests = vistaData ? vistaData.estudiantes : [];
             document.getElementById('pcuota-n-todos').textContent = ests.length;
-            document.getElementById('cuota-sub-coop').textContent = (vistaData ? vistaData.programa.nombre + ' · ' + vistaData.cohorte.nombre : '—');
+            document.getElementById('cuota-sub-coop').textContent = (vistaData ? (vistaData.programa.programaId ? 'Prog. ' + vistaData.programa.programaId + ' · ' : '') + vistaData.programa.nombre + ' · ' + vistaData.cohorte.nombre : '—');
 
             // Auto-detectar última cuota
             var maxVenc = null, maxNum = 0, yaHayInscripcion = false;
@@ -2416,7 +2416,7 @@
 
         function abrirModalCrearCuotas() {
             prepararCuotasIniciales();
-            document.getElementById('modalCuotasSubtitulo').textContent = vistaData.programa.nombre + ' · ' + vistaData.cohorte.nombre;
+            document.getElementById('modalCuotasSubtitulo').textContent = (vistaData.programa.programaId ? 'Prog. ' + vistaData.programa.programaId + ' · ' : '') + vistaData.programa.nombre + ' · ' + vistaData.cohorte.nombre;
             renderCuotasModal();
             renderSelectorEstudiantes();
             actualizarResumenModalCuotas();
