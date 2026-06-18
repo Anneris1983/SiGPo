@@ -509,6 +509,13 @@ function _extraerDniEstudiante(texto) {
               texto.match(/\b2[0347][-.\s]\d{8}[-.\s]\d\b/);
   if (mCuil) return _normalizarDni(mCuil[0].replace(/\D/g, ''));
 
+  // (4) Factura a empresa: el campo CUIT era de una empresa (30/33/34),
+  //     pero Tango incluye "Corresponde a APELLIDO, Nombre DNI 28123456".
+  //     Configurar Tango para que SIEMPRE lleve esta línea garantiza la asignación
+  //     automática incluso cuando quien paga es una empresa o el Estado.
+  var mCorr = texto.match(/Corresponde a[^\n]*\bDNI\s+(\d{7,8})\b/i);
+  if (mCorr) return _normalizarDni(mCorr[1]);
+
   return null;
 }
 
