@@ -14,11 +14,13 @@
  * LO QUE HACE EL SCRIPT:
  *  · Busca en Gmail emails no procesados del remitente configurado con PDF adjunto
  *  · Lee el texto del PDF (convierte a Google Doc temporario)
- *  · Extrae: Nro. Recibo / CUIT o DNI / Concepto (programa_id + cohorte + periodo)
+ *  · Detecta el tipo de PDF y lo enruta:
+ *      – RECIBO  → extrae Nro/CUIT/Concepto, busca la CUOTA (programa+periodo+DNI)
+ *                  y la registra en recibos_tango (o recibos_pendientes_tango)
+ *      – FACTURA → extrae el DNI/CUIT/CUIL del ESTUDIANTE, lo busca y guarda la
+ *                  factura en la tabla `facturas` (vinculada al estudiante, NO a una cuota)
  *  · Normaliza el DNI: maneja CUIT (XX-XXXXXXXX-X) y ceros a la izquierda
- *  · Busca la cuota exacta en Supabase
- *  · Si la encuentra → sube el PDF a Storage y registra en recibos_tango
- *  · Si NO la encuentra → registra en recibos_pendientes_tango y avisa por email
+ *  · Sube el PDF a Storage; si no puede asignar, avisa por email al admin
  *  · Etiqueta el thread de Gmail para no procesarlo dos veces
  * ══════════════════════════════════════════════════════════════
  */
@@ -86,6 +88,13 @@ function _procesarUnPDF(att, msg) {
   // 1. Extraer texto
   var texto = _extraerTextoPDF(att);
   Logger.log('--- TEXTO PDF (primeros 800 chars) ---\n' + texto.substring(0, 800));
+
+  // 1b. ¿Es una FACTURA de Tango? Va por un flujo distinto: la factura se
+  //     vincula al ESTUDIANTE (por su DNI/CUIT/CUIL), no a una cuota.
+  if (/\bFACTURA\b/i.test(texto)) {
+    _procesarFactura(texto, att, msg);
+    return;
+  }
 
   // 2. Parsear campos del recibo
   var datos = _parsearRecibo(texto);
@@ -350,6 +359,168 @@ function _registrarPendiente(datos, motivo, pdfUrl) {
     );
   } catch(e) {
     Logger.log('No se pudo enviar email de aviso: ' + e.toString());
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PROCESAR UNA FACTURA TANGO
+// La factura NO se vincula a una cuota: se asigna al ESTUDIANTE por su
+// DNI/CUIT/CUIL y se guarda en la tabla `facturas` (estudiante_dni).
+// ══════════════════════════════════════════════════════════════
+
+function _procesarFactura(texto, att, msg) {
+  var datos = _parsearFactura(texto);
+  datos.email_origen = msg.getFrom();
+  datos.email_asunto = msg.getSubject();
+  Logger.log('Datos factura: ' + JSON.stringify(datos));
+
+  // Subir el PDF SIEMPRE (quede asignado o no, así no se pierde)
+  var fileBase = (datos.nro_factura || ('factura-' + Date.now())).replace(/[^\w\-]/g, '_');
+  var pdfUrl   = _subirStorage(att.copyBlob(), 'facturas-tango/' + fileBase + '.pdf');
+
+  if (!datos.dni_normalizado) {
+    _avisarFacturaPendiente(datos, 'No se pudo extraer el DNI/CUIT/CUIL del estudiante de la factura.', pdfUrl);
+    return;
+  }
+
+  var est = _buscarEstudiante(datos.dni_normalizado);
+  if (!est) {
+    _avisarFacturaPendiente(datos, 'No se encontró un estudiante con DNI=' + datos.dni_normalizado + '.', pdfUrl);
+    return;
+  }
+
+  if (datos.nro_factura && _facturaDuplicada(datos.nro_factura, est.dni)) {
+    Logger.log('Factura ' + datos.nro_factura + ' ya cargada para dni=' + est.dni + '. Saltando.');
+    return;
+  }
+
+  if (!pdfUrl) {
+    _avisarFacturaPendiente(datos, 'Error al subir el PDF de la factura a Storage.', null);
+    return;
+  }
+
+  var ok = _sbPost('facturas', {
+    estudiante_dni: est.dni,
+    descripcion:    datos.descripcion || ('Factura ' + (datos.nro_factura || '')),
+    periodo:        datos.periodo || null,
+    archivo_url:    pdfUrl,
+    subido_por_dni: 'TANGO'
+  });
+
+  if (ok) {
+    Logger.log('✅ Factura ' + datos.nro_factura + ' asignada a ' +
+               (est.apellido || '') + ', ' + (est.nombre || '') + ' (dni=' + est.dni + ')');
+  } else {
+    _avisarFacturaPendiente(datos, 'Error al guardar la factura en la BD (PDF en Storage: ' + pdfUrl + ').', pdfUrl);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PARSEAR FACTURA TANGO
+// Lo único imprescindible es el DNI/CUIT/CUIL del estudiante.
+// El resto (descripción, cuota, nro) es informativo para la tarjeta.
+// ══════════════════════════════════════════════════════════════
+
+function _parsearFactura(texto) {
+  var datos = {
+    nro_factura:     null,
+    dni_normalizado: null,
+    alumno_nombre:   null,
+    descripcion:     null,
+    periodo:         null
+  };
+
+  // Nro de factura — ej: "Nro: C00007-00007149"
+  var mNro = texto.match(/Nro\.?\s*:?\s*([A-Z]?\d{3,5}-\d{5,10})/i);
+  if (mNro) datos.nro_factura = mNro[1];
+
+  // DNI / CUIT / CUIL del estudiante (descarta el CUIT de la empresa que paga)
+  datos.dni_normalizado = _extraerDniEstudiante(texto);
+
+  // Nombre del alumno — "Corresponde a LEZZIERI, Mariela"
+  var mNom = texto.match(/Corresponde a\s+([^\n]+)/i);
+  if (mNom) datos.alumno_nombre = mNom[1].trim();
+
+  // Item / concepto — ej: "MRS COHORTE 2026"
+  var mItem = texto.match(/([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ0-9 ]*COHORTE[ ]*\d{0,4})/i);
+  var item  = mItem ? mItem[1].replace(/\s{2,}/g, ' ').trim() : null;
+
+  // Cuota Nº — ej: "Cuota Nº 1"
+  var mCuota = texto.match(/Cuota\s*N[ºo°]?\s*(\d+)/i);
+  if (mCuota) datos.periodo = 'Cuota ' + mCuota[1];
+
+  // Descripción legible (incluye el Nro para poder deduplicar)
+  var partes = [];
+  if (item)               partes.push(item);
+  if (mCuota)             partes.push('Cuota ' + mCuota[1]);
+  if (datos.nro_factura)  partes.push('Factura ' + datos.nro_factura);
+  datos.descripcion = partes.join(' · ') || 'Factura';
+
+  return datos;
+}
+
+// ══════════════════════════════════════════════════════════════
+// EXTRAER DNI DEL ESTUDIANTE DE LA FACTURA
+// Prioridad:
+//   1) DNI etiquetado: "DNI: 12345678"
+//   2) CUIT/CUIL de PERSONA FÍSICA (prefijo 20/23/24/27) → 8 dígitos del medio
+//      (así se descarta el CUIT de la empresa que paga, prefijo 30/33/34)
+// ══════════════════════════════════════════════════════════════
+
+function _extraerDniEstudiante(texto) {
+  // (1) DNI explícito
+  var mDni = texto.match(/D\.?N\.?I\.?\s*:?\s*([\d.]{7,10})/i);
+  if (mDni) {
+    var d = mDni[1].replace(/\D/g, '');
+    if (d.length >= 7 && d.length <= 8) return _normalizarDni(d);
+  }
+  // (2) CUIT/CUIL de persona física (20/23/24/27)
+  var mCuil = texto.match(/\b(2[0347][-.\s]?\d{8}[-.\s]?\d)\b/);
+  if (mCuil) return _normalizarDni(mCuil[1]);
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════
+// BUSCAR ESTUDIANTE POR DNI (dni en la BD es numérico, sin ceros previos)
+// ══════════════════════════════════════════════════════════════
+
+function _buscarEstudiante(dniNorm) {
+  var ests = _sbGet('estudiantes?select=dni,nombre,apellido&dni=eq.' + dniNorm);
+  return ests.length ? ests[0] : null;
+}
+
+// ══════════════════════════════════════════════════════════════
+// VERIFICAR FACTURA DUPLICADA (por Nro dentro de la descripción del alumno)
+// ══════════════════════════════════════════════════════════════
+
+function _facturaDuplicada(nroFactura, estDni) {
+  var r = _sbGet('facturas?select=id&estudiante_dni=eq.' + estDni +
+                 '&descripcion=ilike.*' + encodeURIComponent(nroFactura) + '*');
+  return r.length > 0;
+}
+
+// ══════════════════════════════════════════════════════════════
+// AVISO DE FACTURA NO ASIGNADA (email al admin — sin tabla de pendientes)
+// ══════════════════════════════════════════════════════════════
+
+function _avisarFacturaPendiente(datos, motivo, pdfUrl) {
+  Logger.log('⚠ FACTURA PENDIENTE: ' + motivo);
+  try {
+    GmailApp.sendEmail(
+      EMAIL_ADMIN,
+      '[SiGPo] Factura Tango pendiente de revisión',
+      'Una factura no pudo asignarse automáticamente a un estudiante.\n\n' +
+      'Motivo: ' + motivo + '\n' +
+      'Factura Nro: ' + (datos.nro_factura || 'desconocido') + '\n' +
+      'Alumno (texto del PDF): ' + (datos.alumno_nombre || 'desconocido') + '\n' +
+      'DNI detectado: ' + (datos.dni_normalizado || 'ninguno') + '\n' +
+      'PDF: ' + (pdfUrl || 'no se pudo subir') + '\n' +
+      'Email origen: ' + (datos.email_origen || 'desconocido') + '\n\n' +
+      'Cargala manualmente desde vista_facturacion_estudiante.html (rol Cooperadora).',
+      { name: NOMBRE_INST }
+    );
+  } catch(e) {
+    Logger.log('No se pudo enviar email de aviso de factura: ' + e.toString());
   }
 }
 
