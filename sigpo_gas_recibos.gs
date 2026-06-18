@@ -430,29 +430,40 @@ function _parsearFactura(texto) {
     periodo:         null
   };
 
-  // Nro de factura — ej: "Nro: C00007-00007149"
+  // Nro de factura — ej: "Nro: C00009-00000295"
   var mNro = texto.match(/Nro\.?\s*:?\s*([A-Z]?\d{3,5}-\d{5,10})/i);
   if (mNro) datos.nro_factura = mNro[1];
 
   // DNI / CUIT / CUIL del estudiante (descarta el CUIT de la empresa que paga)
   datos.dni_normalizado = _extraerDniEstudiante(texto);
 
-  // Nombre del alumno — "Corresponde a LEZZIERI, Mariela"
+  // Nombre del alumno: "Corresponde a APELLIDO, Nombre" o, si no está,
+  // la línea del cliente "(1B1014 ) - BAIGORRIA, Ernesto"
   var mNom = texto.match(/Corresponde a\s+([^\n]+)/i);
-  if (mNom) datos.alumno_nombre = mNom[1].trim();
+  if (mNom) {
+    datos.alumno_nombre = mNom[1].trim();
+  } else {
+    var mCli = texto.match(/\)\s*-\s*([A-ZÁÉÍÓÚÑ][^\n]+)/);
+    if (mCli) datos.alumno_nombre = mCli[1].trim();
+  }
 
-  // Item / concepto — ej: "MRS COHORTE 2026"
-  var mItem = texto.match(/([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ0-9 ]*COHORTE[ ]*\d{0,4})/i);
+  // Item / concepto — la línea con letras seguida de cantidad y montos
+  // ej: "MAESTRÍA RESP. SOCIAL Y DES. SOST. 19/20 1.00 9,560.00 9,560.00"
+  var mItem = texto.match(/([A-ZÁÉÍÓÚÑ][^\n]*?)\s+\d+[.,]\d{2}\s+[\d.,]+\s+[\d.,]+/);
   var item  = mItem ? mItem[1].replace(/\s{2,}/g, ' ').trim() : null;
 
-  // Cuota Nº — ej: "Cuota Nº 1"
+  // Periodo — mes + año, ej: "mayo 2021"
+  var mPer = texto.match(/(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\s+(\d{4})/i);
+  if (mPer) datos.periodo = _normalizarMes(mPer[1]) + ' ' + mPer[2];
+
+  // Cuota Nº (no siempre aparece) — ej: "Cuota Nº 1"
   var mCuota = texto.match(/Cuota\s*N[ºo°]?\s*(\d+)/i);
-  if (mCuota) datos.periodo = 'Cuota ' + mCuota[1];
 
   // Descripción legible (incluye el Nro para poder deduplicar)
   var partes = [];
   if (item)               partes.push(item);
   if (mCuota)             partes.push('Cuota ' + mCuota[1]);
+  if (datos.periodo)      partes.push(datos.periodo);
   if (datos.nro_factura)  partes.push('Factura ' + datos.nro_factura);
   datos.descripcion = partes.join(' · ') || 'Factura';
 
@@ -461,22 +472,43 @@ function _parsearFactura(texto) {
 
 // ══════════════════════════════════════════════════════════════
 // EXTRAER DNI DEL ESTUDIANTE DE LA FACTURA
-// Prioridad:
-//   1) DNI etiquetado: "DNI: 12345678"
-//   2) CUIT/CUIL de PERSONA FÍSICA (prefijo 20/23/24/27) → 8 dígitos del medio
-//      (así se descarta el CUIT de la empresa que paga, prefijo 30/33/34)
+// OJO: en la factura Tango el campo dice "CUIT:" pero suele ser el DNI.
+//   · "CUIT:14593778"        → 8 dígitos = DNI directo (consumidor final)
+//   · "CUIT:20-12345678-3"   → CUIL de persona física → 8 dígitos del medio
+//   · "CUIT:30-66414911-3"   → empresa que paga (prefijo 30/33/34) → se descarta
+// Prioridad: DNI etiquetado > DNI de 8 dígitos > CUIL de persona.
 // ══════════════════════════════════════════════════════════════
 
 function _extraerDniEstudiante(texto) {
-  // (1) DNI explícito
+  // (1) DNI etiquetado explícito: "DNI: 12345678"
   var mDni = texto.match(/D\.?N\.?I\.?\s*:?\s*([\d.]{7,10})/i);
   if (mDni) {
     var d = mDni[1].replace(/\D/g, '');
-    if (d.length >= 7 && d.length <= 8) return _normalizarDni(d);
+    if (d.length === 7 || d.length === 8) return _normalizarDni(d);
   }
-  // (2) CUIT/CUIL de persona física (20/23/24/27)
-  var mCuil = texto.match(/\b(2[0347][-.\s]?\d{8}[-.\s]?\d)\b/);
-  if (mCuil) return _normalizarDni(mCuil[1]);
+
+  // (2) Juntar todos los valores que aparezcan tras "CUIT" (puede haber varios)
+  var re = /CUIT\s*:?\s*([\d.\-]{7,13})/ig;
+  var candidatos = [], m;
+  while ((m = re.exec(texto)) !== null) candidatos.push(m[1].replace(/\D/g, ''));
+
+  // (2a) 8 dígitos → es un DNI directo (caso "Consumidor final")
+  for (var i = 0; i < candidatos.length; i++) {
+    if (candidatos[i].length === 8) return _normalizarDni(candidatos[i]);
+  }
+  // (2b) 11 dígitos de persona física (prefijo 20/23/24/27) → DNI del medio
+  for (var j = 0; j < candidatos.length; j++) {
+    if (candidatos[j].length === 11 && /^2[0347]/.test(candidatos[j])) {
+      return _normalizarDni(candidatos[j]);
+    }
+  }
+  // (los CUIT de 11 dígitos con prefijo 30/33/34 son empresas → no son el alumno)
+
+  // (3) Respaldo: un CUIL de persona suelto en cualquier parte del texto
+  var mCuil = texto.match(/\b2[0347]\d{9}\b/) ||
+              texto.match(/\b2[0347][-.\s]\d{8}[-.\s]\d\b/);
+  if (mCuil) return _normalizarDni(mCuil[0].replace(/\D/g, ''));
+
   return null;
 }
 
