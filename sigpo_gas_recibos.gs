@@ -110,25 +110,28 @@ function _procesarUnPDF(att, msg) {
     return;
   }
 
-  // 5. Buscar la cuota en Supabase
+  // 5. Subir PDF a Storage (se hace SIEMPRE, antes de buscar el cobro,
+  //    para que quede disponible tanto si se asigna automáticamente como si va a pendientes)
+  var fileBase = datos.nro_recibo || ('sin-nro-' + Date.now());
+  var fileName = 'recibos-tango/' + fileBase + '.pdf';
+  var pdfUrl   = _subirStorage(att.copyBlob(), fileName);
+
+  // 6. Buscar la cuota en Supabase
   var cobro = _buscarCobro(datos.dni_normalizado, datos.programa_id, datos.periodo_bd);
   if (cobro === 'MULTIPLE') {
-    _registrarPendiente(datos, 'Se encontraron múltiples cuotas para los mismos datos. Revisión manual requerida.');
+    _registrarPendiente(datos, 'Se encontraron múltiples cuotas para los mismos datos. Revisión manual requerida.', pdfUrl);
     return;
   }
   if (!cobro) {
     _registrarPendiente(datos,
       'No se encontró cuota para: DNI=' + datos.dni_normalizado +
       ', Programa=' + datos.programa_id +
-      ', Periodo=' + datos.periodo_bd);
+      ', Periodo=' + datos.periodo_bd,
+      pdfUrl);
     return;
   }
-
-  // 6. Subir PDF a Storage
-  var fileName = 'recibos-tango/' + (datos.nro_recibo || ('sin-nro-' + Date.now())) + '.pdf';
-  var pdfUrl   = _subirStorage(att.copyBlob(), fileName);
   if (!pdfUrl) {
-    _registrarPendiente(datos, 'Error al subir el PDF a Supabase Storage.');
+    _registrarPendiente(datos, 'Error al subir el PDF a Supabase Storage.', null);
     return;
   }
 
@@ -137,7 +140,7 @@ function _procesarUnPDF(att, msg) {
   if (ok) {
     Logger.log('✅ Recibo ' + datos.nro_recibo + ' asignado a cobro_id=' + cobro.cobro_id);
   } else {
-    _registrarPendiente(datos, 'Error al guardar en la BD (PDF ya subido a Storage: ' + pdfUrl + ').');
+    _registrarPendiente(datos, 'Error al guardar en la BD (PDF ya subido a Storage: ' + pdfUrl + ').', pdfUrl);
   }
 }
 
@@ -320,15 +323,16 @@ function _registrarExito(cobroId, nroRecibo, pdfUrl, datos) {
 
 // ══════════════════════════════════════════════════════════════
 // REGISTRAR PENDIENTE: insert recibos_pendientes_tango + aviso email
+// pdfUrl: URL del PDF ya subido al Storage (puede ser null si falló el upload)
 // ══════════════════════════════════════════════════════════════
 
-function _registrarPendiente(datos, motivo) {
+function _registrarPendiente(datos, motivo, pdfUrl) {
   Logger.log('⚠ PENDIENTE: ' + motivo);
   _sbPost('recibos_pendientes_tango', {
     email_origen:    datos.email_origen  || null,
     email_asunto:    datos.email_asunto  || null,
     nro_recibo:      datos.nro_recibo    || null,
-    pdf_url:         null,
+    pdf_url:         pdfUrl || null,
     datos_extraidos: datos,
     motivo_fallo:    motivo,
     notificado_en:   new Date().toISOString(),
