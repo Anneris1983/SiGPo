@@ -249,12 +249,11 @@ function _normalizarMes(mes) {
 // ══════════════════════════════════════════════════════════════
 
 function _buscarCobro(dniNorm, programaId, periodoBD) {
-  // Buscar cobros del programa, en ese periodo, sin recibo asignado
+  // Buscar cobros del programa en ese periodo (sin filtrar por recibo_url para soportar pagos parciales)
   var cobros = _sbGet(
     'cobros?select=cobro_id,dni' +
     '&programa_id=eq.' + programaId +
-    '&periodo=ilike.' + encodeURIComponent(periodoBD) +
-    '&recibo_url=is.null'
+    '&periodo=ilike.' + encodeURIComponent(periodoBD)
   );
 
   // Filtrar por DNI normalizado (maneja ceros a la izquierda en la BD)
