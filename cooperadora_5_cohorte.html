@@ -1500,6 +1500,7 @@
         let notificaciones = [];
         let estudianteDescuentoActual = null;
         let cuotasParaCrear = [];
+        let recibosTangoMap = {};
 
         document.addEventListener('DOMContentLoaded', async function () {
             var sesion = await requireAuth();
@@ -1585,6 +1586,8 @@
                 };
                 vistaData = normalizarDetalle(respuesta);
                 vistaData.egresos = egresosRaw;
+                var cobroIds = cobros.map(function(c){ return c.cobro_id; }).filter(Boolean);
+                recibosTangoMap = await obtenerRecibosTango(cobroIds);
                 renderVista();
             } catch(e) {
                 mostrarErrorTabla('No se pudo cargar el detalle de la cohorte.');
@@ -1872,7 +1875,7 @@
 
             let btnsHtml = '';
             const tieneComprobante = !!cuota.comprobanteUrl;
-            const tieneRecibo     = !!cuota.reciboUrl;
+            const recibos = recibosTangoMap[cuota.cobroId] || [];
 
             if (cuota.estado === 'pendiente') {
                 btnsHtml = '<div class="cuota-actions-inline">';
@@ -1883,14 +1886,15 @@
                 btnsHtml += `<button class="cbtn cbtn-no" title="Rechazar" onclick="rechazarCuota('${escapeJs(String(cuota.cobroId))}', event)">✕ Rech.</button>`;
                 btnsHtml += '</div>';
             } else if (cuota.estado === 'abonada' || cuota.estado === 'parcial') {
-                if (tieneComprobante || tieneRecibo) {
+                if (tieneComprobante || recibos.length > 0) {
                     btnsHtml = '<div class="cuota-actions-inline">';
                     if (tieneComprobante) {
                         btnsHtml += `<button class="cbtn cbtn-ver" title="Ver comprobante del alumno" onclick="verComprobante('${escapeJs(cuota.comprobanteUrl)}', event)">📄 Comp.</button>`;
                     }
-                    if (tieneRecibo) {
-                        btnsHtml += `<button class="cbtn cbtn-recibo" title="Ver recibo/factura de cooperadora" onclick="verComprobante('${escapeJs(cuota.reciboUrl)}', event)">🧾 Recibo</button>`;
-                    }
+                    recibos.forEach(function(r, idx) {
+                        var lbl = recibos.length > 1 ? ('🧾 Recibo ' + (idx+1)) : '🧾 Recibo';
+                        btnsHtml += `<button class="cbtn cbtn-recibo" title="Recibo N°${escapeJs(r.nro_recibo||String(idx+1))}" onclick="verComprobante('${escapeJs(r.pdf_url)}', event)">${lbl}</button>`;
+                    });
                     btnsHtml += '</div>';
                 }
             }

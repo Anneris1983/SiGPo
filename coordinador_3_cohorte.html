@@ -458,8 +458,9 @@ const V = {
     notifications: [],
     plantillas: (function(){ try { var s=localStorage.getItem('sigpo_plantillas_coord_'+PROGRAMA_ID); return s ? JSON.parse(s) : JSON.parse(JSON.stringify(PLANTILLAS_DEF)); } catch(e){ return JSON.parse(JSON.stringify(PLANTILLAS_DEF)); } })(),
     config: {},
-    importFile: null,
-    busy:       false,  // mutex — evita doble submit
+    importFile:      null,
+    busy:            false,  // mutex — evita doble submit
+    recibosTangoMap: {}
 };
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -563,6 +564,9 @@ async function cargar() {
         V.data.programa.gas_url        = progData.gas_url || (cohorte.programas ? cohorte.programas.gas_url : '') || '';
         V.data.programa.email_remitente = progData.email_remitente || (cohorte.programas ? cohorte.programas.email_remitente : '') || '';
         V.data.egresos = rEgr.data || [];
+        var _cobroIds = [];
+        cobros.forEach(function(c){ if(c.cobro_id) _cobroIds.push(c.cobro_id); });
+        V.recibosTangoMap = await obtenerRecibosTango(_cobroIds);
         renderHeader();
         renderTabla();
         actualizarStats();
@@ -733,7 +737,8 @@ var CT_VIEW = {
         else txt = fMonto(c.monto_final);
         const title = `${c.concepto} · ${c.periodo || ''} | Estado: ${estado} | Abonado: ${fMonto(montoAbonado)} | Saldo: ${fMonto(c.saldo_pendiente)}${c.fecha_vencimiento ? ' | Vence: '+c.fecha_vencimiento : ''}`;
         const btnComp   = c.comprobante_url ? `<button class="clink clink-comp"   onclick="event.stopPropagation();verArchivo('${escapeJs(c.comprobante_url)}')" title="Ver comprobante del estudiante">📎 Comp.</button>` : '';
-        const btnRecibo = c.recibo_url      ? `<button class="clink clink-recibo" onclick="event.stopPropagation();verArchivo('${escapeJs(c.recibo_url)}')"      title="Ver recibo de Cooperadora">🧾 Recibo</button>` : '';
+        const _recs = V.recibosTangoMap[c.cobro_id] || [];
+        const btnRecibo = _recs.map(function(r,i){ var lbl=_recs.length>1?'🧾 Recibo '+(i+1):'🧾 Recibo'; return `<button class="clink clink-recibo" onclick="event.stopPropagation();verArchivo('${escapeJs(r.pdf_url)}')" title="Ver recibo N°${escapeJs(r.nro_recibo||String(i+1))}">${lbl}</button>`; }).join('');
         const links = (btnComp || btnRecibo) ? `<div class="cell-links">${btnComp}${btnRecibo}</div>` : '';
         let badge = '';
         if      (estado === 'EN_MORA')      badge = '<span class="est-badge badge-mora">En mora</span>';

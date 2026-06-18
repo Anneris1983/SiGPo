@@ -854,12 +854,13 @@ function fechaISO(d) { return d ? new Date(d).toISOString().split('T')[0] : null
    ESTADO GLOBAL
 ══════════════════════════════════════════════════ */
 const V = {
-    data:       null,   // { programa, cohorte, estudiantes, columnas }
-    config:     {},     // { cbu, alias } — cargado desde tabla configuracion
-    filtro:     'todos',
-    page:       1,     // paginación: cuántas páginas visibles
-    descTarget: null,
-    busy:       false,  // mutex para operaciones async — evita doble submit
+    data:            null,   // { programa, cohorte, estudiantes, columnas }
+    config:          {},     // { cbu, alias } — cargado desde tabla configuracion
+    filtro:          'todos',
+    page:            1,     // paginación: cuántas páginas visibles
+    descTarget:      null,
+    busy:            false,  // mutex para operaciones async — evita doble submit
+    recibosTangoMap: {}      // cobro_id -> [recibo, ...]
 };
 var planFilas = [];
 var planMoneda = 'ARS';
@@ -1010,6 +1011,9 @@ async function cargar(aplicarMora) {
             await aplicarMoraCohorteJS(COHORTE_ID);
             V.data = await obtenerCohorteDetalle(COHORTE_ID, PROGRAMA_ID);
         }
+        var _cobroIds = [];
+        V.data.estudiantes.forEach(function(e) { (e.cobros||[]).forEach(function(c){ if(c.cobro_id) _cobroIds.push(c.cobro_id); }); });
+        V.recibosTangoMap = await obtenerRecibosTango(_cobroIds);
         renderHeader();
         renderTabla();
         actualizarStats();
@@ -1177,13 +1181,11 @@ var CT_VIEW = {
         } else if (estado === 'ABONADA') {
             if (c.comprobante_url)
                 btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
-            if (c.recibo_url)
-                btns += '<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\'' + encodeAttr(c.recibo_url) + '\',\'Recibo\',\'' + encodeAttr(c.concepto) + '\')">🧾 Recibo</button>';
+            (V.recibosTangoMap[c.cobro_id]||[]).forEach(function(r,i){ var lbl=((V.recibosTangoMap[c.cobro_id]||[]).length>1?'🧾 Recibo '+(i+1):'🧾 Recibo'); btns+='<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\''+encodeAttr(r.pdf_url)+'\',\'Recibo\',\''+encodeAttr(c.concepto)+'\')">'+lbl+'</button>'; });
         } else if (estado === 'PAGO_PARCIAL') {
             if (c.comprobante_url)
                 btns += '<button class="cbtn cbtn-ver-comp" onclick="verDocumento(\'' + encodeAttr(c.comprobante_url) + '\',\'Comprobante\',\'' + encodeAttr(c.concepto) + '\')">📎 Comp.</button>';
-            if (c.recibo_url)
-                btns += '<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\'' + encodeAttr(c.recibo_url) + '\',\'Recibo parcial\',\'' + encodeAttr(c.concepto) + '\')">🧾 Recibo</button>';
+            (V.recibosTangoMap[c.cobro_id]||[]).forEach(function(r,i){ var lbl=((V.recibosTangoMap[c.cobro_id]||[]).length>1?'🧾 Recibo '+(i+1):'🧾 Recibo'); btns+='<button class="cbtn cbtn-ver-recibo" onclick="verDocumento(\''+encodeAttr(r.pdf_url)+'\',\'Recibo parcial\',\''+encodeAttr(c.concepto)+'\')">'+lbl+'</button>'; });
         }
         // EN_MORA, NO_ABONADA, A_DEFINIR: sin botones
 

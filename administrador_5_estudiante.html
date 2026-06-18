@@ -189,7 +189,8 @@ var QS         = new URLSearchParams(location.search);
 var DNI        = QS.get('dni') || '';
 var COHORTE_ID = parseInt(QS.get('cohorte_id')) || null;
 var PROGRAMA_ID= QS.get('programa_id') || null;
-var _est       = null;
+var _est            = null;
+var _recibosTangoMap = {};
 
 function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fM(n) { var num=parseFloat(n||0); if(isNaN(num))return '$0,00'; return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -224,6 +225,8 @@ async function cargar() {
     _est = rEst.data || {};
     var cobros = rCob.data || [];
     var coh = rCoh.data;
+    var _cIds = cobros.map(function(c){ return c.cobro_id; }).filter(Boolean);
+    _recibosTangoMap = await obtenerRecibosTango(_cIds);
 
     // Header
     var nombre = (_est.apellido||'') + ', ' + (_est.nombre||'');
@@ -272,7 +275,7 @@ function renderCobros(cobros) {
 
         var docs = '';
         if (c.comprobante_url) docs += '<button class="btn-action btn-comp" onclick="verDoc(\''+esc(c.comprobante_url)+'\')">📎 Comp.</button> ';
-        if (c.recibo_url)      docs += '<button class="btn-action btn-recibo" onclick="verDoc(\''+esc(c.recibo_url)+'\')">🧾 Recibo</button>';
+        (_recibosTangoMap[c.cobro_id]||[]).forEach(function(r,i){ var lbl=(_recibosTangoMap[c.cobro_id]||[]).length>1?'🧾 Recibo '+(i+1):'🧾 Recibo'; docs+='<button class="btn-action btn-recibo" onclick="verDoc(\''+esc(r.pdf_url)+'\')">'+lbl+'</button>'; });
 
         var vence = c.fecha_vencimiento ? c.fecha_vencimiento.split('-').reverse().join('/') : '—';
         return '<tr>'

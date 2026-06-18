@@ -183,7 +183,8 @@
 var QS         = new URLSearchParams(location.search);
 var DNI        = QS.get('dni') || '';
 var COHORTE_ID = parseInt(QS.get('cohorte_id')) || null;
-var _est       = null;
+var _est            = null;
+var _recibosTangoMap = {};
 
 function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fM(n)  { var num=parseFloat(n||0); if(isNaN(num))return '$0,00'; return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -240,6 +241,8 @@ async function cargar(sesion) {
     _est = rEst.data || {};
     var cobros = rCob.data || [];
     var coh    = rCoh.data;
+    var _cIds  = cobros.map(function(c){ return c.cobro_id; }).filter(Boolean);
+    _recibosTangoMap = await obtenerRecibosTango(_cIds);
 
     var nombre = (_est.apellido||'') + ', ' + (_est.nombre||'');
     document.getElementById('hdr-nombre').textContent  = nombre;
@@ -282,7 +285,7 @@ function renderCobros(cobros) {
         if ((peso[estado]||0) > (peso[peor]||0)) peor = estado;
         var docs = '';
         if (c.comprobante_url) docs += '<button class="btn-doc btn-comp"  onclick="window.open(\''+esc(c.comprobante_url)+'\',\'_blank\')">📎 Comp.</button>';
-        if (c.recibo_url)      docs += '<button class="btn-doc btn-recibo" onclick="window.open(\''+esc(c.recibo_url)+'\',\'_blank\')">🧾 Recibo</button>';
+        (_recibosTangoMap[c.cobro_id]||[]).forEach(function(r,i){ var lbl=(_recibosTangoMap[c.cobro_id]||[]).length>1?'🧾 Recibo '+(i+1):'🧾 Recibo'; docs+='<button class="btn-doc btn-recibo" onclick="window.open(\''+esc(r.pdf_url)+'\',\'_blank\')">'+lbl+'</button>'; });
         var vence = c.fecha_vencimiento ? c.fecha_vencimiento.split('-').reverse().join('/') : '—';
         return '<tr>'
             + '<td><strong>'+esc(c.concepto)+'</strong></td>'

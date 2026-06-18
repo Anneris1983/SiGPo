@@ -347,8 +347,9 @@ var SESION    = null;
 var COBROS    = [];    // cobros del estudiante (ya procesados)
 var PROGRAMAS = [];    // { id, nombre }
 var COHORTES  = [];    // { id, programa_id, nombre }
-var _cobroActual = null;   // cobro sobre el que se abre el modal
-var _fileActual  = null;   // File object del comprobante
+var _cobroActual     = null;   // cobro sobre el que se abre el modal
+var _fileActual      = null;   // File object del comprobante
+var RECIBOS_MAP      = {};     // cobro_id -> [recibo, ...]
 
 // ════════════════════════════════════════════════════
 // CONSTANTES UI
@@ -542,6 +543,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             autoSeleccionarUrgente();
         }
 
+        // 4b. Recibos Tango (múltiples por cuota)
+        var _cIds = COBROS.map(function(c){ return c.cobro_id; }).filter(Boolean);
+        RECIBOS_MAP = await obtenerRecibosTango(_cIds);
+
         render();
 
         // 5. Notificaciones
@@ -675,7 +680,7 @@ function buildCard(c) {
             + (c.desc > 0 ? '<div><div class="detail-label">Precio original</div><div class="detail-value" style="text-decoration:line-through;color:#bbb;">' + fmt(c.original) + '</div></div><div><div class="detail-label">Descuento</div><div class="detail-value highlight-success">-' + c.desc + '%</div></div>' : '');
         var btns = '';
         if (c.comprobante_url) btns += '<button class="btn btn-outline btn-sm" onclick="verDocumento(\'' + escJs(c.comprobante_url) + '\',\'Comprobante\',\'' + escJs(c.concepto) + '\')">📎 Comprobante</button> ';
-        if (c.recibo_url)      btns += '<button class="btn btn-success btn-sm" onclick="verDocumento(\'' + escJs(c.recibo_url) + '\',\'Recibo\',\'' + escJs(c.concepto) + '\')">🧾 Recibo</button>';
+        (RECIBOS_MAP[c.cobro_id]||[]).forEach(function(r,i){ var lbl=(RECIBOS_MAP[c.cobro_id]||[]).length>1?'🧾 Recibo '+(i+1):'🧾 Recibo'; btns+='<button class="btn btn-success btn-sm" onclick="verDocumento(\''+escJs(r.pdf_url)+'\',\'Recibo\',\''+escJs(c.concepto)+'\')">'+lbl+'</button> '; });
         footerBtn  = btns || '<span style="color:#aaa;font-size:12px;">Sin documentos adjuntos</span>';
         footerLeft = 'Pagada el ' + (c.fechaPago || '—');
 
@@ -702,7 +707,7 @@ function buildCard(c) {
             + '<div><div class="detail-label">Saldo pendiente</div><div class="detail-value highlight-danger">' + fmt(c.saldo) + '</div></div>'
             + (c.desc > 0 ? '<div><div class="detail-label">Descuento aplicado</div><div class="detail-value highlight-success">-' + c.desc + '%</div></div>' : '');
         var btns2 = '<button class="btn btn-primary btn-sm" onclick="abrirModal(' + c.cobro_id + ')">📤 Completar Pago</button>';
-        if (c.recibo_url) btns2 += ' <button class="btn btn-outline btn-sm" onclick="verDocumento(\'' + escJs(c.recibo_url) + '\',\'Recibo Parcial\',\'' + escJs(c.concepto) + '\')">🧾 Ver recibo</button>';
+        (RECIBOS_MAP[c.cobro_id]||[]).forEach(function(r,i){ var lbl=(RECIBOS_MAP[c.cobro_id]||[]).length>1?'🧾 Recibo '+(i+1):'🧾 Recibo'; btns2+=' <button class="btn btn-outline btn-sm" onclick="verDocumento(\''+escJs(r.pdf_url)+'\',\'Recibo Parcial\',\''+escJs(c.concepto)+'\')">'+lbl+'</button>'; });
         footerBtn  = btns2;
         footerLeft = 'Pago parcial registrado · Saldo restante: ' + fmt(c.saldo);
 
