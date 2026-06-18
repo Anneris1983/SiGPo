@@ -882,6 +882,24 @@ async function obtenerInscripcionesPorCohorte(cohorteId, campos) {
     });
 }
 
+// Recibos Tango para un conjunto de cobro_ids. Retorna mapa { cobro_id: [recibo, ...] }
+async function obtenerRecibosTango(cobroIds) {
+    if (!cobroIds || cobroIds.length === 0) return {};
+    const sb = await getSupabase();
+    const { data, error } = await sb
+        .from('recibos_tango')
+        .select('id, cobro_id, nro_recibo, pdf_url, estado, procesado_en')
+        .in('cobro_id', cobroIds)
+        .order('procesado_en', { ascending: true });
+    if (error) { console.error('obtenerRecibosTango:', error); return {}; }
+    const map = {};
+    (data || []).forEach(r => {
+        if (!map[r.cobro_id]) map[r.cobro_id] = [];
+        map[r.cobro_id].push(r);
+    });
+    return map;
+}
+
 // Cobros para reportes de tasa de deserción (campo fijo, todos los programas)
 async function obtenerCobrosParaDesercion() {
     const sb = await getSupabase();
