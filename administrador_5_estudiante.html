@@ -99,6 +99,15 @@
     <style>
     body { zoom: 1.0 !important; }
     .container { max-width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
+    .factura-item { display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid #f3f4f6; }
+    .factura-item:last-child { border-bottom:none; }
+    .factura-icon { width:40px; height:40px; background:#fef3c7; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .factura-info { flex:1; }
+    .factura-desc { font-size:14px; font-weight:600; color:#1f2937; }
+    .factura-meta { font-size:12px; color:#9ca3af; margin-top:2px; }
+    .factura-btn { padding:7px 14px; background:var(--primary,#A11E2D); color:white; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; }
+    .factura-btn:hover { background:#8C1A28; }
+    .facturas-empty { text-align:center; padding:24px; color:#9ca3af; font-size:13px; }
     </style>
 </head>
 <body>
@@ -163,6 +172,12 @@
             </table>
             <div id="cobros-empty" style="display:none;padding:32px;text-align:center;color:#aaa;">Este estudiante no tiene cobros registrados en esta cohorte.</div>
         </div>
+    </div>
+
+    <!-- FACTURAS DE COOPERADORA -->
+    <div class="card">
+        <div class="card-title">🧾 Facturas de Cooperadora</div>
+        <div id="facturas-list"><p style="color:#9ca3af;font-size:13px;">Cargando…</p></div>
     </div>
 
     <!-- DATOS PERSONALES -->
@@ -253,6 +268,58 @@ async function cargar() {
 
     // Cobros
     renderCobros(cobros);
+
+    // Facturas de Cooperadora
+    cargarFacturas(DNI);
+}
+
+/* ── FACTURAS DE COOPERADORA ── */
+async function cargarFacturas(dni) {
+    try {
+        var sb = await getSupabase();
+        var res = await sb.from('facturas')
+            .select('id, descripcion, periodo, archivo_url, created_at')
+            .eq('estudiante_dni', dni)
+            .order('created_at', { ascending: false });
+        if (res.error) throw res.error;
+        renderFacturas(res.data || []);
+    } catch(e) {
+        console.error('Error cargando facturas:', e);
+        document.getElementById('facturas-list').innerHTML = '<p style="color:#b91c1c;font-size:13px;">Error al cargar facturas.</p>';
+    }
+}
+
+function renderFacturas(facturas) {
+    var el = document.getElementById('facturas-list');
+    if (!facturas.length) {
+        el.innerHTML = '<div class="facturas-empty">📭 No hay facturas cargadas por Cooperadora aún.</div>';
+        return;
+    }
+    el.innerHTML = facturas.map(function(f) {
+        var fecha = f.created_at ? new Date(f.created_at).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+        var periodo = f.periodo ? ' · ' + esc(f.periodo) : '';
+        return '<div class="factura-item">'
+            + '<div class="factura-icon">🧾</div>'
+            + '<div class="factura-info">'
+            +   '<div class="factura-desc">' + esc(f.descripcion || 'Factura') + '</div>'
+            +   '<div class="factura-meta">' + fecha + periodo + '</div>'
+            + '</div>'
+            + (f.archivo_url ? '<button class="factura-btn" onclick="verFactura(\'' + String(f.archivo_url).replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">Ver</button>' : '')
+            + '</div>';
+    }).join('');
+}
+
+async function verFactura(url) {
+    try {
+        var sb = await getSupabase();
+        var match = String(url).match(/\/object\/(?:public|sign|authenticated)\/comprobantes\/(.+)/);
+        if (!match) { window.open(url, '_blank'); return; }
+        var res = await sb.storage.from('comprobantes').createSignedUrl(match[1], 120);
+        if (res.error) throw res.error;
+        window.open(res.data.signedUrl, '_blank');
+    } catch(e) {
+        window.open(url, '_blank');
+    }
 }
 
 function renderCobros(cobros) {
