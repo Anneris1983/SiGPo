@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recibos Tango Pendientes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f6f1; font-size: 14px; }
+
+        .header { background: linear-gradient(135deg, #5C1018 0%, #8C1A28 100%); color: white; padding: 20px 40px; }
+        .breadcrumb { font-size: 14px; margin-bottom: 12px; }
+        .breadcrumb a { color: white; text-decoration: none; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); padding: 6px 13px; border-radius: 8px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: background 0.2s; }
+        .breadcrumb a:hover { background: rgba(255,255,255,0.25); }
+        .header h1 { font-family: 'Crimson Pro', serif; font-size: 24px; }
+        .header p  { font-size: 13px; opacity: .8; margin-top: 4px; }
+
+        .container { max-width: 1300px; margin: 24px auto; padding: 0 24px; }
+
+        .card { background: white; border-radius: 12px; padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .card-title { font-size: 18px; font-weight: 700; color: var(--primary,#5C1018); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; display:flex; align-items:center; gap:8px; }
+
+        .stats-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+        .stat-box { flex: 1; min-width: 140px; background: linear-gradient(135deg,#f8f6f1,#fff); border: 2px solid #e0e0e0; padding: 20px; border-radius: 12px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: 700; color: var(--primary,#5C1018); }
+        .stat-label { font-size: 12px; color: #666; margin-top: 6px; }
+
+        .toolbar { display: flex; gap: 10px; margin-bottom: 18px; align-items: center; flex-wrap: wrap; }
+        .filter-btn { padding: 8px 16px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; font-family: 'DM Sans', sans-serif; }
+        .filter-btn.active { border-color: var(--primary,#5C1018); color: var(--primary,#5C1018); background: #fdf7f7; }
+        .filter-btn:hover { border-color: #999; }
+
+        .badge-count { display: inline-flex; align-items: center; justify-content: center; background: #5C1018; color: #fff; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; padding: 0 5px; margin-left: 6px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: #f8f6f1; }
+        th { padding: 11px 12px; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #e0e0e0; white-space: nowrap; }
+        td { padding: 11px 12px; border-bottom: 1px solid #e8e8e8; vertical-align: top; }
+        tr:hover td { background: #fafafa; }
+
+        .motivo-cell { max-width: 260px; font-size: 12px; color: #555; line-height: 1.4; }
+        .datos-cell  { font-size: 12px; color: #444; line-height: 1.6; }
+
+        .badge { padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .badge-pendiente  { background: #fef3c7; color: #92400e; }
+        .badge-resuelto   { background: #dcfce7; color: #166534; }
+
+        .btn { padding: 7px 14px; border: none; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 5px; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+        .btn-primary  { background: #5C1018; color: white; }
+        .btn-success  { background: #16a34a; color: white; }
+        .btn-warning  { background: #d97706; color: white; }
+        .btn-outline  { background: white; color: #5C1018; border: 1.5px solid #5C1018; }
+        .btn-sm       { padding: 5px 10px; font-size: 11px; }
+        .btn-ghost    { background: #f3f4f6; color: #374151; border: 1.5px solid #e5e7eb; }
+        .btn-ghost:hover { background: #e5e7eb; }
+
+        .actions-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #9ca3af; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state p { font-size: 15px; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: white; border-radius: 14px; width: 90%; max-width: 620px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 20px 24px; border-bottom: 2px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 17px; font-weight: 700; color: #5C1018; }
+        .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1; }
+        .modal-body  { padding: 24px; }
+        .modal-footer { padding: 16px 24px; border-top: 2px solid #e0e0e0; display: flex; gap: 10px; justify-content: flex-end; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .info-row  { background: #f8f6f1; padding: 10px 14px; border-radius: 8px; }
+        .info-label { font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+        .info-value { font-size: 14px; font-weight: 600; color: #111; margin-top: 2px; }
+
+        .form-group  { margin-bottom: 16px; }
+        .form-label  { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: #5C1018; }
+        .form-input, .form-select { width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; }
+        .form-input:focus, .form-select:focus { outline: none; border-color: #C49A2A; }
+
+        .search-results { border: 1.5px solid #e0e0e0; border-radius: 8px; max-height: 200px; overflow-y: auto; margin-top: 6px; }
+        .result-row { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: background .15s; font-size: 13px; }
+        .result-row:last-child { border-bottom: none; }
+        .result-row:hover, .result-row.selected { background: #fdf7f7; }
+        .result-row.selected { border-left: 3px solid #5C1018; font-weight: 600; }
+
+        .msg-box { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 10px; display: none; }
+        .msg-box.ok  { background: #dcfce7; color: #166534; display: block; }
+        .msg-box.err { background: #fee2e2; color: #991b1b; display: block; }
+
+        #toasts { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+        .toast { padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); animation: slideIn .25s ease; }
+        .toast.ok  { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .toast.err { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+    <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
+    <link rel="stylesheet" href="sigpo-compact.css?v=20250529">
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+                <div class="breadcrumb" id="breadcrumb-link">
+                    <a href="cooperadora_2_Dashboard.html">← Volver al Dashboard</a>
+                </div>
+                <h1>⚠️ Recibos Tango Pendientes</h1>
+                <p>Recibos que no pudieron asignarse automáticamente — requieren revisión manual</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                <div class="notif-wrapper" style="position:relative;">
+                    <button onclick="toggleNotif()" title="Notificaciones" style="background:none;border:none;cursor:pointer;position:relative;padding:8px;border-radius:8px;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="#C49A2A"/></svg>
+                        <span id="notif-badge" style="position:absolute;top:2px;right:2px;background:var(--clr-danger,#dc2626);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #5C1018;line-height:1;">0</span>
+                    </button>
+                    <div id="notif-dropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:380px;max-height:460px;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.18);z-index:999;border:1px solid #e5e7eb;">
+                        <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+                            <h3 style="font-size:15px;font-weight:700;color:#5C1018;">🔔 Notificaciones</h3>
+                            <button onclick="marcarTodasLeidas()" style="font-size:12px;color:#C49A2A;cursor:pointer;background:none;border:none;font-weight:600;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
+                        </div>
+                        <div id="notif-list"><div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:14px;">Cargando…</div></div>
+                    </div>
+                </div>
+                <a href="portal_login.html" onclick="return cerrarSesion(event)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);color:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;font-family:'DM Sans',sans-serif;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- STATS -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-value" id="stat-pendientes">—</div>
+                <div class="stat-label">Pendientes sin resolver</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="stat-resueltos" style="color:#16a34a;">—</div>
+                <div class="stat-label">Resueltos</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="stat-total">—</div>
+                <div class="stat-label">Total histórico</div>
+            </div>
+        </div>
+
+        <!-- TABLA PENDIENTES -->
+        <div class="card">
+            <div class="card-title">
+                ⚠️ Pendientes sin resolver
+                <span class="badge-count" id="badge-pend">0</span>
+            </div>
+            <div class="toolbar">
+                <button class="filter-btn active" onclick="recargar()">↺ Actualizar</button>
+            </div>
+            <div class="table-container" id="tabla-pendientes-wrap">
+                <div class="empty-state"><div class="icon">⏳</div><p>Cargando…</p></div>
+            </div>
+        </div>
+
+        <!-- TABLA RESUELTOS (colapsable) -->
+        <div class="card">
+            <div class="card-title" style="cursor:pointer;" onclick="toggleResueltos()">
+                ✅ Resueltos
+                <span class="badge-count" id="badge-res" style="background:#16a34a;">0</span>
+                <span id="toggle-icon" style="margin-left:auto;font-size:18px;">▼</span>
+            </div>
+            <div id="resueltos-wrap" style="display:none;">
+                <div class="table-container" id="tabla-resueltos-wrap">
+                    <div class="empty-state"><div class="icon">⏳</div><p>Cargando…</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ASIGNAR -->
+    <div class="modal-overlay" id="modalAsignar">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">📎 Asignar recibo a una cuota</span>
+                <button class="modal-close" onclick="cerrarModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px;color:#555;margin-bottom:16px;">Buscá la cuota correcta para este recibo y seleccionala.</p>
+
+                <!-- Datos del recibo -->
+                <div class="info-grid" id="modal-datos-recibo"></div>
+
+                <!-- Buscador de cobros -->
+                <div class="form-group">
+                    <label class="form-label">Buscar cuota por DNI del estudiante</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" class="form-input" id="buscar-dni" placeholder="Ej: 36190484" style="flex:1;">
+                        <button class="btn btn-primary" onclick="buscarCobros()">Buscar</button>
+                    </div>
+                </div>
+                <div id="resultados-cobros" style="display:none;">
+                    <div class="form-group">
+                        <label class="form-label">Resultados — seleccioná la cuota correcta</label>
+                        <div class="search-results" id="lista-cobros"></div>
+                    </div>
+                </div>
+
+                <div class="msg-box" id="modal-msg"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirmar-asignar" disabled onclick="confirmarAsignar()">✔ Confirmar asignación</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toasts"></div>
+    <script src="supabase.js"></script>
+    <script>
+    var _pendientes = [];
+    var _resueltos  = [];
+    var _sesion     = null;
+    var _pendienteActivo = null;  // id del pendiente que se está asignando
+    var _cobroSeleccionado = null;
+
+    // ── INIT ──────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async function () {
+        _sesion = await requireAuth();
+        if (!_sesion || (_sesion.rol !== 'COOPERADORA' && _sesion.rol !== 'ADMINISTRADOR')) {
+            window.location.href = 'portal_login.html';
+            return;
+        }
+        // Ajustar breadcrumb según rol
+        var dashUrl = _sesion.rol === 'ADMINISTRADOR'
+            ? 'administrador_2_dashboard.html'
+            : 'cooperadora_2_Dashboard.html';
+        document.getElementById('breadcrumb-link').innerHTML =
+            '<a href="' + dashUrl + '">← Volver al Dashboard</a>';
+
+        obtenerNotificaciones(_sesion.rol).then(renderNotificaciones);
+        await recargar();
+    });
+
+    // ── CARGAR DATOS ──────────────────────────────────────────
+    async function recargar() {
+        var sb = await getSupabase();
+        var { data, error } = await sb
+            .from('recibos_pendientes_tango')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            toast('Error al cargar datos: ' + (error.message || error), 'err');
+            return;
+        }
+
+        _pendientes = (data || []).filter(function(r) { return !r.resuelto; });
+        _resueltos  = (data || []).filter(function(r) { return  r.resuelto; });
+
+        document.getElementById('stat-pendientes').textContent = _pendientes.length;
+        document.getElementById('stat-resueltos').textContent  = _resueltos.length;
+        document.getElementById('stat-total').textContent      = (data || []).length;
+        document.getElementById('badge-pend').textContent      = _pendientes.length;
+        document.getElementById('badge-res').textContent       = _resueltos.length;
+
+        renderTabla('tabla-pendientes-wrap', _pendientes, false);
+        renderTabla('tabla-resueltos-wrap',  _resueltos,  true);
+    }
+
+    // ── RENDER TABLA ─────────────────────────────────────────
+    function renderTabla(containerId, filas, esResuelto) {
+        var cont = document.getElementById(containerId);
+        if (!filas.length) {
+            cont.innerHTML = '<div class="empty-state"><div class="icon">'
+                + (esResuelto ? '✅' : '🎉')
+                + '</div><p>'
+                + (esResuelto ? 'Ningún recibo resuelto aún.' : '¡Sin pendientes! Todos los recibos se asignaron automáticamente.')
+                + '</p></div>';
+            return;
+        }
+        var html = '<table><thead><tr>'
+            + '<th>Fecha</th><th>Nro. Recibo</th><th>Datos extraídos</th>'
+            + '<th>Motivo del fallo</th><th>Estado</th><th>Acciones</th>'
+            + '</tr></thead><tbody>';
+
+        filas.forEach(function(r) {
+            var d = r.datos_extraidos || {};
+            var datosHtml = '';
+            if (d.dni_normalizado) datosHtml += '<div><b>DNI:</b> ' + esc(d.dni_normalizado) + '</div>';
+            if (d.programa_id)     datosHtml += '<div><b>Prog.:</b> ' + esc(d.programa_id) + '</div>';
+            if (d.periodo_bd)      datosHtml += '<div><b>Período:</b> ' + esc(d.periodo_bd) + '</div>';
+            if (d.cohorte_nombre)  datosHtml += '<div><b>Cohorte:</b> ' + esc(d.cohorte_nombre) + '</div>';
+            if (d.email_origen)    datosHtml += '<div style="color:#888;font-size:11px;">' + esc(d.email_origen) + '</div>';
+            if (!datosHtml)        datosHtml = '<span style="color:#aaa;">—</span>';
+
+            var acciones = '';
+            if (r.pdf_url) {
+                acciones += '<a href="' + esc(r.pdf_url) + '" target="_blank" class="btn btn-ghost btn-sm">📄 Ver PDF</a>';
+            }
+            if (!esResuelto) {
+                acciones += '<button class="btn btn-primary btn-sm" onclick="abrirModalAsignar(' + r.id + ')">📎 Asignar</button>';
+                acciones += '<button class="btn btn-success btn-sm" onclick="marcarResuelto(' + r.id + ')">✔ Resuelto</button>';
+            } else {
+                var resueltoPor = r.resuelto_por ? (' por ' + esc(r.resuelto_por)) : '';
+                var resueltEn   = r.resuelto_en  ? (' · ' + fFecha(r.resuelto_en)) : '';
+                acciones += '<span style="font-size:11px;color:#16a34a;">Resuelto' + resueltoPor + resueltEn + '</span>';
+            }
+
+            html += '<tr>'
+                + '<td style="white-space:nowrap;">' + fFecha(r.created_at) + '</td>'
+                + '<td><code style="font-size:12px;">' + esc(r.nro_recibo || '—') + '</code></td>'
+                + '<td class="datos-cell">' + datosHtml + '</td>'
+                + '<td class="motivo-cell">' + esc(r.motivo_fallo) + '</td>'
+                + '<td><span class="badge ' + (r.resuelto ? 'badge-resuelto' : 'badge-pendiente') + '">'
+                + (r.resuelto ? 'Resuelto' : 'Pendiente') + '</span></td>'
+                + '<td><div class="actions-group">' + acciones + '</div></td>'
+                + '</tr>';
+        });
+
+        html += '</tbody></table>';
+        cont.innerHTML = html;
+    }
+
+    // ── MODAL ASIGNAR ─────────────────────────────────────────
+    function abrirModalAsignar(pendienteId) {
+        _pendienteActivo   = pendienteId;
+        _cobroSeleccionado = null;
+        document.getElementById('btn-confirmar-asignar').disabled = true;
+        document.getElementById('buscar-dni').value = '';
+        document.getElementById('lista-cobros').innerHTML = '';
+        document.getElementById('resultados-cobros').style.display = 'none';
+        document.getElementById('modal-msg').className = 'msg-box';
+        document.getElementById('modal-msg').textContent = '';
+
+        var pend = _pendientes.find(function(r) { return r.id === pendienteId; }) || {};
+        var d = pend.datos_extraidos || {};
+        var datosHtml = '';
+        if (pend.nro_recibo)  datosHtml += filaInfo('Nro. Recibo', pend.nro_recibo);
+        if (d.dni_normalizado) datosHtml += filaInfo('DNI detectado', d.dni_normalizado);
+        if (d.programa_id)     datosHtml += filaInfo('Programa', String(d.programa_id));
+        if (d.periodo_bd)      datosHtml += filaInfo('Período', d.periodo_bd);
+        if (d.cohorte_nombre)  datosHtml += filaInfo('Cohorte', d.cohorte_nombre);
+        document.getElementById('modal-datos-recibo').innerHTML = datosHtml;
+
+        // Pre-rellenar DNI si se extrajo
+        if (d.dni_normalizado) document.getElementById('buscar-dni').value = d.dni_normalizado;
+
+        document.getElementById('modalAsignar').classList.add('show');
+    }
+
+    function filaInfo(label, value) {
+        return '<div class="info-row"><div class="info-label">' + esc(label)
+            + '</div><div class="info-value">' + esc(value) + '</div></div>';
+    }
+
+    function cerrarModal() {
+        document.getElementById('modalAsignar').classList.remove('show');
+        _pendienteActivo   = null;
+        _cobroSeleccionado = null;
+    }
+
+    async function buscarCobros() {
+        var dni = document.getElementById('buscar-dni').value.trim();
+        if (!dni) { alert('Ingresá un DNI'); return; }
+
+        var sb = await getSupabase();
+        var { data, error } = await sb
+            .from('cobros')
+            .select('cobro_id, concepto, periodo, estado, monto_final, recibo_url, programas(nombre), cohortes(nombre)')
+            .eq('dni', dni)
+            .order('periodo');
+
+        var lista = document.getElementById('lista-cobros');
+        var wrap  = document.getElementById('resultados-cobros');
+
+        if (error || !data || !data.length) {
+            lista.innerHTML = '<div style="padding:12px 14px;color:#888;font-size:13px;">Sin resultados para DNI ' + esc(dni) + '</div>';
+            wrap.style.display = 'block';
+            return;
+        }
+
+        lista.innerHTML = data.map(function(c) {
+            var prog = (c.programas && c.programas.nombre) ? c.programas.nombre : '?';
+            var coh  = (c.cohortes  && c.cohortes.nombre)  ? c.cohortes.nombre  : '?';
+            var yaConRecibo = c.recibo_url ? ' ⚠️ ya tiene recibo' : '';
+            return '<div class="result-row" onclick="seleccionarCobro(' + c.cobro_id + ', this)">'
+                + '<strong>' + esc(c.concepto) + ' · ' + esc(c.periodo) + '</strong>'
+                + yaConRecibo
+                + '<br><span style="color:#888;font-size:11px;">' + esc(prog) + ' — ' + esc(coh) + ' · $' + (c.monto_final || '—') + '</span>'
+                + '</div>';
+        }).join('');
+
+        wrap.style.display = 'block';
+        _cobroSeleccionado = null;
+        document.getElementById('btn-confirmar-asignar').disabled = true;
+    }
+
+    function seleccionarCobro(cobroId, el) {
+        document.querySelectorAll('#lista-cobros .result-row').forEach(function(r) { r.classList.remove('selected'); });
+        el.classList.add('selected');
+        _cobroSeleccionado = cobroId;
+        document.getElementById('btn-confirmar-asignar').disabled = false;
+    }
+
+    async function confirmarAsignar() {
+        if (!_pendienteActivo || !_cobroSeleccionado) return;
+        var btn = document.getElementById('btn-confirmar-asignar');
+        btn.disabled = true; btn.textContent = 'Asignando…';
+
+        var sb = await getSupabase();
+        var { data, error } = await sb.rpc('asignar_recibo_pendiente', {
+            p_pendiente_id: _pendienteActivo,
+            p_cobro_id:     _cobroSeleccionado,
+            p_resuelto_por: _sesion ? _sesion.nombre : null
+        });
+
+        if (error || (data && !data.ok)) {
+            var msg = document.getElementById('modal-msg');
+            msg.textContent = '✕ ' + ((data && data.mensaje) || (error && error.message) || 'Error al asignar');
+            msg.className = 'msg-box err';
+            btn.disabled = false; btn.textContent = '✔ Confirmar asignación';
+            return;
+        }
+
+        toast('Recibo asignado correctamente', 'ok');
+        cerrarModal();
+        await recargar();
+    }
+
+    // ── MARCAR RESUELTO SIN ASIGNAR ───────────────────────────
+    async function marcarResuelto(pendienteId) {
+        if (!confirm('¿Marcar este recibo como resuelto sin asignarlo a ninguna cuota?\n(Usá esto si el cobro ya fue registrado por otro medio.)')) return;
+
+        var sb = await getSupabase();
+        var { data, error } = await sb.rpc('marcar_pendiente_resuelto', {
+            p_pendiente_id: pendienteId,
+            p_resuelto_por: _sesion ? _sesion.nombre : null
+        });
+
+        if (error || (data && !data.ok)) {
+            toast('Error: ' + ((data && data.mensaje) || (error && error.message) || 'No se pudo resolver'), 'err');
+            return;
+        }
+
+        toast('Marcado como resuelto', 'ok');
+        await recargar();
+    }
+
+    // ── TOGGLE RESUELTOS ──────────────────────────────────────
+    function toggleResueltos() {
+        var w = document.getElementById('resueltos-wrap');
+        var ic = document.getElementById('toggle-icon');
+        var oculto = w.style.display === 'none';
+        w.style.display  = oculto ? 'block' : 'none';
+        ic.textContent = oculto ? '▲' : '▼';
+    }
+    </script>
+</body>
+</html>
