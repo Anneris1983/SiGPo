@@ -472,50 +472,18 @@ function _parsearFactura(texto) {
 
 // ══════════════════════════════════════════════════════════════
 // EXTRAER DNI DEL ESTUDIANTE DE LA FACTURA
-// OJO: en la factura Tango el campo dice "CUIT:" pero suele ser el DNI.
-//   · "CUIT:14593778"        → 8 dígitos = DNI directo (consumidor final)
-//   · "CUIT:20-12345678-3"   → CUIL de persona física → 8 dígitos del medio
-//   · "CUIT:30-66414911-3"   → empresa que paga (prefijo 30/33/34) → se descarta
-// Prioridad: DNI etiquetado > DNI de 8 dígitos > CUIL de persona.
+// Única fuente: el campo "Corresponde a", que en Tango se carga SIEMPRE
+// con el DNI del estudiante. No importa a nombre de quién esté la factura
+// (estudiante, empresa o Estado): el alumno se identifica por ese número.
+// Si no aparece, la factura NO se asigna y pasa a revisión manual
+// (igual que los recibos). No se adivina por CUIT/CUIL.
 // ══════════════════════════════════════════════════════════════
 
 function _extraerDniEstudiante(texto) {
-  // (0) Campo "Corresponde a": en Tango se carga SIEMPRE con el DNI del estudiante.
-  //     Es la fuente más confiable y NO importa a nombre de quién esté la factura
-  //     (estudiante, empresa o Estado): el alumno se identifica por este número.
-  //     Toma el DNI con o sin la etiqueta "DNI" (ej: "Corresponde a 28123456"
-  //     o "Corresponde a LEZZIERI, Mariela DNI 28123456").
+  // Campo "Corresponde a" — con o sin la etiqueta "DNI"
+  //   ej: "Corresponde a 28123456"  ó  "Corresponde a LEZZIERI, Mariela DNI 28123456"
   var mCorr = texto.match(/Corresponde a[^\n]*?\b(\d{7,8})\b/i);
   if (mCorr) return _normalizarDni(mCorr[1]);
-
-  // (1) DNI etiquetado explícito: "DNI: 12345678"
-  var mDni = texto.match(/D\.?N\.?I\.?\s*:?\s*([\d.]{7,10})/i);
-  if (mDni) {
-    var d = mDni[1].replace(/\D/g, '');
-    if (d.length === 7 || d.length === 8) return _normalizarDni(d);
-  }
-
-  // (2) Juntar todos los valores que aparezcan tras "CUIT" (puede haber varios)
-  var re = /CUIT\s*:?\s*([\d.\-]{7,13})/ig;
-  var candidatos = [], m;
-  while ((m = re.exec(texto)) !== null) candidatos.push(m[1].replace(/\D/g, ''));
-
-  // (2a) 8 dígitos → es un DNI directo (caso "Consumidor final")
-  for (var i = 0; i < candidatos.length; i++) {
-    if (candidatos[i].length === 8) return _normalizarDni(candidatos[i]);
-  }
-  // (2b) 11 dígitos de persona física (prefijo 20/23/24/27) → DNI del medio
-  for (var j = 0; j < candidatos.length; j++) {
-    if (candidatos[j].length === 11 && /^2[0347]/.test(candidatos[j])) {
-      return _normalizarDni(candidatos[j]);
-    }
-  }
-  // (los CUIT de 11 dígitos con prefijo 30/33/34 son empresas → no son el alumno)
-
-  // (3) Respaldo: un CUIL de persona suelto en cualquier parte del texto
-  var mCuil = texto.match(/\b2[0347]\d{9}\b/) ||
-              texto.match(/\b2[0347][-.\s]\d{8}[-.\s]\d\b/);
-  if (mCuil) return _normalizarDni(mCuil[0].replace(/\D/g, ''));
 
   return null;
 }
