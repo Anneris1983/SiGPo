@@ -508,11 +508,22 @@ function _facturaDuplicada(nroFactura, estDni) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// AVISO DE FACTURA NO ASIGNADA (email al admin — sin tabla de pendientes)
+// AVISO DE FACTURA NO ASIGNADA
+// Registra en facturas_pendientes_tango + aviso por email (igual que recibos)
 // ══════════════════════════════════════════════════════════════
 
 function _avisarFacturaPendiente(datos, motivo, pdfUrl) {
   Logger.log('⚠ FACTURA PENDIENTE: ' + motivo);
+  _sbPost('facturas_pendientes_tango', {
+    email_origen:    datos.email_origen  || null,
+    email_asunto:    datos.email_asunto  || null,
+    nro_factura:     datos.nro_factura   || null,
+    pdf_url:         pdfUrl || null,
+    datos_extraidos: datos,
+    motivo_fallo:    motivo,
+    notificado_en:   new Date().toISOString(),
+    resuelto:        false
+  });
   try {
     GmailApp.sendEmail(
       EMAIL_ADMIN,
