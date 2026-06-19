@@ -3011,9 +3011,10 @@
             document.getElementById('aprobReciboFile').value = '';
             document.getElementById('apUploadBox').style.display = 'block';
             document.getElementById('apFileUploaded').style.display = 'none';
-            document.getElementById('apWarnNoFile').style.display = 'block';
+            document.getElementById('apWarnNoFile').style.display = 'none';
+            // El recibo es opcional (lo adjunta el script de Tango): no bloquear el botón Aprobar.
             var btn = document.getElementById('btnAprobConfirm');
-            btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
+            btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
         }
 
         function apMostrarRechazo() {
