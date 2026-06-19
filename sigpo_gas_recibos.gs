@@ -480,6 +480,14 @@ function _parsearFactura(texto) {
 // ══════════════════════════════════════════════════════════════
 
 function _extraerDniEstudiante(texto) {
+  // (0) Campo "Corresponde a": en Tango se carga SIEMPRE con el DNI del estudiante.
+  //     Es la fuente más confiable y NO importa a nombre de quién esté la factura
+  //     (estudiante, empresa o Estado): el alumno se identifica por este número.
+  //     Toma el DNI con o sin la etiqueta "DNI" (ej: "Corresponde a 28123456"
+  //     o "Corresponde a LEZZIERI, Mariela DNI 28123456").
+  var mCorr = texto.match(/Corresponde a[^\n]*?\b(\d{7,8})\b/i);
+  if (mCorr) return _normalizarDni(mCorr[1]);
+
   // (1) DNI etiquetado explícito: "DNI: 12345678"
   var mDni = texto.match(/D\.?N\.?I\.?\s*:?\s*([\d.]{7,10})/i);
   if (mDni) {
@@ -508,13 +516,6 @@ function _extraerDniEstudiante(texto) {
   var mCuil = texto.match(/\b2[0347]\d{9}\b/) ||
               texto.match(/\b2[0347][-.\s]\d{8}[-.\s]\d\b/);
   if (mCuil) return _normalizarDni(mCuil[0].replace(/\D/g, ''));
-
-  // (4) Factura a empresa: el campo CUIT era de una empresa (30/33/34),
-  //     pero Tango incluye "Corresponde a APELLIDO, Nombre DNI 28123456".
-  //     Configurar Tango para que SIEMPRE lleve esta línea garantiza la asignación
-  //     automática incluso cuando quien paga es una empresa o el Estado.
-  var mCorr = texto.match(/Corresponde a[^\n]*\bDNI\s+(\d{7,8})\b/i);
-  if (mCorr) return _normalizarDni(mCorr[1]);
 
   return null;
 }
