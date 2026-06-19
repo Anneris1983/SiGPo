@@ -75,6 +75,34 @@ async function getSupabase() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// LEER TODAS LAS FILAS (paginado)
+// PostgREST/Supabase devuelve como máximo 1000 filas por consulta. Para
+// cohortes grandes (p.ej. 67 estudiantes × 24 cuotas = 1608 cobros) eso
+// trunca los datos. Este helper trae TODO en bloques de 1000.
+//
+// Recibe una FÁBRICA que devuelve un query builder nuevo en cada llamada
+// (un builder no se puede reejecutar después de await), ya con sus filtros
+// y .order() aplicados. NO le agregues .range() vos: lo hace el helper.
+//
+//   var { data, error } = await sbFetchAll(function() {
+//     return sb.from('cobros').select('...').eq('cohorte_id', id).order('fecha_vencimiento');
+//   });
+// ══════════════════════════════════════════════════════════════
+
+async function sbFetchAll(makeQuery, pageSize) {
+    pageSize = pageSize || 1000;
+    var todas = [], desde = 0;
+    while (true) {
+        var { data, error } = await makeQuery().range(desde, desde + pageSize - 1);
+        if (error) return { data: null, error: error };
+        todas = todas.concat(data || []);
+        if (!data || data.length < pageSize) break;
+        desde += pageSize;
+    }
+    return { data: todas, error: null };
+}
+
+// ══════════════════════════════════════════════════════════════
 // AUTENTICACIÓN
 // ══════════════════════════════════════════════════════════════
 
