@@ -885,11 +885,13 @@ async function obtenerCohorteDetalle(cohorteId, programaId) {
           .select('cohorte_id, nombre, estado, fecha_inicio, fecha_fin')
           .eq('cohorte_id', cohorteId)
           .single(),
-        sb.from('cobros')
-          .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, moneda, no_aplica, es_readmision, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id, fecha_pago, fecha_aprobacion, comprobante_fecha')
-          .eq('cohorte_id', cohorteId)
-          .eq('programa_id', programaId)
-          .order('fecha_vencimiento'),
+        sbFetchAll(function() {
+          return sb.from('cobros')
+            .select('cobro_id, dni, concepto, periodo, fecha_vencimiento, monto_original, descuento_porcentaje, monto_final, saldo_pendiente, monto_abonado, monto_transferido, estado, moneda, no_aplica, es_readmision, comprobante_url, recibo_url, recordatorio_enviado, reclamo_enviado, aviso_coordinador_enviado, cohorte_id, programa_id, fecha_pago, fecha_aprobacion, comprobante_fecha')
+            .eq('cohorte_id', cohorteId)
+            .eq('programa_id', programaId)
+            .order('fecha_vencimiento');
+        }),
         obtenerEgresosResumenPorCohorte(cohorteId)
     ]);
 

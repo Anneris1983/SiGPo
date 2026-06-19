@@ -1524,7 +1524,7 @@
                 var sb = await getSupabase();
                 var [rCoh, rCob, rInsc, rEgr, rCfg] = await Promise.all([
                     sb.from('cohortes').select('cohorte_id,nombre,estado,fecha_inicio,fecha_fin,programa_id,programas(nombre,tipo,estado)').eq('cohorte_id', cohorteId).single(),
-                    sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,monto_transferido,estado,moneda,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId),
+                    sbFetchAll(function() { return sb.from('cobros').select('cobro_id,dni,concepto,periodo,nro_cuota,fecha_vencimiento,monto_original,descuento_porcentaje,monto_final,saldo_pendiente,monto_abonado,monto_transferido,estado,moneda,no_aplica,comprobante_url,recibo_url').eq('cohorte_id', cohorteId).order('cobro_id'); }),
                     obtenerInscripcionesPorCohorte(cohorteId, 'estudiante_id, descuento_porcentaje, estado_academico, descuento_motivo'),
                     obtenerEgresosResumenPorCohorte(cohorteId),
                     obtenerConfiguracion()

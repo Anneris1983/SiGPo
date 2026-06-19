@@ -535,8 +535,8 @@ async function cargarCohortes() {
         var inscData=[], cobrosData=[];
         if (cids.length) {
             var [ir,cr] = await Promise.all([
-                sb.from('inscripciones').select('cohorte_id,estado_academico').in('cohorte_id',cids),
-                sb.from('cobros').select('cohorte_id,monto_final,saldo_pendiente,estado,no_aplica').in('cohorte_id',cids)
+                sbFetchAll(function() { return sb.from('inscripciones').select('cohorte_id,estado_academico').in('cohorte_id',cids).order('estudiante_id'); }),
+                sbFetchAll(function() { return sb.from('cobros').select('cohorte_id,monto_final,saldo_pendiente,estado,no_aplica').in('cohorte_id',cids).order('cobro_id'); })
             ]);
             inscData = ir.data||[];
             cobrosData = cr.data||[];
