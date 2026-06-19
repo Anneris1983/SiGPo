@@ -209,7 +209,7 @@ function _parsearRecibo(texto) {
   }
 
   // Concepto — ej: "11  cohorte 2025-2026 septiembre 2026"
-  var mConc = texto.match(/Concepto\s*:?\s*(\d{1,3})\s+cohorte\s+(\d{4}-\d{4})\s+([a-záéíóúñ]+)\s+(\d{4})/i);
+  var mConc = texto.match(/Concepto\s*:?\s*(\d{1,3})\s+cohorte\s+(\d{4}-\d{4})\s+([a-záéíóúñ]+)\s+(?:de\s+)?(\d{4})/i);
   if (mConc) {
     datos.concepto_raw   = mConc[0].replace(/\s+/g, ' ').trim();
     datos.programa_id    = parseInt(mConc[1], 10);
