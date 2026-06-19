@@ -89,9 +89,14 @@ function _procesarUnPDF(att, msg) {
   var texto = _extraerTextoPDF(att);
   Logger.log('--- TEXTO PDF (primeros 800 chars) ---\n' + texto.substring(0, 800));
 
-  // 1b. ¿Es una FACTURA de Tango? Va por un flujo distinto: la factura se
-  //     vincula al ESTUDIANTE (por su DNI/CUIT/CUIL), no a una cuota.
-  if (/\bFACTURA\b/i.test(texto)) {
+  // 1b. ¿FACTURA o RECIBO? El recibo trae el descargo legal
+  //     "DOCUMENTO NO VALIDO COMO FACTURA", que hacía que se confundiera
+  //     con una factura. Detectamos primero el RECIBO por su encabezado
+  //     "RECIBO OFICIAL"; solo si NO es recibo y aparece "FACTURA" fuera
+  //     de ese descargo lo tratamos como factura (se vincula al ESTUDIANTE).
+  var _esRecibo    = /RECIBO\s+OFICIAL/i.test(texto);
+  var _sinDescargo = texto.replace(/NO\s+V[ÁA]LIDO\s+COMO\s+FACTURA/ig, '');
+  if (!_esRecibo && /\bFACTURA\b/i.test(_sinDescargo)) {
     _procesarFactura(texto, att, msg);
     return;
   }
