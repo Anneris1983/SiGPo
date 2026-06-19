@@ -110,8 +110,8 @@
                 <div class="breadcrumb" id="breadcrumb-link">
                     <a href="cooperadora_2_Dashboard.html">← Volver al Dashboard</a>
                 </div>
-                <h1>⚠️ Recibos Tango Pendientes</h1>
-                <p>Recibos que no pudieron asignarse automáticamente — requieren revisión manual</p>
+                <h1>⚠️ Recibos y Facturas Tango Pendientes</h1>
+                <p>Comprobantes que no pudieron asignarse automáticamente — requieren revisión manual</p>
             </div>
             <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
                 <div class="notif-wrapper" style="position:relative;">
@@ -179,6 +179,38 @@
                 </div>
             </div>
         </div>
+
+        <!-- ════════════ FACTURAS ════════════ -->
+        <h2 style="font-family:'Crimson Pro',serif;font-size:21px;color:#5C1018;margin:36px 0 4px;">🧾 Facturas Tango</h2>
+        <p style="font-size:13px;color:#666;margin-bottom:18px;">Facturas que no se pudieron asignar a un estudiante — asignalas por DNI.</p>
+
+        <!-- FACTURAS PENDIENTES -->
+        <div class="card">
+            <div class="card-title">
+                ⚠️ Facturas pendientes sin resolver
+                <span class="badge-count" id="badge-fact-pend">0</span>
+            </div>
+            <div class="toolbar">
+                <button class="filter-btn active" onclick="recargarFacturas()">↺ Actualizar</button>
+            </div>
+            <div class="table-container" id="tabla-fact-pend-wrap">
+                <div class="empty-state"><div class="icon">⏳</div><p>Cargando…</p></div>
+            </div>
+        </div>
+
+        <!-- FACTURAS RESUELTAS (colapsable) -->
+        <div class="card">
+            <div class="card-title" style="cursor:pointer;" onclick="toggleFacturasResueltas()">
+                ✅ Facturas resueltas
+                <span class="badge-count" id="badge-fact-res" style="background:#16a34a;">0</span>
+                <span id="toggle-icon-fact" style="margin-left:auto;font-size:18px;">▼</span>
+            </div>
+            <div id="fact-resueltos-wrap" style="display:none;">
+                <div class="table-container" id="tabla-fact-res-wrap">
+                    <div class="empty-state"><div class="icon">⏳</div><p>Cargando…</p></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL ASIGNAR -->
@@ -218,6 +250,41 @@
         </div>
     </div>
 
+    <!-- MODAL ASIGNAR FACTURA -->
+    <div class="modal-overlay" id="modalAsignarFactura">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">🧾 Asignar factura a un estudiante</span>
+                <button class="modal-close" onclick="cerrarModalFactura()">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px;color:#555;margin-bottom:16px;">Buscá el estudiante por DNI y seleccionalo. La factura quedará en su repositorio.</p>
+
+                <div class="info-grid" id="modal-datos-factura"></div>
+
+                <div class="form-group">
+                    <label class="form-label">Buscar estudiante por DNI</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" class="form-input" id="buscar-dni-est" placeholder="Ej: 28123456" style="flex:1;">
+                        <button class="btn btn-primary" onclick="buscarEstudiantes()">Buscar</button>
+                    </div>
+                </div>
+                <div id="resultados-estudiantes" style="display:none;">
+                    <div class="form-group">
+                        <label class="form-label">Resultados — seleccioná el estudiante</label>
+                        <div class="search-results" id="lista-estudiantes"></div>
+                    </div>
+                </div>
+
+                <div class="msg-box" id="modal-msg-factura"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="cerrarModalFactura()">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirmar-asignar-factura" disabled onclick="confirmarAsignarFactura()">✔ Confirmar asignación</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toasts"></div>
     <script src="supabase.js"></script>
     <script>
@@ -226,6 +293,12 @@
     var _sesion     = null;
     var _pendienteActivo = null;  // id del pendiente que se está asignando
     var _cobroSeleccionado = null;
+
+    // Facturas
+    var _facturasPend = [];
+    var _facturasRes  = [];
+    var _facturaPendienteActiva = null;
+    var _estudianteSeleccionado = null;
 
     // ── INIT ──────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', async function () {
@@ -243,6 +316,7 @@
 
         obtenerNotificaciones(_sesion.rol).then(renderNotificaciones);
         await recargar();
+        await recargarFacturas();
     });
 
     // ── CARGAR DATOS ──────────────────────────────────────────
@@ -454,6 +528,205 @@
     function toggleResueltos() {
         var w = document.getElementById('resueltos-wrap');
         var ic = document.getElementById('toggle-icon');
+        var oculto = w.style.display === 'none';
+        w.style.display  = oculto ? 'block' : 'none';
+        ic.textContent = oculto ? '▲' : '▼';
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // FACTURAS PENDIENTES
+    // ══════════════════════════════════════════════════════════
+    async function recargarFacturas() {
+        var sb = await getSupabase();
+        var { data, error } = await sb
+            .from('facturas_pendientes_tango')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            toast('Error al cargar facturas: ' + (error.message || error), 'err');
+            return;
+        }
+
+        _facturasPend = (data || []).filter(function(r) { return !r.resuelto; });
+        _facturasRes  = (data || []).filter(function(r) { return  r.resuelto; });
+
+        document.getElementById('badge-fact-pend').textContent = _facturasPend.length;
+        document.getElementById('badge-fact-res').textContent  = _facturasRes.length;
+
+        renderTablaFacturas('tabla-fact-pend-wrap', _facturasPend, false);
+        renderTablaFacturas('tabla-fact-res-wrap',  _facturasRes,  true);
+    }
+
+    function renderTablaFacturas(containerId, filas, esResuelto) {
+        var cont = document.getElementById(containerId);
+        if (!filas.length) {
+            cont.innerHTML = '<div class="empty-state"><div class="icon">'
+                + (esResuelto ? '✅' : '🎉')
+                + '</div><p>'
+                + (esResuelto ? 'Ninguna factura resuelta aún.' : '¡Sin facturas pendientes! Todas se asignaron automáticamente.')
+                + '</p></div>';
+            return;
+        }
+        var html = '<table><thead><tr>'
+            + '<th>Fecha</th><th>Nro. Factura</th><th>Datos extraídos</th>'
+            + '<th>Motivo del fallo</th><th>Estado</th><th>Acciones</th>'
+            + '</tr></thead><tbody>';
+
+        filas.forEach(function(r) {
+            var d = r.datos_extraidos || {};
+            var datosHtml = '';
+            if (d.alumno_nombre)   datosHtml += '<div><b>Alumno:</b> ' + esc(d.alumno_nombre) + '</div>';
+            if (d.dni_normalizado) datosHtml += '<div><b>DNI:</b> ' + esc(d.dni_normalizado) + '</div>';
+            if (d.periodo)         datosHtml += '<div><b>Período:</b> ' + esc(d.periodo) + '</div>';
+            if (d.descripcion)     datosHtml += '<div style="color:#666;">' + esc(d.descripcion) + '</div>';
+            if (d.email_origen)    datosHtml += '<div style="color:#888;font-size:11px;">' + esc(d.email_origen) + '</div>';
+            if (!datosHtml)        datosHtml = '<span style="color:#aaa;">—</span>';
+
+            var acciones = '';
+            if (r.pdf_url) {
+                acciones += '<a href="' + esc(r.pdf_url) + '" target="_blank" class="btn btn-ghost btn-sm">📄 Ver PDF</a>';
+            }
+            if (!esResuelto) {
+                acciones += '<button class="btn btn-primary btn-sm" onclick="abrirModalAsignarFactura(' + r.id + ')">🧾 Asignar</button>';
+                acciones += '<button class="btn btn-success btn-sm" onclick="marcarFacturaResuelta(' + r.id + ')">✔ Resuelto</button>';
+            } else {
+                var resueltoPor = r.resuelto_por ? (' por ' + esc(r.resuelto_por)) : '';
+                var resueltEn   = r.resuelto_en  ? (' · ' + fFecha(r.resuelto_en)) : '';
+                acciones += '<span style="font-size:11px;color:#16a34a;">Resuelto' + resueltoPor + resueltEn + '</span>';
+            }
+
+            html += '<tr>'
+                + '<td style="white-space:nowrap;">' + fFecha(r.created_at) + '</td>'
+                + '<td><code style="font-size:12px;">' + esc(r.nro_factura || '—') + '</code></td>'
+                + '<td class="datos-cell">' + datosHtml + '</td>'
+                + '<td class="motivo-cell">' + esc(r.motivo_fallo) + '</td>'
+                + '<td><span class="badge ' + (r.resuelto ? 'badge-resuelto' : 'badge-pendiente') + '">'
+                + (r.resuelto ? 'Resuelto' : 'Pendiente') + '</span></td>'
+                + '<td><div class="actions-group">' + acciones + '</div></td>'
+                + '</tr>';
+        });
+
+        html += '</tbody></table>';
+        cont.innerHTML = html;
+    }
+
+    function abrirModalAsignarFactura(pendienteId) {
+        _facturaPendienteActiva = pendienteId;
+        _estudianteSeleccionado = null;
+        document.getElementById('btn-confirmar-asignar-factura').disabled = true;
+        document.getElementById('buscar-dni-est').value = '';
+        document.getElementById('lista-estudiantes').innerHTML = '';
+        document.getElementById('resultados-estudiantes').style.display = 'none';
+        document.getElementById('modal-msg-factura').className = 'msg-box';
+        document.getElementById('modal-msg-factura').textContent = '';
+
+        var pend = _facturasPend.find(function(r) { return r.id === pendienteId; }) || {};
+        var d = pend.datos_extraidos || {};
+        var datosHtml = '';
+        if (pend.nro_factura)  datosHtml += filaInfo('Nro. Factura', pend.nro_factura);
+        if (d.alumno_nombre)   datosHtml += filaInfo('Alumno (PDF)', d.alumno_nombre);
+        if (d.dni_normalizado) datosHtml += filaInfo('DNI detectado', d.dni_normalizado);
+        if (d.periodo)         datosHtml += filaInfo('Período', d.periodo);
+        document.getElementById('modal-datos-factura').innerHTML = datosHtml;
+
+        if (d.dni_normalizado) document.getElementById('buscar-dni-est').value = d.dni_normalizado;
+
+        document.getElementById('modalAsignarFactura').classList.add('show');
+    }
+
+    function cerrarModalFactura() {
+        document.getElementById('modalAsignarFactura').classList.remove('show');
+        _facturaPendienteActiva = null;
+        _estudianteSeleccionado = null;
+    }
+
+    async function buscarEstudiantes() {
+        var dni = document.getElementById('buscar-dni-est').value.trim();
+        if (!dni) { alert('Ingresá un DNI'); return; }
+
+        var sb = await getSupabase();
+        var { data, error } = await sb
+            .from('estudiantes')
+            .select('dni, nombre, apellido')
+            .eq('dni', dni);
+
+        var lista = document.getElementById('lista-estudiantes');
+        var wrap  = document.getElementById('resultados-estudiantes');
+
+        if (error || !data || !data.length) {
+            lista.innerHTML = '<div style="padding:12px 14px;color:#888;font-size:13px;">Sin estudiante con DNI ' + esc(dni) + '</div>';
+            wrap.style.display = 'block';
+            _estudianteSeleccionado = null;
+            document.getElementById('btn-confirmar-asignar-factura').disabled = true;
+            return;
+        }
+
+        lista.innerHTML = data.map(function(e) {
+            return '<div class="result-row" onclick="seleccionarEstudiante(' + e.dni + ', this)">'
+                + '<strong>' + esc((e.apellido || '') + ', ' + (e.nombre || '')) + '</strong>'
+                + '<br><span style="color:#888;font-size:11px;">DNI ' + esc(e.dni) + '</span>'
+                + '</div>';
+        }).join('');
+
+        wrap.style.display = 'block';
+        _estudianteSeleccionado = null;
+        document.getElementById('btn-confirmar-asignar-factura').disabled = true;
+    }
+
+    function seleccionarEstudiante(dni, el) {
+        document.querySelectorAll('#lista-estudiantes .result-row').forEach(function(r) { r.classList.remove('selected'); });
+        el.classList.add('selected');
+        _estudianteSeleccionado = dni;
+        document.getElementById('btn-confirmar-asignar-factura').disabled = false;
+    }
+
+    async function confirmarAsignarFactura() {
+        if (!_facturaPendienteActiva || !_estudianteSeleccionado) return;
+        var btn = document.getElementById('btn-confirmar-asignar-factura');
+        btn.disabled = true; btn.textContent = 'Asignando…';
+
+        var sb = await getSupabase();
+        var { data, error } = await sb.rpc('asignar_factura_pendiente', {
+            p_pendiente_id:   _facturaPendienteActiva,
+            p_estudiante_dni: _estudianteSeleccionado,
+            p_resuelto_por:   _sesion ? _sesion.nombre : null
+        });
+
+        if (error || (data && !data.ok)) {
+            var msg = document.getElementById('modal-msg-factura');
+            msg.textContent = '✕ ' + ((data && data.mensaje) || (error && error.message) || 'Error al asignar');
+            msg.className = 'msg-box err';
+            btn.disabled = false; btn.textContent = '✔ Confirmar asignación';
+            return;
+        }
+
+        toast('Factura asignada correctamente', 'ok');
+        cerrarModalFactura();
+        await recargarFacturas();
+    }
+
+    async function marcarFacturaResuelta(pendienteId) {
+        if (!confirm('¿Marcar esta factura como resuelta sin asignarla a ningún estudiante?\n(Usá esto si ya fue cargada por otro medio.)')) return;
+
+        var sb = await getSupabase();
+        var { data, error } = await sb.rpc('marcar_factura_pendiente_resuelto', {
+            p_pendiente_id: pendienteId,
+            p_resuelto_por: _sesion ? _sesion.nombre : null
+        });
+
+        if (error || (data && !data.ok)) {
+            toast('Error: ' + ((data && data.mensaje) || (error && error.message) || 'No se pudo resolver'), 'err');
+            return;
+        }
+
+        toast('Factura marcada como resuelta', 'ok');
+        await recargarFacturas();
+    }
+
+    function toggleFacturasResueltas() {
+        var w = document.getElementById('fact-resueltos-wrap');
+        var ic = document.getElementById('toggle-icon-fact');
         var oculto = w.style.display === 'none';
         w.style.display  = oculto ? 'block' : 'none';
         ic.textContent = oculto ? '▲' : '▼';
