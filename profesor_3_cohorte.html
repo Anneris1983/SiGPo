@@ -220,7 +220,7 @@ var V = { data: null, filtro: 'todos', recibosTangoMap: {} };
 
 function escHtml(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fMonto(n) { var num=parseFloat(n||0); if(isNaN(num))return '$0,00'; return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function fMillones(n) { var num=parseFloat(n||0); if(isNaN(num))return '$0'; if(Math.abs(num)>=1000000)return (num<0?'-$':'$')+(Math.abs(num)/1000000).toLocaleString('es-AR',{minimumFractionDigits:1,maximumFractionDigits:1})+'M'; if(Math.abs(num)>=1000)return (num<0?'-$':'$')+(Math.abs(num)/1000).toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:1})+'k'; return fMonto(num); }
+// fMillones: ahora en supabase.js (monto completo)
 function spin(on) { document.getElementById('spinner').classList.toggle('show', on); }
 
 /* ── NOTIFICACIONES ── */

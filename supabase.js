@@ -429,13 +429,14 @@ function fMonto(n, moneda) {
 }
 
 /** Formato abreviado para dashboards: $1,5M · $90k · $500,00. moneda opcional. */
+// Monto COMPLETO (decision de Anneris 2026-06: nada de abreviar $1,5M).
+// Mantiene el nombre fMillones por compatibilidad y el soporte de moneda (ARS/USD).
 function fMillones(n, moneda) {
-    if (n===null||n===undefined||n==='') return '—';
+    if (n===null||n===undefined||n==='') return '$0,00';
+    var num = parseFloat(n);
+    if (isNaN(num)) return '$0,00';
     var sim = simboloMoneda(moneda);
-    var v = Math.round(Number(n)||0);
-    if (v>=1000000) return sim+(v/1000000).toFixed(1)+'M';
-    if (v>=1000) return sim+Math.round(v/1000)+'k';
-    return fMonto(n, moneda);
+    return (num < 0 ? '-' + sim : sim) + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
 /** Formato con signo para egresos/flujos: -$5.000,00. moneda opcional. */

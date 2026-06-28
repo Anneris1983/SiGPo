@@ -166,12 +166,7 @@
 /* ══════════════════════════════════════════════
    UTILIDADES
    ══════════════════════════════════════════════ */
-function fMillones(valor) {
-    if (valor === null || valor === undefined) return '$0,00';
-    var num = parseFloat(valor);
-    if (isNaN(num)) return '$0,00';
-    return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
+// fMillones: ahora en supabase.js (monto completo)
 
 function getParam(name) {
     var url = new URL(window.location.href);
