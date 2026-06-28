@@ -361,6 +361,9 @@ function hoy() { return new Date().toISOString().split('T')[0]; }
 // Clave de mes 'YYYY-MM' a partir de una fecha ISO. Usada en reportes y cashflow.
 function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
 
+// Etiqueta de mes 'Abr 2026' a partir de una fecha/clave ISO. Usada en reportes.
+function mesLabel(iso) { var meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; var p=String(iso||'').split('T')[0].split('-'); return p.length>=2 ? meses[parseInt(p[1])-1]+' '+p[0] : iso||''; }
+
 function redondear2(n) { return Math.round((Number(n)||0)*100)/100; }
 
 function keyCuota(c, p) { return String(c||'')+'||'+String(p||''); }

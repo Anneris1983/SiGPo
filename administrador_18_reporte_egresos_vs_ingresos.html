@@ -431,9 +431,7 @@ function imprimirReporte() {
 }
 
 // ── Helpers ──
-function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
-function mesLabel(iso) { var meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; var p=String(iso||'').split('T')[0].split('-'); return p.length>=2 ? meses[parseInt(p[1])-1]+' '+p[0] : iso||''; }
-async function cargarDatos() {
+function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }async function cargarDatos() {
     try {
         var sb = await getSupabase();
         var rCobros  = await sb.from('cobros').select('programa_id,cohorte_id,fecha_vencimiento,estado,monto_final,saldo_pendiente,monto_abonado,moneda');
