@@ -1218,10 +1218,6 @@
             document.getElementById('spinner').classList.toggle('show', !!v);
         }
 
-        function estaEnAppsScript() {
-            return typeof google !== 'undefined' && google.script && google.script.run;
-        }
-
         function gs(fn, ...args) {
             return new Promise((resolve, reject) => {
                 google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn](...args);

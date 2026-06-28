@@ -2916,10 +2916,6 @@
             return fallback;
         }
 
-        function estaEnAppsScript() {
-            return typeof google !== 'undefined' && google.script && google.script.run;
-        }
-
         function cryptoRandomId() {
             return 'id-' + Math.random().toString(36).slice(2, 10);
         }

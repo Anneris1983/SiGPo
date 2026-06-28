@@ -585,8 +585,6 @@
             reader.onerror = reject; reader.readAsDataURL(archivo);
         });
     }
-    function estaEnAppsScript() { return typeof google !== 'undefined' && google.script && google.script.run; }
-
     function escapeJs(valor) { return String(valor==null?'':valor).replaceAll('\\','\\\\').replaceAll("'","\\'"); }
     </script>
 </body>
