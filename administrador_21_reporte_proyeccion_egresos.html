@@ -312,7 +312,6 @@ var _chart1 = null;
 var CAT_COLORS = ['var(--clr-danger)','#0891b2','var(--clr-warning)','#6b7280','var(--clr-success)','#7c3aed','#5C1018','#db2777','#d97706'];
 function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
 function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 async function cargarDatos() {
     try {

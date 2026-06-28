@@ -317,7 +317,6 @@ function cargarCohortes(programaId) {
         + cohs.map(function(c){ return '<option value="'+c.cohorte_id+'">'+esc(c.nombre)+'</option>'; }).join('');
 }
 
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 /* ── STATS ── */
 function renderStats() {

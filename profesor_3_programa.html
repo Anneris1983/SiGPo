@@ -111,7 +111,6 @@
 <script>
 var PROGRAMA_ID = new URLSearchParams(location.search).get('programa_id') || '';
 
-function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fM(n) { var num=parseFloat(n||0); if(isNaN(num))return '$0,00'; return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
 var _notifs = [];

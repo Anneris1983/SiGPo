@@ -407,7 +407,6 @@
 <script src="cohorte_tabla.js?v=20250603"></script>
 <script>
 var _programaId = new URLSearchParams(location.search).get('programa') || new URLSearchParams(location.search).get('id') || '';
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fM(n) { var num=parseFloat(n||0); if(isNaN(num)) return '$0,00'; return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
 var _notifs = [];

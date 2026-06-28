@@ -381,8 +381,6 @@ function renderCohortes(data) {
     }).join('');
 }
 
-function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-
 function cargarCohortes() {
     obtenerDetallePrograma(_programaId).then(function(data) {
         renderCohortes(data);

@@ -1189,10 +1189,6 @@ function fPeso(n) {
 }
 
 
-function esc(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
 function exportarExcel() {
     var m = _metricas;
     if (!m || Object.keys(m).length === 0) { alert('Aplicá los filtros primero.'); return; }
