@@ -119,9 +119,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     /* == CAMPANA == */
-    var _notifs = [];
-    function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
-    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
+    var _notifs = [];    document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) { var dd = document.getElementById('notif-dropdown'); if (dd) dd.style.display = 'none'; } });
     // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 </script>
     <link rel="stylesheet" href="sigpo-theme.css?v=20250529">
