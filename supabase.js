@@ -371,6 +371,33 @@ function mesLabel(iso) { var meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','A
 // True si la pagina corre embebida en Google Apps Script (entorno legacy).
 function estaEnAppsScript() { return typeof google !== 'undefined' && google.script && google.script.run; }
 
+// Exportar todas las <table> de la pagina a un .xlsx (carga SheetJS bajo demanda).
+// Version generica compartida; las paginas con export propio la sobrescriben localmente.
+function exportarExcel() {
+        var loadXLSX = window.XLSX
+            ? Promise.resolve()
+            : new Promise(function(res, rej) {
+                var s = document.createElement('script');
+                s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+                s.onload = res; s.onerror = rej;
+                document.head.appendChild(s);
+              });
+        loadXLSX.then(function() {
+            var wb = XLSX.utils.book_new();
+            var tables = document.querySelectorAll('table');
+            if (!tables.length) { alert('No hay tablas para exportar.'); return; }
+            tables.forEach(function(tbl, i) {
+                var ws = XLSX.utils.table_to_sheet(tbl);
+                XLSX.utils.book_append_sheet(wb, ws, 'Hoja' + (i + 1));
+            });
+            var nombre = (document.title || 'reporte').replace(/[^a-zA-Z0-9 ]/g, '_').trim();
+            XLSX.writeFile(wb, nombre + '.xlsx');
+        }).catch(function(e) { alert('Error al exportar: ' + (e.message || e)); });
+    }
+
+// Exportar a PDF via el dialogo de impresion del navegador.
+function exportarPDF() { window.print(); }
+
 function redondear2(n) { return Math.round((Number(n)||0)*100)/100; }
 
 function keyCuota(c, p) { return String(c||'')+'||'+String(p||''); }
