@@ -318,13 +318,6 @@
 var _programaId = new URLSearchParams(location.search).get('programa') || new URLSearchParams(location.search).get('programaId') || '';
 var _cohortes = [];
 
-function fM(n) {
-    var v = Math.round(Number(n || 0));
-    if (v >= 1000000) return '$' + (v / 1000000).toFixed(1).replace('.0', '') + 'M';
-    if (v >= 1000) return '$' + Math.round(v / 1000) + 'K';
-    return '$' + v.toLocaleString('es-AR');
-}
-
 function irACohorte(cohorteId, event) {
     if (event) event.stopPropagation();
     navegar('cooperadora_5_cohorte.html?programa=' + _programaId + '&cohorte=' + cohorteId);

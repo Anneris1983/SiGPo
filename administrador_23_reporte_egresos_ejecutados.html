@@ -288,9 +288,7 @@
 
 <script>
 var _chart1 = null, _chart2 = null;
-var CAT_COLORS = ['#5C1018','var(--clr-danger)','var(--clr-warning)','#d97706','var(--clr-success)','#0891b2','#7c3aed','#db2777','#6b7280'];
-function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
-async function cargarDatos() {
+var CAT_COLORS = ['#5C1018','var(--clr-danger)','var(--clr-warning)','#d97706','var(--clr-success)','#0891b2','#7c3aed','#db2777','#6b7280'];async function cargarDatos() {
     try {
         var sb = await getSupabase();
         var r = await sb.from('egresos').select('*');

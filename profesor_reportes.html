@@ -267,10 +267,6 @@ function toggleTodosAnios(cb) {
 
 // toast: usa la versión global de supabase.js
 
-function fM(n) {
-    return Number(n || 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
-}
-
 function actualizarCohortes() {
     var progId = document.getElementById('selPrograma').value;
     var sel = document.getElementById('selCohorte');

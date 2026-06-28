@@ -111,8 +111,6 @@
 <script>
 var PROGRAMA_ID = new URLSearchParams(location.search).get('programa_id') || '';
 
-function fM(n) { var num=parseFloat(n||0); if(isNaN(num))return '$0,00'; return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-
 var _notifs = [];
 function toggleNotif() { var dd=document.getElementById('notif-dropdown'); if(dd)dd.style.display=dd.style.display==='block'?'none':'block'; }
 document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });

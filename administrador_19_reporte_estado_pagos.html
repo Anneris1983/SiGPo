@@ -277,7 +277,7 @@
     var chartCohortes = null;
 
     // ── Helpers ──
-    function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }    async function cargarDatos() {
+    async function cargarDatos() {
         try {
             var sb = await getSupabase();
             var rCobros = await sb.from('cobros').select('*, programas(nombre), cohortes(nombre)');

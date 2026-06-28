@@ -205,8 +205,6 @@ var COHORTE_ID = parseInt(QS.get('cohorte_id')) || null;
 var PROGRAMA_ID= QS.get('programa_id') || null;
 var _est            = null;
 var _recibosTangoMap = {};
-
-function fM(n) { var num=parseFloat(n||0); if(isNaN(num))return '$0,00'; return (num<0?'-$':'$')+Math.abs(num).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function spin(v){ document.getElementById('spinner').classList.toggle('show',v); }
 // toast: usa la versión global de supabase.js
 

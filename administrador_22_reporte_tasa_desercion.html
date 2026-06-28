@@ -291,9 +291,7 @@
 </script>
 
 <script>
-var _chartLine = null, _chartBar = null, _chartDonut = null;
-function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2,maximumFractionDigits:2}); }
-// exportarExcel: ahora en supabase.js
+var _chartLine = null, _chartBar = null, _chartDonut = null;// exportarExcel: ahora en supabase.js
 async function cargarDatos() {
     try {
         var [cobros, programas] = await Promise.all([

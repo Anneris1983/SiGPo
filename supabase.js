@@ -428,6 +428,10 @@ function fMonto(n, moneda) {
     return simboloMoneda(moneda)+Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
+// Formato de moneda oficial del sistema: $1.234,00 (decision de Anneris 2026-06).
+// fM era una copia local divergente en muchas paginas; ahora es esta unica version.
+function fM(n) { return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
 /** Formato abreviado para dashboards: $1,5M · $90k · $500,00. moneda opcional. */
 // Monto COMPLETO (decision de Anneris 2026-06: nada de abreviar $1,5M).
 // Mantiene el nombre fMillones por compatibilidad y el soporte de moneda (ARS/USD).
