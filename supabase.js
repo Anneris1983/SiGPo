@@ -358,6 +358,9 @@ function fFecha(fecha) {
 
 function hoy() { return new Date().toISOString().split('T')[0]; }
 
+// Clave de mes 'YYYY-MM' a partir de una fecha ISO. Usada en reportes y cashflow.
+function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
+
 function redondear2(n) { return Math.round((Number(n)||0)*100)/100; }
 
 function keyCuota(c, p) { return String(c||'')+'||'+String(p||''); }

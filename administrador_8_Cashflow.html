@@ -352,8 +352,6 @@ function formatMillones(n) {
     if (isNaN(num)) return '$0,00';
     return (num < 0 ? '-$' : '$') + Math.abs(num).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
-function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
-
 function actualizarCohortes(programaId) {
     var selCoh = document.getElementById('filtroCohorte');
     if (!selCoh) return;
