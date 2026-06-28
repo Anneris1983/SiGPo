@@ -2903,12 +2903,6 @@
             return fecha.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' }).toUpperCase();
         }
 
-        function escapeJs(valor) {
-            return String(valor == null ? '' : valor)
-                .replaceAll('\\', '\\\\')
-                .replaceAll("'", "\\'");
-        }
-
         function obtenerMensajeError(error, fallback) {
             if (!error) return fallback;
             if (typeof error === 'string') return error;

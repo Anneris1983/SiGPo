@@ -33,6 +33,10 @@ function escapeJsAttr(str) {
     return escapeHtml(String(str == null ? '' : str).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
 }
 
+// Escapa SOLO para string JS (\ y '), sin escape HTML. Para JS dentro de un
+// atributo HTML (onclick="...") usar escapeJsAttr/escJs (que ademas escapa HTML).
+function escapeJs(valor) { return String(valor==null?'':valor).replaceAll('\\','\\\\').replaceAll("'","\\'"); }
+
 const SUPABASE_URL = 'https://fdevypdowdhqaxvfiywt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_PxypVbCcQuum2EtxuJRmkg_korPHaCW';
 
