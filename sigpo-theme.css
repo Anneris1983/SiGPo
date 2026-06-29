@@ -202,7 +202,7 @@ body {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar        { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track  { background: transparent; }
 ::-webkit-scrollbar-thumb  { background: var(--clr-border); border-radius: var(--r-pill); }
 ::-webkit-scrollbar-thumb:hover { background: var(--clr-text-muted); }
