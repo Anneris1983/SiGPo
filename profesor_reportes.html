@@ -739,12 +739,7 @@ async function exportarPDF() {
     }
 }
 
-var _notifs = [];
-function toggleNotif() {
-    var dd = document.getElementById('notif-dropdown');
-    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-}
-document.addEventListener('click', function(e) {
+var _notifs = [];document.addEventListener('click', function(e) {
     var w = document.querySelector('#notif-dropdown');
     if (w && !w.parentElement.contains(e.target)) w.style.display = 'none';
 });

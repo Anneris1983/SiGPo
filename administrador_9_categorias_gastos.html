@@ -195,9 +195,7 @@
             navegar('administrador_7_reportes_globales.html');
         }
 
-        var _notifs = [];
-        function toggleNotif() { var dd = document.getElementById('notif-dropdown'); dd.style.display = dd.style.display === 'block' ? 'none' : 'block'; }
-        document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) document.getElementById('notif-dropdown').style.display = 'none'; });
+        var _notifs = [];        document.addEventListener('click', function(e) { var w = document.querySelector('.notif-wrapper'); if (w && !w.contains(e.target)) document.getElementById('notif-dropdown').style.display = 'none'; });
         // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
         
         async function inicializar() {

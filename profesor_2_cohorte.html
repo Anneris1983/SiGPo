@@ -137,9 +137,7 @@ var _filtroEstado = 'TODOS';
 var _pagina = 1;
 var PAGE_SIZE = 20;
 
-/* ── NOTIFICACIONES ── */
-function toggleNotif() { var dd=document.getElementById('notif-dropdown'); if(dd)dd.style.display=dd.style.display==='block'?'none':'block'; }
-document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
+/* ── NOTIFICACIONES ── */document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
 // renderNotificaciones / leerNotif / marcarTodasNotificacionesLeidas: usa supabase.js
 
 document.addEventListener('DOMContentLoaded', async function() {

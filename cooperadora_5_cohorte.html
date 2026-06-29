@@ -2790,8 +2790,6 @@
             box.className = 'message-box ' + tipo;
             box.textContent = texto;
         }
-
-        function toggleNotif() { var dd=document.getElementById('notif-dropdown'); dd.style.display=dd.style.display==='block'?'none':'block'; }
         function marcarTodasLeidas() { _notifs.forEach(function(n){n.leida=true;}); renderNotificaciones(_notifs); marcarTodasNotificacionesLeidas(); }
 
         function mostrarLoadingTabla() {

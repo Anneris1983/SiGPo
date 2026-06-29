@@ -224,9 +224,7 @@ function fMonto(n) { var num=parseFloat(n||0); if(isNaN(num))return '$0,00'; ret
 function spin(on) { document.getElementById('spinner').classList.toggle('show', on); }
 
 /* ── NOTIFICACIONES ── */
-var _notifs = [];
-function toggleNotif() { var dd=document.getElementById('notif-dropdown'); if(dd)dd.style.display=dd.style.display==='block'?'none':'block'; }
-document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
+var _notifs = [];document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
 // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 
 /* ── INIT ── */

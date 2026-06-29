@@ -378,11 +378,6 @@ var RESUMEN_META = [
 // NOTIFICACIONES
 // ════════════════════════════════════════════════════
 var _notifs = [];
-
-function toggleNotif() {
-    var dd = document.getElementById('notif-dropdown');
-    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-}
 document.addEventListener('click', function(e) {
     var w = document.querySelector('.notif-wrapper');
     if (w && !w.contains(e.target)) {

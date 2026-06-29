@@ -407,9 +407,7 @@
 <script src="cohorte_tabla.js?v=20250603"></script>
 <script>
 var _programaId = new URLSearchParams(location.search).get('programa') || new URLSearchParams(location.search).get('id') || '';
-var _notifs = [];
-function toggleNotif() { var dd=document.getElementById('notif-dropdown'); if(dd) dd.style.display=dd.style.display==='block'?'none':'block'; }
-document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
+var _notifs = [];document.addEventListener('click', function(e){ var w=document.querySelector('.notif-wrapper'); if(w&&!w.contains(e.target)){var dd=document.getElementById('notif-dropdown');if(dd)dd.style.display='none';} });
 // renderNotificaciones / leerNotif / marcarTodasLeidas: usa supabase.js
 
 function abrirLogout() { document.getElementById('logoutModal').classList.add('show'); }
