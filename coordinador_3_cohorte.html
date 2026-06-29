@@ -305,12 +305,12 @@
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;flex-shrink:0;">
             <div style="display:flex;align-items:center;gap:10px;">
-                <div style="position:relative;" id="notif-wrapper">
+                <div style="position:relative;" id="notif-wrapper" class="notif-wrapper">
                     <button onclick="toggleNotif()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 12px;border-radius:8px;font-size:18px;cursor:pointer;position:relative;" title="Notificaciones">
                         🔔
                         <span id="notif-badge" style="position:absolute;top:-4px;right:-4px;background:var(--clr-danger);color:white;border-radius:50%;min-width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;">0</span>
                     </button>
-                    <div id="notif-panel" style="display:none;position:absolute;right:0;top:48px;width:320px;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:500;overflow:hidden;">
+                    <div id="notif-dropdown" style="display:none;position:absolute;right:0;top:48px;width:320px;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:500;overflow:hidden;">
                         <div style="padding:14px 16px;border-bottom:1px solid #f0f0f0;font-weight:700;color:#5C1018;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;">
                             <span>🔔 Notificaciones</span>
                             <button type="button" onclick="marcarTodasLeidas()" style="background:none;border:none;color:#8C1A28;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Marcar todas como leídas</button>
@@ -480,12 +480,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     cargar();
 });
-document.addEventListener('click', function(e) {
-    const wrapper = document.getElementById('notif-wrapper');
-    if (wrapper && !wrapper.contains(e.target)) {
-        document.getElementById('notif-panel').style.display = 'none';
-    }
-});
+// cierre de notificaciones al click afuera: ahora en supabase.js (.notif-wrapper / #notif-dropdown)
 document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if(e.target===m) cerrar(m.id); });
 });
@@ -1026,10 +1021,7 @@ function renderNotificaciones() {
         </div>
     `).join('');
 }
-function toggleNotif() {
-    var p = document.getElementById('notif-panel');
-    p.style.display = p.style.display === 'block' ? 'none' : 'block';
-}
+// toggleNotif: ahora en supabase.js (#notif-dropdown)
 function leerNotif(i) {
     if (!V.notifications[i]) return;
     V.notifications[i].leida = true;

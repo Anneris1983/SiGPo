@@ -143,11 +143,11 @@
                 <p id="headerSub">Cargando programas…</p>
             </div>
             <div class="header-actions">
-                <div style="position:relative;display:inline-block;" id="notifWrapper">
+                <div style="position:relative;display:inline-block;" id="notifWrapper" class="notif-wrapper">
                     <button class="icon-btn" type="button" onclick="toggleNotif()" title="Notificaciones">
                         🔔<span id="notif-badge" class="notif-badge" style="display:none;">0</span>
                     </button>
-                    <div id="notif-panel" class="notif-panel">
+                    <div id="notif-dropdown" class="notif-panel" style="display:none;">
                         <div class="notif-head">
                             <span>Notificaciones</span>
                             <button type="button" onclick="marcarTodasLeidas()">Marcar todas como leídas</button>
@@ -252,7 +252,6 @@
     document.addEventListener('DOMContentLoaded', async function() {
         var sesion = await requireAuth();
         if (!sesion || sesion.rol !== 'COORDINADOR') { window.location.href = 'portal_login.html'; return; }
-        document.addEventListener('click', cerrarNotifSiCorresponde);
         cargarVista();
         cargarNotificaciones();
     });
@@ -569,12 +568,7 @@
                 '<small>' + escapeHtml(n.tiempo || '') + '</small></div>';
         }).join('');
     }
-    function toggleNotif() { document.getElementById('notif-panel').classList.toggle('open'); }
-    function cerrarNotifSiCorresponde(e) {
-        var wrapper = document.getElementById('notifWrapper');
-        if (!wrapper || wrapper.contains(e.target)) return;
-        document.getElementById('notif-panel').classList.remove('open');
-    }
+    // toggleNotif y cierre-al-click-afuera: ahora en supabase.js (usa #notif-dropdown / .notif-wrapper)
     function leerNotif(index) { if (!notificaciones[index]) return; notificaciones[index].leida = true; renderNotificaciones(notificaciones); }
     function marcarTodasLeidas() { notificaciones = notificaciones.map(function(n) { n.leida=true; return n; }); renderNotificaciones(notificaciones); marcarTodasNotificacionesLeidas(); }
 
