@@ -368,6 +368,9 @@ function mesKey(iso) { return String(iso||'').split('T')[0].substring(0,7); }
 // Etiqueta de mes 'Abr 2026' a partir de una fecha/clave ISO. Usada en reportes.
 function mesLabel(iso) { var meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; var p=String(iso||'').split('T')[0].split('-'); return p.length>=2 ? meses[parseInt(p[1])-1]+' '+p[0] : iso||''; }
 
+// Fecha 'YYYY-MM-DD' -> 'DD/MM/YYYY' (vacio -> ''). Copia compartida del fmt() de reportes.
+function fmt(iso) { if (!iso) return ''; var p = iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
 // True si la pagina corre embebida en Google Apps Script (entorno legacy).
 function estaEnAppsScript() { return typeof google !== 'undefined' && google.script && google.script.run; }
 

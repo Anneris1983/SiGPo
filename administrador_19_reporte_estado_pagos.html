@@ -246,12 +246,7 @@
     // ── Cerrar sesión ──
 
     // ── Filter band dinámica ──
-    (function() {
-        function fmt(iso) {
-            if (!iso) return '';
-            const p = iso.split('-'); return `${p[2]}/${p[1]}/${p[0]}`;
-        }
-        try {
+    (function() {        try {
             const raw  = sessionStorage.getItem('sigpo_filtros_cashflow') || sessionStorage.getItem('cashflowFiltros');
             const f    = raw ? JSON.parse(raw) : null;
             const band = document.getElementById('filter-band');
