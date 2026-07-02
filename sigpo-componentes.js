@@ -52,4 +52,31 @@
     }
   }
   customElements.define('sigpo-campana', SigpoCampana);
+
+  // ════════════════════════════════════════════════════════════
+  // <sigpo-logout></sigpo-logout>
+  // Boton "Cerrar sesion" unificado. Reemplaza las 4 variantes que estaban
+  // repetidas y divergentes en ~48 paginas. Estilo autocontenido (inline),
+  // igual al .btn-logout que se veia bien en la mayoria. Llama a la funcion
+  // global cerrarSesion() de supabase.js.
+  // ════════════════════════════════════════════════════════════
+  var LOGOUT_MARKUP =
+    '<a href="portal_login.html" onclick="return cerrarSesion(event)" ' +
+      'style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;' +
+      'background:rgba(255,255,255,0.14);border:1.5px solid rgba(255,255,255,0.38);' +
+      'border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;' +
+      'text-decoration:none;transition:background 0.2s;font-family:\'DM Sans\',sans-serif;white-space:nowrap;" ' +
+      'onmouseover="this.style.background=\'rgba(255,255,255,0.25)\'" ' +
+      'onmouseout="this.style.background=\'rgba(255,255,255,0.14)\'">' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
+      'Cerrar sesión' +
+    '</a>';
+
+  class SigpoLogout extends HTMLElement {
+    connectedCallback() {
+      this.style.display = 'inline-flex';
+      this.innerHTML = LOGOUT_MARKUP;
+    }
+  }
+  customElements.define('sigpo-logout', SigpoLogout);
 })();
