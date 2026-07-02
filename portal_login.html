@@ -240,7 +240,7 @@
         <div id="seccionRecovery" style="display:none;">
         <div class="login-body">
             <div id="errorMsgRec" class="error-msg"></div>
-            <p style="font-size:14px;color:#374151;margin-bottom:18px;line-height:1.5;">Ingresá tu nueva contraseña para continuar.</p>
+            <p id="recoveryMsg" style="font-size:14px;color:#374151;margin-bottom:18px;line-height:1.5;">Ingresá tu nueva contraseña para continuar.</p>
 
             <div class="field">
                 <label for="newPassword">Nueva contraseña</label>
@@ -345,7 +345,7 @@ async function iniciarSesion() {
             return;
         }
 
-        var respPre = await sb.from('usuarios').select('usuario_id, rol, nombre_completo, apellido, nombre, email, programa_id, dni').eq('dni', dni).single();
+        var respPre = await sb.from('usuarios').select('usuario_id, rol, nombre_completo, apellido, nombre, email, programa_id, dni, debe_cambiar_password').eq('dni', dni).single();
         var usuario = respPre.data;
 
         localStorage.setItem('sigpo_rol', usuario.rol);
@@ -361,6 +361,20 @@ async function iniciarSesion() {
         localStorage.setItem('sigpo_usuario_id', String(usuario.usuario_id || ''));
 
         var destino = RUTAS[usuario.rol] || 'portal_estudiante_2_dashboard.html';
+
+        // Primer ingreso: obligar a definir una clave propia antes de entrar.
+        if (usuario.debe_cambiar_password) {
+            _destinoTrasCambio = destino;
+            _claveTemporal = password;
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            document.getElementById('seccionLogin').style.display = 'none';
+            document.getElementById('recoveryMsg').textContent = 'Primer ingreso: por seguridad, definí tu propia contraseña para continuar.';
+            document.getElementById('seccionRecovery').style.display = '';
+            document.getElementById('newPassword').focus();
+            return;
+        }
+
         window.location.href = destino;
 
     } catch (err) {
@@ -407,6 +421,11 @@ function togglePasswordRec(id, btn) {
     else { input.type = 'password'; btn.textContent = '👁️'; }
 }
 
+// Primer ingreso: destino a redirigir tras el cambio obligatorio, y clave
+// temporal usada para entrar (la nueva no puede ser igual a esa).
+var _destinoTrasCambio = null;
+var _claveTemporal = null;
+
 async function cambiarPassword() {
     var p1 = document.getElementById('newPassword').value;
     var p2 = document.getElementById('confirmPassword').value;
@@ -414,12 +433,20 @@ async function cambiarPassword() {
     errEl.classList.remove('show');
     if (p1.length < 8) { errEl.textContent = 'La contraseña debe tener al menos 8 caracteres.'; errEl.classList.add('show'); return; }
     if (p1 !== p2) { errEl.textContent = 'Las contraseñas no coinciden.'; errEl.classList.add('show'); return; }
+    if (_claveTemporal && p1 === _claveTemporal) { errEl.textContent = 'La nueva contraseña no puede ser igual a la que te asignaron.'; errEl.classList.add('show'); return; }
     var btn = document.getElementById('btnCambiar');
     btn.classList.add('loading'); btn.disabled = true;
     try {
         var sb = await getSupabase();
         var { error } = await sb.auth.updateUser({ password: p1 });
         if (error) { errEl.textContent = 'No se pudo cambiar la contraseña: ' + error.message; errEl.classList.add('show'); return; }
+        // Apagar la marca de primer ingreso (también en recuperación: ya definió clave propia).
+        try { await sb.rpc('marcar_password_cambiada'); } catch (e) { /* no bloquea el ingreso */ }
+        if (_destinoTrasCambio) {
+            // Primer ingreso: la sesión ya está activa, entrar directo.
+            window.location.href = _destinoTrasCambio;
+            return;
+        }
         alert('✅ Contraseña actualizada correctamente. Ahora podés iniciar sesión.');
         window.location.hash = '';
         window.location.replace(window.location.pathname);
