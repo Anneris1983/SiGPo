@@ -190,10 +190,16 @@ async function requireAuth() {
     // Verify role from DB using the authenticated JWT (not localStorage)
     const { data: usuario, error } = await sb
         .from('usuarios')
-        .select('usuario_id, rol, nombre_completo, apellido, nombre, dni, email, programa_id')
+        .select('usuario_id, rol, nombre_completo, apellido, nombre, dni, email, programa_id, debe_cambiar_password')
         .eq('auth_user_id', session.user.id)
         .maybeSingle();
     if (error || !usuario) {
+        window.location.href = 'portal_login.html';
+        return null;
+    }
+    // Primer ingreso sin clave propia definida: volver al login, que fuerza
+    // la pantalla de cambio de clave. Evita saltearla navegando directo a una URL.
+    if (usuario.debe_cambiar_password) {
         window.location.href = 'portal_login.html';
         return null;
     }
