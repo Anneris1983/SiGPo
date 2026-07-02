@@ -1266,7 +1266,28 @@ async function obtenerPerfilUsuario() {
 // INICIALIZACIÓN AUTOMÁTICA DE NOTIFICACIONES
 // ══════════════════════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════════════════
+// BOTÓN "CERRAR SESIÓN" UNIFICADO
+// Antes cada página tenía su propio botón (clases btn-logout / logout-btn /
+// header-btn, con distinto estilo → algunos se veían mal, ej. blanco sobre el
+// header). Esta función lo normaliza en TODAS las páginas al mismo look, sin
+// tocar el HTML de cada una: se cambia acá, en un solo lugar.
+// Alcanza solo el botón del header (onclick con cerrarSesion); no toca modales.
+// ══════════════════════════════════════════════════════════════
+function unificarBotonLogout() {
+    var SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+    var ESTILO = "display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:rgba(255,255,255,0.14);border:1.5px solid rgba(255,255,255,0.38);border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;font-family:'DM Sans',sans-serif;white-space:nowrap;line-height:1;";
+    var botones = document.querySelectorAll('[onclick*="cerrarSesion"]');
+    botones.forEach(function (b) {
+        b.style.cssText = ESTILO;
+        b.innerHTML = SVG + ' Cerrar sesión';
+        b.onmouseover = function () { this.style.background = 'rgba(255,255,255,0.25)'; };
+        b.onmouseout  = function () { this.style.background = 'rgba(255,255,255,0.14)'; };
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
+    unificarBotonLogout();
     var sesion = getSesion();
     if (sesion && document.getElementById('notif-badge')) {
         var notifs = await obtenerNotificaciones(sesion.rol);
